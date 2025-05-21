@@ -10,6 +10,7 @@ import React, {useEffect, useState} from 'react'
 import {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {NavigationContainer} from '@react-navigation/native'
 import {PaperProvider} from 'react-native-paper'
+import theme from './app/constants/theme'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
 import {initFirebase} from './app/services/firebase'
@@ -23,7 +24,7 @@ function App(): React.JSX.Element {
 
   return (
     <NavigationContainer>
-      <PaperProvider>
+      <PaperProvider theme={theme}>
         {user ? <AuthNavigator /> : <NoAuthNavigator />}
       </PaperProvider>
     </NavigationContainer>
