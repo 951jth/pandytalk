@@ -84,6 +84,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        minSdkVersion 24
     }
     signingConfigs {
         debug {
@@ -116,4 +117,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    implementation 'com.google.firebase:firebase-analytics'
 }
+
+apply plugin: 'com.google.gms.google-services'
