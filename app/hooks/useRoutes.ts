@@ -7,6 +7,7 @@ type RouteItem = {
   title?: string
   component: React.ComponentType<any>
   options?: object
+  icon?: string
 }
 
 type LayoutItem = {
@@ -29,6 +30,7 @@ const authRoutes = (): LayoutItem[] => {
           name: 'home',
           title: '홈',
           component: HomeScreen,
+          icon: 'home',
         },
       ],
     },

@@ -1,24 +1,33 @@
+import auth from '@react-native-firebase/auth'
 import React, {useState} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Button, Text, TextInput} from 'react-native-paper'
 import CustomInput from '../components/common/CustomInput'
 
 type formTypes = {
-  id: string
-  pwd: string
+  email: string
+  password: string
 }
 
 export default function LoginScreen() {
-  const [formValues, setFormValues] = useState<formTypes>({id: null, pwd: null})
-  const onSubmit = () => {
-    // alert(JSON.stringify(formValues))
+  const [formValues, setFormValues] = useState<formTypes>({
+    email: '',
+    password: '',
+  })
+  const onSubmit = async () => {
+    try {
+      // alert(JSON.stringify(formValues))
+      const {email, password} = formValues
+      await auth().signInWithEmailAndPassword(email, password)
+    } catch (e) {
+      console.log('error', e)
+    }
   }
 
   const onFormChange = (key: string, value: string) => {
     setFormValues(old => ({...old, [key]: value}))
   }
 
-  console.log(formValues)
   return (
     <View style={styles.container}>
       <View>
@@ -26,16 +35,20 @@ export default function LoginScreen() {
         <CustomInput
           label="ID"
           mode="outlined"
-          onBlur={e => onFormChange('id', e)}
+          onChangeText={e => {
+            onFormChange('email', e)
+          }}
         />
         <CustomInput
           label="PASSWORD"
           mode="outlined"
           secureTextEntry
           right={<TextInput.Icon icon="eye" />}
-          onBlur={e => onFormChange('pwd', e)}
+          onChangeText={e => onFormChange('password', e)}
         />
-        <Button onTouchEnd={onSubmit}>로그인</Button>
+        <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
+          로그인
+        </Button>
       </View>
     </View>
   )
@@ -51,5 +64,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'semibold',
     marginBottom: 20,
+  },
+  submitBtn: {
+    marginTop: 20,
   },
 })

@@ -7,7 +7,7 @@
 
 import React, {useEffect, useState} from 'react'
 
-import {FirebaseAuthTypes} from '@react-native-firebase/auth'
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {NavigationContainer} from '@react-navigation/native'
 import {PaperProvider} from 'react-native-paper'
 import theme from './app/constants/theme'
@@ -17,9 +17,17 @@ import {initFirebase} from './app/services/firebase'
 
 function App(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
+  const [initializing, setInitializing] = useState<boolean>(true)
 
   useEffect(() => {
     initFirebase()
+
+    const subscriber = auth().onAuthStateChanged(userInfo => {
+      setUser(userInfo)
+      if (initializing) setInitializing(false)
+    })
+
+    return subscriber // unsubscribe on unmount
   }, [])
 
   return (
