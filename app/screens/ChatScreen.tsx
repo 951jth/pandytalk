@@ -1,10 +1,10 @@
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
 
-export default function HomeScreen() {
+export default function ChatScreen() {
   return (
     <View style={styles.container}>
-      <Text>메인 페이지</Text>
+      <Text>채팅 페이지</Text>
     </View>
   )
 }

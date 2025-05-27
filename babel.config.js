@@ -16,6 +16,7 @@ module.exports = {
           '@services': './app/services',
           '@store': './app/store',
           '@utils': './app/utils',
+          '@types': './app/types',
         },
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       },

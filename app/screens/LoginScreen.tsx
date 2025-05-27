@@ -30,26 +30,24 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={styles.title}>로그인 페이지</Text>
-        <CustomInput
-          label="ID"
-          mode="outlined"
-          onChangeText={e => {
-            onFormChange('email', e)
-          }}
-        />
-        <CustomInput
-          label="PASSWORD"
-          mode="outlined"
-          secureTextEntry
-          right={<TextInput.Icon icon="eye" />}
-          onChangeText={e => onFormChange('password', e)}
-        />
-        <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
-          로그인
-        </Button>
-      </View>
+      <Text style={styles.title}>로그인 페이지</Text>
+      <CustomInput
+        label="ID"
+        mode="outlined"
+        onChangeText={e => {
+          onFormChange('email', e)
+        }}
+      />
+      <CustomInput
+        label="PASSWORD"
+        mode="outlined"
+        secureTextEntry
+        right={<TextInput.Icon icon="eye" />}
+        onChangeText={e => onFormChange('password', e)}
+      />
+      <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
+        로그인
+      </Button>
     </View>
   )
 }
@@ -59,6 +57,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
   },
   title: {
     fontSize: 20,
@@ -67,5 +66,6 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 20,
+    width: '100%',
   },
 })

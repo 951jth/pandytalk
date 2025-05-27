@@ -1,6 +1,8 @@
-import HomeScreen from '@screens/HomeScreen'
 import AuthLayout from '../components/layout/AuthLayout'
+import ChatScreen from '../screens/ChatScreen'
+import FriendsScreen from '../screens/FriendsScreen'
 import LoginScreen from '../screens/LoginScreen'
+import ProfileScreen from '../screens/ProfileScreen'
 
 type RouteItem = {
   name: string
@@ -27,10 +29,22 @@ const authRoutes = (): LayoutItem[] => {
       },
       children: [
         {
-          name: 'home',
-          title: '홈',
-          component: HomeScreen,
-          icon: 'home',
+          name: 'friends',
+          title: 'Friends',
+          component: FriendsScreen,
+          icon: 'account-group',
+        },
+        {
+          name: 'chats',
+          title: 'Chat',
+          component: ChatScreen,
+          icon: 'chat',
+        },
+        {
+          name: 'profile',
+          title: 'Profile',
+          component: ProfileScreen,
+          icon: 'account-circle',
         },
       ],
     },
@@ -43,6 +57,6 @@ const noAuthRoutes: RouteItem[] = [
   },
 ]
 
-const initialRouteName = 'home'
+const initialRouteName = 'friends'
 
 export {authRoutes, initialRouteName, noAuthRoutes}

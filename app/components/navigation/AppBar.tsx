@@ -1,19 +1,22 @@
 import auth from '@react-native-firebase/auth'
-import {useNavigation, useRoute} from '@react-navigation/native'
-import React from 'react'
+import {useNavigation, useNavigationState} from '@react-navigation/native'
+import React, {useEffect, useState} from 'react'
+import {StyleSheet} from 'react-native'
 import {Appbar} from 'react-native-paper'
 import {authRoutes} from '../../hooks/useRoutes'
 
 export default function AppBar() {
   const navigation = useNavigation()
-  const route = useRoute()
   const canGoBack = navigation.canGoBack()
-  // 🔍 현재 route.name과 일치하는 title 찾기
-  const matchedRoute = authRoutes()
-    .flatMap(group => group.children)
-    .find(r => r.name === route.name)
+  const [title, setTitle] = useState<string | null>('Friends')
+  const mainRoutes = authRoutes()?.[0]?.children || []
 
-  const title = matchedRoute?.title ?? route.name
+  //현재 route name
+  const currentRouteName = useNavigationState(state => {
+    const nested = state.routes?.[state.index]?.state
+    const tab = nested?.routes?.[nested?.index || 0]
+    return tab?.name ?? null
+  })
 
   const handleLogout = async () => {
     try {
@@ -24,11 +27,20 @@ export default function AppBar() {
     }
   }
 
+  useEffect(() => {
+    const matched = mainRoutes.find(r => r.name === currentRouteName)
+    setTitle(matched?.title || currentRouteName)
+  }, [currentRouteName])
+
   return (
-    <Appbar.Header>
+    <Appbar.Header style={styles.header}>
       {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-      <Appbar.Content title={'CHATTING'} />
+      <Appbar.Content title={title} />
       <Appbar.Action icon="logout" onPress={handleLogout} />
     </Appbar.Header>
   )
 }
+
+const styles = StyleSheet.create({
+  header: {borderBottomWidth: 1, borderBottomColor: '#d9d9d9'},
+})

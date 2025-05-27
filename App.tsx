@@ -5,37 +5,20 @@
 //  * @format
  */
 
-import React, {useEffect, useState} from 'react'
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
+import React from 'react'
+import {RecoilRoot} from 'recoil'
+import MainApp from './MainApp'
 
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth'
-import {NavigationContainer} from '@react-navigation/native'
-import {PaperProvider} from 'react-native-paper'
-import theme from './app/constants/theme'
-import AuthNavigator from './app/navigation/AuthNavigator'
-import NoAuthNavigator from './app/navigation/NoAuthNavigator'
-import {initFirebase} from './app/services/firebase'
+const queryClient = new QueryClient()
 
 function App(): React.JSX.Element {
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
-  const [initializing, setInitializing] = useState<boolean>(true)
-
-  useEffect(() => {
-    initFirebase()
-
-    const subscriber = auth().onAuthStateChanged(userInfo => {
-      setUser(userInfo)
-      if (initializing) setInitializing(false)
-    })
-
-    return subscriber // unsubscribe on unmount
-  }, [])
-
   return (
-    <NavigationContainer>
-      <PaperProvider theme={theme}>
-        {user ? <AuthNavigator /> : <NoAuthNavigator />}
-      </PaperProvider>
-    </NavigationContainer>
+    <RecoilRoot>
+      <QueryClientProvider client={queryClient}>
+        <MainApp />
+      </QueryClientProvider>
+    </RecoilRoot>
   )
 }
 
