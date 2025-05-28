@@ -43,7 +43,9 @@ const AppBottom: React.FC = () => {
         <Tab.Screen
           key={route.name}
           name={`${route.name}Tab`}
-          component={route.component}
+          // component={route.component}
+          // ✅ children이 있으면 렌더링, 아니면 기존 컴포넌트
+          children={() => <>{children ? children : <route.component />}</>}
           options={{title: route.title ?? route.name}}
         />
       ))}
