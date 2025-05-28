@@ -11,13 +11,13 @@ export default function AuthNavigator() {
           <Stack.Screen
             key={route.name}
             name={route.name}
-            options={layoutGroup.options || route.options}
-            children={props => (
+            options={layoutGroup.options || route.options}>
+            {props => (
               <layoutGroup.layout>
                 <route.component {...props} />
               </layoutGroup.layout>
             )}
-          />
+          </Stack.Screen>
         )),
       )}
     </Stack.Navigator>

@@ -1,13 +1,17 @@
 import {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 
+export type FsSnapshot =
+  FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
+
 export interface User {
   uid: string
   nickname: string
   email: string
-  photoURL?: string
-  status: 'online' | 'offline'
-  lastSeen?: FirebaseFirestoreTypes.Timestamp // RN Firebase 기준
   authority: 'ADMIN' | 'MANAGER' | 'USER'
+  status: 'online' | 'offline'
+  photoURL?: string
+  lastSeen?: FirebaseFirestoreTypes.Timestamp // RN Firebase 기준
+  isGuest?: boolean
 }
 
 export interface ChatRoom {

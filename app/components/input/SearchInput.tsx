@@ -12,6 +12,15 @@ export default function SearchInput(props: TextInputProps) {
         style={styles.input}
         contentStyle={{padding: 0}}
         outlineStyle={{borderRadius: 50}}
+        right={
+          props?.value ? (
+            <TextInput.Icon
+              icon="close"
+              onPress={() => props?.onChangeText?.('')}
+              forceTextInputFocus={false}
+            />
+          ) : null
+        }
         {...props}
       />
     </View>

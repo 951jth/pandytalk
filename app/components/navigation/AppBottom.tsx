@@ -14,7 +14,7 @@ const AppBottom: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={({route}) => {
-        const currentRoute = routes.find(r => r.name === route.name)
+        const currentRoute = routes.find(r => `${r.name}Tab` === route.name)
 
         return {
           headerShown: false,
@@ -42,7 +42,7 @@ const AppBottom: React.FC = () => {
       {routes.map(route => (
         <Tab.Screen
           key={route.name}
-          name={route.name}
+          name={`${route.name}Tab`}
           component={route.component}
           options={{title: route.title ?? route.name}}
         />

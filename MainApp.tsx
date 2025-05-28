@@ -7,7 +7,11 @@
 
 import React, {useEffect, useState} from 'react'
 
-import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth'
+import {
+  FirebaseAuthTypes,
+  getAuth,
+  onAuthStateChanged,
+} from '@react-native-firebase/auth'
 import {NavigationContainer} from '@react-navigation/native'
 import {PaperProvider} from 'react-native-paper'
 import {useSetRecoilState} from 'recoil'
@@ -16,6 +20,7 @@ import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
 import {fetchUserProfile} from './app/services/userService'
 import {userState} from './app/store/userStore'
+const authInstance = getAuth()
 
 function MainApp(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
@@ -23,13 +28,12 @@ function MainApp(): React.JSX.Element {
   const setUserProfile = useSetRecoilState(userState)
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(async userInfo => {
+    const subscriber = onAuthStateChanged(authInstance, async userInfo => {
       setUser(userInfo)
       if (userInfo) {
         try {
           const userProfile = await fetchUserProfile(userInfo.uid)
           setUserProfile(userProfile)
-          console.log('✅ Fetched profile:', userProfile)
         } catch (err) {
           console.error('❌ Failed to fetch profile:', err)
         }

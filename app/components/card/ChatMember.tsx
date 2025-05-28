@@ -1,12 +1,17 @@
 import React from 'react'
-import {StyleSheet, Text, View} from 'react-native'
+import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {User} from '../../types/firebase'
 
-export default function ChatMember(item: User) {
+interface ChatMemberProps {
+  item: User
+  style?: StyleProp<ViewStyle>
+}
+
+export default function ChatMember({item, style}: ChatMemberProps) {
   return (
-    <View style={styles.friend}>
+    <View style={[styles.friend, style]}>
       <View style={styles.frame}>
         <Icon source="account" size={35} color={COLORS.primary} />
         {item?.status == 'online' && <View style={styles.point} />}

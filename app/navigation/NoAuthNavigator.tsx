@@ -4,7 +4,6 @@ import {noAuthRoutes} from '../hooks/useRoutes'
 
 export default function NoAuthNavigator() {
   const Stack = createNativeStackNavigator()
-  console.log('noAuthRoutes', noAuthRoutes)
   return (
     <Stack.Navigator initialRouteName={'login'}>
       {noAuthRoutes?.map(route => {
