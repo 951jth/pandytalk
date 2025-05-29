@@ -56,7 +56,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#2CC069',
     width: 14,
     height: 14,
-    borderRadius: '100%',
+    // borderRadius: '100%',
+    borderRadius: 100,
     borderColor: '#FFF',
     borderWidth: 2,
     position: 'absolute',
@@ -69,8 +70,8 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 14,
-    fontWeight: 'semibold',
-    fontFamily: 'Mulish',
+    color: '#000',
+    fontFamily: 'Mulish-Semibold',
   },
   status: {
     fontSize: 12,

@@ -5,9 +5,11 @@ import {authRoutes, initialRouteName} from '../hooks/useRoutes'
 const Stack = createNativeStackNavigator()
 
 export default function AuthNavigator() {
+  // const routes = useMemo(() => authRoutes(), [])
+  const routes = authRoutes()
   return (
     <Stack.Navigator initialRouteName={initialRouteName}>
-      {authRoutes().flatMap(layoutGroup =>
+      {routes.flatMap(layoutGroup =>
         layoutGroup.children.map(route => (
           <Stack.Screen
             key={route.name}

@@ -20,7 +20,7 @@ export default function UsersScreen(): React.JSX.Element {
   } = useUsersInfinite(searchText)
 
   const users = data?.pages.flatMap(page => page.users) ?? []
-
+  console.log(users)
   const debouncedSetSearchText = useMemo(
     () =>
       debounce((text: string) => {

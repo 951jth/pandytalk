@@ -1,20 +1,20 @@
 import COLORS from '@constants/color'
 import React, {type ReactNode} from 'react'
-import {StyleSheet, useColorScheme, View} from 'react-native'
+import {StyleSheet, useColorScheme} from 'react-native'
+import {SafeAreaView} from 'react-native-safe-area-context'
 import AppBar from '../navigation/AppBar'
 
 type propsType = {
   children: ReactNode
 }
 
-export default function AuthLayout({children}: propsType) {
+export default function MainLayout({children}: propsType): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark'
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <AppBar />
       {children}
-      {/* <AppBottom /> */}
-    </View>
+    </SafeAreaView>
   )
 }
 

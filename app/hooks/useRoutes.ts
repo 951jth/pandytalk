@@ -1,5 +1,5 @@
-import {useMemo} from 'react'
-import AuthLayout from '../components/layout/AuthLayout'
+import React from 'react'
+import MainLayout from '../components/layout/MainLayout'
 import MainContents from '../components/navigation/MainContents'
 import ChatScreen from '../screens/ChatScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -23,46 +23,43 @@ type LayoutItem = {
 
 // ✅ 하단 탭에 들어갈 화면 정의 (중앙 집중화): 메인페이지 전용 탭들
 const tabScreens = (): RouteItem[] => {
-  const tabsMemo = useMemo(
-    () => [
-      {
-        name: 'users',
-        title: 'Users',
-        component: UsersScreen,
-        icon: 'account-group',
-      },
-      {
-        name: 'chats',
-        title: 'Chat',
-        component: ChatScreen,
-        icon: 'chat',
-      },
-      {
-        name: 'profile',
-        title: 'Profile',
-        component: ProfileScreen,
-        icon: 'account-circle',
-      },
-    ],
-    [],
-  )
-  return tabsMemo
+  return [
+    {
+      name: 'users',
+      title: 'Users',
+      component: UsersScreen,
+      icon: 'account-group',
+    },
+    {
+      name: 'chats',
+      title: 'Chat',
+      component: ChatScreen,
+      icon: 'chat',
+    },
+    {
+      name: 'profile',
+      title: 'Profile',
+      component: ProfileScreen,
+      icon: 'account-circle',
+    },
+  ]
 }
 
 const authRoutes = (): LayoutItem[] => {
   return [
     {
       key: 'auth',
-      layout: AuthLayout,
+      layout: MainLayout,
       options: {
         headerShown: false,
       },
       children: [
         {
           name: 'main',
-          title: 'Main',
+          title: 'Users',
           component: MainContents, // 실제 탭 화면
         },
+        {name: 'chatRoom', title: 'ChatRoom', component: ChatScreen},
       ],
     },
   ]

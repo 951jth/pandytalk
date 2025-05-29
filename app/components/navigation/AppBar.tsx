@@ -1,22 +1,32 @@
 import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
-import React, {useEffect, useState} from 'react'
+import React from 'react'
 import {StyleSheet} from 'react-native'
-import {Appbar} from 'react-native-paper'
-import {authRoutes} from '../../hooks/useRoutes'
+import * as Paper from 'react-native-paper'
+import {authRoutes, tabScreens} from '../../hooks/useRoutes'
 const authInstance = getAuth()
 
 export default function AppBar() {
   const navigation = useNavigation()
   const canGoBack = navigation.canGoBack()
-  const [title, setTitle] = useState<string | null>('Users')
-  const mainRoutes = authRoutes()?.[0]?.children || []
+  const allRoutes =
+    authRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
+  const tabs = tabScreens() // 동적일 수도 있음
 
-  //현재 route name
-  const currentRouteName = useNavigationState(state => {
-    const nested = state.routes?.[state.index]?.state
-    const tab = nested?.routes?.[nested?.index || 0]
-    return tab?.name ?? 'Users'
+  const currentTitle = useNavigationState(state => {
+    const current = state.routes[state.index]
+    // 1. 현재 route가 'main'이면 (즉, 탭 화면의 title)
+    if (current.name === 'main' && current.state) {
+      const tabState = current.state
+      const activeTabIndex = tabState.index ?? 0
+      const tabRoute = tabState.routes[activeTabIndex]
+
+      const matched = tabs.find(t => `${t.name}` === tabRoute.name)
+      return matched?.title ?? tabRoute.name
+    }
+    // 2. 그 외 route는 title 그대로 사용
+    const matchedRoute = allRoutes.find(r => r.name === current.name)
+    return matchedRoute?.title ?? current.name
   })
 
   const handleLogout = async () => {
@@ -28,17 +38,19 @@ export default function AppBar() {
     }
   }
 
-  useEffect(() => {
-    const matched = mainRoutes.find(r => `${r.name}Tab` === currentRouteName)
-    setTitle(matched?.title || currentRouteName)
-  }, [currentRouteName])
+  // useEffect(() => {
+  //   const matched = mainRoutes.find(r => `${r.name}Tab` === currentRouteName)
+  //   setTitle(matched?.title || currentRoute)
+  // }, [currentRoute])
 
   return (
-    <Appbar.Header style={styles.header}>
-      {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-      <Appbar.Content title={title} />
-      <Appbar.Action icon="logout" onPress={handleLogout} />
-    </Appbar.Header>
+    <Paper.Appbar.Header style={styles.header}>
+      {canGoBack && (
+        <Paper.Appbar.BackAction onPress={() => navigation.goBack()} />
+      )}
+      <Paper.Appbar.Content title={currentTitle} />
+      <Paper.Appbar.Action icon="logout" onPress={handleLogout} />
+    </Paper.Appbar.Header>
   )
 }
 

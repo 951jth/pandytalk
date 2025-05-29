@@ -6,13 +6,12 @@ import {tabScreens} from '../../hooks/useRoutes'
 
 const Tab = createBottomTabNavigator()
 
-const MainContents: React.FC = () => {
+export default function MainContents(): React.JSX.Element {
   const tabs = tabScreens()
   return (
     <Tab.Navigator
       screenOptions={({route}) => {
         const currentRoute = tabs.find(r => r.name === route.name)
-
         return {
           headerShown: false,
           tabBarIcon: ({focused, color, size}) => (
@@ -29,7 +28,7 @@ const MainContents: React.FC = () => {
       {tabs.map(route => (
         <Tab.Screen
           key={route.name}
-          name={`${route.name}Tab`}
+          name={route.name}
           component={route.component}
           options={{title: route.title ?? route.name}}
         />
@@ -37,5 +36,3 @@ const MainContents: React.FC = () => {
     </Tab.Navigator>
   )
 }
-
-export default MainContents
