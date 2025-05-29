@@ -5,57 +5,25 @@
 //  * @format
  */
 
-import React, {useEffect, useMemo, useState} from 'react'
-
-import {
-  FirebaseAuthTypes,
-  getAuth,
-  onAuthStateChanged,
-} from '@react-native-firebase/auth'
-import {NavigationContainer} from '@react-navigation/native'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
-import {View} from 'react-native'
-import {ActivityIndicator, PaperProvider} from 'react-native-paper'
+import React from 'react'
+import {PaperProvider} from 'react-native-paper'
+import {Provider} from 'react-redux'
 import theme from './app/constants/theme'
-import AuthNavigator from './app/navigation/AuthNavigator'
-import NoAuthNavigator from './app/navigation/NoAuthNavigator'
-const authInstance = getAuth()
+import store from './app/store/store'
+import {MainApp} from './MainApp'
+
+const queryClient = new QueryClient()
 
 function App(): React.JSX.Element {
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
-  const [initializing, setInitializing] = useState<boolean>(true)
-  const queryClient = useMemo(() => new QueryClient(), [])
-
-  useEffect(() => {
-    const subscriber = onAuthStateChanged(authInstance, async userInfo => {
-      setUser(userInfo)
-      if (userInfo) {
-        try {
-        } catch (err) {
-          console.error('❌ Failed to fetch profile:', err)
-        }
-      }
-      if (initializing) setInitializing(false)
-    })
-
-    return subscriber // unsubscribe on unmount
-  }, [])
-  if (initializing) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator />
-      </View>
-    )
-  } // 초기 로딩 중에는 화면 렌더 안 함
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <NavigationContainer>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
         <PaperProvider theme={theme}>
-          {user ? <AuthNavigator /> : <NoAuthNavigator />}
+          <MainApp />
         </PaperProvider>
-      </NavigationContainer>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </Provider>
   )
 }
 

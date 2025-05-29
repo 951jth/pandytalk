@@ -1,0 +1,72 @@
+// app/store/userSlice.ts
+import {doc, getDoc, getFirestore} from '@react-native-firebase/firestore'
+import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
+
+type UserType = {
+  uid: string
+  email: string
+  nickname: string
+  authority: string
+  status: 'online' | 'offline'
+  photoURL: string
+  isGuest: boolean
+  lastSeen: string
+}
+
+type UserState = {
+  data: UserType | null
+  loading: boolean
+  error: string | null
+}
+
+const initialState: UserState = {
+  data: null,
+  loading: false,
+  error: null,
+}
+
+// ✅ 비동기 thunk: Firebase에서 유저 불러오기
+export const fetchUserById = createAsyncThunk(
+  'user/fetchById',
+  async (uid: string) => {
+    if (!uid) throw new Error('Invalid UID')
+    const firestore = getFirestore()
+    const docRef = doc(firestore, 'users', uid)
+    const snapshot = await getDoc(docRef)
+    if (!snapshot.exists()) throw new Error('User not found')
+    return snapshot.data() as UserType
+  },
+)
+
+const userSlice = createSlice({
+  name: 'user',
+  initialState,
+  reducers: {
+    clearUser: state => {
+      state.data = null
+      state.loading = false
+      state.error = null
+    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(fetchUserById.pending, state => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(
+        fetchUserById.fulfilled,
+        (state, action: PayloadAction<UserType>) => {
+          state.loading = false
+          state.data = action.payload
+        },
+      )
+      .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message ?? 'Unknown error'
+      })
+  },
+})
+
+export const {clearUser} = userSlice.actions
+export default userSlice.reducer
