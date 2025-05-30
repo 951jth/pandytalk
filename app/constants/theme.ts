@@ -11,7 +11,7 @@ const theme = {
     surface: '#FFFFFF', // surface 배경
     surfaceVariant: '#F5F5F5', // 선택 사항
     error: COLORS.error,
-    onPrimary: COLORS.text,
+    onPrimary: COLORS.primaryText,
     onBackground: '#000000',
     onSurface: '#000000',
     outline: COLORS.gray,

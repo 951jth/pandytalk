@@ -10,7 +10,7 @@ export interface User {
   authority: 'ADMIN' | 'MANAGER' | 'USER'
   status: 'online' | 'offline'
   photoURL?: string
-  lastSeen?: FirebaseFirestoreTypes.Timestamp // RN Firebase 기준
+  lastSeen?: Number | null // RN Firebase 기준
   isGuest?: boolean
 }
 

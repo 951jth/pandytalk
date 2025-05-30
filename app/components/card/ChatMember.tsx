@@ -1,3 +1,4 @@
+import dayjs from '@utils/dayjs'
 import React from 'react'
 import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
@@ -19,7 +20,10 @@ export default function ChatMember({item, style}: ChatMemberProps) {
       <View style={styles.contents}>
         <Text style={styles.name}>{item?.nickname}</Text>
         <Text style={styles.status}>
-          {item?.status == 'online' ? '온라인' : '오프라인'}
+          {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
+          {item?.lastSeen
+            ? dayjs(Number(item?.lastSeen)).fromNow()
+            : '알 수 없음'}
         </Text>
       </View>
     </View>

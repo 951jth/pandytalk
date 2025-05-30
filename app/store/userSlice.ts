@@ -1,20 +1,10 @@
 // app/store/userSlice.ts
 import {doc, getDoc, getFirestore} from '@react-native-firebase/firestore'
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
-
-type UserType = {
-  uid: string
-  email: string
-  nickname: string
-  authority: string
-  status: 'online' | 'offline'
-  photoURL: string
-  isGuest: boolean
-  lastSeen: string
-}
+import {User} from '../types/firebase'
 
 type UserState = {
-  data: UserType | null
+  data: User | null
   loading: boolean
   error: string | null
 }
@@ -34,7 +24,11 @@ export const fetchUserById = createAsyncThunk(
     const docRef = doc(firestore, 'users', uid)
     const snapshot = await getDoc(docRef)
     if (!snapshot.exists()) throw new Error('User not found')
-    return snapshot.data() as UserType
+    const data = snapshot.data()
+    return {
+      ...data,
+      lastSeen: data?.lastSeen,
+    } as User
   },
 )
 
@@ -56,7 +50,7 @@ const userSlice = createSlice({
       })
       .addCase(
         fetchUserById.fulfilled,
-        (state, action: PayloadAction<UserType>) => {
+        (state, action: PayloadAction<User>) => {
           state.loading = false
           state.data = action.payload
         },

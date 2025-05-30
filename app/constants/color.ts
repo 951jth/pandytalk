@@ -5,6 +5,7 @@ const COLORS = {
   text: '#000',
   error: '#EF4444',
   gray: '#9CA3AF',
+  primaryText: '#FFF',
 }
 
 export default COLORS

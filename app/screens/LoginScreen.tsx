@@ -2,7 +2,7 @@ import auth from '@react-native-firebase/auth'
 import React, {useState} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Button, Text, TextInput} from 'react-native-paper'
-import CustomInput from '../components/common/CustomInput'
+import CustomInput from '../components/input/CustomInput'
 
 type formTypes = {
   email: string
@@ -14,14 +14,38 @@ export default function LoginScreen() {
     email: '',
     password: '',
   })
+  const [error, setError] = useState<String | null>('')
   const onSubmit = async () => {
     try {
-      // alert(JSON.stringify(formValues))
       const {email, password} = formValues
       await auth().signInWithEmailAndPassword(email, password)
-    } catch (e) {
-      console.log('error', e)
+    } catch (error: any) {
+      handleFirebaseAuthError(error)
     }
+  }
+
+  const handleFirebaseAuthError = (error: any) => {
+    let message = '알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
+
+    switch (error?.code) {
+      case 'auth/invalid-email':
+        message = '이메일 형식이 올바르지 않습니다.'
+        break
+      case 'auth/user-not-found':
+        message = '등록되지 않은 이메일입니다.'
+        break
+      case 'auth/wrong-password':
+        message = '비밀번호가 일치하지 않습니다.'
+        break
+      case 'auth/user-disabled':
+        message = '이 계정은 비활성화되어 있습니다.'
+        break
+      case 'auth/too-many-requests':
+        message = '잠시 후 다시 시도해주세요. 요청이 너무 많습니다.'
+        break
+      // 필요시 추가
+    }
+    setError(message)
   }
 
   const onFormChange = (key: string, value: string) => {
@@ -45,6 +69,7 @@ export default function LoginScreen() {
         right={<TextInput.Icon icon="eye" />}
         onChangeText={e => onFormChange('password', e)}
       />
+      <Text style={styles.errorText}>{error}</Text>
       <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
         로그인
       </Button>
@@ -67,5 +92,8 @@ const styles = StyleSheet.create({
   submitBtn: {
     marginTop: 20,
     width: '100%',
+  },
+  errorText: {
+    color: 'red',
   },
 })

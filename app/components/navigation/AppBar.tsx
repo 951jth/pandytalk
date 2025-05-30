@@ -2,8 +2,9 @@ import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import React from 'react'
 import {StyleSheet} from 'react-native'
-import * as Paper from 'react-native-paper'
+import {Appbar} from 'react-native-paper'
 import {authRoutes, tabScreens} from '../../hooks/useRoutes'
+import {clearUser} from '../../store/userSlice'
 const authInstance = getAuth()
 
 export default function AppBar() {
@@ -32,28 +33,33 @@ export default function AppBar() {
   const handleLogout = async () => {
     try {
       await signOut(authInstance)
+      clearUser()
       // 필요시 로그인 화면으로 리디렉션
     } catch (e) {
       console.log('로그아웃 실패:', e)
     }
   }
 
-  // useEffect(() => {
-  //   const matched = mainRoutes.find(r => `${r.name}Tab` === currentRouteName)
-  //   setTitle(matched?.title || currentRoute)
-  // }, [currentRoute])
-
   return (
-    <Paper.Appbar.Header style={styles.header}>
-      {canGoBack && (
-        <Paper.Appbar.BackAction onPress={() => navigation.goBack()} />
-      )}
-      <Paper.Appbar.Content title={currentTitle} />
-      <Paper.Appbar.Action icon="logout" onPress={handleLogout} />
-    </Paper.Appbar.Header>
+    <Appbar.Header style={styles.header} mode="small">
+      {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
+      <Appbar.Content title={currentTitle} titleStyle={styles.title} />
+      <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+    </Appbar.Header>
   )
 }
 
 const styles = StyleSheet.create({
-  header: {borderBottomWidth: 1, borderBottomColor: '#d9d9d9'},
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#d9d9d9',
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3, // Android 그림자
+    backgroundColor: 'unset',
+  },
+  title: {fontSize: 20},
 })
