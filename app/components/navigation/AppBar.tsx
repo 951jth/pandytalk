@@ -1,7 +1,7 @@
 import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import React from 'react'
-import {StyleSheet} from 'react-native'
+import {StatusBar, StyleSheet, View} from 'react-native'
 import {Appbar} from 'react-native-paper'
 import {authRoutes, tabScreens} from '../../hooks/useRoutes'
 import {clearUser} from '../../store/userSlice'
@@ -41,11 +41,18 @@ export default function AppBar() {
   }
 
   return (
-    <Appbar.Header style={styles.header} mode="small">
-      {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-      <Appbar.Content title={currentTitle} titleStyle={styles.title} />
-      <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
-    </Appbar.Header>
+    <View>
+      <StatusBar
+        translucent={false}
+        backgroundColor="#ffffff" // Android 배경
+        barStyle="dark-content" // light-content도 가능
+      />
+      <Appbar.Header style={styles.header} mode="small">
+        {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
+        <Appbar.Content title={currentTitle} titleStyle={styles.title} />
+        <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+      </Appbar.Header>
+    </View>
   )
 }
 

@@ -10,16 +10,10 @@ type propsType = {
 export default function MainLayout({children}: propsType): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark'
   return (
-    // <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-    //   <KeyboardAvoidingView
-    //     style={{flex: 1}}
-    //     behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
     <View style={styles.container}>
       <AppBar />
       {children}
     </View>
-    //   </KeyboardAvoidingView>
-    // </TouchableWithoutFeedback>
   )
 }
 
