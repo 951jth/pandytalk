@@ -1,7 +1,9 @@
 import React from 'react'
 import MainLayout from '../components/layout/MainLayout'
+import NoLayout from '../components/layout/NoLayout'
 import MainContents from '../components/navigation/MainContents'
-import ChatScreen from '../screens/ChatScreen'
+import ChatListScreen from '../screens/ChatListScreen'
+import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LoginScreen from '../screens/LoginScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 import UsersScreen from '../screens/UsersScreen'
@@ -16,7 +18,7 @@ type RouteItem = {
 
 type LayoutItem = {
   key: string
-  layout: React.ComponentType<any>
+  layout?: React.ComponentType<any>
   options?: object
   children: RouteItem[]
 }
@@ -33,7 +35,7 @@ const tabScreens = (): RouteItem[] => {
     {
       name: 'chats',
       title: 'Chat',
-      component: ChatScreen,
+      component: ChatListScreen,
       icon: 'chat',
     },
     {
@@ -48,7 +50,7 @@ const tabScreens = (): RouteItem[] => {
 const authRoutes = (): LayoutItem[] => {
   return [
     {
-      key: 'auth',
+      key: 'main',
       layout: MainLayout,
       options: {
         headerShown: false,
@@ -59,7 +61,16 @@ const authRoutes = (): LayoutItem[] => {
           title: 'Users',
           component: MainContents, // 실제 탭 화면
         },
-        {name: 'chatRoom', title: 'ChatRoom', component: ChatScreen},
+      ],
+    },
+    {
+      key: 'chat',
+      layout: NoLayout,
+      options: {
+        headerShown: false,
+      },
+      children: [
+        {name: 'chatRoom', title: 'ChatRoom', component: ChatRoomScreen},
       ],
     },
   ]

@@ -1,13 +1,20 @@
 import {getAuth} from '@react-native-firebase/auth'
 import {doc, getFirestore, updateDoc} from '@react-native-firebase/firestore'
+import storage from '@react-native-firebase/storage'
+import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import {cloneDeep} from 'lodash'
 import React, {useEffect, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
+import {useDispatch} from 'react-redux'
 import InputForm from '../components/description/InputForm'
 import EditProfile from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
 import {useAppSelector} from '../store/hooks'
+import {AppDispatch} from '../store/store'
+import {fetchUserById} from '../store/userSlice'
+import {isLocalFile} from '../utils/file'
 
 const authInstance = getAuth()
 
@@ -17,6 +24,10 @@ export default function ProfileScreen(): React.JSX.Element {
   const [edit, setEdit] = useState<boolean>(false)
   const [photoURL, setPhotoURL] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<boolean>(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>('')
+  const dispatch = useDispatch<AppDispatch>()
+  const queryClient = useQueryClient()
+  const uid = authInstance.currentUser?.uid
 
   const formItems = [
     {label: '닉네임', key: 'nickname'},
@@ -31,20 +42,39 @@ export default function ProfileScreen(): React.JSX.Element {
     },
     {label: '게스트 여부', contents: user?.isGuest ? 'Y' : 'N'},
   ]
+  const initialFormValues = {
+    uid,
+    authority: 'USER',
+    email: user?.email ?? '',
+    isGuest: false,
+    lastSeen: Date.now(),
+    nickname: '',
+    photoURL: '',
+    status: 'online',
+  } //초기값이 없는 경우 강제로넣어줌
 
   const updateUserProfile = async (formValues: object) => {
     try {
-      const uid = authInstance.currentUser?.uid
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
       setSubmitting(true)
       const firestore = getFirestore()
       const userRef = doc(firestore, 'users', uid)
-
+      if (previewUrl && isLocalFile(previewUrl)) {
+        const fileName = `profile_${Date.now()}.jpg`
+        const ref = storage().ref(`profiles/${uid}/${fileName}`)
+        await ref.putFile(previewUrl)
+        const newPhotoURL = await ref.getDownloadURL()
+        formValues = {
+          ...initialFormValues,
+          ...formValues,
+          photoURL: newPhotoURL,
+        }
+      }
       await updateDoc(userRef, {
-        // nickname: formValues?.nickname || '',
-        photoURL,
+        ...formValues,
       })
-
+      const profile = await dispatch(fetchUserById(uid)).unwrap()
+      queryClient.invalidateQueries({queryKey: ['users']}) //유저 조회 쿼리갱신
       Alert.alert('성공', '프로필 정보가 저장되었습니다.')
     } catch (err) {
       console.error('프로필 업데이트 실패:', err)
@@ -57,6 +87,7 @@ export default function ProfileScreen(): React.JSX.Element {
   useEffect(() => {
     console.log(user)
     setFormValues(user as object)
+    if (user?.photoURL) setPreviewUrl(user.photoURL)
   }, [user])
 
   return (
@@ -71,12 +102,17 @@ export default function ProfileScreen(): React.JSX.Element {
             <View style={styles.profileWrap}>
               <EditProfile
                 edit={edit}
-                imageUri={photoURL}
-                setImageUri={setPhotoURL}
+                previewUrl={previewUrl}
+                setPreviewUrl={setPreviewUrl}
               />
             </View>
           }
-          onEdit={setEdit}
+          edit={edit}
+          setEdit={bool => {
+            setEdit(bool)
+            setFormValues(cloneDeep(formValues))
+            if (!bool && user?.photoURL) setPreviewUrl(user.photoURL)
+          }}
           loading={submitting}
           onSubmit={formValues => updateUserProfile(formValues)}
         />

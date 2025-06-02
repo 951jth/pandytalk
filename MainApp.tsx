@@ -13,12 +13,16 @@ import {
   onAuthStateChanged,
 } from '@react-native-firebase/auth'
 import {NavigationContainer} from '@react-navigation/native'
-import {AppState, View} from 'react-native'
+import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
-import {updateLastSeen} from './app/services/userService'
+import {
+  initialUserInfo,
+  updateLastSeen,
+  updateUserOffline,
+} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
 import {clearUser, fetchUserById} from './app/store/userSlice'
 const authInstance = getAuth()
@@ -32,8 +36,12 @@ export function MainApp(): React.JSX.Element {
     try {
       await updateLastSeen(uid)
       const profile = await dispatch(fetchUserById(uid)).unwrap()
-    } catch (err) {
+    } catch (err: any) {
       console.error('❌ 유저 정보 로딩 실패:', err)
+      if (err?.message == 'User not found' && user) {
+        //새로등록한 유저의 경우 초기값설정해서 등록해줌
+        initialUserInfo(uid, user)
+      }
     }
   }
 
@@ -57,6 +65,9 @@ export function MainApp(): React.JSX.Element {
       if (nextAppState === 'active' && user?.uid) {
         updateLastSeen(user.uid)
       }
+      if (nextAppState === 'background' && user?.uid) {
+        updateUserOffline(user.uid)
+      }
     })
     return () => subscription.remove()
   }, [user])
@@ -71,6 +82,11 @@ export function MainApp(): React.JSX.Element {
 
   return (
     <NavigationContainer>
+      <StatusBar
+        translucent={false}
+        backgroundColor="#ffffff" // Android 배경
+        barStyle="dark-content" // light-content도 가능
+      />
       {user ? <AuthNavigator /> : <NoAuthNavigator />}
     </NavigationContainer>
   )

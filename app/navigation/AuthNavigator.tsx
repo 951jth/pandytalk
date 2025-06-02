@@ -1,5 +1,6 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
+import {View} from 'react-native'
 import {authRoutes, initialRouteName} from '../hooks/useRoutes'
 
 const Stack = createNativeStackNavigator()
@@ -16,7 +17,7 @@ export default function AuthNavigator() {
             name={route.name}
             options={layoutGroup.options || route.options}>
             {(props: any) => {
-              const Layout = layoutGroup.layout
+              const Layout = layoutGroup.layout || <View></View>
               const Component = route.component
               return (
                 <Layout>

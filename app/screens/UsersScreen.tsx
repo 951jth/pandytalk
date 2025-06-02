@@ -1,3 +1,5 @@
+import {useNavigation} from '@react-navigation/native'
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import debounce from 'lodash/debounce'
 import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
@@ -6,6 +8,11 @@ import ChatMember from '../components/card/ChatMember'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/useInfiniteQuery'
+
+// 채팅방 네비게이션 타입 정의 (필요 시 수정)
+type RootStackParamList = {
+  chatRoom: {uid: string}
+}
 
 export default function UsersScreen(): React.JSX.Element {
   const [input, setInput] = useState<string>('')
@@ -19,6 +26,8 @@ export default function UsersScreen(): React.JSX.Element {
     refetch,
   } = useUsersInfinite(searchText)
 
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
   const users = data?.pages.flatMap(page => page.users) ?? []
   const debouncedSetSearchText = useMemo(
     () =>
@@ -27,6 +36,10 @@ export default function UsersScreen(): React.JSX.Element {
       }, 300),
     [],
   )
+
+  const moveToChatRoom = (uid: string) => {
+    navigation.navigate('chatRoom', {uid})
+  }
 
   useEffect(() => {
     debouncedSetSearchText(input)
@@ -45,7 +58,9 @@ export default function UsersScreen(): React.JSX.Element {
         data={users}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
-          return <ChatMember item={item} />
+          return (
+            <ChatMember item={item} onPress={() => moveToChatRoom(item.uid)} />
+          )
         }}
         onEndReached={() => {
           if (hasNextPage) fetchNextPage()
@@ -58,7 +73,7 @@ export default function UsersScreen(): React.JSX.Element {
         refreshing={isLoading}
         onRefresh={refetch}
         keyboardShouldPersistTaps="handled"
-        style={styles.friendsContainer}
+        contentContainerStyle={styles.friendsContainer}
       />
     </View>
   )
@@ -70,5 +85,6 @@ const styles = StyleSheet.create({
   },
   friendsContainer: {
     paddingHorizontal: 16,
+    paddingTop: 4,
   },
 })

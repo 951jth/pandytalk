@@ -1,4 +1,4 @@
-import {get} from 'lodash'
+import {get, set} from 'lodash'
 import React, {useEffect, useState} from 'react'
 import {
   Keyboard,
@@ -11,7 +11,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import {ActivityIndicator, Button, IconButton, Text} from 'react-native-paper'
+import {Button, IconButton, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {inputFormItemType} from '../../types/form'
 import EditInput from '../input/EditInput'
@@ -29,8 +29,10 @@ interface propsType {
   buttonLabel?: string
   topElement?: React.JSX.Element
   bottomElement?: React.JSX.Element
-  onEdit?: (value: boolean) => void
-  defaultEdit?: boolean
+  edit?: boolean
+  setEdit?: (value: boolean) => void
+  // onEdit?: (value: boolean) => void
+  // defaultEdit?: boolean
   loading?: boolean
   onSubmit?: (value: any) => void
 }
@@ -48,81 +50,86 @@ export default function InputForm({
   buttonLabel = '',
   topElement,
   bottomElement,
-  onEdit,
-  defaultEdit = false,
+  edit = false,
+  setEdit = bool => {},
   loading = false,
   onSubmit = values => {},
 }: propsType): React.JSX.Element {
   const [formValues, setFormValues] = useState<object | null>()
-  const [edit, setEdit] = useState<boolean>(defaultEdit)
+  // const [edit, setEdit] = useState<boolean>(defaultEdit)
 
   const onEditChange = (bool: boolean) => {
     setEdit(bool)
-    if (onEdit) onEdit(bool)
   }
 
   useEffect(() => {
-    if (!edit) setFormValues(initialData)
-  }, [initialData, edit])
+    if (initialData) setFormValues(initialData)
+  }, [initialData])
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {loading ? (
-          <ActivityIndicator size="large" color={COLORS.primary} />
-        ) : (
-          <View style={[styles.container, style]}>
-            {edit && (
-              <IconButton
-                icon="close"
-                size={20}
-                style={styles.backBtn}
-                onTouchEnd={() => onEditChange(false)}
-              />
-            )}
-            {topElement}
-            <View style={[styles.items]}>
-              {items?.map((item, index) => {
-                const findText = item?.key ? get(formValues, item.key) : '-'
-                return (
-                  <View style={[styles.row, rowStyle]} key={index}>
-                    <Text
-                      style={[
-                        styles.label,
-                        {minWidth: labelWidth, fontSize},
-                        labelStyle,
-                      ]}>
-                      {item?.label}
-                    </Text>
-                    <View style={[styles.contents, contentsStyle, {fontSize}]}>
-                      {item?.contents ? (
-                        <Text>{item?.contents}</Text>
-                      ) : (
-                        <EditInput
-                          edit={item?.fixed ? false : edit}
-                          defaultValue={findText}
-                        />
-                      )}
-                    </View>
+        {/* {loading && <ActivityIndicator size="large" color={COLORS.primary} />} */}
+        <View style={[styles.container, style]}>
+          {edit && (
+            <IconButton
+              icon="close"
+              size={20}
+              style={styles.backBtn}
+              onTouchEnd={() => onEditChange(false)}
+            />
+          )}
+          {topElement}
+          <View style={[styles.items]}>
+            {items?.map((item, index) => {
+              const findText = item?.key ? get(formValues, item.key) : '-'
+              return (
+                <View style={[styles.row, rowStyle]} key={index}>
+                  <Text
+                    style={[
+                      styles.label,
+                      {minWidth: labelWidth, fontSize},
+                      labelStyle,
+                    ]}>
+                    {item?.label}
+                  </Text>
+                  <View style={[styles.contents, contentsStyle, {fontSize}]}>
+                    {item?.contents ? (
+                      <Text>{item?.contents}</Text>
+                    ) : (
+                      <EditInput
+                        edit={item?.fixed ? false : edit}
+                        defaultValue={findText}
+                        onChangeText={text => {
+                          if (!item?.key) return
+                          setFormValues(prev => {
+                            const updated = {...(prev || {})}
+                            set(updated, item.key || '', text)
+                            return updated
+                          })
+                        }}
+                      />
+                    )}
                   </View>
-                )
-              })}
-            </View>
-            {bottomElement}
-            {editable && (
-              <Button
-                mode="contained"
-                onTouchEnd={() => {
-                  if (edit) onSubmit(formValues)
-                  onEditChange(!edit)
-                }}>
-                {`${buttonLabel}${edit ? '저장' : '수정'}`}
-              </Button>
-            )}
+                </View>
+              )
+            })}
           </View>
-        )}
+          {bottomElement}
+          {editable && (
+            <Button
+              mode="contained"
+              onTouchEnd={() => {
+                if (edit) onSubmit(formValues)
+                onEditChange(!edit)
+              }}
+              loading={loading}>
+              {`${buttonLabel}${edit ? '저장' : '수정'}`}
+            </Button>
+          )}
+        </View>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   )

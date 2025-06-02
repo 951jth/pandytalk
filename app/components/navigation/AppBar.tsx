@@ -1,18 +1,28 @@
 import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
-import React from 'react'
-import {StatusBar, StyleSheet, View} from 'react-native'
+import React, {ComponentProps} from 'react'
+import {StyleSheet, View} from 'react-native'
 import {Appbar} from 'react-native-paper'
 import {authRoutes, tabScreens} from '../../hooks/useRoutes'
+import {updateUserOffline} from '../../services/userService'
+import {useAppSelector} from '../../store/hooks'
 import {clearUser} from '../../store/userSlice'
 const authInstance = getAuth()
 
-export default function AppBar() {
+type AppbarActionItem = ComponentProps<typeof Appbar.Action>
+
+interface propTypes {
+  title?: string
+  rightActions?: AppbarActionItem[]
+}
+
+export default function AppBar({title, rightActions = []}: propTypes) {
   const navigation = useNavigation()
   const canGoBack = navigation.canGoBack()
   const allRoutes =
     authRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
   const tabs = tabScreens() // 동적일 수도 있음
+  const {data: user, loading, error} = useAppSelector(state => state.user)
 
   const currentTitle = useNavigationState(state => {
     const current = state.routes[state.index]
@@ -32,6 +42,7 @@ export default function AppBar() {
 
   const handleLogout = async () => {
     try {
+      user?.uid && (await updateUserOffline(user.uid))
       await signOut(authInstance)
       clearUser()
       // 필요시 로그인 화면으로 리디렉션
@@ -42,15 +53,18 @@ export default function AppBar() {
 
   return (
     <View>
-      <StatusBar
-        translucent={false}
-        backgroundColor="#ffffff" // Android 배경
-        barStyle="dark-content" // light-content도 가능
-      />
       <Appbar.Header style={styles.header} mode="small">
         {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-        <Appbar.Content title={currentTitle} titleStyle={styles.title} />
-        <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+        <Appbar.Content
+          title={title ?? currentTitle}
+          titleStyle={styles.title}
+        />
+        {rightActions?.map((prop, idx) => (
+          <Appbar.Action key={idx} size={20} {...prop} />
+        ))}
+        {!canGoBack && (
+          <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+        )}
       </Appbar.Header>
     </View>
   )
@@ -68,5 +82,5 @@ const styles = StyleSheet.create({
     elevation: 3, // Android 그림자
     backgroundColor: 'unset',
   },
-  title: {fontSize: 20},
+  title: {fontSize: 18},
 })

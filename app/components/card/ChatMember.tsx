@@ -1,6 +1,14 @@
 import dayjs from '@utils/dayjs'
 import React from 'react'
-import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
+import {
+  Image,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {User} from '../../types/firebase'
@@ -8,47 +16,76 @@ import {User} from '../../types/firebase'
 interface ChatMemberProps {
   item: User
   style?: StyleProp<ViewStyle>
+  onPress: (uid: string) => void
 }
 
-export default function ChatMember({item, style}: ChatMemberProps) {
+export default function ChatMember({
+  item,
+  style,
+  onPress = () => {},
+}: ChatMemberProps) {
   return (
-    <View style={[styles.friend, style]}>
-      <View style={styles.frame}>
-        <Icon source="account" size={35} color={COLORS.primary} />
-        {item?.status == 'online' && <View style={styles.point} />}
+    <Pressable
+      onPress={() => onPress(item.uid)}
+      style={({pressed}) => [
+        {
+          marginBottom: 8,
+          borderRadius: 8,
+          shadowColor: '#000',
+          shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
+          shadowOpacity: 0.1,
+          shadowRadius: pressed ? 1 : 3,
+          elevation: pressed ? 1 : 3,
+          backgroundColor: '#FFF',
+          transform: [{scale: pressed ? 0.98 : 1}],
+        },
+        style,
+      ]}>
+      <View style={[styles.friend, style]}>
+        <View style={styles.frame}>
+          {item?.photoURL ? (
+            <Image
+              source={{uri: item?.photoURL}}
+              resizeMode="cover"
+              style={styles.image}
+            />
+          ) : (
+            <Icon source="account" size={40} color={COLORS.primary} />
+          )}
+          {item?.status == 'online' && <View style={styles.point} />}
+        </View>
+        <View style={styles.contents}>
+          <Text style={styles.name}>{item?.nickname}</Text>
+          <Text style={styles.status}>
+            {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
+            {item?.lastSeen
+              ? dayjs(Number(item?.lastSeen)).fromNow()
+              : '알 수 없음'}
+          </Text>
+        </View>
       </View>
-      <View style={styles.contents}>
-        <Text style={styles.name}>{item?.nickname}</Text>
-        <Text style={styles.status}>
-          {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
-          {item?.lastSeen
-            ? dayjs(Number(item?.lastSeen)).fromNow()
-            : '알 수 없음'}
-        </Text>
-      </View>
-    </View>
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
   friend: {
     flexDirection: 'row',
-    marginBottom: 8,
-    backgroundColor: '#FFF',
+    // marginBottom: 8,
+    // backgroundColor: '#FFF',
     padding: 8,
-    borderRadius: 8,
-    // ✅ 그림자 효과 (iOS + Android 호환)
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3, // Android 전용 그림자
-    // ✅ 공간감 추가
+    // borderRadius: 8,
+    // // ✅ 그림자 효과 (iOS + Android 호환)
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 1},
+    // shadowOpacity: 0.1,
+    // shadowRadius: 3,
+    // elevation: 3, // Android 전용 그림자
     gap: 12, // RN 0.71+ 이상에서 사용 가능
   },
   frame: {
-    width: 48,
-    height: 48,
+    width: 55,
+    height: 55,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -75,10 +112,15 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     color: '#000',
-    fontFamily: 'Mulish-Semibold',
+    fontWeight: 'bold',
   },
   status: {
     fontSize: 12,
     color: '#ADB5BD',
+  },
+  image: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
   },
 })
