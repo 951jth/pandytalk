@@ -1,6 +1,5 @@
 import React from 'react'
 import MainLayout from '../components/layout/MainLayout'
-import NoLayout from '../components/layout/NoLayout'
 import MainContents from '../components/navigation/MainContents'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
@@ -65,7 +64,6 @@ const authRoutes = (): LayoutItem[] => {
     },
     {
       key: 'chat',
-      layout: NoLayout,
       options: {
         headerShown: false,
       },

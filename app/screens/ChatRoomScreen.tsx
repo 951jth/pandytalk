@@ -1,6 +1,15 @@
 import React, {useState} from 'react'
-import {StyleSheet, View} from 'react-native'
+import {
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context'
 import AppBar from '../components/navigation/AppBar'
 import UploadButton from '../components/upload/UploadButton'
 import COLORS from '../constants/color'
@@ -8,39 +17,55 @@ import COLORS from '../constants/color'
 export default function ChatRoomScreen() {
   const [rightActions, setRightActions] = useState([{icon: 'magnify'}])
   const [chats, setChats] = useState(dummy)
+  const insets = useSafeAreaInsets()
+
   return (
-    <View style={styles.container}>
-      <AppBar title="채팅방" rightActions={rightActions}></AppBar>
-      <View style={styles.chatContents}></View>
-      <View style={styles.inputContents}>
-        <UploadButton />
-        <TextInput
-          style={styles.chatTextInput}
-          mode="outlined"
-          contentStyle={{
-            paddingVertical: 0,
-            paddingHorizontal: 12,
-            textAlignVertical: 'center', // ✅ Android 중심 정렬
-          }}
-          outlineStyle={{
-            borderRadius: 50,
-            borderWidth: 1,
-          }}
-        />
-        {/* <IconButton
-          icon="send"
-          style={[styles.send, {width: 30, height: 30}]}
-          size={30}
-          contentStyle={{width: 30, height: 30}}></IconButton> */}
-        <IconButton
-          icon="send"
-          size={23} // 아이콘 크기
-          // onPress={handleSend}
-          style={styles.sendButton}
-          contentStyle={styles.sendContent}
-        />
-      </View>
-    </View>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.inner}>
+            <AppBar title="채팅방" rightActions={rightActions} />
+            <View style={{flex: 1}}>
+              <FlatList
+                data={chats}
+                keyExtractor={item => item.uid}
+                renderItem={({item}) => <View></View>}
+                contentContainerStyle={styles.chatList}
+              />
+            </View>
+            <View
+              style={[
+                styles.inputContents,
+                // {paddingBottom: insets.bottom > 0 ? insets.bottom : 8},
+              ]}>
+              <UploadButton />
+              <TextInput
+                style={styles.chatTextInput}
+                mode="outlined"
+                contentStyle={{
+                  paddingVertical: 0,
+                  paddingHorizontal: 12,
+                  textAlignVertical: 'center',
+                }}
+                outlineStyle={{
+                  borderRadius: 50,
+                  borderWidth: 1,
+                }}
+              />
+              <IconButton
+                icon="send"
+                size={20}
+                style={styles.sendButton}
+                iconColor={COLORS.onPrimary}
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
@@ -48,19 +73,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  chatContents: {
+  inner: {
     flex: 1,
-    gap: 12,
+    justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
+    // paddingBottom: 60,
+  },
+  chatList: {
+    flex: 1,
+    flexGrow: 1,
+    // padding: 12,
   },
   inputContents: {
+    // position: 'absolute',
+    // bottom: 0,
+    // left: 0,
+    // right: 0,
     backgroundColor: COLORS.background,
-    height: 60,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 3, // Android 그림자
+    elevation: 3,
     borderTopColor: '#d9d9d9',
     borderTopWidth: 0.3,
     flexDirection: 'row',
@@ -72,14 +106,9 @@ const styles = StyleSheet.create({
   },
   chatTextInput: {
     flex: 1,
-    height: 40, // ✅ 높이 지정
-    justifyContent: 'center', // iOS용
+    height: 40,
+    justifyContent: 'center',
     paddingVertical: 0,
-  },
-  send: {
-    padding: 0,
-    margin: 0,
-    // backgroundColor: COLORS.outerColor,
   },
   sendButton: {
     padding: 0,
@@ -88,19 +117,11 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-
-  sendContent: {
-    padding: 0,
-    margin: 0,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: COLORS.primary,
   },
 })
 
-var dummy = [
+const dummy = [
   {
     uid: '1',
     nickname: '더미1',

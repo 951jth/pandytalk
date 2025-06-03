@@ -1,10 +1,8 @@
-import COLORS from '@constants/color'
 import React, {type ReactNode} from 'react'
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   TouchableWithoutFeedback,
   useColorScheme,
   View,
@@ -17,21 +15,13 @@ type propsType = {
 export default function NoLayout({children}: propsType): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark'
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAvoidingView
-          style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          {children}
-        </KeyboardAvoidingView>
+        <View style={{flex: 1}}>{children}</View>
       </TouchableWithoutFeedback>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-})

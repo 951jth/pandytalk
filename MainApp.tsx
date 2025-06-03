@@ -15,6 +15,7 @@ import {
 import {NavigationContainer} from '@react-navigation/native'
 import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
+import {SafeAreaView} from 'react-native-safe-area-context'
 import {useDispatch} from 'react-redux'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
@@ -82,12 +83,13 @@ export function MainApp(): React.JSX.Element {
 
   return (
     <NavigationContainer>
-      <StatusBar
-        translucent={false}
-        backgroundColor="#ffffff" // Android 배경
-        barStyle="dark-content" // light-content도 가능
-      />
-      {user ? <AuthNavigator /> : <NoAuthNavigator />}
+      <SafeAreaView style={{flex: 1}} edges={['top', 'left', 'right']}>
+        <StatusBar
+          translucent={false}
+          backgroundColor="#ffffff" // Android 배경
+        />
+        {user ? <AuthNavigator /> : <NoAuthNavigator />}
+      </SafeAreaView>
     </NavigationContainer>
   )
 }

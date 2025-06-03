@@ -53,7 +53,11 @@ export default function AppBar({title, rightActions = []}: propTypes) {
 
   return (
     <View>
-      <Appbar.Header style={styles.header} mode="small">
+      <Appbar.Header
+        style={styles.header}
+        mode="small"
+        statusBarHeight={0} // ✅ SafeAreaView에서 처리하므로 여백 제거
+      >
         {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
         <Appbar.Content
           title={title ?? currentTitle}
