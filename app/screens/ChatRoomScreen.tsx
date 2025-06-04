@@ -1,70 +1,46 @@
-import React, {useState} from 'react'
-import {
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TouchableWithoutFeedback,
-  View,
-} from 'react-native'
-import {IconButton, TextInput} from 'react-native-paper'
-import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context'
+import {useRoute} from '@react-navigation/native'
+import React, {useEffect, useState} from 'react'
+import {StyleSheet, View} from 'react-native'
+import {SafeAreaView} from 'react-native-safe-area-context'
+import ChatMessageList from '../components/chat/CharMessageList'
+import ChatInputBox from '../components/chat/ChatInputBox'
+import KeyboardViewWrapper from '../components/container/KeyboardViewWrapper'
 import AppBar from '../components/navigation/AppBar'
-import UploadButton from '../components/upload/UploadButton'
 import COLORS from '../constants/color'
+import {getDirectMessageRoomId} from '../services/chatService'
+import {useAppSelector} from '../store/hooks'
+import {User} from '../types/firebase'
 
 export default function ChatRoomScreen() {
   const [rightActions, setRightActions] = useState([{icon: 'magnify'}])
-  const [chats, setChats] = useState(dummy)
-  const insets = useSafeAreaInsets()
+  const {data: user, loading, error} = useAppSelector(state => state.user)
+  const route = useRoute()
+  const {targetId} = route.params as {targetId: string}
+  const [roomId, setRoomId] = useState<string | null>(null)
+  const [members, setMembers] = useState<Array<User>>([]) //채팅방에 있는 멤버 조회회
+
+  const getRoomId = async () => {
+    if (user?.uid !== targetId && user?.uid && targetId) {
+      const rid = await getDirectMessageRoomId(user.uid, targetId)
+
+      setRoomId(rid)
+    }
+  }
+
+  useEffect(() => {
+    getRoomId()
+  }, [])
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View style={styles.inner}>
-            <AppBar title="채팅방" rightActions={rightActions} />
-            <View style={{flex: 1}}>
-              <FlatList
-                data={chats}
-                keyExtractor={item => item.uid}
-                renderItem={({item}) => <View></View>}
-                contentContainerStyle={styles.chatList}
-              />
-            </View>
-            <View
-              style={[
-                styles.inputContents,
-                // {paddingBottom: insets.bottom > 0 ? insets.bottom : 8},
-              ]}>
-              <UploadButton />
-              <TextInput
-                style={styles.chatTextInput}
-                mode="outlined"
-                contentStyle={{
-                  paddingVertical: 0,
-                  paddingHorizontal: 12,
-                  textAlignVertical: 'center',
-                }}
-                outlineStyle={{
-                  borderRadius: 50,
-                  borderWidth: 1,
-                }}
-              />
-              <IconButton
-                icon="send"
-                size={20}
-                style={styles.sendButton}
-                iconColor={COLORS.onPrimary}
-              />
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      <KeyboardViewWrapper>
+        <View style={styles.inner}>
+          <AppBar title="채팅방" rightActions={rightActions} />
+          {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
+          <ChatMessageList roomId={roomId} user={user} />
+          <ChatInputBox roomId={roomId} user={user} />
+        </View>
+      </KeyboardViewWrapper>
     </SafeAreaView>
   )
 }
@@ -77,58 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
+    // position: 'relative',
     // paddingBottom: 60,
   },
-  chatList: {
-    flex: 1,
-    flexGrow: 1,
-    // padding: 12,
-  },
-  inputContents: {
-    // position: 'absolute',
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
-    backgroundColor: COLORS.background,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3,
-    borderTopColor: '#d9d9d9',
-    borderTopWidth: 0.3,
-    flexDirection: 'row',
-    gap: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  chatTextInput: {
-    flex: 1,
-    height: 40,
-    justifyContent: 'center',
-    paddingVertical: 0,
-  },
-  sendButton: {
-    padding: 0,
-    margin: 0,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-  },
 })
-
-const dummy = [
-  {
-    uid: '1',
-    nickname: '더미1',
-    isGroup: false,
-    createdAt: Date.now(),
-    type: 'text',
-    imageUrl: '',
-    text: '테스트입니돠',
-  },
-]

@@ -32,7 +32,7 @@ export async function updateLastSeen(uid: string): Promise<void> {
       status: 'online',
     })
   } catch (error) {
-    console.error('❌ lastSeen 갱신 실패:', error)
+    console.error('lastSeen 갱신 실패:', error)
   }
 }
 

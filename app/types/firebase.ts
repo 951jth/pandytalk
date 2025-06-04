@@ -4,6 +4,7 @@ export type FsSnapshot =
   FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
 
 export interface User {
+  id?: string
   uid: string
   nickname: string
   email: string
@@ -22,6 +23,16 @@ export interface ChatRoom {
   groupImage?: string
   lastMessage?: string
   lastMessageTime?: FirebaseFirestoreTypes.Timestamp
+}
+
+export interface RoomInfo {
+  id?: string
+  type: string
+  createdAt: any
+  members?: User | any[]
+  groupName?: string // 그룹일 경우만
+  groupImage?: string
+  lastMessage?: string
 }
 
 export interface ChatMessage {

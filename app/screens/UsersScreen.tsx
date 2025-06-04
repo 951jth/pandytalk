@@ -8,10 +8,11 @@ import ChatMember from '../components/card/ChatMember'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/useInfiniteQuery'
+import useKeyboardFocus from '../hooks/useKeyboardFocus'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 type RootStackParamList = {
-  chatRoom: {uid: string}
+  chatRoom: {targetId: string}
 }
 
 export default function UsersScreen(): React.JSX.Element {
@@ -29,6 +30,8 @@ export default function UsersScreen(): React.JSX.Element {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
   const users = data?.pages.flatMap(page => page.users) ?? []
+  const {isKeyboardVisible, dismissKeyboard} = useKeyboardFocus()
+
   const debouncedSetSearchText = useMemo(
     () =>
       debounce((text: string) => {
@@ -38,7 +41,7 @@ export default function UsersScreen(): React.JSX.Element {
   )
 
   const moveToChatRoom = (uid: string) => {
-    navigation.navigate('chatRoom', {uid})
+    navigation.navigate('chatRoom', {targetId: uid})
   }
 
   useEffect(() => {
@@ -58,8 +61,15 @@ export default function UsersScreen(): React.JSX.Element {
         data={users}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
+          console.log(item)
           return (
-            <ChatMember item={item} onPress={() => moveToChatRoom(item.uid)} />
+            <ChatMember
+              item={item}
+              onPress={() => {
+                dismissKeyboard()
+                if (!isKeyboardVisible) moveToChatRoom(item.uid)
+              }}
+            />
           )
         }}
         onEndReached={() => {

@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3, // Android 그림자
-    backgroundColor: 'unset',
+    backgroundColor: '#FFF',
   },
   title: {fontSize: 18},
 })
