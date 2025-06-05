@@ -6,10 +6,11 @@ import {
   Platform,
   TouchableWithoutFeedback,
   TouchableWithoutFeedbackProps,
+  View,
 } from 'react-native'
 
 interface propTypes {
-  children: React.JSX.Element
+  children: React.ReactNode
   keyboardAvoidingView?: KeyboardAvoidingViewProps
   touchableWithoutFeedback?: TouchableWithoutFeedbackProps
 }
@@ -20,17 +21,18 @@ export default function KeyboardViewWrapper({
 }: propTypes) {
   return (
     <TouchableWithoutFeedback
-      style={{flex: 1}}
       onPress={Keyboard.dismiss}
       accessible={false}
       {...touchableWithoutFeedback}>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
-        {...keyboardAvoidingView}>
-        {children}
-      </KeyboardAvoidingView>
+      <View style={{flex: 1}}>
+        <KeyboardAvoidingView
+          style={{flex: 1}}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
+          {...keyboardAvoidingView}>
+          {children}
+        </KeyboardAvoidingView>
+      </View>
     </TouchableWithoutFeedback>
   )
 }

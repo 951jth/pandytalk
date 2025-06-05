@@ -4,26 +4,35 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatMessageList from '../components/chat/CharMessageList'
 import ChatInputBox from '../components/chat/ChatInputBox'
-import KeyboardViewWrapper from '../components/container/KeyboardViewWrapper'
 import AppBar from '../components/navigation/AppBar'
 import COLORS from '../constants/color'
-import {getDirectMessageRoomId} from '../services/chatService'
+import {getChatRoomInfo, getDirectMessageRoomId} from '../services/chatService'
 import {useAppSelector} from '../store/hooks'
-import {User} from '../types/firebase'
+import {RoomInfo} from '../types/firebase'
+
+interface ChatRoomRouteParams {
+  targetIds: string[]
+}
 
 export default function ChatRoomScreen() {
+  const route = useRoute()
   const [rightActions, setRightActions] = useState([{icon: 'magnify'}])
   const {data: user, loading, error} = useAppSelector(state => state.user)
-  const route = useRoute()
-  const {targetId} = route.params as {targetId: string}
-  const [roomId, setRoomId] = useState<string | null>(null)
-  const [members, setMembers] = useState<Array<User>>([]) //채팅방에 있는 멤버 조회회
+  const {targetIds} = route.params as ChatRoomRouteParams
+  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null)
+  const roomId = roomInfo?.id || null
+  const targetMember = roomInfo?.memberInfos?.find(
+    member => member?.id == targetIds?.[0],
+  )
 
   const getRoomId = async () => {
-    if (user?.uid !== targetId && user?.uid && targetId) {
-      const rid = await getDirectMessageRoomId(user.uid, targetId)
-
-      setRoomId(rid)
+    if (user?.uid !== targetIds?.[0] && user?.uid && targetIds?.[0]) {
+      const rid = await getDirectMessageRoomId(user.uid, targetIds?.[0])
+      if (rid)
+        getChatRoomInfo(rid).then(res => {
+          setRoomInfo(res || null)
+        })
+      // setRoomId(rid)
     }
   }
 
@@ -33,14 +42,24 @@ export default function ChatRoomScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <KeyboardViewWrapper>
-        <View style={styles.inner}>
-          <AppBar title="채팅방" rightActions={rightActions} />
-          {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
-          <ChatMessageList roomId={roomId} user={user} />
-          <ChatInputBox roomId={roomId} user={user} />
-        </View>
-      </KeyboardViewWrapper>
+      <View style={styles.inner}>
+        <AppBar
+          title={targetMember?.nickname || '채팅방'}
+          rightActions={rightActions}
+        />
+        {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
+        <ChatMessageList
+          roomId={roomId}
+          userId={user?.uid}
+          roomInfo={roomInfo}
+        />
+        <ChatInputBox
+          roomId={roomId}
+          userId={user?.uid}
+          targetIds={targetIds}
+          getRoomId={getRoomId}
+        />
+      </View>
     </SafeAreaView>
   )
 }
@@ -51,9 +70,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    justifyContent: 'space-between',
+    // justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
-    // position: 'relative',
-    // paddingBottom: 60,
   },
 })
