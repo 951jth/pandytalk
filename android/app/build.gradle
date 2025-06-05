@@ -3,6 +3,10 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
+project.ext.react = [
+    entryFile: "index.tsx"
+]
+
 react {
     autolinkLibrariesWithApp()
 }
