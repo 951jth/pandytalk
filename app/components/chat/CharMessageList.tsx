@@ -2,12 +2,8 @@ import React, {useEffect, useState} from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {
-  getChatMembersInfo,
-  getChatMessages,
-  subscribeToMessages,
-} from '../../services/chatService'
-import {User} from '../../types/firebase'
+import {getChatMessages, subscribeToMessages} from '../../services/chatService'
+import {User, type ChatMessage} from '../../types/firebase'
 import {formatChatTime} from '../../utils/format'
 
 interface propTypes {
@@ -16,8 +12,8 @@ interface propTypes {
 }
 
 export default function ChatMessageList({roomId, user}: propTypes) {
-  const [messages, setMessages] = useState<Array<object>>(dummy)
-  const [members, setMembers] = useState<Array<User>>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [members, setMembers] = useState<User[]>([])
 
   const MyChat = ({item}: any) => {
     return (
@@ -66,9 +62,9 @@ export default function ChatMessageList({roomId, user}: propTypes) {
     getChatMessages(roomId).then(res => {
       setMessages(res)
     })
-    getChatMembersInfo(roomId).then(res => {
-      setMembers(res)
-    })
+    // getChatMembersInfo(roomId).then(res => {
+    //   setMembers(res)
+    // })
 
     //양방향 통신 설정
     const unsub = subscribeToMessages(roomId, msgs => {
@@ -82,10 +78,8 @@ export default function ChatMessageList({roomId, user}: propTypes) {
   return (
     <FlatList
       data={messages}
-      keyExtractor={item => item.uid}
+      keyExtractor={item => item?.id || item?.senderId}
       renderItem={({item}) => {
-        console.log(user?.uid)
-        console.log(item?.uid)
         const isMine = item?.uid == user?.uid
         return (
           <View
