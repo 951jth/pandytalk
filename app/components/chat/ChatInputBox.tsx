@@ -1,15 +1,50 @@
-import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import React, {useState} from 'react'
+import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import COLORS from '../../constants/color'
+import {createChatRoom, sendMessage} from '../../services/chatService'
+import {ChatMessage} from '../../types/firebase'
 import UploadButton from '../upload/UploadButton'
 
 interface propTypes {
   roomId: string | null
-  user: object | null
+  userId: string | null | undefined
+  targetIds: Array<string> | null
+  getRoomId: () => void
 }
 
-export default function ChatInputBox({roomId, user}: propTypes) {
+export default function ChatInputBox({
+  roomId,
+  userId,
+  targetIds,
+  getRoomId,
+}: propTypes) {
+  const [text, setText] = useState<string>('')
+
+  // const onNewChatRoom = () => {
+  //   createChatRoom()
+  // }
+
+  const onSendMessage = async (type?: ChatMessage['type']) => {
+    if (!userId || !text || !targetIds?.[0]) return
+    const message = {
+      senderId: userId,
+      text: text,
+      type: type || 'text',
+    }
+    try {
+      const rid = roomId ?? (await createChatRoom(userId, targetIds))
+      if (rid) {
+        await sendMessage(rid, message)
+        getRoomId()
+      }
+    } catch (e) {
+      Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')
+    }
+    setText('')
+    Keyboard.dismiss()
+  }
+
   return (
     <View style={[styles.inputContents]}>
       <UploadButton />
@@ -25,12 +60,15 @@ export default function ChatInputBox({roomId, user}: propTypes) {
           borderRadius: 50,
           borderWidth: 1,
         }}
+        value={text}
+        onChangeText={setText}
       />
       <IconButton
         icon="send"
         size={20}
         style={styles.sendButton}
         iconColor={COLORS.onPrimary}
+        onPress={() => onSendMessage()}
       />
     </View>
   )
@@ -65,8 +103,9 @@ const styles = StyleSheet.create({
   sendButton: {
     padding: 0,
     margin: 0,
-    width: 30,
-    height: 30,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.primary,

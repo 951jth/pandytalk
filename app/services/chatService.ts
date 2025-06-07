@@ -1,5 +1,6 @@
 import {getApp} from '@react-native-firebase/app'
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
@@ -8,9 +9,11 @@ import {
   onSnapshot,
   orderBy,
   query,
+  updateDoc,
   where,
 } from '@react-native-firebase/firestore'
-import {RoomInfo, User} from '../types/firebase'
+import {ChatMessage, RoomInfo, User} from '../types/firebase'
+import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
 
@@ -44,15 +47,15 @@ export const getDirectMessageRoomId = async (
 //채팅방 정보 조회 (멤버 및 채팅방 정보들들)
 export const getChatRoomInfo = async (
   roomId: string,
-): Promise<RoomInfo | null> => {
+): Promise<RoomInfo | void> => {
+  // 1. chats/{roomId} 문서에서 members 배열 가져오기
   try {
-    // 1. chats/{roomId} 문서에서 members 배열 가져오기
     const chatDocRef = doc(firestore, 'chats', roomId)
     const chatSnap = await getDoc(chatDocRef)
     if (!chatSnap.exists()) {
       throw new Error('채팅방이 존재하지 않습니다.')
     }
-    let roomInfo = chatSnap?.data() as RoomInfo
+    let roomInfo = {id: chatSnap.id, ...chatSnap?.data()} as RoomInfo
     const uids: string[] = chatSnap?.data()?.members ?? []
 
     // 2. users 컬렉션에서 해당 uid들의 유저 정보 가져오기
@@ -71,12 +74,11 @@ export const getChatRoomInfo = async (
             ...doc.data(),
           }) as User,
       ) || []
-    if (!roomInfo) return null
-    roomInfo.members = members
-    return roomInfo
+
+    roomInfo.memberInfos = members || null
+    return roomInfo || null
   } catch (e) {
-    console.log(e)
-    return null
+    console.error('getChatRoomInfo error', e)
   }
 }
 
@@ -87,11 +89,14 @@ export const getChatMessages = async (roomId: string) => {
     const q = query(messagesRef, orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(q)
 
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc?.data(),
-    }))
-    return messages
+    const messages = snapshot.docs.map(
+      doc =>
+        ({
+          id: doc.id,
+          ...doc?.data(),
+        }) as ChatMessage,
+    )
+    return messages ?? null
   } catch (e) {
     console.log('get chat messages error', e)
     return []
@@ -124,8 +129,65 @@ export const subscribeToMessages = (
   return unsubscribe
 }
 
+//채팅 보내기
 export const sendMessage = async (
-  text: string,
   roomId: string,
-  senderUid: string,
-) => {}
+  message: ChatMessage,
+): Promise<void> => {
+  try {
+    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+    const chatRoomRef = doc(firestore, 'chats', roomId)
+
+    const newMessage = {
+      senderId: message.senderId,
+      text: message.text ?? '',
+      type: message.type,
+      imageUrl: message.imageUrl ?? '',
+      createdAt: Date.now(),
+    }
+
+    // 1. 메시지 추가
+    await addDoc(messagesRef, newMessage)
+
+    // 2. 마지막 메시지 갱신
+    await updateDoc(chatRoomRef, {
+      lastMessage: newMessage,
+    })
+  } catch (error) {
+    console.error('메시지 전송 실패:', error)
+    throw error
+  }
+}
+
+//채팅방 생성
+export const createChatRoom = async (
+  userId: string,
+  targetIds: string[],
+  options?: {
+    name?: string
+    groupImage?: string
+    type?: RoomInfo['type']
+  },
+): Promise<string | null> => {
+  try {
+    const sortedIds = [userId, ...targetIds].sort()
+    const chatRef = collection(firestore, 'chats')
+    const newRoom: Omit<RoomInfo, 'id'> = {
+      type: options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm'),
+      createdAt: Date.now(),
+      members: sortedIds,
+      name: options?.name ?? '',
+      groupImage: options?.groupImage,
+      // lastMessage: message,
+    }
+
+    // 1. 채팅방 생성 (자동 ID)
+    const docRef = await addDoc(chatRef, removeEmpty(newRoom))
+    const roomId = docRef.id
+
+    return roomId
+  } catch (e) {
+    console.error('create room error', e)
+    return null
+  }
+}

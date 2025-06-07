@@ -3,54 +3,62 @@ import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {getChatMessages, subscribeToMessages} from '../../services/chatService'
-import {User, type ChatMessage} from '../../types/firebase'
+import {ChatMessage, RoomInfo} from '../../types/firebase'
+import {isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
 
 interface propTypes {
   roomId: string | null
-  user: User | null
+  userId: string | null | undefined
+  roomInfo: RoomInfo | null
 }
 
-export default function ChatMessageList({roomId, user}: propTypes) {
+export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [members, setMembers] = useState<User[]>([])
-
-  const MyChat = ({item}: any) => {
+  const members = roomInfo?.memberInfos ?? []
+  const MyChat = ({item, hideMinuete}: any) => {
     return (
       <View style={styles.myChat}>
         <Text style={{color: COLORS.onPrimary}}>{item?.text}</Text>
-        <Text style={[styles.chatDate, {left: -50}]}>
-          {formatChatTime(item?.createdAt)}
-        </Text>
+        {!hideMinuete && (
+          <Text style={[styles.chatDate, {left: -60}]}>
+            {formatChatTime(item?.createdAt)}
+          </Text>
+        )}
       </View>
     )
   }
 
-  const OtherChat = ({item}: any) => {
-    console.log(item)
+  const OtherChat = ({item, hideProfile, hideMinuete}: any) => {
     const member = members?.find(mem => mem?.uid == item?.senderId)
     return (
       <>
-        <View style={styles.frame}>
-          {item?.photoURL ? (
-            <Image
-              source={{
-                uri: 'https://firebasestorage.googleapis.com/v0/b/csh-rn.firebasestorage.app/o/profiles%2FJtd0DjYGKagvr4kPr9uvfxu5cLo2%2Fprofile_1748833300803.jpg?alt=media&token=5e0d6eb3-e5fa-4b2a-9f48-942b0c0152fb',
-              }}
-              resizeMode="cover"
-              style={styles.image}
-            />
-          ) : (
-            <Icon source="account" size={40} color={COLORS.primary} />
+        {!hideProfile && (
+          <View style={styles.frame}>
+            {member?.photoURL ? (
+              <Image
+                source={{
+                  uri: member?.photoURL,
+                }}
+                resizeMode="cover"
+                style={styles.image}
+              />
+            ) : (
+              <Icon source="account" size={35} color={COLORS.primary} />
+            )}
+          </View>
+        )}
+        <View style={{marginLeft: hideProfile ? 55 : 0}}>
+          {!hideProfile && (
+            <Text style={styles.nickname}>{member?.nickname}</Text>
           )}
-        </View>
-        <View>
-          <Text style={styles.nickname}>{item?.nickname}</Text>
           <View style={styles.otherChat}>
             <Text style={{color: COLORS.text}}>{item?.text}</Text>
-            <Text style={[styles.chatDate, {right: -50}]}>
-              {formatChatTime(item?.createdAt)}
-            </Text>
+            {!hideMinuete && (
+              <Text style={[styles.chatDate, {right: -60}]}>
+                {formatChatTime(item?.createdAt)}
+              </Text>
+            )}
           </View>
         </View>
       </>
@@ -60,53 +68,71 @@ export default function ChatMessageList({roomId, user}: propTypes) {
   useEffect(() => {
     if (!roomId) return
     getChatMessages(roomId).then(res => {
-      setMessages(res)
+      setMessages(res ?? [])
     })
-    // getChatMembersInfo(roomId).then(res => {
-    //   setMembers(res)
-    // })
 
     //양방향 통신 설정
     const unsub = subscribeToMessages(roomId, msgs => {
-      setMessages(msgs) // 상태 갱신
+      setMessages(msgs as Array<ChatMessage>) // 상태 갱신
     })
 
     return () => unsub() // 언마운트 시 리스너 제거
   }, [roomId])
+  console.log('messages', messages)
 
-  console.log(messages)
   return (
     <FlatList
       data={messages}
-      keyExtractor={item => item?.id || item?.senderId}
-      renderItem={({item}) => {
-        const isMine = item?.uid == user?.uid
+      keyExtractor={item => item.id || item?.senderId}
+      renderItem={({item, index}) => {
+        const isMine = item?.senderId == userId
+        const prevItem = messages?.[index - 1] ?? null
+        const afterItem = messages?.[index + 1] ?? null
+        const ishideProfile = isSameSender(prevItem, item)
+        const isHideMinuete = isSameMinute(item, afterItem)
+
         return (
           <View
             style={[
               styles.chatRow,
               {justifyContent: isMine ? 'flex-end' : 'flex-start'},
             ]}>
-            {isMine ? <MyChat item={item} /> : <OtherChat item={item} />}
+            {isMine ? (
+              <MyChat item={item} hideMinuete={isHideMinuete} />
+            ) : (
+              <OtherChat
+                item={item}
+                hideProfile={ishideProfile}
+                hideMinuete={isHideMinuete}
+              />
+            )}
           </View>
         )
-        // return isMine ? <MyChat item={item} /> : <></>
       }}
+      style={{flex: 1}}
       contentContainerStyle={styles.chatList}
+      keyboardShouldPersistTaps="handled"
+      inverted
+      keyboardDismissMode="on-drag"
+      onScroll={({nativeEvent}) => {
+        if (nativeEvent.contentOffset.y <= 0) {
+          // 👉 이전 메시지 불러오기 로직 호출
+        }
+      }}
     />
   )
 }
 
 const styles = StyleSheet.create({
   chatList: {
-    flexGrow: 1,
-    justifyContent: 'flex-end',
-    padding: 16,
+    // flexGrow: 1,
+    paddingTop: 4,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
   },
   chatRow: {
     flexDirection: 'row',
     marginBottom: 12,
-    gap: 6,
   },
   myChat: {
     padding: 10,
@@ -136,6 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     position: 'absolute',
     bottom: 0,
+    width: 60,
   },
   frame: {
     width: 45,
@@ -153,10 +180,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3, // Android 전용 그림자
+    marginRight: 10,
   },
   image: {
-    width: 45,
-    height: 45,
+    width: 48,
+    height: 48,
     borderRadius: 25,
   },
   nickname: {
@@ -165,28 +193,3 @@ const styles = StyleSheet.create({
     // marginTop: 0,
   },
 })
-
-var dummy = [
-  {
-    uid: 'Jtd0DjYGKagvr4kPr9uvfxu5cLo2',
-    nickname: '더미1',
-    isGroup: false,
-    createdAt: Date.now(),
-    type: 'text',
-    imageUrl: '',
-    text: '테스트입니돠...더미 테스에욘 ㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎㅎ',
-    photoUrl:
-      'https://firebasestorage.googleapis.com/v0/b/csh-rn.firebasestorage.app/o/profiles%2FJtd0DjYGKagvr4kPr9uvfxu5cLo2%2Fprofile_1748833300803.jpg?alt=media&token=5e0d6eb3-e5fa-4b2a-9f48-942b0c0152fb',
-  },
-  {
-    uid: '3FGB3apiF8MploeAeDdoLO3ycsN2',
-    nickname: '더미1',
-    isGroup: false,
-    createdAt: Date.now(),
-    type: 'text',
-    imageUrl: '',
-    text: '테스트입니돠',
-    photoUrl:
-      'https://firebasestorage.googleapis.com/v0/b/csh-rn.firebasestorage.app/o/profiles%2FJtd0DjYGKagvr4kPr9uvfxu5cLo2%2Fprofile_1748833300803.jpg?alt=media&token=5e0d6eb3-e5fa-4b2a-9f48-942b0c0152fb',
-  },
-]

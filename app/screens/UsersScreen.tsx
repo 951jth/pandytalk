@@ -9,10 +9,11 @@ import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/useInfiniteQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
+import {useAppSelector} from '../store/hooks'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 type RootStackParamList = {
-  chatRoom: {targetId: string}
+  chatRoom: {targetIds: string[]}
 }
 
 export default function UsersScreen(): React.JSX.Element {
@@ -26,6 +27,7 @@ export default function UsersScreen(): React.JSX.Element {
     isFetchingNextPage,
     refetch,
   } = useUsersInfinite(searchText)
+  const {data: user, loading, error} = useAppSelector(state => state.user)
 
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
@@ -41,7 +43,7 @@ export default function UsersScreen(): React.JSX.Element {
   )
 
   const moveToChatRoom = (uid: string) => {
-    navigation.navigate('chatRoom', {targetId: uid})
+    navigation.navigate('chatRoom', {targetIds: [uid]})
   }
 
   useEffect(() => {
@@ -58,10 +60,9 @@ export default function UsersScreen(): React.JSX.Element {
         onChangeText={setInput}
       />
       <FlatList
-        data={users}
+        data={users.filter(({uid}) => uid != user?.uid)}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
-          console.log(item)
           return (
             <ChatMember
               item={item}

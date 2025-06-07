@@ -17,13 +17,12 @@ export const fetchUserProfile = async (uid: string): Promise<User | null> => {
   const userDoc = await getDoc(doc(firestore, 'users', uid))
 
   if (!userDoc.exists()) return null
-  return {uid: userDoc.id, ...userDoc.data()} as User
+  return {id: userDoc.id, ...userDoc.data()} as User
 }
 
 //최근 접속 시간 갱신함수
 export async function updateLastSeen(uid: string): Promise<void> {
   if (!uid) return
-  const firestore = getFirestore()
   const userRef = doc(firestore, 'users', uid)
 
   try {
@@ -39,7 +38,6 @@ export async function updateLastSeen(uid: string): Promise<void> {
 //사용자 오프라인 설정
 export async function updateUserOffline(uid: string): Promise<void> {
   if (!uid) return
-  const firestore = getFirestore()
   const userRef = doc(firestore, 'users', uid)
   try {
     await updateDoc(userRef, {

@@ -15,31 +15,22 @@ export interface User {
   isGuest?: boolean
 }
 
-export interface ChatRoom {
-  id?: string // 문서 ID를 담아올 때
-  isGroup: boolean
-  members: string[] // uid 배열
-  groupName?: string // 그룹일 경우만
-  groupImage?: string
-  lastMessage?: string
-  lastMessageTime?: FirebaseFirestoreTypes.Timestamp
-}
-
-export interface RoomInfo {
-  id?: string
-  type: string
-  createdAt: any
-  members?: User | any[]
-  groupName?: string // 그룹일 경우만
-  groupImage?: string
-  lastMessage?: string
-}
-
 export interface ChatMessage {
   id?: string
   senderId: string
   text?: string
   type: 'text' | 'image' | 'file'
   imageUrl?: string
-  createdAt: FirebaseFirestoreTypes.Timestamp
+  createdAt?: Number
+}
+
+export interface RoomInfo {
+  id?: string
+  type: 'dm' | 'group'
+  createdAt?: Number
+  members?: string[]
+  name?: string // 그룹일 경우만
+  groupImage?: string // 그룹일 경우만
+  lastMessage?: ChatMessage
+  memberInfos?: User[] | null
 }
