@@ -99,7 +99,7 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
       }
     },
     getNextPageParam: lastPage =>
-      lastPage.isLastPage ? undefined : lastPage.lastVisible,
+      lastPage?.isLastPage ? undefined : lastPage?.lastVisible,
     initialPageParam: undefined,
   })
 }

@@ -27,13 +27,13 @@ export default function ChatInputBox({
 
   const onSendMessage = async (type?: ChatMessage['type']) => {
     if (!userId || !text || !targetIds?.[0]) return
-    const message = {
-      senderId: userId,
-      text: text,
-      type: type || 'text',
-    }
     try {
       const rid = roomId ?? (await createChatRoom(userId, targetIds))
+      const message = {
+        senderId: userId,
+        text: text,
+        type: type || 'text',
+      }
       if (rid) {
         await sendMessage(rid, message)
         getRoomId()

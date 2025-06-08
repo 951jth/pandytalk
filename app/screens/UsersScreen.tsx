@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   friendsContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 4,
   },
 })

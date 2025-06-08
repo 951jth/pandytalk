@@ -13,7 +13,7 @@ import {
   onAuthStateChanged,
 } from '@react-native-firebase/auth'
 import {NavigationContainer} from '@react-navigation/native'
-import {AppState, View} from 'react-native'
+import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import AuthNavigator from './app/navigation/AuthNavigator'
@@ -82,9 +82,11 @@ export function MainApp(): React.JSX.Element {
 
   return (
     <NavigationContainer>
-      {/* <StatusBar
+      <StatusBar
+        translucent={false}
         backgroundColor="#000" // Android 배경
-      /> */}
+      />
+
       {user ? <AuthNavigator /> : <NoAuthNavigator />}
     </NavigationContainer>
   )

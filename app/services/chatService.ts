@@ -177,7 +177,7 @@ export const createChatRoom = async (
       createdAt: Date.now(),
       members: sortedIds,
       name: options?.name ?? '',
-      groupImage: options?.groupImage,
+      image: options?.image ?? '',
       // lastMessage: message,
     }
 
@@ -189,5 +189,25 @@ export const createChatRoom = async (
   } catch (e) {
     console.error('create room error', e)
     return null
+  }
+}
+
+/**
+ * 전체 RoomInfo 데이터를 받아 해당 채팅방 문서를 업데이트합니다.
+ * @param roomId 채팅방 ID
+ * @param roomData RoomInfo 또는 ChatRoom 포맷 객체 (id 필드는 제외됨)
+ */
+export const updateChatRoom = async (
+  roomId: string,
+  roomData: Partial<Omit<RoomInfo, 'id'>>,
+): Promise<void> => {
+  try {
+    const chatDocRef = doc(firestore, 'chats', roomId)
+
+    await updateDoc(chatDocRef, roomData)
+    console.log('채팅방 정보가 성공적으로 업데이트되었습니다.')
+  } catch (error) {
+    console.error('채팅방 정보 업데이트 실패:', error)
+    throw error
   }
 }

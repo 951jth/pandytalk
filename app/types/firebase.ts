@@ -30,7 +30,7 @@ export interface RoomInfo {
   createdAt?: Number
   members?: string[]
   name?: string // 그룹일 경우만
-  groupImage?: string // 그룹일 경우만
+  image?: string // 그룹일 경우만
   lastMessage?: ChatMessage
   memberInfos?: User[] | null
 }

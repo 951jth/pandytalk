@@ -30,7 +30,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
   }
 
   const OtherChat = ({item, hideProfile, hideMinuete}: any) => {
-    const member = members?.find(mem => mem?.uid == item?.senderId)
+    const member = members?.find(mem => mem?.uid == item?.senderId) || null
     return (
       <>
         {!hideProfile && (
@@ -78,7 +78,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
 
     return () => unsub() // 언마운트 시 리스너 제거
   }, [roomId])
-  console.log('messages', messages)
 
   return (
     <FlatList
@@ -88,7 +87,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
         const isMine = item?.senderId == userId
         const prevItem = messages?.[index - 1] ?? null
         const afterItem = messages?.[index + 1] ?? null
-        const ishideProfile = isSameSender(prevItem, item)
+        const ishideProfile = isSameSender(item, afterItem)
         const isHideMinuete = isSameMinute(item, afterItem)
 
         return (
@@ -111,8 +110,8 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
       }}
       style={{flex: 1}}
       contentContainerStyle={styles.chatList}
-      keyboardShouldPersistTaps="handled"
       inverted
+      keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       onScroll={({nativeEvent}) => {
         if (nativeEvent.contentOffset.y <= 0) {

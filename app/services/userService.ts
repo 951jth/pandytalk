@@ -1,11 +1,15 @@
 import {getApp} from '@react-native-firebase/app'
 import {FirebaseAuthTypes, getAuth} from '@react-native-firebase/auth'
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
   getFirestore,
+  query,
   setDoc,
   updateDoc,
+  where,
 } from '@react-native-firebase/firestore'
 import {User} from '../types/firebase'
 
@@ -103,4 +107,33 @@ export const initialUserInfo = async (
   } catch (err) {
     console.error('❌ 사용자 정보 초기화 실패:', err)
   }
+}
+
+/**
+ * 주어진 userId 배열을 기준으로 해당 유저 정보를 Firestore에서 조회합니다.
+ * Firestore의 'in' 쿼리 제한 (10개) 고려하여 자동 분할 처리함.
+ *
+ * @param userIds 조회할 userId 문자열 배열
+ * @returns User[] 유저 정보 배열
+ */
+export const getUsersByIds = async (userIds: string[]): Promise<User[]> => {
+  if (!userIds || userIds.length === 0) return []
+
+  const chunkSize = 10
+  const chunks: string[][] = []
+
+  for (let i = 0; i < userIds.length; i += chunkSize) {
+    chunks.push(userIds.slice(i, i + chunkSize))
+  }
+  // 🔹 병렬로 모든 쿼리 실행
+  const results = await Promise.all(
+    chunks.map(async chunk => {
+      const q = query(collection(firestore, 'users'), where('uid', 'in', chunk))
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(doc => ({id: doc?.id, ...doc.data()}) as User)
+    }),
+  )
+  console.log('results', results.flat())
+  // 🔹 결과 flatten
+  return results.flat()
 }

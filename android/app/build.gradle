@@ -3,10 +3,6 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
-project.ext.react = [
-    entryFile: "index.tsx"
-]
-
 react {
     autolinkLibrariesWithApp()
 }
@@ -23,13 +19,11 @@ android {
     namespace "com.cshchatapp"
     defaultConfig {
         applicationId "com.cshchatapp"
-        // minSdkVersion rootProject.ext.minSdkVersion  // ✅ 중복 제거
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         minSdkVersion 24
         ndk {
-            // abiFilters "arm64-v8a"
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
     }
@@ -46,18 +40,18 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
-            // ✅ 빌드 속도 개선: 디버그 빌드 시 불필요한 최적화 제거
             minifyEnabled false
             shrinkResources false
         }
         release {
+            // 🔐 테스트 목적: debug keystore로 서명
             signingConfig signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
 
-    // ✅ 캐시 활용 향상을 위한 옵션 (Gradle 8+ 호환)
     buildFeatures {
         buildConfig true
     }

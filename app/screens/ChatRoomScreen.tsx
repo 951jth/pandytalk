@@ -36,6 +36,16 @@ export default function ChatRoomScreen() {
     }
   }
 
+  // useEffect(() => {
+  //   if (roomInfo && roomInfo?.type == 'dm' && roomId) {
+  //     updateChatRoom(roomId, {
+  //       ...roomInfo,
+  //       name: targetMember?.nickname,
+  //       image: targetMember?.photoURL,
+  //     })
+  //   }
+  // }, [roomInfo])
+
   useEffect(() => {
     getRoomId()
   }, [])
@@ -70,7 +80,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    // justifyContent: 'space-between',
+    justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
   },
 })
