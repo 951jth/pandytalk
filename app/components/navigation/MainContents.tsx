@@ -24,6 +24,10 @@ export default function MainContents(): React.JSX.Element {
           ),
           tabBarActiveTintColor: COLORS.primary,
           tabBarInactiveTintColor: '#000000',
+          tabBarLabelStyle: {
+            fontFamily: 'BMDOHYEON', // 👈 로컬 폰트 이름
+            fontSize: 10,
+          },
         }
       }}>
       {tabs.map(route => (

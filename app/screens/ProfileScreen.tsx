@@ -11,6 +11,7 @@ import InputForm from '../components/description/InputForm'
 import EditProfile from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
+import {initialUserInfo} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import {AppDispatch} from '../store/store'
 import {fetchUserById} from '../store/userSlice'
@@ -73,7 +74,7 @@ export default function ProfileScreen(): React.JSX.Element {
       await updateDoc(userRef, {
         ...formValues,
       })
-      const profile = await dispatch(fetchUserById(uid)).unwrap()
+      const profile = await dispatch(fetchUserById(uid))
       queryClient.invalidateQueries({queryKey: ['users']}) //유저 조회 쿼리갱신
       Alert.alert('성공', '프로필 정보가 저장되었습니다.')
     } catch (err) {
@@ -85,6 +86,10 @@ export default function ProfileScreen(): React.JSX.Element {
   }
 
   useEffect(() => {
+    if (!user) {
+      //새로등록한 유저의 경우 초기값설정해서 등록해줌
+      initialUserInfo(uid as string, dispatch)
+    }
     setFormValues(user as object)
     if (user?.photoURL) setPreviewUrl(user.photoURL)
   }, [user])

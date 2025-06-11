@@ -26,11 +26,13 @@ export default function EditInput({
       }}
       onBlur={() => {
         setFocused(false)
-        others?.onBlur?.(e)
+        others?.onBlur && others?.onBlur(e)
       }}
     />
   ) : (
-    <Text> {others?.value || others?.defaultValue || '-'}</Text>
+    <Text style={styles.fixedText}>
+      {others?.value || others?.defaultValue || '-'}
+    </Text>
   )
 }
 
@@ -41,6 +43,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     paddingHorizontal: 0,
     height: 40,
+    fontSize: 16,
+    fontFamily: 'Roboto',
   },
   focusedInput: {
     borderBottomWidth: 3,
@@ -48,5 +52,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingBottom: 0,
     // marginBottom: 4,
+  },
+  fixedText: {
+    fontFamily: 'BMDOHYEON',
+    color: '#5D5D5D',
+    fontSize: 12,
   },
 })

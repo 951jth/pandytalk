@@ -8,8 +8,10 @@ export default function CustomInput(props: TextInputProps): React.JSX.Element {
 
 const styles = StyleSheet.create({
   input: {
-    minWidth: 330,
+    minWidth: 300,
     width: '100%',
     height: 50,
+    fontSize: 16,
+    fontFamily: 'Roboto',
   },
 })

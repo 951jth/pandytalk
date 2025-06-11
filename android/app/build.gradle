@@ -3,57 +3,61 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
+// ✅ 반드시 com.facebook.react **아래에 위치**
+// project.ext.react = [
+//     entryFile: "index.tsx"
+// ]
+
 react {
     autolinkLibrariesWithApp()
 }
 
 def enableProguardInReleaseBuilds = false
-
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
-    ndkVersion rootProject.ext.ndkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    ndkVersion = rootProject.ext.ndkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
+    compileSdk = rootProject.ext.compileSdkVersion
 
-    namespace "com.cshchatapp"
+    namespace = "com.cshchatapp"
     defaultConfig {
-        applicationId "com.cshchatapp"
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-        minSdkVersion 24
+        applicationId = "com.cshchatapp"
+        minSdk = 24
+        targetSdk = rootProject.ext.targetSdkVersion
+        versionCode = 1
+        versionName = "1.0"
+
         ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            abiFilters += ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
         }
     }
 
     signingConfigs {
         debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+            storeFile = file('debug.keystore')
+            storePassword = 'android'
+            keyAlias = 'androiddebugkey'
+            keyPassword = 'android'
         }
     }
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
+            signingConfig = signingConfigs.debug
+            minifyEnabled = false
+            shrinkResources = false
         }
-        release {
-            // 🔐 테스트 목적: debug keystore로 서명
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            shrinkResources false
+       release {
+            signingConfig = signingConfigs.debug
+            minifyEnabled = false
+            shrinkResources = false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
 
     buildFeatures {
-        buildConfig true
+        buildConfig = true
     }
 }
 

@@ -27,19 +27,19 @@ const tabScreens = (): RouteItem[] => {
   return [
     {
       name: 'users',
-      title: 'Users',
+      title: '유저 찾기',
       component: UsersScreen,
       icon: 'account-group',
     },
     {
       name: 'chats',
-      title: 'Chat',
+      title: '채팅',
       component: ChatListScreen,
       icon: 'chat',
     },
     {
       name: 'profile',
-      title: 'Profile',
+      title: '프로필',
       component: ProfileScreen,
       icon: 'account-circle',
     },

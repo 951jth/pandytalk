@@ -113,10 +113,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
     fontWeight: 'bold',
+    fontFamily: 'BMDOHYEON',
   },
   status: {
     fontSize: 12,
     color: '#ADB5BD',
+    fontFamily: 'BMDOHYEON',
   },
   image: {
     width: 50,

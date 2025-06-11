@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "app/assets/fonts/BMDOHYEON.ttf",
+      "sha1": "0e172deca3570d1aadcc86d07bf850c44507557a"
+    },
+    {
+      "path": "app/assets/fonts/Mulish-Bold.ttf",
+      "sha1": "97cb4086e384a1e2e8688985b7eb8cbbc63354cb"
+    },
+    {
+      "path": "app/assets/fonts/Mulish-Regular.ttf",
+      "sha1": "65aa946a76999c7fe9a6b4478e9c35db9c80b137"
+    },
+    {
+      "path": "app/assets/fonts/Mulish-SemiBold.ttf",
+      "sha1": "0935586660615fe1c41fc1bc8aa3a5e0c8c744a8"
+    }
+  ]
+}

@@ -1,8 +1,12 @@
+import pandy from '@assets/images/pandy_visible.png'
 import auth from '@react-native-firebase/auth'
 import React, {useState} from 'react'
-import {StyleSheet, View} from 'react-native'
-import {Button, Text, TextInput} from 'react-native-paper'
+import {Image, StyleSheet, View} from 'react-native'
+import {Button, Text} from 'react-native-paper'
+import {SafeAreaView} from 'react-native-safe-area-context'
 import CustomInput from '../components/input/CustomInput'
+import {PasswordInput} from '../components/input/PasswordInput'
+import COLORS from '../constants/color'
 
 type formTypes = {
   email: string
@@ -53,27 +57,27 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>로그인 페이지</Text>
-      <CustomInput
-        label="ID"
-        mode="outlined"
-        onChangeText={e => {
-          onFormChange('email', e)
-        }}
-      />
-      <CustomInput
-        label="PASSWORD"
-        mode="outlined"
-        secureTextEntry
-        right={<TextInput.Icon icon="eye" />}
-        onChangeText={e => onFormChange('password', e)}
-      />
-      <Text style={styles.errorText}>{error}</Text>
-      <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
-        로그인
-      </Button>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <Image source={pandy} style={styles.image} resizeMode="none" />
+      <View style={styles.card}>
+        <Text style={styles.title}>로그인 페이지</Text>
+        <CustomInput
+          label="ID"
+          mode="outlined"
+          onChangeText={e => {
+            onFormChange('email', e)
+          }}
+        />
+        <PasswordInput
+          mode="outlined"
+          onChangeText={e => onFormChange('password', e)}
+        />
+        <Text style={styles.errorText}>{error}</Text>
+        <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
+          로그인
+        </Button>
+      </View>
+    </SafeAreaView>
   )
 }
 
@@ -83,15 +87,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: COLORS.primary,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: COLORS.onPrimary,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1.5},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    borderRadius: 16,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'semibold',
     marginBottom: 20,
+    fontFamily: 'BMDOHYEON',
   },
   submitBtn: {
     marginTop: 20,
     width: '100%',
+    borderRadius: 8,
+  },
+  image: {
+    width: 200,
+    height: 200,
   },
   errorText: {
     color: 'red',

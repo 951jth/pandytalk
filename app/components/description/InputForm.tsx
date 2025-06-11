@@ -97,7 +97,7 @@ export default function InputForm({
                   </Text>
                   <View style={[styles.contents, contentsStyle, {fontSize}]}>
                     {item?.contents ? (
-                      <Text>{item?.contents}</Text>
+                      <Text style={styles.textContent}>{item?.contents}</Text>
                     ) : (
                       <EditInput
                         edit={item?.fixed ? false : edit}
@@ -155,17 +155,22 @@ const styles = StyleSheet.create({
     height: 50,
   },
   label: {
-    color: '#5D5D5D',
-    fontWeight: 'bold',
+    // color: '#5D5D5D',
+    fontFamily: 'BMDOHYEON',
   },
   contents: {
     flex: 1,
     minWidth: 0,
-    // width: '100%',
+    // color: '#5D5D5D',
   },
   backBtn: {
     position: 'absolute',
     right: 0,
     top: 0,
+  },
+  textContent: {
+    fontFamily: 'BMDOHYEON',
+    fontSize: 12,
+    color: '#5D5D5D',
   },
 })

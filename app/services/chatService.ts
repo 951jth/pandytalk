@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   doc,
+  getCountFromServer,
   getDoc,
   getDocs,
   getFirestore,
@@ -165,7 +166,7 @@ export const createChatRoom = async (
   targetIds: string[],
   options?: {
     name?: string
-    groupImage?: string
+    image?: string
     type?: RoomInfo['type']
   },
 ): Promise<string | null> => {
@@ -175,7 +176,7 @@ export const createChatRoom = async (
     const newRoom: Omit<RoomInfo, 'id'> = {
       type: options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm'),
       createdAt: Date.now(),
-      members: sortedIds,
+      members: sortedIds?.filter(Boolean),
       name: options?.name ?? '',
       image: options?.image ?? '',
       // lastMessage: message,
@@ -205,9 +206,35 @@ export const updateChatRoom = async (
     const chatDocRef = doc(firestore, 'chats', roomId)
 
     await updateDoc(chatDocRef, roomData)
-    console.log('채팅방 정보가 성공적으로 업데이트되었습니다.')
   } catch (error) {
     console.error('채팅방 정보 업데이트 실패:', error)
     throw error
   }
+}
+
+//유저 채팅 마지막 읽음 시간 갱신
+export const updateLastRead = async (roomId: string, userId: string) => {
+  console.log('updateLastRead')
+  try {
+    const chatDocRef = doc(firestore, 'chats', roomId)
+    await updateDoc(chatDocRef, {
+      [`lastReadTimestamps.${userId}`]: Date.now(), // ✅ number(ms)
+    })
+  } catch (e) {
+    console.error('채팅방 정보 업데이트 실패:', e)
+  }
+}
+
+//안읽은 메세지 수 조회
+export const getUnreadCount = async (
+  roomId: string,
+  userId: string,
+  lastRead?: number,
+) => {
+  const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+
+  const q = query(messagesRef, where('createdAt', '>', lastRead ?? 0))
+
+  const snapshot = await getCountFromServer(q) // ✅ 빠른 count-only 쿼리
+  return snapshot.data().count
 }

@@ -1,6 +1,7 @@
 import {
   collection,
   endAt,
+  getCountFromServer,
   getDocs,
   getFirestore,
   limit,
@@ -11,7 +12,7 @@ import {
   where,
 } from '@react-native-firebase/firestore'
 import {useInfiniteQuery} from '@tanstack/react-query'
-import {FsSnapshot, User, type ChatRoom} from '../types/firebase'
+import {FsSnapshot, RoomInfo, User} from '../types/firebase'
 
 const firestore = getFirestore()
 const PAGE_SIZE = 10
@@ -65,6 +66,14 @@ export const useUsersInfinite = (searchText: string = '') => {
   })
 }
 
+// 유저별 마지막 읽은 시간
+const getUserLastRead = async (roomId: string, userId: string) => {
+  const lastReadRef = collection(firestore, `chats/${roomId}/readStatus`)
+  const snap = await getDocs(query(lastReadRef, where('uid', '==', userId)))
+  const data = snap.docs[0]?.data()
+  return data?.lastReadTimestamps ?? 0
+}
+
 export const useMyChatsInfinite = (userId: string | null | undefined) => {
   return useInfiniteQuery({
     enabled: !!userId, // userId 없을 때 쿼리 비활성화
@@ -75,6 +84,7 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
         let q = query(
           chatsRef,
           where('members', 'array-contains', userId),
+          orderBy('lastMessage.createdAt', 'desc'),
           orderBy('createdAt', 'desc'),
           limit(PAGE_SIZE),
         )
@@ -84,18 +94,67 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
         }
 
         const snapshot = await getDocs(q)
-        const chats = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as ChatRoom[]
 
+        const chats: (RoomInfo & {unreadCount: number})[] = (
+          await Promise.all(
+            snapshot.docs.map(async doc => {
+              const data = doc.data()
+              const roomId = doc.id
+              const defaultObj = {
+                id: roomId,
+                type: data.type,
+                createdAt: data.createdAt,
+                name: data.name,
+                image: data.image,
+                lastMessage: data.lastMessage,
+                members: data?.members ?? [],
+                lastReadTimestamps: data.lastReadTimestamps ?? null,
+              }
+              // members 필드가 없거나 배열이 아니면 기본 데이터만 리턴
+              if (!data.members || !Array.isArray(data.members)) {
+                return {
+                  ...defaultObj,
+                  unreadCount: 0,
+                }
+              }
+
+              const lastReadAt =
+                doc.data()?.lastReadTimestamps?.[userId || ''] ?? 0
+              console.log('lastReadAt', lastReadAt)
+              const messagesRef = collection(
+                firestore,
+                `chats/${roomId}/messages`,
+              )
+              const unreadQ = query(
+                messagesRef,
+                where('createdAt', '>', lastReadAt),
+                where('senderId', '!=', userId),
+              )
+
+              let unreadCount = 0
+              try {
+                const unreadSnap = await getCountFromServer(unreadQ)
+                unreadCount = unreadSnap.data().count
+              } catch (e) {
+                console.warn(`unreadCount fetch failed in room ${roomId}`, e)
+              }
+
+              return {
+                ...defaultObj,
+                unreadCount,
+              }
+            }),
+          )
+        ).filter(Boolean)
+        console.log('chats', chats)
         return {
           chats,
           lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
-          isLastPage: snapshot.docs.length < PAGE_SIZE,
+          isLastPage: snapshot?.docs?.length < PAGE_SIZE,
         }
       } catch (e) {
         console.error(e)
+        return null // 또는 fallback
       }
     },
     getNextPageParam: lastPage =>

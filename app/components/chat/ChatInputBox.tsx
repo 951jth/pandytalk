@@ -26,9 +26,13 @@ export default function ChatInputBox({
   // }
 
   const onSendMessage = async (type?: ChatMessage['type']) => {
-    if (!userId || !text || !targetIds?.[0]) return
+    console.log(userId, text, targetIds)
+    if (!userId || !text) return
     try {
-      const rid = roomId ?? (await createChatRoom(userId, targetIds))
+      let rid = roomId
+      if (!rid && targetIds?.[0]) {
+        rid = await createChatRoom(userId, targetIds)
+      }
       const message = {
         senderId: userId,
         text: text,

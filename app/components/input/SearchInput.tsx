@@ -33,5 +33,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     height: 40,
     fontSize: 14,
+    fontFamily: 'Roboto',
   },
 })

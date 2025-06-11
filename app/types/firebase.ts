@@ -33,4 +33,6 @@ export interface RoomInfo {
   image?: string // 그룹일 경우만
   lastMessage?: ChatMessage
   memberInfos?: User[] | null
+  lastReadTimestamps?: Record<string, number | null> | null
+  unreadCount?: number | null
 }

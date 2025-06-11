@@ -31,16 +31,18 @@ export function MainApp(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
   const dispatch = useDispatch<AppDispatch>()
+  console.log(user)
 
   const fetchProfile = async (uid: string) => {
     try {
-      await updateLastSeen(uid)
       const profile = await dispatch(fetchUserById(uid)).unwrap()
+      await updateLastSeen(uid)
     } catch (err: any) {
       console.error('❌ 유저 정보 로딩 실패:', err)
       if (err?.message == 'User not found' && user) {
+        alert('cgeck!')
         //새로등록한 유저의 경우 초기값설정해서 등록해줌
-        initialUserInfo(uid, user)
+        initialUserInfo(uid)
       }
     }
   }

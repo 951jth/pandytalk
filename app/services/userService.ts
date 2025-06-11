@@ -1,5 +1,5 @@
 import {getApp} from '@react-native-firebase/app'
-import {FirebaseAuthTypes, getAuth} from '@react-native-firebase/auth'
+import {getAuth} from '@react-native-firebase/auth'
 import {
   collection,
   doc,
@@ -11,6 +11,8 @@ import {
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
+import {AppDispatch} from '../store/store'
+import {setUser} from '../store/userSlice'
 import {User} from '../types/firebase'
 
 const firestore = getFirestore(getApp())
@@ -83,26 +85,24 @@ export const generateGuestUsers = async () => {
 }
 
 //유저값 초기 데이터세팅
-export const initialUserInfo = async (
-  uid: string,
-  user: FirebaseAuthTypes.User,
-) => {
+export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
   const firestore = getFirestore()
   const userRef = doc(firestore, 'users', uid)
-
+  const currentUser = authInstance.currentUser
   const initialFormValues = {
     uid,
     authority: 'USER',
-    email: user?.email ?? '',
+    email: currentUser?.email ?? '',
     isGuest: false,
     lastSeen: Date.now(),
-    nickname: user?.email ?? '',
+    nickname: currentUser?.email ?? '',
     photoURL: '',
     status: 'online',
-  }
+  } as User
 
   try {
     await setDoc(userRef, initialFormValues)
+    dispatch(setUser(initialFormValues))
     console.log('✅ 사용자 정보 초기화 완료')
   } catch (err) {
     console.error('❌ 사용자 정보 초기화 실패:', err)

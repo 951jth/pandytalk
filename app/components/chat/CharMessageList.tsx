@@ -16,6 +16,7 @@ interface propTypes {
 export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const members = roomInfo?.memberInfos ?? []
+
   const MyChat = ({item, hideMinuete}: any) => {
     return (
       <View style={styles.myChat}>
@@ -55,7 +56,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
           <View style={styles.otherChat}>
             <Text style={{color: COLORS.text}}>{item?.text}</Text>
             {!hideMinuete && (
-              <Text style={[styles.chatDate, {right: -60}]}>
+              <Text style={[styles.chatDate, {right: -65}]}>
                 {formatChatTime(item?.createdAt)}
               </Text>
             )}

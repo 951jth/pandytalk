@@ -1,17 +1,19 @@
 {
+  "include": ["app", "app/types"], // 혹은 "@types"
   "compilerOptions": {
-    "baseUrl": "./app", // alias 기준 루트
+    "baseUrl": ".", // ✅ 프로젝트 루트를 기준으로 alias 적용
     "paths": {
-      "@assets/*": ["assets/*"],
-      "@components/*": ["components/*"],
-      "@constants/*": ["constants/*"],
-      "@contexts/*": ["contexts/*"],
-      "@hooks/*": ["hooks/*"],
-      "@navigation/*": ["navigation/*"],
-      "@screens/*": ["screens/*"],
-      "@services/*": ["services/*"],
-      "@store/*": ["store/*"],
-      "@utils/*": ["utils/*"]
+      "@assets/*": ["app/assets/*"],
+      "@components/*": ["app/components/*"],
+      "@constants/*": ["app/constants/*"],
+      "@contexts/*": ["app/contexts/*"],
+      "@hooks/*": ["app/hooks/*"],
+      "@navigation/*": ["app/navigation/*"],
+      "@screens/*": ["app/screens/*"],
+      "@services/*": ["app/services/*"],
+      "@store/*": ["app/store/*"],
+      "@utils/*": ["app/utils/*"],
+      "@types/*": ["app/types/*"]
     },
     "jsx": "react",
     "moduleResolution": "node",

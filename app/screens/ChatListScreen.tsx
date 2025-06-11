@@ -1,14 +1,19 @@
+import {useNavigation} from '@react-navigation/native'
+import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
-import {FlatList, Image, StyleSheet, View} from 'react-native'
+import {FlatList, Image, Pressable, StyleSheet, View} from 'react-native'
 import {ActivityIndicator, Icon, Text} from 'react-native-paper'
+import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useMyChatsInfinite} from '../hooks/useInfiniteQuery'
+import {getUnreadCount} from '../services/chatService'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
-import type {User} from '../types/firebase'
+import type {RoomInfo, User} from '../types/firebase'
+import {RootStackParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
   const {data: user} = useAppSelector(state => state.user)
@@ -20,18 +25,19 @@ export default function ChatListScreen() {
     isFetchingNextPage,
     refetch,
   } = useMyChatsInfinite(user?.uid) as any
-  const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
   const [targetMembers, setTargetMembers] = useState<User[]>([])
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
+  const [unreadCnts, setUnreadCnts] = useState<object>({})
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
+  const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
 
   const memberIds = useMemo(() => {
     return Array.from(
       new Set(chats?.flatMap((chat: any) => chat?.members || [])),
     ) as string[]
   }, [chats])
-
-  console.log('chats', chats)
 
   const debouncedSetSearchText = useMemo(
     () =>
@@ -41,6 +47,47 @@ export default function ChatListScreen() {
     [],
   )
 
+  const moveToChatRoom = (roomId: string, uid: string) => {
+    navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
+  }
+
+  // const getUnreadCount = (item: RoomInfo) => {
+  //   const uid = user?.uid
+  //   const lastRead = uid ? item?.lastReadTimestamps?.[uid] : null
+
+  //   if (uid && typeof lastRead === 'number') {
+  //     return lastRead
+  //   }
+
+  //   return null
+  // }
+
+  const getUnreadCounts = async (chats: RoomInfo[]) => {
+    let promises = []
+    if (!user?.uid) return
+    for (let i = 0; i <= chats?.length; i++) {
+      const chat = chats[i]
+      const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
+      if (chat.id) promises.push(getUnreadCount(chat.id, user?.uid, lastRead))
+    }
+    Promise.all(promises)
+      .then(res => {})
+      .catch(e => console.log(e))
+  }
+
+  useEffect(() => {
+    if (data?.pages && user?.uid) {
+      data?.pages?.forEach((page: RoomInfo[]) => {
+        // getUnreadCounts(page)
+        //   const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
+        //   const count = await getUnreadCount(chat.id, user?.uid, lastRead)
+        //   // 이 count를 state에 저장하거나, chat 리스트에 매핑
+        // page.chats.forEach(async (chat: RoomInfo) => {
+        // })
+      })
+    }
+  }, [data])
+
   useEffect(() => {
     debouncedSetSearchText(input)
     // cleanup 함수로 debounce 취소
@@ -48,7 +95,6 @@ export default function ChatListScreen() {
   }, [input])
 
   useEffect(() => {
-    console.log('memberIds', memberIds)
     if (memberIds?.[0]) {
       console.log('memberIds', memberIds)
       // alert(JSON.stringify(chats))
@@ -69,6 +115,7 @@ export default function ChatListScreen() {
         data={chats}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
+          console.log(item)
           const isDM = item?.type == 'dm'
           const targetId = item?.members.find(
             (mId: string) => mId !== user?.uid,
@@ -76,8 +123,24 @@ export default function ChatListScreen() {
           const findMember = targetMembers?.find(
             member => member?.uid == targetId,
           )
+          // const unreadCnt = getUnreadCount(item as RoomInfo)
           return (
-            <View style={styles.chatRoom}>
+            <Pressable
+              onPress={() => moveToChatRoom(item.id, targetId)}
+              style={({pressed}) => [
+                {
+                  marginBottom: 8,
+                  borderRadius: 8,
+                  shadowColor: '#000',
+                  shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
+                  shadowOpacity: 0.1,
+                  shadowRadius: pressed ? 1 : 3,
+                  elevation: pressed ? 1 : 3,
+                  backgroundColor: '#FFF',
+                  transform: [{scale: pressed ? 0.98 : 1}],
+                },
+                styles.chatRoom,
+              ]}>
               <View style={styles.frame}>
                 {findMember?.photoURL ? (
                   <Image
@@ -107,11 +170,15 @@ export default function ChatListScreen() {
                     ? dayjs(Number(item?.lastMessage?.createdAt)).fromNow()
                     : '알 수 없음'}
                 </Text>
-                <View style={styles.unreadMessageBadge}>
-                  <Text style={styles.unreadMessage}>12</Text>
-                </View>
+                {!!item?.unreadCount && (
+                  <View style={styles.unreadMessageBadge}>
+                    <Text style={styles.unreadMessage}>
+                      {item?.unreadCount || 0}
+                    </Text>
+                  </View>
+                )}
               </View>
-            </View>
+            </Pressable>
           )
         }}
         onEndReached={() => {
@@ -121,6 +188,19 @@ export default function ChatListScreen() {
           isFetchingNextPage ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : null
+        }
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingBottom: 12,
+            }}>
+            <EmptyData
+              text={`레서판다가 기다리고 있어요.\n새로운 대화를 시작해볼까요?`}
+            />
+          </View>
         }
         refreshing={isLoading}
         onRefresh={refetch}
@@ -141,6 +221,7 @@ const styles = StyleSheet.create({
     // flex: 1,
     // alignItems: 'center',
     // justifyContent: 'center',
+    flexGrow: 1,
     backgroundColor: COLORS.outerColor,
     paddingHorizontal: 12,
     paddingTop: 4,
@@ -150,13 +231,6 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 8,
     borderRadius: 8,
-    backgroundColor: '#FFF',
-    // 그림자 스타일 (iOS + Android)
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3, // Android 그림자
     padding: 8,
   },
   frame: {
@@ -193,10 +267,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#000',
     fontWeight: 'bold',
+    fontFamily: 'BMDOHYEON',
   },
   lastMessage: {
     fontSize: 12,
     color: '#ADB5BD',
+    fontFamily: 'BMDOHYEON',
   },
   lastSendTime: {
     fontSize: 12,
@@ -204,6 +280,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
+    fontFamily: 'BMDOHYEON',
   },
   unreadMessageBadge: {
     position: 'absolute',
@@ -220,5 +297,6 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
     fontSize: 12,
     fontWeight: 'bold',
+    fontFamily: 'BMDOHYEON',
   },
 })
