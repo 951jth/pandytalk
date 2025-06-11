@@ -1,7 +1,7 @@
 import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import React, {ComponentProps} from 'react'
-import {StyleSheet, View} from 'react-native'
+import {StyleSheet} from 'react-native'
 import {Appbar} from 'react-native-paper'
 import {authRoutes, tabScreens} from '../../hooks/useRoutes'
 import {updateUserOffline} from '../../services/userService'
@@ -52,25 +52,20 @@ export default function AppBar({title, rightActions = []}: propTypes) {
   }
 
   return (
-    <View>
-      <Appbar.Header
-        style={styles.header}
-        mode="small"
-        // statusBarHeight={0} // ✅ SafeAreaView에서 처리하므로 여백 제거
-      >
-        {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-        <Appbar.Content
-          title={title ?? currentTitle}
-          titleStyle={styles.title}
-        />
-        {rightActions?.map((prop, idx) => (
-          <Appbar.Action key={idx} size={20} {...prop} />
-        ))}
-        {!canGoBack && (
-          <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
-        )}
-      </Appbar.Header>
-    </View>
+    <Appbar.Header
+      style={styles.header}
+      mode="small"
+      // statusBarHeight={0} // ✅ SafeAreaView에서 처리하므로 여백 제거
+    >
+      {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
+      <Appbar.Content title={title ?? currentTitle} titleStyle={styles.title} />
+      {rightActions?.map((prop, idx) => (
+        <Appbar.Action key={idx} size={20} {...prop} />
+      ))}
+      {!canGoBack && (
+        <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+      )}
+    </Appbar.Header>
   )
 }
 

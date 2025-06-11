@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    height: 50,
     // ✅ 그림자 효과 (iOS + Android 호환)
   },
   chatTextInput: {

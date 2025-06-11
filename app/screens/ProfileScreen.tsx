@@ -47,7 +47,7 @@ export default function ProfileScreen(): React.JSX.Element {
     uid,
     authority: 'USER',
     email: user?.email ?? '',
-    isGuest: false,
+    isGuest: true,
     lastSeen: Date.now(),
     nickname: '',
     photoURL: '',

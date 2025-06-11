@@ -2,8 +2,10 @@ import pandy from '@assets/images/pandy_visible.png'
 import auth from '@react-native-firebase/auth'
 import React, {useState} from 'react'
 import {Image, StyleSheet, View} from 'react-native'
+import LinearGradient from 'react-native-linear-gradient'
 import {Button, Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
+import KeyboardViewWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import CustomInput from '../components/input/CustomInput'
 import {PasswordInput} from '../components/input/PasswordInput'
 import COLORS from '../constants/color'
@@ -19,12 +21,16 @@ export default function LoginScreen() {
     password: '',
   })
   const [error, setError] = useState<String | null>('')
+  const [loading, setLoading] = useState<boolean>(false)
   const onSubmit = async () => {
     try {
+      setLoading(true)
       const {email, password} = formValues
       await auth().signInWithEmailAndPassword(email, password)
     } catch (error: any) {
       handleFirebaseAuthError(error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -57,26 +63,36 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Image source={pandy} style={styles.image} resizeMode="none" />
-      <View style={styles.card}>
-        <Text style={styles.title}>로그인 페이지</Text>
-        <CustomInput
-          label="ID"
-          mode="outlined"
-          onChangeText={e => {
-            onFormChange('email', e)
-          }}
-        />
-        <PasswordInput
-          mode="outlined"
-          onChangeText={e => onFormChange('password', e)}
-        />
-        <Text style={styles.errorText}>{error}</Text>
-        <Button onTouchEnd={onSubmit} mode="contained" style={styles.submitBtn}>
-          로그인
-        </Button>
-      </View>
+    <SafeAreaView style={{flex: 1}}>
+      <KeyboardViewWrapper>
+        <LinearGradient
+          colors={['#A1C4FD', '#C2E9FB']}
+          style={styles.container}>
+          <Image source={pandy} style={styles.image} resizeMode="none" />
+          {/* <Text style={styles.title}>어서오세요!</Text> */}
+          <View style={styles.card}>
+            <CustomInput
+              label="이메일"
+              mode="outlined"
+              onChangeText={e => {
+                onFormChange('email', e)
+              }}
+            />
+            <PasswordInput
+              mode="outlined"
+              onChangeText={e => onFormChange('password', e)}
+            />
+            <Text style={styles.errorText}>{error}</Text>
+            <Button
+              onTouchEnd={onSubmit}
+              mode="contained"
+              style={styles.submitBtn}
+              loading={loading}>
+              로그인
+            </Button>
+          </View>
+        </LinearGradient>
+      </KeyboardViewWrapper>
     </SafeAreaView>
   )
 }
@@ -87,7 +103,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: COLORS.primary,
+    // backgroundColor: COLORS.primary,
+  },
+  scrollView: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
   },
   card: {
     width: '100%',
@@ -104,6 +126,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 20,
     fontFamily: 'BMDOHYEON',
+    color: '#FFF',
   },
   submitBtn: {
     marginTop: 20,

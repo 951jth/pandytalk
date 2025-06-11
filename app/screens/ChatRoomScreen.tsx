@@ -4,7 +4,7 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatMessageList from '../components/chat/CharMessageList'
 import ChatInputBox from '../components/chat/ChatInputBox'
-import KeyboardViewWrapper from '../components/container/KeyboardViewWrapper'
+import {default as KeyboardUtilitiesWrapper} from '../components/container/KeyboardUtilitiesWrapper'
 import AppBar from '../components/navigation/AppBar'
 import COLORS from '../constants/color'
 import {
@@ -67,28 +67,32 @@ export default function ChatRoomScreen() {
   )
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <KeyboardViewWrapper>
-        <View style={styles.inner}>
-          <AppBar
-            title={targetMember?.nickname || '채팅방'}
-            rightActions={rightActions}
-          />
-          {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
-          <ChatMessageList
-            roomId={currentRid}
-            userId={user?.uid}
-            roomInfo={roomInfo}
-          />
-          <ChatInputBox
-            roomId={currentRid}
-            userId={user?.uid}
-            targetIds={targetIds}
-            getRoomId={getRoomId}
-          />
-        </View>
-      </KeyboardViewWrapper>
-    </SafeAreaView>
+    <>
+      <SafeAreaView
+        style={styles.container}
+        edges={['left', 'right', 'bottom']}>
+        <KeyboardUtilitiesWrapper useTouchable={false}>
+          <View style={styles.inner}>
+            <AppBar
+              title={targetMember?.nickname || '채팅방'}
+              rightActions={rightActions}
+            />
+            {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
+            <ChatMessageList
+              roomId={currentRid}
+              userId={user?.uid}
+              roomInfo={roomInfo}
+            />
+            <ChatInputBox
+              roomId={currentRid}
+              userId={user?.uid}
+              targetIds={targetIds}
+              getRoomId={getRoomId}
+            />
+          </View>
+        </KeyboardUtilitiesWrapper>
+      </SafeAreaView>
+    </>
   )
 }
 
@@ -97,8 +101,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inner: {
-    flex: 1,
-    justifyContent: 'space-between',
+    flexGrow: 1,
+    // justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
   },
 })

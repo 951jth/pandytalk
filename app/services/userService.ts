@@ -93,7 +93,7 @@ export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
     uid,
     authority: 'USER',
     email: currentUser?.email ?? '',
-    isGuest: false,
+    isGuest: true,
     lastSeen: Date.now(),
     nickname: currentUser?.email ?? '',
     photoURL: '',

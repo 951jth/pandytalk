@@ -18,11 +18,7 @@ import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
-import {
-  initialUserInfo,
-  updateLastSeen,
-  updateUserOffline,
-} from './app/services/userService'
+import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
 import {clearUser, fetchUserById} from './app/store/userSlice'
 const authInstance = getAuth()
@@ -40,9 +36,8 @@ export function MainApp(): React.JSX.Element {
     } catch (err: any) {
       console.error('❌ 유저 정보 로딩 실패:', err)
       if (err?.message == 'User not found' && user) {
-        alert('cgeck!')
         //새로등록한 유저의 경우 초기값설정해서 등록해줌
-        initialUserInfo(uid)
+        // initialUserInfo(uid, dispatch)
       }
     }
   }
@@ -85,8 +80,10 @@ export function MainApp(): React.JSX.Element {
   return (
     <NavigationContainer>
       <StatusBar
-        translucent={false}
-        backgroundColor="#000" // Android 배경
+        // translucent={false}
+        translucent={true}
+        backgroundColor="#FFF" // Android 배경
+        barStyle={'dark-content'}
       />
 
       {user ? <AuthNavigator /> : <NoAuthNavigator />}

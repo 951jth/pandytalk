@@ -9,7 +9,7 @@ export function PasswordInput(props: TextInputProps) {
   const [showPassword, setShowPassword] = useState(false)
   return (
     <CustomInput
-      label="PASSWORD"
+      label="비밀번호"
       secureTextEntry={!showPassword}
       right={
         <TextInput.Icon

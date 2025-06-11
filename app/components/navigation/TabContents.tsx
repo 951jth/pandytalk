@@ -7,7 +7,7 @@ import {tabScreens} from '../../hooks/useRoutes'
 
 const Tab = createBottomTabNavigator()
 
-export default function MainContents(): React.JSX.Element {
+export default function TabContents(): React.JSX.Element {
   const tabs = tabScreens()
   return (
     <Tab.Navigator

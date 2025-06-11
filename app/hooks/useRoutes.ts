@@ -1,6 +1,6 @@
 import React from 'react'
 import MainLayout from '../components/layout/MainLayout'
-import MainContents from '../components/navigation/MainContents'
+import TabContents from '../components/navigation/TabContents'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -58,7 +58,7 @@ const authRoutes = (): LayoutItem[] => {
         {
           name: 'main',
           title: 'Users',
-          component: MainContents, // 실제 탭 화면
+          component: TabContents, // 실제 탭 화면
         },
       ],
     },

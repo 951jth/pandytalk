@@ -1,19 +1,17 @@
 import {get, set} from 'lodash'
 import React, {useEffect, useState} from 'react'
 import {
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
+  ScrollView,
   StyleProp,
   StyleSheet,
   TextStyle,
-  TouchableWithoutFeedback,
   View,
   ViewStyle,
 } from 'react-native'
 import {Button, IconButton, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {inputFormItemType} from '../../types/form'
+import KeyboardUtilitiesWrapper from '../container/KeyboardUtilitiesWrapper'
 import EditInput from '../input/EditInput'
 
 interface propsType {
@@ -67,11 +65,9 @@ export default function InputForm({
   }, [initialData])
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        {/* {loading && <ActivityIndicator size="large" color={COLORS.primary} />} */}
+    <>
+      {/* {loading && <ActivityIndicator size="large" color={COLORS.primary} />} */}
+      <KeyboardUtilitiesWrapper>
         <View style={[styles.container, style]}>
           {edit && (
             <IconButton
@@ -82,7 +78,7 @@ export default function InputForm({
             />
           )}
           {topElement}
-          <View style={[styles.items]}>
+          <ScrollView style={[styles.items]}>
             {items?.map((item, index) => {
               const findText = item?.key ? get(formValues, item.key) : '-'
               return (
@@ -116,7 +112,7 @@ export default function InputForm({
                 </View>
               )
             })}
-          </View>
+          </ScrollView>
           {bottomElement}
           {editable && (
             <Button
@@ -130,14 +126,14 @@ export default function InputForm({
             </Button>
           )}
         </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+      </KeyboardUtilitiesWrapper>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: COLORS.background,
     position: 'relative',
     paddingVertical: 20,
@@ -155,13 +151,11 @@ const styles = StyleSheet.create({
     height: 50,
   },
   label: {
-    // color: '#5D5D5D',
     fontFamily: 'BMDOHYEON',
   },
   contents: {
     flex: 1,
     minWidth: 0,
-    // color: '#5D5D5D',
   },
   backBtn: {
     position: 'absolute',
