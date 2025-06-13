@@ -70,7 +70,7 @@ export default function ChatRoomScreen() {
         style={styles.container}
         // edges={['left', 'right', 'bottom']}
       >
-        <KeyboardUtilitiesWrapper useTouchable={false}>
+        <KeyboardUtilitiesWrapper>
           <View style={styles.inner}>
             <AppHeader
               title={title || targetMember?.nickname || '채팅방'}

@@ -43,7 +43,12 @@ export default function KeyboardUtilitiesWrapper({
     if (useTouchable) {
       WrappedChildren = (
         <TouchableWithoutFeedback
-          onPress={Keyboard.dismiss}
+          // onPress={Keyboard.dismiss}
+          onPress={() => {
+            setTimeout(() => {
+              Keyboard.dismiss()
+            }, 100) // 100ms 정도 지연 (원하는 시간으로 조절 가능)
+          }}
           accessible={false}
           {...touchableWithoutFeedback}>
           {WrappedChildren}
@@ -57,7 +62,6 @@ export default function KeyboardUtilitiesWrapper({
           style={{flex: 1}}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
-          // keyboardVerticalOffset={keyboardOffset}
           {...keyboardAvoidingView}>
           {WrappedChildren}
         </KeyboardAvoidingView>
