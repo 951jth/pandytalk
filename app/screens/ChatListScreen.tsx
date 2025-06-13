@@ -11,7 +11,7 @@ import COLORS from '../constants/color'
 import {useMyChatsInfinite} from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
-import type {User} from '../types/firebase'
+import type {RoomInfo, User} from '../types/firebase'
 import {RootStackParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
