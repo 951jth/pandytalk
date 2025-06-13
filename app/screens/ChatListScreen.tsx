@@ -2,7 +2,7 @@ import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
-import React, {useEffect, useMemo, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {FlatList, Image, Pressable, StyleSheet, View} from 'react-native'
 import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
@@ -25,6 +25,7 @@ export default function ChatListScreen() {
     refetch,
   } = useMyChatsInfinite(user?.uid) as any
   const [targetMembers, setTargetMembers] = useState<User[]>([])
+  const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const [unreadCnts, setUnreadCnts] = useState<object>({})
@@ -34,8 +35,8 @@ export default function ChatListScreen() {
 
   const memberIds = useMemo(() => {
     return Array.from(
-      new Set(chats?.flatMap((chat: any) => chat?.members || [])),
-    ) as string[]
+      new Set(chats?.flatMap((chat: RoomInfo) => chat?.members || [])),
+    ).sort((a: any, b: any) => b - a) as string[]
   }, [chats])
 
   const debouncedSetSearchText = useMemo(
@@ -58,12 +59,22 @@ export default function ChatListScreen() {
 
   useEffect(() => {
     if (memberIds?.[0]) {
-      // alert(JSON.stringify(chats))
-      getUsersByIds(memberIds).then(res => {
-        setTargetMembers(res)
+      const newIds = memberIds.filter(
+        id => !fetchedMemberIdsRef.current.has(id),
+      )
+      if (newIds.length === 0) return
+      getUsersByIds(newIds).then(res => {
+        // 캐시에 추가
+        res.forEach(user => fetchedMemberIdsRef.current.add(user?.id))
+        // 기존 캐시 + 신규 결과 병합
+        setTargetMembers(prev => {
+          const prevMap = new Map(prev.map(u => [u.id, u]))
+          res.forEach(u => prevMap.set(u.id, u))
+          return Array.from(prevMap.values())
+        })
       })
     }
-  }, [JSON.stringify(memberIds)])
+  }, [memberIds])
 
   return (
     <View style={{flex: 1}}>

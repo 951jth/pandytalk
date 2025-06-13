@@ -130,7 +130,9 @@ export const getUsersByIds = async (userIds: string[]): Promise<User[]> => {
     chunks.map(async chunk => {
       const q = query(collection(firestore, 'users'), where('uid', 'in', chunk))
       const snapshot = await getDocs(q)
-      return snapshot.docs.map(doc => ({id: doc?.id, ...doc.data()}) as User)
+      return snapshot.docs.map(doc => {
+        if (doc?.id) return {id: doc?.id, ...doc.data()} as User
+      })
     }),
   )
   console.log('results', results.flat())
