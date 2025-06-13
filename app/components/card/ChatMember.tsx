@@ -112,7 +112,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     color: '#000',
-    fontWeight: 'bold',
     fontFamily: 'BMDOHYEON',
   },
   status: {

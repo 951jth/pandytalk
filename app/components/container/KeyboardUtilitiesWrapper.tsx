@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -27,23 +27,15 @@ export default function KeyboardUtilitiesWrapper({
   // const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
   const insets = useSafeAreaInsets()
   const statusTopHeight = insets.top
-  const statusBottomHeight = insets.bottom
+  const statusBottomHeight = insets.bottom || 0
+  const [layoutFixKey, setLayoutFixKey] = useState<boolean>(false)
 
   useEffect(() => {
-    //현재 일부 기기에서 keyboardAvoidingView 포커싱후 bottom이 높게뜨는 이슈가 있음
-    //해결 방법 찾는중
-    const showSub = Keyboard.addListener('keyboardDidShow', e => {
-      // 키보드 높이에 따라 동적으로 offset 적용
-      const offset = Platform.OS === 'ios' ? 50 : addOffset
-      // setKeyboardOffset(offset)
-    })
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      // setKeyboardOffset(0 - statusBottomHeight)
+      setLayoutFixKey(prev => !prev) // 강제 리렌더 트리거
     })
-    return () => {
-      showSub.remove()
-      hideSub.remove()
-    }
+
+    return () => hideSub.remove()
   }, [])
 
   const wrapChildren = (children: React.ReactNode) => {
@@ -61,9 +53,11 @@ export default function KeyboardUtilitiesWrapper({
     if (useAvoiding) {
       WrappedChildren = (
         <KeyboardAvoidingView
+          key={`avoiding-${layoutFixKey}`}
           style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : addOffset}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
+          // keyboardVerticalOffset={keyboardOffset}
           {...keyboardAvoidingView}>
           {WrappedChildren}
         </KeyboardAvoidingView>

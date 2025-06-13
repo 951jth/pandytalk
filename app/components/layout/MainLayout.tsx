@@ -1,7 +1,8 @@
 import COLORS from '@constants/color'
 import React, {type ReactNode} from 'react'
-import {StyleSheet, useColorScheme, View} from 'react-native'
-import AppBar from '../navigation/AppBar'
+import {StyleSheet, useColorScheme} from 'react-native'
+import {SafeAreaView} from 'react-native-safe-area-context'
+import AppHeader from '../navigation/AppHeader'
 
 type propsType = {
   children: ReactNode
@@ -10,10 +11,10 @@ type propsType = {
 export default function MainLayout({children}: propsType): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark'
   return (
-    <View style={styles.container}>
-      <AppBar />
+    <SafeAreaView style={styles.container}>
+      <AppHeader />
       {children}
-    </View>
+    </SafeAreaView>
   )
 }
 

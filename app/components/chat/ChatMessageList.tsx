@@ -1,5 +1,12 @@
-import React, {useEffect, useState} from 'react'
-import {FlatList, Image, StyleSheet, View} from 'react-native'
+import React, {useEffect, useRef, useState} from 'react'
+import {
+  FlatList,
+  Image,
+  Keyboard,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {getChatMessages, subscribeToMessages} from '../../services/chatService'
@@ -16,7 +23,7 @@ interface propTypes {
 export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const members = roomInfo?.memberInfos ?? []
-
+  const flatListRef = useRef<FlatList<any>>(null)
   const MyChat = ({item, hideMinuete}: any) => {
     return (
       <View style={styles.myChat}>
@@ -80,13 +87,34 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
     return () => unsub() // 언마운트 시 리스너 제거
   }, [roomId])
 
+  useEffect(() => {
+    //현재 일부 기기에서 keyboardAvoidingView 포커싱후 bottom이 높게뜨는 이슈가 있음
+    //해결 방법 찾는중
+    const showSub = Keyboard.addListener('keyboardDidShow', e => {
+      // 키보드 높이에 따라 동적으로 offset 적용
+      const offset = Platform.OS === 'ios' ? 50 : 0
+      // setKeyboardOffset(offset)
+    })
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      // setKeyboardOffset(0 - statusBottomHeight)
+      if (flatListRef?.current) {
+        console.log('check!')
+        flatListRef?.current?.scrollToOffset({offset: 0, animated: true})
+      }
+    })
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [flatListRef?.current])
+
   return (
     <FlatList
+      ref={flatListRef}
       data={messages}
       keyExtractor={item => item.id || item?.senderId}
       renderItem={({item, index}) => {
         const isMine = item?.senderId == userId
-        const prevItem = messages?.[index - 1] ?? null
         const afterItem = messages?.[index + 1] ?? null
         const ishideProfile = isSameSender(item, afterItem)
         const isHideMinuete = isSameMinute(item, afterItem)
@@ -127,7 +155,7 @@ const styles = StyleSheet.create({
   chatList: {
     // flexGrow: 1,
     paddingTop: 4,
-    paddingBottom: 16,
+    // paddingBottom: 16,
     paddingHorizontal: 16,
   },
   chatRow: {

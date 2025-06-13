@@ -1,22 +1,20 @@
 import {getAuth, signOut} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
-import React, {ComponentProps} from 'react'
-import {StyleSheet} from 'react-native'
-import {Appbar} from 'react-native-paper'
+import React, {ReactNode} from 'react'
+import {StyleSheet, View} from 'react-native'
+import {IconButton, Text} from 'react-native-paper'
 import {authRoutes, tabScreens} from '../../hooks/useRoutes'
 import {updateUserOffline} from '../../services/userService'
 import {useAppSelector} from '../../store/hooks'
 import {clearUser} from '../../store/userSlice'
 const authInstance = getAuth()
 
-type AppbarActionItem = ComponentProps<typeof Appbar.Action>
-
 interface propTypes {
   title?: string
-  rightActions?: AppbarActionItem[]
+  rightActions?: ReactNode[]
 }
 
-export default function AppBar({title, rightActions = []}: propTypes) {
+export default function AppHeader({title, rightActions = []}: propTypes) {
   const navigation = useNavigation()
   const canGoBack = navigation.canGoBack()
   const allRoutes =
@@ -52,20 +50,26 @@ export default function AppBar({title, rightActions = []}: propTypes) {
   }
 
   return (
-    <Appbar.Header
-      style={styles.header}
-      mode="small"
-      // statusBarHeight={0} // ✅ SafeAreaView에서 처리하므로 여백 제거
-    >
-      {canGoBack && <Appbar.BackAction onPress={() => navigation.goBack()} />}
-      <Appbar.Content title={title ?? currentTitle} titleStyle={styles.title} />
-      {rightActions?.map((prop, idx) => (
-        <Appbar.Action key={idx} size={20} {...prop} />
-      ))}
-      {!canGoBack && (
-        <Appbar.Action icon="logout" onPress={handleLogout} size={20} />
+    <View style={styles.header}>
+      {canGoBack && (
+        <IconButton
+          onPress={() => navigation.goBack()}
+          icon={'arrow-left'}
+          style={{margin: 0}}
+        />
       )}
-    </Appbar.Header>
+      <Text style={styles.title}>{title ?? currentTitle}</Text>
+      <View style={styles.rightActions}>
+        {rightActions?.map((node: React.ReactNode) => node)}
+        {!canGoBack && (
+          <IconButton
+            icon="logout"
+            onPress={handleLogout}
+            style={{margin: -12}}
+          />
+        )}
+      </View>
+    </View>
   )
 }
 
@@ -80,6 +84,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3, // Android 그림자
     backgroundColor: '#FFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
   },
-  title: {fontSize: 18},
+  title: {fontSize: 18, fontFamily: 'BMDOHYEON', flex: 1, padding: 8},
+  rightActions: {},
 })

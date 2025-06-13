@@ -1,8 +1,9 @@
+import {sendMessage} from '@react-native-firebase/messaging'
 import React, {useState} from 'react'
 import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {createChatRoom, sendMessage} from '../../services/chatService'
+import {createChatRoom} from '../../services/chatService'
 import {ChatMessage, User} from '../../types/firebase'
 import UploadButton from '../upload/UploadButton'
 
@@ -72,7 +73,7 @@ export default function ChatInputBox({
       />
       <IconButton
         icon="send"
-        size={20}
+        size={25}
         style={styles.sendButton}
         iconColor={COLORS.onPrimary}
         onPress={() => onSendMessage()}
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     margin: 0,
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.primary,

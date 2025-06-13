@@ -1,11 +1,11 @@
 import {useFocusEffect, useRoute} from '@react-navigation/native'
-import React, {useEffect, useState} from 'react'
-import {StyleSheet, View} from 'react-native'
+import React, {ReactNode, useEffect, useRef, useState} from 'react'
+import {FlatList, StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
-import AppBar from '../components/navigation/AppBar'
+import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
 import {
   getChatRoomInfo,
@@ -18,7 +18,6 @@ import {RootStackParamList} from '../types/navigate'
 
 export default function ChatRoomScreen() {
   const route = useRoute()
-  const [rightActions, setRightActions] = useState([{icon: 'magnify'}])
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const {roomId, targetIds, title} =
     route.params as RootStackParamList['chatRoom']
@@ -27,6 +26,8 @@ export default function ChatRoomScreen() {
   const targetMember = roomInfo?.memberInfos?.find(
     member => member?.id == targetIds?.[0], //채팅방이 없으면 targetIds는 필수로 들고와야함
   )
+  const flatListRef = useRef<FlatList<any>>(null)
+  const rightActions: ReactNode[] = []
   console.log('roomId, targetIds, title', roomId, targetIds, title)
   const getRoomId = async () => {
     let rid = currentRid
@@ -67,10 +68,11 @@ export default function ChatRoomScreen() {
     <>
       <SafeAreaView
         style={styles.container}
-        edges={['left', 'right', 'bottom']}>
-        <View style={styles.inner}>
-          <KeyboardUtilitiesWrapper useTouchable={false}>
-            <AppBar
+        // edges={['left', 'right', 'bottom']}
+      >
+        <KeyboardUtilitiesWrapper useTouchable={false}>
+          <View style={styles.inner}>
+            <AppHeader
               title={title || targetMember?.nickname || '채팅방'}
               rightActions={rightActions}
             />
@@ -86,8 +88,8 @@ export default function ChatRoomScreen() {
               targetIds={targetIds}
               getRoomId={getRoomId}
             />
-          </KeyboardUtilitiesWrapper>
-        </View>
+          </View>
+        </KeyboardUtilitiesWrapper>
       </SafeAreaView>
     </>
   )
@@ -98,8 +100,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inner: {
-    flexGrow: 1,
-    justifyContent: 'space-between',
+    flex: 1,
+    // justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
   },
 })

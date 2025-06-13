@@ -57,7 +57,7 @@ const authRoutes = (): LayoutItem[] => {
       children: [
         {
           name: 'main',
-          title: 'Users',
+          title: '유저 찾기',
           component: TabContents, // 실제 탭 화면
         },
       ],

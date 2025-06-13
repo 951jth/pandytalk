@@ -1,3 +1,3 @@
 module.exports = {
-  assets: ['./app/assets/fonts'], // ← 폰트 경로에 맞게 수정
+  assets: ['./app/assets/fonts'], // ✅ 상대경로 기준이며 이 경로에 .ttf 파일이 있어야 함
 }
