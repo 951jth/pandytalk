@@ -16,18 +16,21 @@ import {NavigationContainer} from '@react-navigation/native'
 import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
+import {navigationRef} from './app/components/navigation/RootNavigation'
+import {useFCMSetup} from './app/hooks/useFCM'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
 import {clearUser, fetchUserById} from './app/store/userSlice'
+
 const authInstance = getAuth()
 
 export function MainApp(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
   const dispatch = useDispatch<AppDispatch>()
-  console.log(user)
+  useFCMSetup() //FCM 푸시알림 세팅
 
   const fetchProfile = async (uid: string) => {
     try {
@@ -35,10 +38,6 @@ export function MainApp(): React.JSX.Element {
       await updateLastSeen(uid)
     } catch (err: any) {
       console.error('❌ 유저 정보 로딩 실패:', err)
-      if (err?.message == 'User not found' && user) {
-        //새로등록한 유저의 경우 초기값설정해서 등록해줌
-        // initialUserInfo(uid, dispatch)
-      }
     }
   }
 
@@ -78,10 +77,10 @@ export function MainApp(): React.JSX.Element {
   } // 초기 로딩 중에는 화면 렌더 안 함
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <StatusBar
-        // translucent={false}
         translucent={true}
+        // translucent={false}
         backgroundColor="#FFF" // Android 배경
         barStyle={'dark-content'}
       />

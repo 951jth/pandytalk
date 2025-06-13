@@ -9,10 +9,9 @@ import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useMyChatsInfinite} from '../hooks/useInfiniteQuery'
-import {getUnreadCount} from '../services/chatService'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
-import type {RoomInfo, User} from '../types/firebase'
+import type {User} from '../types/firebase'
 import {RootStackParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
@@ -51,43 +50,6 @@ export default function ChatListScreen() {
     navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
   }
 
-  // const getUnreadCount = (item: RoomInfo) => {
-  //   const uid = user?.uid
-  //   const lastRead = uid ? item?.lastReadTimestamps?.[uid] : null
-
-  //   if (uid && typeof lastRead === 'number') {
-  //     return lastRead
-  //   }
-
-  //   return null
-  // }
-
-  const getUnreadCounts = async (chats: RoomInfo[]) => {
-    let promises = []
-    if (!user?.uid) return
-    for (let i = 0; i <= chats?.length; i++) {
-      const chat = chats[i]
-      const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
-      if (chat.id) promises.push(getUnreadCount(chat.id, user?.uid, lastRead))
-    }
-    Promise.all(promises)
-      .then(res => {})
-      .catch(e => console.log(e))
-  }
-
-  useEffect(() => {
-    if (data?.pages && user?.uid) {
-      data?.pages?.forEach((page: RoomInfo[]) => {
-        // getUnreadCounts(page)
-        //   const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
-        //   const count = await getUnreadCount(chat.id, user?.uid, lastRead)
-        //   // 이 count를 state에 저장하거나, chat 리스트에 매핑
-        // page.chats.forEach(async (chat: RoomInfo) => {
-        // })
-      })
-    }
-  }, [data])
-
   useEffect(() => {
     debouncedSetSearchText(input)
     // cleanup 함수로 debounce 취소
@@ -96,7 +58,6 @@ export default function ChatListScreen() {
 
   useEffect(() => {
     if (memberIds?.[0]) {
-      console.log('memberIds', memberIds)
       // alert(JSON.stringify(chats))
       getUsersByIds(memberIds).then(res => {
         setTargetMembers(res)
@@ -115,7 +76,6 @@ export default function ChatListScreen() {
         data={chats}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
-          console.log(item)
           const isDM = item?.type == 'dm'
           const targetId = item?.members.find(
             (mId: string) => mId !== user?.uid,

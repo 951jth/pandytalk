@@ -145,6 +145,8 @@ export const sendMessage = async (
       type: message.type,
       imageUrl: message.imageUrl ?? '',
       createdAt: Date.now(),
+      senderPicURL: message?.senderPicURL,
+      senderName: message?.senderName,
     }
 
     // 1. 메시지 추가

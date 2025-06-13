@@ -3,19 +3,19 @@ import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {createChatRoom, sendMessage} from '../../services/chatService'
-import {ChatMessage} from '../../types/firebase'
+import {ChatMessage, User} from '../../types/firebase'
 import UploadButton from '../upload/UploadButton'
 
 interface propTypes {
-  roomId: string | null
-  userId: string | null | undefined
-  targetIds: Array<string> | null
+  roomId?: string | null
+  user: User
+  targetIds?: Array<string> | null
   getRoomId: () => void
 }
 
 export default function ChatInputBox({
   roomId,
-  userId,
+  user,
   targetIds,
   getRoomId,
 }: propTypes) {
@@ -26,17 +26,20 @@ export default function ChatInputBox({
   // }
 
   const onSendMessage = async (type?: ChatMessage['type']) => {
-    console.log(userId, text, targetIds)
-    if (!userId || !text) return
+    if (!user?.uid || !text) return
     try {
       let rid = roomId
       if (!rid && targetIds?.[0]) {
-        rid = await createChatRoom(userId, targetIds)
+        rid = await createChatRoom(user?.uid, targetIds)
       }
+      console.log(user)
       const message = {
-        senderId: userId,
+        senderPicURL: user?.photoURL,
+        senderName: user?.nickname,
+        senderId: user?.uid,
         text: text,
         type: type || 'text',
+        imageUrl: '',
       }
       if (rid) {
         await sendMessage(rid, message)

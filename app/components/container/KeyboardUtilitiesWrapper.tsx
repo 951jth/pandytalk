@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react'
+import React, {useEffect} from 'react'
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -24,8 +24,9 @@ export default function KeyboardUtilitiesWrapper({
   useAvoiding = true,
   addOffset = 0, //현재는 안드로이드만
 }: propTypes) {
-  const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
+  // const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
   const insets = useSafeAreaInsets()
+  const statusTopHeight = insets.top
   const statusBottomHeight = insets.bottom
 
   useEffect(() => {
@@ -34,10 +35,10 @@ export default function KeyboardUtilitiesWrapper({
     const showSub = Keyboard.addListener('keyboardDidShow', e => {
       // 키보드 높이에 따라 동적으로 offset 적용
       const offset = Platform.OS === 'ios' ? 50 : addOffset
-      setKeyboardOffset(offset)
+      // setKeyboardOffset(offset)
     })
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardOffset(0 - statusBottomHeight)
+      // setKeyboardOffset(0 - statusBottomHeight)
     })
     return () => {
       showSub.remove()
@@ -61,8 +62,8 @@ export default function KeyboardUtilitiesWrapper({
       WrappedChildren = (
         <KeyboardAvoidingView
           style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={keyboardOffset}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : addOffset}
           {...keyboardAvoidingView}>
           {WrappedChildren}
         </KeyboardAvoidingView>

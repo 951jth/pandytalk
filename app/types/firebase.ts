@@ -22,6 +22,8 @@ export interface ChatMessage {
   type: 'text' | 'image' | 'file'
   imageUrl?: string
   createdAt?: Number
+  senderPicURL?: string
+  senderName?: string
 }
 
 export interface RoomInfo {

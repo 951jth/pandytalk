@@ -1,3 +1,3 @@
 export type RootStackParamList = {
-  chatRoom: {targetIds: string[]; roomId?: string}
+  chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
 }
