@@ -24,25 +24,18 @@ export default function KeyboardUtilitiesWrapper({
   useAvoiding = true,
   addOffset = 0, //현재는 안드로이드만
 }: propTypes) {
-  const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
+  // const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
   const insets = useSafeAreaInsets()
-  const statusBottomHeight = insets.bottom
+  const statusTopHeight = insets.top
+  const statusBottomHeight = insets.bottom || 0
+  const [layoutFixKey, setLayoutFixKey] = useState<boolean>(false)
 
   useEffect(() => {
-    //현재 일부 기기에서 keyboardAvoidingView 포커싱후 bottom이 높게뜨는 이슈가 있음
-    //해결 방법 찾는중
-    const showSub = Keyboard.addListener('keyboardDidShow', e => {
-      // 키보드 높이에 따라 동적으로 offset 적용
-      const offset = Platform.OS === 'ios' ? 50 : addOffset
-      setKeyboardOffset(offset)
-    })
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardOffset(0 - statusBottomHeight)
+      setLayoutFixKey(prev => !prev) // 강제 리렌더 트리거
     })
-    return () => {
-      showSub.remove()
-      hideSub.remove()
-    }
+
+    return () => hideSub.remove()
   }, [])
 
   const wrapChildren = (children: React.ReactNode) => {
@@ -50,7 +43,12 @@ export default function KeyboardUtilitiesWrapper({
     if (useTouchable) {
       WrappedChildren = (
         <TouchableWithoutFeedback
-          onPress={Keyboard.dismiss}
+          // onPress={Keyboard.dismiss}
+          onPress={() => {
+            setTimeout(() => {
+              Keyboard.dismiss()
+            }, 100) // 100ms 정도 지연 (원하는 시간으로 조절 가능)
+          }}
           accessible={false}
           {...touchableWithoutFeedback}>
           {WrappedChildren}
@@ -60,9 +58,10 @@ export default function KeyboardUtilitiesWrapper({
     if (useAvoiding) {
       WrappedChildren = (
         <KeyboardAvoidingView
+          key={`avoiding-${layoutFixKey}`}
           style={{flex: 1}}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={keyboardOffset}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
           {...keyboardAvoidingView}>
           {WrappedChildren}
         </KeyboardAvoidingView>

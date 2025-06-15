@@ -2,14 +2,13 @@ import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
-import React, {useEffect, useMemo, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {FlatList, Image, Pressable, StyleSheet, View} from 'react-native'
 import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useMyChatsInfinite} from '../hooks/useInfiniteQuery'
-import {getUnreadCount} from '../services/chatService'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import type {RoomInfo, User} from '../types/firebase'
@@ -26,6 +25,7 @@ export default function ChatListScreen() {
     refetch,
   } = useMyChatsInfinite(user?.uid) as any
   const [targetMembers, setTargetMembers] = useState<User[]>([])
+  const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const [unreadCnts, setUnreadCnts] = useState<object>({})
@@ -35,8 +35,8 @@ export default function ChatListScreen() {
 
   const memberIds = useMemo(() => {
     return Array.from(
-      new Set(chats?.flatMap((chat: any) => chat?.members || [])),
-    ) as string[]
+      new Set(chats?.flatMap((chat: RoomInfo) => chat?.members || [])),
+    ).sort((a: any, b: any) => b - a) as string[]
   }, [chats])
 
   const debouncedSetSearchText = useMemo(
@@ -51,43 +51,6 @@ export default function ChatListScreen() {
     navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
   }
 
-  // const getUnreadCount = (item: RoomInfo) => {
-  //   const uid = user?.uid
-  //   const lastRead = uid ? item?.lastReadTimestamps?.[uid] : null
-
-  //   if (uid && typeof lastRead === 'number') {
-  //     return lastRead
-  //   }
-
-  //   return null
-  // }
-
-  const getUnreadCounts = async (chats: RoomInfo[]) => {
-    let promises = []
-    if (!user?.uid) return
-    for (let i = 0; i <= chats?.length; i++) {
-      const chat = chats[i]
-      const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
-      if (chat.id) promises.push(getUnreadCount(chat.id, user?.uid, lastRead))
-    }
-    Promise.all(promises)
-      .then(res => {})
-      .catch(e => console.log(e))
-  }
-
-  useEffect(() => {
-    if (data?.pages && user?.uid) {
-      data?.pages?.forEach((page: RoomInfo[]) => {
-        // getUnreadCounts(page)
-        //   const lastRead = chat.lastReadTimestamps?.[user?.uid ?? ''] ?? 0
-        //   const count = await getUnreadCount(chat.id, user?.uid, lastRead)
-        //   // 이 count를 state에 저장하거나, chat 리스트에 매핑
-        // page.chats.forEach(async (chat: RoomInfo) => {
-        // })
-      })
-    }
-  }, [data])
-
   useEffect(() => {
     debouncedSetSearchText(input)
     // cleanup 함수로 debounce 취소
@@ -96,13 +59,22 @@ export default function ChatListScreen() {
 
   useEffect(() => {
     if (memberIds?.[0]) {
-      console.log('memberIds', memberIds)
-      // alert(JSON.stringify(chats))
-      getUsersByIds(memberIds).then(res => {
-        setTargetMembers(res)
+      const newIds = memberIds.filter(
+        id => !fetchedMemberIdsRef.current.has(id),
+      )
+      if (newIds.length === 0) return
+      getUsersByIds(newIds).then(res => {
+        // 캐시에 추가
+        res.forEach(user => fetchedMemberIdsRef.current.add(user?.id))
+        // 기존 캐시 + 신규 결과 병합
+        setTargetMembers(prev => {
+          const prevMap = new Map(prev.map(u => [u.id, u]))
+          res.forEach(u => prevMap.set(u.id, u))
+          return Array.from(prevMap.values())
+        })
       })
     }
-  }, [JSON.stringify(memberIds)])
+  }, [memberIds])
 
   return (
     <View style={{flex: 1}}>
@@ -115,7 +87,6 @@ export default function ChatListScreen() {
         data={chats}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
-          console.log(item)
           const isDM = item?.type == 'dm'
           const targetId = item?.members.find(
             (mId: string) => mId !== user?.uid,

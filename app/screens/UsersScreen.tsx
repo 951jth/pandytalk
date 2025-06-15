@@ -10,11 +10,9 @@ import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/useInfiniteQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {useAppSelector} from '../store/hooks'
+import {RootStackParamList} from '../types/navigate'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
-type RootStackParamList = {
-  chatRoom: {targetIds: string[]}
-}
 
 export default function UsersScreen(): React.JSX.Element {
   const [input, setInput] = useState<string>('')
@@ -42,8 +40,8 @@ export default function UsersScreen(): React.JSX.Element {
     [],
   )
 
-  const moveToChatRoom = (uid: string) => {
-    navigation.navigate('chatRoom', {targetIds: [uid]})
+  const moveToChatRoom = (uid: string, title: string) => {
+    navigation.navigate('chatRoom', {targetIds: [uid], title})
   }
 
   useEffect(() => {
@@ -68,7 +66,7 @@ export default function UsersScreen(): React.JSX.Element {
               item={item}
               onPress={() => {
                 dismissKeyboard()
-                if (!isKeyboardVisible) moveToChatRoom(item.uid)
+                if (!isKeyboardVisible) moveToChatRoom(item.uid, item?.nickname)
               }}
             />
           )

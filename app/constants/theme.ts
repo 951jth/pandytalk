@@ -44,7 +44,7 @@ const fonts = {
   bodyLarge: {
     // fontFamily: 'BMDOHYEON',
     fontFamily: 'System', // 입력 텍스트
-    fontWeight: 'normal',
+    // fontWeight: 'normal',
   },
   bodyMedium: {
     // fontFamily: 'BMDOHYEON',
@@ -69,8 +69,19 @@ const fonts = {
   },
 }
 
+const fontConfig = {
+  default: {
+    fontFamily: 'BMDOHYEON',
+    fontWeight: 'normal' as const,
+    letterSpacing: 0.5,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+}
+
 const theme = {
   ...MD3LightTheme,
+  // fonts: configureFonts({config: fontConfig}),
   fonts,
   colors: {
     ...MD3LightTheme.colors,
@@ -84,9 +95,9 @@ const theme = {
     onBackground: '#000000',
     onSurface: '#000000',
     outline: COLORS.gray,
-    fontWeight: '400',
-    lineHeight: 22,
-    fontSize: 12,
+    // fontWeight: '400',
+    // lineHeight: 22,
+    // fontSize: 12,
   },
 }
 
