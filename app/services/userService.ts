@@ -105,6 +105,7 @@ export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
     dispatch(setUser(initialFormValues))
     console.log('✅ 사용자 정보 초기화 완료')
   } catch (err) {
+    console.log(JSON.stringify(err))
     console.error('❌ 사용자 정보 초기화 실패:', err)
   }
 }
