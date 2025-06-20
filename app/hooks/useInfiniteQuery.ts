@@ -11,8 +11,8 @@ import {
   startAt,
   where,
 } from '@react-native-firebase/firestore'
-import {useInfiniteQuery} from '@tanstack/react-query'
-import {FsSnapshot, RoomInfo, User} from '../types/firebase'
+import {QueryClient, useInfiniteQuery} from '@tanstack/react-query'
+import {FsSnapshot, PushMessage, RoomInfo, User} from '../types/firebase'
 
 const firestore = getFirestore()
 const PAGE_SIZE = 10
@@ -120,7 +120,7 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
 
               const lastReadAt =
                 doc.data()?.lastReadTimestamps?.[userId || ''] ?? 0
-              console.log('lastReadAt', lastReadAt)
+
               const messagesRef = collection(
                 firestore,
                 `chats/${roomId}/messages`,
@@ -146,7 +146,6 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
             }),
           )
         ).filter(Boolean)
-        console.log('chats', chats)
         return {
           chats,
           lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
@@ -161,4 +160,100 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
       lastPage?.isLastPage ? undefined : lastPage?.lastVisible,
     initialPageParam: undefined,
   })
+}
+
+interface pageType {
+  chats: RoomInfo[]
+  lastVisible: unknown | null
+  isLastPage: boolean
+}
+
+export function updateChatListCache(
+  queryClient: QueryClient,
+  userId: string,
+  message: PushMessage,
+) {
+  const queryKey = ['chats', userId]
+  const prev = queryClient.getQueryData<{
+    pages: pageType[]
+    pageParams: unknown[]
+  }>(queryKey)
+  if (!prev) return
+  const pages = prev.pages
+  const flatList = pages?.flatMap(e => e?.chats || [])
+
+  // 현재 채팅방 존재 여부 확인
+  const exist = flatList.find(room => room.id === message.chatId)
+  let updatedFlat: RoomInfo[] = []
+
+  if (exist) {
+    updatedFlat = flatList.map(room =>
+      room.id === message.chatId
+        ? ({
+            ...room,
+            lastMessage: message,
+            unreadCount: (room.unreadCount ?? 0) + 1,
+          } as RoomInfo)
+        : room,
+    )
+  } else {
+    // 새 채팅방 추가
+    const newRoom: RoomInfo = {
+      id: message.chatId,
+      lastMessage: message,
+      createdAt: message.createdAt,
+      unreadCount: 1,
+      type: 'dm',
+      members: [userId, message.senderId], // 또는 다른 방식으로 초기화
+    }
+    updatedFlat = [newRoom, ...flatList]
+  }
+  updatedFlat.sort(
+    (a, b) =>
+      (b?.lastMessage?.createdAt || 0) - (a?.lastMessage?.createdAt || 0),
+  )
+  // 기존과 같은 page 크기로 다시 나누기 (여기선 첫 페이지 길이 기준)
+  const perPage = PAGE_SIZE
+  const newPages: pageType[] = []
+
+  for (let i = 0; i < flatList.length; i += perPage) {
+    const chunk = updatedFlat.slice(i, i + perPage)
+    newPages.push({
+      chats: chunk,
+      lastVisible: prev.pages[i].lastVisible, // ⚠️ 이 값은 클라이언트가 임의로 판단 불가하므로 null 처리
+      isLastPage: chunk.length < perPage,
+    })
+  }
+  queryClient.setQueryData(queryKey, {
+    ...prev,
+    pages: newPages,
+  })
+}
+
+export function updateChatLastReadCache(
+  queryClient: QueryClient,
+  chatId: string,
+  userId: string,
+) {
+  const queryKey = ['chats', userId]
+  const prev = queryClient.getQueryData<{
+    pages: pageType[]
+  }>(queryKey)
+  const newPages = prev?.pages?.map(page => {
+    const chats = page?.chats?.map(chat => {
+      const findChat = chat?.id == chatId
+      return findChat
+        ? {
+            ...chat,
+            unreadCount: 0,
+            lastReadTimestamps: {
+              ...chat.lastReadTimestamps,
+              [userId]: Date.now(),
+            },
+          }
+        : chat
+    })
+    return {...page, chats}
+  })
+  queryClient.setQueryData(queryKey, {...prev, pages: newPages})
 }

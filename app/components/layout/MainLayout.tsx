@@ -11,7 +11,7 @@ type propsType = {
 export default function MainLayout({children}: propsType): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark'
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
       <AppHeader />
       {children}
     </SafeAreaView>

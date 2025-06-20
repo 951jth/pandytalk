@@ -1,19 +1,30 @@
 import React from 'react'
 import {StyleSheet} from 'react-native'
-import {launchImageLibrary} from 'react-native-image-picker'
+import {
+  ImageLibraryOptions,
+  ImagePickerResponse,
+  launchImageLibrary,
+} from 'react-native-image-picker'
 import {IconButton} from 'react-native-paper'
 import {requestPhotoPermission} from '../../utils/permission'
 interface propTypes {
   iconSize?: number
+  onChange?: (result: ImagePickerResponse) => void
+  options?: Omit<ImageLibraryOptions, 'mediaType'>
 }
 
-export default function UploadButton({iconSize = 25}) {
+export default function UploadButton({
+  iconSize = 25,
+  onChange,
+  options,
+}: propTypes) {
   const pickFile = async () => {
     try {
       const hasPermission = await requestPhotoPermission()
       if (!hasPermission) return
-      const result = await launchImageLibrary({mediaType: 'photo'})
+      const result = await launchImageLibrary({mediaType: 'photo', ...options})
       if (result.didCancel || !result.assets?.[0]?.uri) return
+      if (onChange) onChange(result)
       //   setPreviewUrl(result.assets[0].uri!)
     } catch (e) {
       console.log('이미지피커 오류: ', e)

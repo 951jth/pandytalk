@@ -20,7 +20,7 @@ export default function LoginScreen() {
     email: '',
     password: '',
   })
-  const [error, setError] = useState<String | null>('')
+  const [error, setError] = useState<string | null>('')
   const [loading, setLoading] = useState<boolean>(false)
   const onSubmit = async () => {
     try {
@@ -64,7 +64,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <KeyboardViewWrapper>
+      <KeyboardViewWrapper useTouchable={true}>
         <LinearGradient
           colors={['#A1C4FD', '#C2E9FB']}
           style={styles.container}>

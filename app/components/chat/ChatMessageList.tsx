@@ -1,77 +1,23 @@
-import React, {useEffect, useRef, useState} from 'react'
-import {
-  FlatList,
-  Image,
-  Keyboard,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native'
+import React, {useEffect, useState} from 'react'
+import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {getChatMessages, subscribeToMessages} from '../../services/chatService'
 import {ChatMessage, RoomInfo} from '../../types/firebase'
 import {isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
+import ImageViewer from '../common/ImageViewer'
 
-interface propTypes {
+interface Props {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: RoomInfo | null
+  inputComponent?: React.ComponentType<any> | React.ReactElement | null
 }
 
-export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
+export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const members = roomInfo?.memberInfos ?? []
-  const flatListRef = useRef<FlatList<any>>(null)
-  const MyChat = ({item, hideMinuete}: any) => {
-    return (
-      <View style={styles.myChat}>
-        <Text style={{color: COLORS.onPrimary}}>{item?.text}</Text>
-        {!hideMinuete && (
-          <Text style={[styles.chatDate, {left: -60}]}>
-            {formatChatTime(item?.createdAt)}
-          </Text>
-        )}
-      </View>
-    )
-  }
-
-  const OtherChat = ({item, hideProfile, hideMinuete}: any) => {
-    const member = members?.find(mem => mem?.uid == item?.senderId) || null
-    return (
-      <>
-        {!hideProfile && (
-          <View style={styles.frame}>
-            {member?.photoURL ? (
-              <Image
-                source={{
-                  uri: member?.photoURL,
-                }}
-                resizeMode="cover"
-                style={styles.image}
-              />
-            ) : (
-              <Icon source="account" size={35} color={COLORS.primary} />
-            )}
-          </View>
-        )}
-        <View style={{marginLeft: hideProfile ? 55 : 0}}>
-          {!hideProfile && (
-            <Text style={styles.nickname}>{member?.nickname}</Text>
-          )}
-          <View style={styles.otherChat}>
-            <Text style={{color: COLORS.text}}>{item?.text}</Text>
-            {!hideMinuete && (
-              <Text style={[styles.chatDate, {right: -65}]}>
-                {formatChatTime(item?.createdAt)}
-              </Text>
-            )}
-          </View>
-        </View>
-      </>
-    )
-  }
 
   useEffect(() => {
     if (!roomId) return
@@ -79,72 +25,104 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
       setMessages(res ?? [])
     })
 
-    //양방향 통신 설정
     const unsub = subscribeToMessages(roomId, msgs => {
-      setMessages(msgs as Array<ChatMessage>) // 상태 갱신
+      setMessages(msgs as ChatMessage[])
     })
 
-    return () => unsub() // 언마운트 시 리스너 제거
+    return () => unsub()
   }, [roomId])
 
-  useEffect(() => {
-    //현재 일부 기기에서 keyboardAvoidingView 포커싱후 bottom이 높게뜨는 이슈가 있음
-    //해결 방법 찾는중
-    const showSub = Keyboard.addListener('keyboardDidShow', e => {
-      // 키보드 높이에 따라 동적으로 offset 적용
-      const offset = Platform.OS === 'ios' ? 50 : 0
-      // setKeyboardOffset(offset)
-    })
-    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      // setKeyboardOffset(0 - statusBottomHeight)
-      if (flatListRef?.current) {
-        console.log('check!')
-        flatListRef?.current?.scrollToOffset({offset: 0, animated: true})
-      }
-    })
-    return () => {
-      showSub.remove()
-      hideSub.remove()
-    }
-  }, [flatListRef?.current])
+  const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
+    const isMine = item?.senderId === userId
+    const nextItem = messages[index + 1]
+    const hideProfile = isSameSender(item, nextItem)
+    const hideMinute = isSameMinute(item, nextItem)
+    const member = members?.find(mem => mem?.uid === item?.senderId)
+
+    return (
+      <View
+        style={[
+          styles.chatRow,
+          {justifyContent: isMine ? 'flex-end' : 'flex-start'},
+        ]}>
+        {isMine ? (
+          <View style={styles.myChat}>
+            {/* 내 채팅 */}
+            <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
+            {item?.type == 'image' && item?.imageUrl && (
+              <ImageViewer
+                images={[{uri: item?.imageUrl}]}
+                imageProps={{
+                  resizeMode: 'cover',
+                  style: styles.chatImage,
+                }}
+              />
+            )}
+            {!hideMinute && item?.createdAt && (
+              <Text style={[styles.chatDate, {left: -60}]}>
+                {formatChatTime(item?.createdAt)}
+              </Text>
+            )}
+          </View>
+        ) : (
+          <>
+            {!hideProfile && (
+              //프로필
+              <View style={styles.frame}>
+                {member?.photoURL ? (
+                  <Image
+                    source={{uri: member.photoURL}}
+                    resizeMode="cover"
+                    style={styles.profile}
+                  />
+                ) : (
+                  <Icon source="account" size={35} color={COLORS.primary} />
+                )}
+              </View>
+            )}
+            <View style={{marginLeft: hideProfile ? 55 : 0}}>
+              {/* 닉네임 */}
+              {!hideProfile && (
+                <Text style={styles.nickname}>{member?.nickname}</Text>
+              )}
+              <View style={styles.otherChat}>
+                {/* 상대 채팅 */}
+                <Text style={{color: COLORS.text}}>{item.text}</Text>
+                {item?.type == 'image' && item?.imageUrl && (
+                  <ImageViewer
+                    images={[{uri: item?.imageUrl}]}
+                    imageProps={{
+                      resizeMode: 'cover',
+                      style: styles.chatImage,
+                    }}
+                  />
+                )}
+                {!hideMinute && (
+                  <Text style={[styles.chatDate, {right: -65}]}>
+                    {formatChatTime(item.createdAt)}
+                  </Text>
+                )}
+              </View>
+            </View>
+          </>
+        )}
+      </View>
+    )
+  }
 
   return (
     <FlatList
-      ref={flatListRef}
+      style={styles.flex}
       data={messages}
-      keyExtractor={item => item.id || item?.senderId}
-      renderItem={({item, index}) => {
-        const isMine = item?.senderId == userId
-        const afterItem = messages?.[index + 1] ?? null
-        const ishideProfile = isSameSender(item, afterItem)
-        const isHideMinuete = isSameMinute(item, afterItem)
-
-        return (
-          <View
-            style={[
-              styles.chatRow,
-              {justifyContent: isMine ? 'flex-end' : 'flex-start'},
-            ]}>
-            {isMine ? (
-              <MyChat item={item} hideMinuete={isHideMinuete} />
-            ) : (
-              <OtherChat
-                item={item}
-                hideProfile={ishideProfile}
-                hideMinuete={isHideMinuete}
-              />
-            )}
-          </View>
-        )
-      }}
-      style={{flex: 1}}
+      keyExtractor={(item, index) => item.id ?? `${item.senderId}_${index}`}
+      renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
       inverted
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
       onScroll={({nativeEvent}) => {
         if (nativeEvent.contentOffset.y <= 0) {
-          // 👉 이전 메시지 불러오기 로직 호출
+          // 🔁 페이징 or 이전 메시지 불러오기
         }
       }}
     />
@@ -152,10 +130,13 @@ export default function ChatMessageList({roomId, userId, roomInfo}: propTypes) {
 }
 
 const styles = StyleSheet.create({
+  flex: {
+    flex: 1,
+  },
   chatList: {
-    // flexGrow: 1,
-    paddingTop: 4,
-    // paddingBottom: 16,
+    minHeight: 100,
+    flexGrow: 1,
+    paddingTop: 8,
     paddingHorizontal: 16,
   },
   chatRow: {
@@ -170,7 +151,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     backgroundColor: COLORS.primary,
     position: 'relative',
-    maxWidth: 200,
+    maxWidth: 250,
   },
   otherChat: {
     padding: 10,
@@ -180,13 +161,10 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     backgroundColor: COLORS.background,
     position: 'relative',
-    maxWidth: 200,
-    flexDirection: 'row',
-    gap: 12,
+    maxWidth: 250,
   },
   chatDate: {
-    // color: '#D9D9D9',
-    color: '#333333',
+    color: '#333',
     fontSize: 12,
     position: 'absolute',
     bottom: 0,
@@ -200,17 +178,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: COLORS.primary,
     borderWidth: 1,
-    position: 'relative',
     backgroundColor: '#FFF',
-    // ✅ 그림자 효과 (iOS + Android 호환)
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3, // Android 전용 그림자
+    elevation: 3,
     marginRight: 10,
   },
-  image: {
+  profile: {
     width: 48,
     height: 48,
     borderRadius: 25,
@@ -218,6 +194,11 @@ const styles = StyleSheet.create({
   nickname: {
     marginBottom: 2,
     fontSize: 13,
-    // marginTop: 0,
+  },
+  chatImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 8,
+    marginTop: 8,
   },
 })

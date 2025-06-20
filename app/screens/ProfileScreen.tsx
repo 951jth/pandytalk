@@ -23,7 +23,6 @@ export default function ProfileScreen(): React.JSX.Element {
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const [formValues, setFormValues] = useState<object | null>()
   const [edit, setEdit] = useState<boolean>(false)
-  const [photoURL, setPhotoURL] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>('')
   const dispatch = useDispatch<AppDispatch>()
@@ -44,12 +43,13 @@ export default function ProfileScreen(): React.JSX.Element {
     {label: '게스트 여부', contents: user?.isGuest ? 'Y' : 'N'},
   ]
   const initialFormValues = {
+    // ...user,
     uid,
     authority: 'USER',
     email: user?.email ?? '',
     isGuest: true,
     lastSeen: Date.now(),
-    nickname: '',
+    nickname: user?.email,
     photoURL: '',
     status: 'online',
   } //초기값이 없는 경우 강제로넣어줌
@@ -90,16 +90,17 @@ export default function ProfileScreen(): React.JSX.Element {
       //새로등록한 유저의 경우 초기값설정해서 등록해줌
       initialUserInfo(uid as string, dispatch)
     }
-    setFormValues(user as object)
+    // setFormValues(user as object)
     if (user?.photoURL) setPreviewUrl(user.photoURL)
   }, [user])
+  console.log('previewUrl', previewUrl)
 
   return (
     <View style={styles.container}>
       <View style={styles.contents}>
         <InputForm
           items={formItems}
-          initialData={formValues}
+          initialData={user || initialFormValues}
           editable={true}
           buttonLabel="프로필 "
           topElement={

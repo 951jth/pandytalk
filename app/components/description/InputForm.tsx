@@ -1,5 +1,5 @@
 import {get, set} from 'lodash'
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {
   ScrollView,
   StyleProp,
@@ -53,15 +53,20 @@ export default function InputForm({
   loading = false,
   onSubmit = values => {},
 }: propsType): React.JSX.Element {
+  const resetValues = useRef<object>({})
   const [formValues, setFormValues] = useState<object | null>()
   // const [edit, setEdit] = useState<boolean>(defaultEdit)
 
   const onEditChange = (bool: boolean) => {
     setEdit(bool)
+    if (!bool) setFormValues(resetValues?.current)
   }
 
   useEffect(() => {
-    if (initialData) setFormValues(initialData)
+    if (initialData) {
+      resetValues.current = initialData
+      setFormValues(initialData)
+    }
   }, [initialData])
 
   return (

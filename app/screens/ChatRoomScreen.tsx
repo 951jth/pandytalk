@@ -1,12 +1,14 @@
 import {useFocusEffect, useRoute} from '@react-navigation/native'
-import React, {ReactNode, useEffect, useRef, useState} from 'react'
-import {FlatList, StyleSheet, View} from 'react-native'
+import {useQueryClient} from '@tanstack/react-query'
+import React, {ReactNode, useEffect, useState} from 'react'
+import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
+import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import {
   getChatRoomInfo,
   getDirectMessageRoomId,
@@ -26,9 +28,9 @@ export default function ChatRoomScreen() {
   const targetMember = roomInfo?.memberInfos?.find(
     member => member?.id == targetIds?.[0], //채팅방이 없으면 targetIds는 필수로 들고와야함
   )
-  const flatListRef = useRef<FlatList<any>>(null)
   const rightActions: ReactNode[] = []
-  console.log('roomId, targetIds, title', roomId, targetIds, title)
+  const queryClient = useQueryClient()
+
   const getRoomId = async () => {
     let rid = currentRid
     if (!rid && user?.uid !== targetIds?.[0] && user?.uid && targetIds?.[0]) {
@@ -59,6 +61,7 @@ export default function ChatRoomScreen() {
       return () => {
         if (currentRid && user?.uid) {
           updateLastRead(currentRid, user.uid) // ✅ 화면 벗어날 때 실행됨
+          updateChatLastReadCache(queryClient, currentRid, user.uid) //현재 query 캐시갱신
         }
       }
     }, [currentRid, user?.id]),
@@ -66,11 +69,8 @@ export default function ChatRoomScreen() {
 
   return (
     <>
-      <SafeAreaView
-        style={styles.container}
-        // edges={['left', 'right', 'bottom']}
-      >
-        <KeyboardUtilitiesWrapper>
+      <SafeAreaView style={styles.container}>
+        <KeyboardUtilitiesWrapper useTouchable={false}>
           <View style={styles.inner}>
             <AppHeader
               title={title || targetMember?.nickname || '채팅방'}
@@ -101,7 +101,18 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    // justifyContent: 'space-between',
     backgroundColor: COLORS.outerColor,
+  },
+  inputWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    // paddingVertical: 10,
+    // paddingHorizontal: 16,
+    // borderTopWidth: 1,
+    // borderTopColor: '#eee',
+    zIndex: 10,
   },
 })

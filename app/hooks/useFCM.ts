@@ -11,6 +11,8 @@ import {
 import {useQueryClient} from '@tanstack/react-query'
 import {useEffect} from 'react'
 import {PermissionsAndroid, Platform} from 'react-native'
+import {PushMessage} from '../types/firebase'
+import {updateChatListCache} from './useInfiniteQuery'
 
 // iOS 권한 : alert, badge, sound, provisional 선택 가능
 const iosPermOptions = {
@@ -92,30 +94,51 @@ export function useFCMListener(userId: string | null | undefined) {
     const app = getApp()
     const messaging = getMessaging(app)
 
+    const updateChatList = (remoteMessage: any) => {
+      const data = remoteMessage?.data
+      if (data) {
+        updateChatListCache(queryClient, userId, {
+          chatId: data.chatId,
+          pushType: data.pushType,
+          senderId: data.senderId,
+          text: data.text,
+          type: data.type,
+          imageUrl: data.imageUrl || '',
+          senderName: data.senderName || '',
+          senderPicURL: data.senderPicURL || '',
+          createdAt: Number(data.createdAt),
+        } as PushMessage)
+        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
+      }
+    }
+
     // ✅ 포그라운드 수신
     const unsubscribe = onMessage(messaging, async remoteMessage => {
-      const type = remoteMessage?.data?.type
+      console.log('음음?')
+      const type = remoteMessage?.data?.pushType
       if (type === 'chat') {
-        console.log('[FCM] foreground: 채팅 목록 새로고침')
-        queryClient.invalidateQueries({queryKey: ['chats', userId]})
+        console.log('[FCM] foreground tap: 채팅 목록 새로고침')
+        updateChatList(remoteMessage)
       }
     })
 
     // ✅ 백그라운드 탭
     onNotificationOpenedApp(messaging, remoteMessage => {
-      const type = remoteMessage?.data?.type
+      const type = remoteMessage?.data?.pushType
       if (type === 'chat') {
         console.log('[FCM] background tap: 채팅 목록 새로고침')
-        queryClient.invalidateQueries({queryKey: ['chats', userId]})
+        updateChatList(remoteMessage)
+        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
       }
     })
 
     // ✅ 종료 상태에서 푸시로 실행된 경우
     getInitialNotification(messaging).then(remoteMessage => {
-      const type = remoteMessage?.data?.type
+      const type = remoteMessage?.data?.pushType
       if (type === 'chat') {
         console.log('[FCM] quit → 실행됨: 채팅 목록 새로고침')
-        queryClient.invalidateQueries({queryKey: ['chats', userId]})
+        updateChatList(remoteMessage)
+        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
       }
     })
 

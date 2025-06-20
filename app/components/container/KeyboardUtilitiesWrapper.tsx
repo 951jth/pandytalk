@@ -6,15 +6,14 @@ import {
   Platform,
   TouchableWithoutFeedback,
   TouchableWithoutFeedbackProps,
+  View,
 } from 'react-native'
-import {useSafeAreaInsets} from 'react-native-safe-area-context'
 interface propTypes {
   children: React.ReactNode
   keyboardAvoidingView?: KeyboardAvoidingViewProps
   touchableWithoutFeedback?: TouchableWithoutFeedbackProps
   useTouchable?: boolean
   useAvoiding?: boolean
-  addOffset?: number
 }
 export default function KeyboardUtilitiesWrapper({
   children,
@@ -22,49 +21,49 @@ export default function KeyboardUtilitiesWrapper({
   touchableWithoutFeedback,
   useTouchable = true,
   useAvoiding = true,
-  addOffset = 0, //현재는 안드로이드만
 }: propTypes) {
-  // const [keyboardOffset, setKeyboardOffset] = useState(addOffset)
-  const insets = useSafeAreaInsets()
-  const statusTopHeight = insets.top
-  const statusBottomHeight = insets.bottom || 0
-  const [layoutFixKey, setLayoutFixKey] = useState<boolean>(false)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
 
   useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', e => {
+      setKeyboardHeight(e.endCoordinates?.height || 0)
+    })
     const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-      setLayoutFixKey(prev => !prev) // 강제 리렌더 트리거
+      setKeyboardHeight(0)
     })
 
-    return () => hideSub.remove()
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
   }, [])
 
   const wrapChildren = (children: React.ReactNode) => {
     let WrappedChildren = children
+    if (useAvoiding) {
+      WrappedChildren =
+        Platform.OS === 'ios' ? (
+          <KeyboardAvoidingView
+            behavior="padding"
+            keyboardVerticalOffset={50} // Header 높이 고려
+            style={{flex: 1}}
+            {...keyboardAvoidingView}>
+            {WrappedChildren}
+          </KeyboardAvoidingView>
+        ) : (
+          <View style={{flex: 1, paddingBottom: keyboardHeight}}>
+            {WrappedChildren}
+          </View>
+        )
+    }
     if (useTouchable) {
       WrappedChildren = (
         <TouchableWithoutFeedback
-          // onPress={Keyboard.dismiss}
-          onPress={() => {
-            setTimeout(() => {
-              Keyboard.dismiss()
-            }, 100) // 100ms 정도 지연 (원하는 시간으로 조절 가능)
-          }}
+          onPress={Keyboard.dismiss}
           accessible={false}
           {...touchableWithoutFeedback}>
           {WrappedChildren}
         </TouchableWithoutFeedback>
-      )
-    }
-    if (useAvoiding) {
-      WrappedChildren = (
-        <KeyboardAvoidingView
-          key={`avoiding-${layoutFixKey}`}
-          style={{flex: 1}}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
-          {...keyboardAvoidingView}>
-          {WrappedChildren}
-        </KeyboardAvoidingView>
       )
     }
     return WrappedChildren
