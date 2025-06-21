@@ -57,6 +57,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const updateUserProfile = async (formValues: object) => {
     try {
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
+      if (!user) initialUserInfo(uid as string, dispatch)
       setSubmitting(true)
       const firestore = getFirestore()
       const userRef = doc(firestore, 'users', uid)
@@ -86,10 +87,6 @@ export default function ProfileScreen(): React.JSX.Element {
   }
 
   useEffect(() => {
-    if (!user) {
-      //새로등록한 유저의 경우 초기값설정해서 등록해줌
-      initialUserInfo(uid as string, dispatch)
-    }
     // setFormValues(user as object)
     if (user?.photoURL) setPreviewUrl(user.photoURL)
   }, [user])

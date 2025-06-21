@@ -75,7 +75,6 @@ export default function ChatListScreen() {
       )
       if (newIds.length === 0) return
       getUsersByIds(newIds).then(res => {
-        console.log('users', res)
         // 캐시에 추가
         res.forEach(user => fetchedMemberIdsRef.current.add(user?.uid))
         // 기존 캐시 + 신규 결과 병합

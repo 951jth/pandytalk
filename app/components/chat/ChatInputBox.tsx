@@ -29,6 +29,7 @@ export default function ChatInputBox({
   const [text, setText] = useState<string>('')
   const authInstance = getAuth()
   const currentUser = authInstance.currentUser
+  const [loading, setLoading] = useState<boolean>(false)
   // const onNewChatRoom = () => {
   //   createChatRoom()
   // }
@@ -40,6 +41,7 @@ export default function ChatInputBox({
     if (!user?.uid) return
     try {
       let rid = roomId
+      setLoading(true)
       if (!rid && targetIds?.[0]) {
         rid = await createChatRoom(user?.uid, targetIds)
       }
@@ -80,6 +82,8 @@ export default function ChatInputBox({
     } catch (e) {
       Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')
       console.log('error', e)
+    } finally {
+      setLoading(false)
     }
     setText('')
     Keyboard.dismiss()
@@ -112,6 +116,7 @@ export default function ChatInputBox({
         style={styles.sendButton}
         iconColor={COLORS.onPrimary}
         onPress={() => onSendMessage()}
+        loading={loading}
       />
     </View>
   )

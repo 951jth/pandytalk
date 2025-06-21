@@ -11,7 +11,6 @@ import {
 import {Button, IconButton, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {inputFormItemType} from '../../types/form'
-import KeyboardUtilitiesWrapper from '../container/KeyboardUtilitiesWrapper'
 import EditInput from '../input/EditInput'
 
 interface propsType {
@@ -72,66 +71,64 @@ export default function InputForm({
   return (
     <>
       {/* {loading && <ActivityIndicator size="large" color={COLORS.primary} />} */}
-      <KeyboardUtilitiesWrapper>
-        <View style={[styles.container, style]}>
-          {edit && (
-            <IconButton
-              icon="close"
-              size={20}
-              style={styles.backBtn}
-              onTouchEnd={() => onEditChange(false)}
-            />
-          )}
-          {topElement}
-          <ScrollView style={[styles.items]}>
-            {items?.map((item, index) => {
-              const findText = item?.key ? get(formValues, item.key) : '-'
-              return (
-                <View style={[styles.row, rowStyle]} key={index}>
-                  <Text
-                    style={[
-                      styles.label,
-                      {minWidth: labelWidth, fontSize},
-                      labelStyle,
-                    ]}>
-                    {item?.label}
-                  </Text>
-                  <View style={[styles.contents, contentsStyle, {fontSize}]}>
-                    {item?.contents ? (
-                      <Text style={styles.textContent}>{item?.contents}</Text>
-                    ) : (
-                      <EditInput
-                        edit={item?.fixed ? false : edit}
-                        defaultValue={findText}
-                        onChangeText={text => {
-                          if (!item?.key) return
-                          setFormValues(prev => {
-                            const updated = {...(prev || {})}
-                            set(updated, item.key || '', text)
-                            return updated
-                          })
-                        }}
-                      />
-                    )}
-                  </View>
+      <View style={[styles.container, style]}>
+        {edit && (
+          <IconButton
+            icon="close"
+            size={20}
+            style={styles.backBtn}
+            onTouchEnd={() => onEditChange(false)}
+          />
+        )}
+        {topElement}
+        <ScrollView style={[styles.items]}>
+          {items?.map((item, index) => {
+            const findText = item?.key ? get(formValues, item.key) : '-'
+            return (
+              <View style={[styles.row, rowStyle]} key={index}>
+                <Text
+                  style={[
+                    styles.label,
+                    {minWidth: labelWidth, fontSize},
+                    labelStyle,
+                  ]}>
+                  {item?.label}
+                </Text>
+                <View style={[styles.contents, contentsStyle, {fontSize}]}>
+                  {item?.contents ? (
+                    <Text style={styles.textContent}>{item?.contents}</Text>
+                  ) : (
+                    <EditInput
+                      edit={item?.fixed ? false : edit}
+                      defaultValue={findText}
+                      onChangeText={text => {
+                        if (!item?.key) return
+                        setFormValues(prev => {
+                          const updated = {...(prev || {})}
+                          set(updated, item.key || '', text)
+                          return updated
+                        })
+                      }}
+                    />
+                  )}
                 </View>
-              )
-            })}
-          </ScrollView>
-          {bottomElement}
-          {editable && (
-            <Button
-              mode="contained"
-              onTouchEnd={() => {
-                if (edit) onSubmit(formValues)
-                onEditChange(!edit)
-              }}
-              loading={loading}>
-              {`${buttonLabel}${edit ? '저장' : '수정'}`}
-            </Button>
-          )}
-        </View>
-      </KeyboardUtilitiesWrapper>
+              </View>
+            )
+          })}
+        </ScrollView>
+        {bottomElement}
+        {editable && (
+          <Button
+            mode="contained"
+            onTouchEnd={() => {
+              if (edit) onSubmit(formValues)
+              onEditChange(!edit)
+            }}
+            loading={loading}>
+            {`${buttonLabel}${edit ? '저장' : '수정'}`}
+          </Button>
+        )}
+      </View>
     </>
   )
 }

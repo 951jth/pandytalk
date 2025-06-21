@@ -1,6 +1,5 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
-import {StyleSheet} from 'react-native'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {tabScreens} from '../../hooks/useRoutes'
@@ -41,13 +40,3 @@ export default function TabContents(): React.JSX.Element {
     </Tab.Navigator>
   )
 }
-
-const styles = StyleSheet.create({
-  bottomNavigator: {
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 3, // Android 그림자
-  },
-})

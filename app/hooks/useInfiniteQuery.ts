@@ -66,14 +66,6 @@ export const useUsersInfinite = (searchText: string = '') => {
   })
 }
 
-// 유저별 마지막 읽은 시간
-const getUserLastRead = async (roomId: string, userId: string) => {
-  const lastReadRef = collection(firestore, `chats/${roomId}/readStatus`)
-  const snap = await getDocs(query(lastReadRef, where('uid', '==', userId)))
-  const data = snap.docs[0]?.data()
-  return data?.lastReadTimestamps ?? 0
-}
-
 export const useMyChatsInfinite = (userId: string | null | undefined) => {
   return useInfiniteQuery({
     enabled: !!userId, // userId 없을 때 쿼리 비활성화
