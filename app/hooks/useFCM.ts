@@ -1,6 +1,11 @@
 import {getApp} from '@react-native-firebase/app'
 import {getAuth} from '@react-native-firebase/auth'
-import {doc, getFirestore, setDoc} from '@react-native-firebase/firestore'
+import {
+  arrayUnion,
+  doc,
+  getFirestore,
+  setDoc,
+} from '@react-native-firebase/firestore'
 import {
   getInitialNotification,
   getMessaging,
@@ -71,7 +76,7 @@ export function useFCMSetup() {
         const token = await messaging.getToken()
         await setDoc(
           doc(firestore, 'users', currentUser.uid),
-          {fcmToken: token},
+          {fcmTokens: arrayUnion(token)},
           {merge: true},
         )
       } catch (e) {

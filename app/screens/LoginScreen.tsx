@@ -1,5 +1,5 @@
 import pandy from '@assets/images/pandy_visible.png'
-import auth from '@react-native-firebase/auth'
+import {getAuth, signInWithEmailAndPassword} from '@react-native-firebase/auth'
 import React, {useState} from 'react'
 import {Image, StyleSheet, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
@@ -20,13 +20,16 @@ export default function LoginScreen() {
     email: '',
     password: '',
   })
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
   const [error, setError] = useState<String | null>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const authInstance = getAuth()
   const onSubmit = async () => {
     try {
       setLoading(true)
-      const {email, password} = formValues
-      await auth().signInWithEmailAndPassword(email, password)
+      // const {email, password} = formValues
+      await signInWithEmailAndPassword(authInstance, email, password)
     } catch (error: any) {
       handleFirebaseAuthError(error)
     } finally {
@@ -58,9 +61,9 @@ export default function LoginScreen() {
     setError(message)
   }
 
-  const onFormChange = (key: string, value: string) => {
-    setFormValues(old => ({...old, [key]: value}))
-  }
+  // const onFormChange = (key: string, value: string) => {
+  //   setFormValues(old => ({...old, [key]: value}))
+  // }
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -74,13 +77,12 @@ export default function LoginScreen() {
             <CustomInput
               label="이메일"
               mode="outlined"
-              onChangeText={e => {
-                onFormChange('email', e)
-              }}
+              onChangeText={setEmail}
             />
             <PasswordInput
               mode="outlined"
-              onChangeText={e => onFormChange('password', e)}
+              // onChangeText={e => onFormChange('password', e)}
+              onChangeText={setPassword}
             />
             <Text style={styles.errorText}>{error}</Text>
             <Button

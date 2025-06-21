@@ -49,8 +49,13 @@ export const sendNewMessageNotification = onDocumentCreated(
 
       for (const uid of receiverIds) {
         const userSnap = await db.doc(`users/${uid}`).get()
-        const token = userSnap.get('fcmToken')
-        if (token) tokens.push(token)
+        const userData = userSnap.data()
+        if (!userData) continue
+
+        const fcmTokens = userData.fcmTokens
+        if (Array.isArray(fcmTokens)) {
+          tokens.push(...fcmTokens.filter(Boolean)) // null/undefined 방지
+        }
       }
 
       if (tokens.length === 0) {
