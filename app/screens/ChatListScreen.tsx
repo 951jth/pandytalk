@@ -1,5 +1,6 @@
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
@@ -8,7 +9,10 @@ import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
-import {useMyChatsInfinite} from '../hooks/useInfiniteQuery'
+import {
+  updateChatLastReadCache,
+  useMyChatsInfinite,
+} from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import type {RoomInfo, User} from '../types/firebase'
@@ -16,6 +20,7 @@ import {RootStackParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
   const {data: user} = useAppSelector(state => state.user)
+  const queryClient = useQueryClient()
   const {
     data,
     isLoading,
@@ -24,14 +29,18 @@ export default function ChatListScreen() {
     isFetchingNextPage,
     refetch,
   } = useMyChatsInfinite(user?.uid) as any
-  const [targetMembers, setTargetMembers] = useState<User[]>([])
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
-  const [unreadCnts, setUnreadCnts] = useState<object>({})
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
   const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
+  const [targetMembers, setTargetMembers] = useState<User[]>([])
+  const chatsWithMemberInfo = chats?.map((chat: any) => {
+    const targetId = chat?.members.find((mId: string) => mId !== user?.uid)
+    const findMember = targetMembers?.find(member => member?.uid == targetId)
+    return {...chat, targetId, findMember}
+  })
 
   const memberIds = useMemo(() => {
     return Array.from(
@@ -48,6 +57,8 @@ export default function ChatListScreen() {
   )
 
   const moveToChatRoom = (roomId: string, uid: string) => {
+    if (!user?.uid) return
+    updateChatLastReadCache(queryClient, roomId, user?.uid)
     navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
   }
 
@@ -64,8 +75,9 @@ export default function ChatListScreen() {
       )
       if (newIds.length === 0) return
       getUsersByIds(newIds).then(res => {
+        console.log('users', res)
         // 캐시에 추가
-        res.forEach(user => fetchedMemberIdsRef.current.add(user?.id))
+        res.forEach(user => fetchedMemberIdsRef.current.add(user?.uid))
         // 기존 캐시 + 신규 결과 병합
         setTargetMembers(prev => {
           const prevMap = new Map(prev.map(u => [u.id, u]))
@@ -79,22 +91,21 @@ export default function ChatListScreen() {
   return (
     <View style={{flex: 1}}>
       <SearchInput
-        placeholder="검색할 닉네임 시작 글자를 입력해주세요."
+        placeholder="검색할 닉네임을 입력해주세요."
         value={input}
         onChangeText={setInput}
       />
       <FlatList
-        data={chats}
+        data={chatsWithMemberInfo?.filter((chat: any) =>
+          String(chat.findMember?.nickname?.toLowerCase())?.includes(
+            searchText,
+          ),
+        )}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
           const isDM = item?.type == 'dm'
-          const targetId = item?.members.find(
-            (mId: string) => mId !== user?.uid,
-          )
-          const findMember = targetMembers?.find(
-            member => member?.uid == targetId,
-          )
-          // const unreadCnt = getUnreadCount(item as RoomInfo)
+          const findMember = item?.findMember
+          const targetId = findMember?.id
           return (
             <Pressable
               onPress={() => moveToChatRoom(item.id, targetId)}
@@ -237,7 +248,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 14,
     color: '#000',
-    fontWeight: 'bold',
     fontFamily: 'BMDOHYEON',
   },
   lastMessage: {

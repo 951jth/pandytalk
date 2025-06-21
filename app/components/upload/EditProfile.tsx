@@ -57,13 +57,27 @@ export default function EditProfile({
 
   const pickImage = async () => {
     try {
+      // Android 13 이상일 경우 권한 체크
       const hasPermission = await requestPhotoPermission()
       if (!hasPermission) return
-      const result = await launchImageLibrary({mediaType: 'photo'})
-      if (result.didCancel || !result.assets?.[0]?.uri) return
-      setPreviewUrl(result.assets[0].uri!)
-    } catch (e) {
-      console.log('이미지피커 오류: ', e)
+
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+      })
+
+      // 유저가 취소했거나 uri가 없을 경우 무시
+      if (result.didCancel || result.errorCode) return
+      const asset = result.assets?.[0]
+      if (!asset?.uri) {
+        console.warn('선택된 이미지가 없습니다.')
+        return
+      }
+
+      // 결과 URI 설정
+      setPreviewUrl(asset.uri)
+    } catch (error) {
+      console.error('이미지 선택 중 오류:', error)
     }
   }
 

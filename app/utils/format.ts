@@ -1,6 +1,25 @@
 import dayjs from 'dayjs'
+import {PushMessage} from '../types/firebase'
 
-export const formatChatTime = (timestamp: number): string => {
+// 푸시 메세지 타입 변환 함수
+export function parsePushMessage(data: {[key: string]: string}): PushMessage {
+  return {
+    chatId: data.chatId,
+    pushType: data.pushType,
+    senderId: data.senderId,
+    text: data.text,
+    type: data.type as 'text' | 'image' | 'file',
+    imageUrl: data.imageUrl || '',
+    senderName: data.senderName || '',
+    senderPicURL: data.senderPicURL || '',
+    createdAt: Number(data.createdAt),
+  }
+}
+
+export const formatChatTime = (
+  timestamp: number | null | undefined,
+): string => {
+  if (!timestamp) return ''
   const hour = dayjs(timestamp).format('h:mm')
   const period = dayjs(timestamp).hour() < 12 ? '오전' : '오후'
   return `${period}:${hour}`

@@ -79,8 +79,7 @@ export function MainApp(): React.JSX.Element {
   return (
     <NavigationContainer ref={navigationRef}>
       <StatusBar
-        translucent={true}
-        // translucent={false}
+        translucent={false}
         backgroundColor="#FFF" // Android 배경
         barStyle={'dark-content'}
       />

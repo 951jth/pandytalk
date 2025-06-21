@@ -67,7 +67,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{flex: 1}}>
-      <KeyboardViewWrapper>
+      <KeyboardViewWrapper useTouchable={true}>
         <LinearGradient
           colors={['#A1C4FD', '#C2E9FB']}
           style={styles.container}>

@@ -94,9 +94,14 @@ export const sendNewMessageNotification = onDocumentCreated(
         },
         data: {
           chatId: String(chatId),
-          senderId: String(senderId),
-          senderName: String(message?.senderName || ''),
-          type: 'chat',
+          text: message.text ?? '',
+          type: message.type ?? '',
+          senderId: String(message.senderId ?? ''),
+          senderName: message.senderName ?? '',
+          senderPicURL: message.senderPicURL ?? '',
+          imageUrl: message.imageUrl ?? '',
+          createdAt: String(message.createdAt ?? Date.now()),
+          pushType: 'chat',
         },
       }
       // 4. 메시지 전송

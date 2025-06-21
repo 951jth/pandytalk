@@ -17,8 +17,6 @@ export default function AuthNavigator() {
   useFCMListener(currentUser?.uid)
 
   function navigateToChat(roomId: string, title?: string) {
-    console.log('roomId', roomId)
-    console.log('title', title)
     try {
       navigate('chatRoom', {roomId, title})
     } catch (e) {
@@ -32,18 +30,26 @@ export default function AuthNavigator() {
     const messaging = getMessaging(app)
     // 앱 종료 상태에서 푸시 클릭
     messaging.getInitialNotification().then(remoteMessage => {
-      if (remoteMessage?.data?.type === 'chat' && remoteMessage?.data?.chatId) {
+      if (
+        remoteMessage?.data?.pushType === 'chat' &&
+        remoteMessage?.data?.chatId
+      ) {
         console.log('앱 종료 푸시')
         const data = remoteMessage.data
+        console.log(data)
         navigateToChat(data?.chatId as string, data?.senderName as string)
       }
     })
 
     // 백그라운드 상태에서 푸시 클릭
     const unsubscribe = messaging.onNotificationOpenedApp(remoteMessage => {
-      if (remoteMessage?.data?.type === 'chat' && remoteMessage?.data?.chatId) {
+      if (
+        remoteMessage?.data?.pushType === 'chat' &&
+        remoteMessage?.data?.chatId
+      ) {
         console.log('백그라운드 푸시')
         const data = remoteMessage.data
+        console.log(data)
         navigateToChat(data?.chatId as string, data?.senderName as string)
       }
     })
