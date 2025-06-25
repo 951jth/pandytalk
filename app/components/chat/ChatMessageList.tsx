@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react'
+import React from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {getChatMessages, subscribeToMessages} from '../../services/chatService'
+import {useChatMessages} from '../../hooks/queries/useChatQuery'
 import {ChatMessage, RoomInfo} from '../../types/firebase'
 import {isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
@@ -16,22 +16,9 @@ interface Props {
 }
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const members = roomInfo?.memberInfos ?? []
-
-  useEffect(() => {
-    if (!roomId) return
-    getChatMessages(roomId).then(res => {
-      setMessages(res ?? [])
-    })
-
-    const unsub = subscribeToMessages(roomId, msgs => {
-      setMessages(msgs as ChatMessage[])
-    })
-
-    return () => unsub()
-  }, [roomId])
-
+  const {data: messages = [], isLoading, error} = useChatMessages(roomId)
+  console.log('messages', messages)
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
     const nextItem = messages[index + 1]
