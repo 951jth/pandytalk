@@ -13,6 +13,8 @@ import {
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
+import type {Transaction} from 'react-native-sqlite-storage'
+import {db} from '../store/sqlite'
 import {ChatMessage, RoomInfo, User} from '../types/firebase'
 import {removeEmpty} from '../utils/format'
 
@@ -239,4 +241,139 @@ export const getUnreadCount = async (
 
   const snapshot = await getCountFromServer(q) // ✅ 빠른 count-only 쿼리
   return snapshot.data().count
+}
+
+export const saveMessagesToSQLite = async (
+  roomId: string,
+  messages: ChatMessage[],
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx: Transaction) => {
+        messages.forEach(msg => {
+          tx.executeSql(
+            `INSERT OR REPLACE INTO messages (id, roomId, text, senderId, createdAt, type, imageUrl)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              msg.id,
+              roomId,
+              msg.text,
+              msg.senderId,
+              msg.createdAt,
+              msg.type,
+              msg.imageUrl ?? '',
+            ],
+          )
+        })
+      },
+      error => reject(error),
+      () => resolve(),
+    )
+  })
+}
+
+// export const getMessagesFromSQLite = async (
+//   roomId: string,
+//   cursorCreatedAt?: number,
+//   pageSize: number = 20,
+// ): Promise<ChatMessage[]> => {
+//   return new Promise((resolve, reject) => {
+//     db.transaction((tx: Transaction) => {
+//       const query = cursorCreatedAt
+//         ? `SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?`
+//         : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
+
+//       const params = cursorCreatedAt
+//         ? [roomId, cursorCreatedAt, pageSize]
+//         : [roomId, pageSize]
+
+//       tx.executeSql(
+//         query,
+//         params,
+//         (_, result) => {
+//           const messages: ChatMessage[] = []
+//           for (let i = 0; i < result.rows.length; i++) {
+//             messages.push(result.rows.item(i))
+//           }
+//           resolve(messages)
+//         },
+//         (_, error) => {
+//           console.error('SQLite 쿼리 오류:', error)
+//           reject(error)
+//           return true
+//         },
+//       )
+//     })
+//   })
+// }
+
+export const getMessagesFromSQLite = async (
+  roomId: string,
+): Promise<ChatMessage[]> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx: Transaction) => {
+      tx.executeSql(
+        'SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC',
+        [roomId],
+        (_tx, results) => {
+          const data: ChatMessage[] = []
+          const rows = results.rows
+
+          for (let i = 0; i < rows.length; i++) {
+            data.push(rows.item(i))
+          }
+
+          resolve(data)
+        },
+        (_tx, error) => {
+          reject(error)
+          console.error('SQLite error', _tx, error)
+          return []
+        },
+      )
+    })
+  })
+}
+
+export const initChatTables = () => {
+  db.transaction(tx => {
+    tx.executeSql(
+      `CREATE TABLE IF NOT EXISTS messages (
+        id TEXT PRIMARY KEY NOT NULL,
+        roomId TEXT NOT NULL,
+        text TEXT,
+        senderId TEXT,
+        createdAt INTEGER,
+        type TEXT,
+        imageUrl TEXT
+      );`,
+      [],
+      () => console.log('✅ messages table created'),
+      (_, error) => {
+        console.error('❌ Failed to create messages table', error)
+        return true
+      },
+    )
+  })
+}
+
+export const isMessagesTableExists = async (): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
+        [],
+        (_, result) => {
+          const exists = result.rows.length > 0
+          console.log('🔍 messages 테이블 존재 여부:', exists)
+          resolve(exists)
+        },
+        (_, error) => {
+          console.error('❌ 테이블 존재 확인 중 에러:', error)
+          reject(error)
+          return true
+        },
+      )
+    })
+  })
 }

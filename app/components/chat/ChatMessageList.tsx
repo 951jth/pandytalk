@@ -17,8 +17,9 @@ interface Props {
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const members = roomInfo?.memberInfos ?? []
-  const {data: messages = [], isLoading, error} = useChatMessages(roomId)
-  console.log('messages', messages)
+  console.log('roomId', roomId)
+  const {data: messages, isLoading, isError, refetch} = useChatMessages(roomId)
+
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
     const nextItem = messages[index + 1]

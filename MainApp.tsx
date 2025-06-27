@@ -17,9 +17,11 @@ import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import {navigationRef} from './app/components/navigation/RootNavigation'
+
 import {useFCMSetup} from './app/hooks/useFCM'
 import AuthNavigator from './app/navigation/AuthNavigator'
 import NoAuthNavigator from './app/navigation/NoAuthNavigator'
+import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
 import {clearUser, fetchUserById} from './app/store/userSlice'
@@ -54,6 +56,17 @@ export function MainApp(): React.JSX.Element {
 
     return subscriber // unsubscribe on unmount
   }, [dispatch])
+
+  useEffect(() => {
+    isMessagesTableExists().then(exists => {
+      if (!exists) {
+        console.log('messages 테이블이 없어 초기화 시작')
+        initChatTables()
+      } else {
+        console.log('이미 messages 테이블 있음')
+      }
+    })
+  }, [])
 
   useEffect(() => {
     //앱이 백그라운드 → 포그라운드로 돌아올 때 lastSeen을 갱신
