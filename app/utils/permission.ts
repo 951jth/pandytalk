@@ -9,7 +9,6 @@ export const requestPhotoPermission = async (): Promise<boolean> => {
         : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE
 
     const currentStatus = await check(permission)
-    console.log('currentStatus', currentStatus)
     if (currentStatus === RESULTS.GRANTED) {
       return true
     }

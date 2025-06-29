@@ -16,12 +16,12 @@ export interface User {
 }
 
 export interface ChatMessage {
-  id?: string
+  id: string
   senderId: string
   text?: string
   type: 'text' | 'image' | 'file'
   imageUrl?: string
-  createdAt?: number
+  createdAt: number
   senderPicURL?: string
   senderName?: string
 }

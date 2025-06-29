@@ -15,7 +15,7 @@ import {
 } from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
-import type {RoomInfo, User} from '../types/firebase'
+import type {User} from '../types/firebase'
 import {RootStackParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
@@ -43,8 +43,13 @@ export default function ChatListScreen() {
   })
 
   const memberIds = useMemo(() => {
+    if (!chats || !Array.isArray(chats)) return []
     return Array.from(
-      new Set(chats?.flatMap((chat: RoomInfo) => chat?.members || [])),
+      new Set(
+        chats.flatMap(chat =>
+          Array.isArray(chat?.members) ? chat.members : [],
+        ),
+      ),
     ).sort((a: any, b: any) => b - a) as string[]
   }, [chats])
 
@@ -95,11 +100,11 @@ export default function ChatListScreen() {
         onChangeText={setInput}
       />
       <FlatList
-        data={chatsWithMemberInfo?.filter((chat: any) =>
-          String(chat.findMember?.nickname?.toLowerCase())?.includes(
-            searchText,
-          ),
-        )}
+        data={
+          chatsWithMemberInfo?.filter((chat: any) =>
+            chat.findMember?.nickname?.toLowerCase()?.includes(searchText),
+          ) ?? []
+        }
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
           const isDM = item?.type == 'dm'

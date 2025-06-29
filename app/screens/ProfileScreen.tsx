@@ -90,7 +90,6 @@ export default function ProfileScreen(): React.JSX.Element {
     // setFormValues(user as object)
     if (user?.photoURL) setPreviewUrl(user.photoURL)
   }, [user])
-  console.log('previewUrl', previewUrl)
 
   return (
     <View style={styles.container}>

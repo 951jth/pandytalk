@@ -58,7 +58,7 @@ export default function UsersScreen(): React.JSX.Element {
         onChangeText={setInput}
       />
       <FlatList
-        data={users.filter(({uid}) => uid != user?.uid)}
+        data={users?.filter(({uid}) => uid != user?.uid)}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
           return (

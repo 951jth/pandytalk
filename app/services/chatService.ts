@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  Timestamp,
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
@@ -218,7 +219,6 @@ export const updateChatRoom = async (
 
 //유저 채팅 마지막 읽음 시간 갱신
 export const updateLastRead = async (roomId: string, userId: string) => {
-  console.log('updateLastRead')
   try {
     const chatDocRef = doc(firestore, 'chats', roomId)
     await updateDoc(chatDocRef, {
@@ -307,6 +307,7 @@ export const saveMessagesToSQLite = async (
 //   })
 // }
 
+//sqlite 채팅방 메세지 모두 조회
 export const getMessagesFromSQLite = async (
   roomId: string,
 ): Promise<ChatMessage[]> => {
@@ -335,6 +336,39 @@ export const getMessagesFromSQLite = async (
   })
 }
 
+//sqlite 채팅방 페이징 조회
+export const getMessagesFromSqliteByPaging = (
+  roomId: string,
+  page: number = 0,
+  size: number = 20,
+): Promise<ChatMessage[]> => {
+  const offset = page * size
+  return new Promise((resolve, reject) => {
+    db.transaction((tx: Transaction) => {
+      tx.executeSql(
+        `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
+        [roomId, size, offset],
+        (_tx, results) => {
+          const data: ChatMessage[] = []
+          const rows = results.rows
+
+          for (let i = 0; i < rows.length; i++) {
+            data.push(rows.item(i))
+          }
+
+          resolve(data)
+        },
+        (_tx, error) => {
+          reject(error)
+          console.error('SQLite error', _tx, error)
+          return []
+        },
+      )
+    })
+  })
+}
+
+//sqlite 테이블 생성
 export const initChatTables = () => {
   db.transaction(tx => {
     tx.executeSql(
@@ -357,6 +391,7 @@ export const initChatTables = () => {
   })
 }
 
+//메세지 테이블 생성 유무 조회
 export const isMessagesTableExists = async (): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {
@@ -365,15 +400,60 @@ export const isMessagesTableExists = async (): Promise<boolean> => {
         [],
         (_, result) => {
           const exists = result.rows.length > 0
-          console.log('🔍 messages 테이블 존재 여부:', exists)
           resolve(exists)
         },
         (_, error) => {
-          console.error('❌ 테이블 존재 확인 중 에러:', error)
           reject(error)
           return true
         },
       )
     })
   })
+}
+
+//채팅창 마지막 메세지 날짜 조회
+export const getLatestMessageCreatedAtFromSQLite = async (
+  roomId: string,
+): Promise<number | null> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx: Transaction) => {
+      tx.executeSql(
+        `SELECT createdAt FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1`,
+        [roomId],
+        (_, result) => {
+          if (result.rows.length > 0) {
+            const latest = result.rows.item(0).createdAt
+            resolve(latest)
+          } else {
+            resolve(null) // 데이터가 없는 경우
+          }
+        },
+        (_, error) => {
+          console.error('❌ 최신 메시지 createdAt 조회 실패:', error)
+          reject(error)
+          return true
+        },
+      )
+    })
+  })
+}
+
+//마지막 데이터 날짜 이후로 데이터 존재여부 확인
+export const getMessagesFromLatestRead = async (
+  roomId: string,
+  latestCreated: number,
+) => {
+  console.log('latestCreated', latestCreated)
+  const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+  const q = query(
+    messagesRef,
+    orderBy('createdAt', 'desc'),
+    where('createdAt', '>', Timestamp.fromMillis(latestCreated)),
+  )
+  const snapshot = await getDocs(q)
+  const messages = snapshot?.docs?.map(doc => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as ChatMessage[]
+  return messages ?? []
 }

@@ -17,8 +17,6 @@ export const firebaseImageUpload = async (
 ): Promise<UploadResult | null> => {
   const image = result?.assets?.[0]
   if (!image?.uri || !image.fileName) return null
-  console.log('result', result)
-  console.log('filePath', filePath)
   try {
     const storageRef = storage().ref(filePath)
 

@@ -93,9 +93,8 @@ export function useFCMSetup() {
 //수신등록
 export function useFCMListener(userId: string | null | undefined) {
   const queryClient = useQueryClient()
+  if (!userId) return
   useEffect(() => {
-    if (!userId) return
-
     const app = getApp()
     const messaging = getMessaging(app)
 

@@ -1,8 +1,8 @@
-import React from 'react'
+import React, {useState} from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {useChatMessages} from '../../hooks/queries/useChatQuery'
+import {useChatMessagesPaging} from '../../hooks/queries/useChatQuery'
 import {ChatMessage, RoomInfo} from '../../types/firebase'
 import {isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
@@ -17,12 +17,21 @@ interface Props {
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const members = roomInfo?.memberInfos ?? []
-  console.log('roomId', roomId)
-  const {data: messages, isLoading, isError, refetch} = useChatMessages(roomId)
+  const [isMount, setIsMount] = useState(false)
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useChatMessagesPaging(roomId)
 
+  const messages = data?.pages.flatMap(page => page.data) ?? []
+  console.log(data?.pageParams)
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
-    const nextItem = messages[index + 1]
+    const nextItem = messages?.[index + 1] ?? null
     const hideProfile = isSameSender(item, nextItem)
     const hideMinute = isSameMinute(item, nextItem)
     const member = members?.find(mem => mem?.uid === item?.senderId)
@@ -102,7 +111,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     <FlatList
       style={styles.flex}
       data={messages}
-      keyExtractor={(item, index) => item.id ?? `${item.senderId}_${index}`}
+      keyExtractor={(item, index) => item.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
       inverted
@@ -111,8 +120,11 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       onScroll={({nativeEvent}) => {
         if (nativeEvent.contentOffset.y <= 0) {
           // 🔁 페이징 or 이전 메시지 불러오기
+          if (hasNextPage) fetchNextPage()
         }
       }}
+      // refreshing={isLoading}
+      // onRefresh={refetch}
     />
   )
 }
