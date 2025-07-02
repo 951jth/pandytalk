@@ -16,7 +16,7 @@ import {
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import type {User} from '../types/firebase'
-import {RootStackParamList} from '../types/navigate'
+import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
   const {data: user} = useAppSelector(state => state.user)
@@ -33,7 +33,7 @@ export default function ChatListScreen() {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
+    useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
   const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
   const [targetMembers, setTargetMembers] = useState<User[]>([])
   const chatsWithMemberInfo = chats?.map((chat: any) => {

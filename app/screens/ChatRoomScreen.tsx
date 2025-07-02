@@ -16,13 +16,13 @@ import {
 } from '../services/chatService'
 import {useAppSelector} from '../store/hooks'
 import {RoomInfo, User} from '../types/firebase'
-import {RootStackParamList} from '../types/navigate'
+import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatRoomScreen() {
   const route = useRoute()
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const {roomId, targetIds, title} =
-    route.params as RootStackParamList['chatRoom']
+    route.params as AppRouteParamList['chatRoom']
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null)
   const currentRid = roomId || roomInfo?.id || null //현재 채팅방 아이디
   const targetMember = roomInfo?.memberInfos?.find(

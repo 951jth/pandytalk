@@ -10,7 +10,7 @@ import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/useInfiniteQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {useAppSelector} from '../store/hooks'
-import {RootStackParamList} from '../types/navigate'
+import {AppRouteParamList} from '../types/navigate'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 
@@ -28,7 +28,7 @@ export default function UsersScreen(): React.JSX.Element {
   const {data: user, loading, error} = useAppSelector(state => state.user)
 
   const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList, 'chatRoom'>>()
+    useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
   const users = data?.pages.flatMap(page => page.users) ?? []
   const {isKeyboardVisible, dismissKeyboard} = useKeyboardFocus()
 
