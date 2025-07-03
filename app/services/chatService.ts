@@ -272,40 +272,40 @@ export const saveMessagesToSQLite = async (
   })
 }
 
-// export const getMessagesFromSQLite = async (
-//   roomId: string,
-//   cursorCreatedAt?: number,
-//   pageSize: number = 20,
-// ): Promise<ChatMessage[]> => {
-//   return new Promise((resolve, reject) => {
-//     db.transaction((tx: Transaction) => {
-//       const query = cursorCreatedAt
-//         ? `SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?`
-//         : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
+export const getMessagesFromSQLiteByPaging = async (
+  roomId: string,
+  cursorCreatedAt?: number,
+  pageSize: number = 20,
+): Promise<ChatMessage[]> => {
+  return new Promise((resolve, reject) => {
+    db.transaction((tx: Transaction) => {
+      const query = cursorCreatedAt
+        ? `SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?`
+        : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
 
-//       const params = cursorCreatedAt
-//         ? [roomId, cursorCreatedAt, pageSize]
-//         : [roomId, pageSize]
+      const params = cursorCreatedAt
+        ? [roomId, cursorCreatedAt, pageSize]
+        : [roomId, pageSize]
 
-//       tx.executeSql(
-//         query,
-//         params,
-//         (_, result) => {
-//           const messages: ChatMessage[] = []
-//           for (let i = 0; i < result.rows.length; i++) {
-//             messages.push(result.rows.item(i))
-//           }
-//           resolve(messages)
-//         },
-//         (_, error) => {
-//           console.error('SQLite 쿼리 오류:', error)
-//           reject(error)
-//           return true
-//         },
-//       )
-//     })
-//   })
-// }
+      tx.executeSql(
+        query,
+        params,
+        (_, result) => {
+          const messages: ChatMessage[] = []
+          for (let i = 0; i < result.rows.length; i++) {
+            messages.push(result.rows.item(i))
+          }
+          resolve(messages)
+        },
+        (_, error) => {
+          console.error('SQLite 쿼리 오류:', error)
+          reject(error)
+          return true
+        },
+      )
+    })
+  })
+}
 
 //sqlite 채팅방 메세지 모두 조회
 export const getMessagesFromSQLite = async (
@@ -323,39 +323,6 @@ export const getMessagesFromSQLite = async (
           for (let i = 0; i < rows.length; i++) {
             data.push(rows.item(i))
           }
-
-          resolve(data)
-        },
-        (_tx, error) => {
-          reject(error)
-          console.error('SQLite error', _tx, error)
-          return []
-        },
-      )
-    })
-  })
-}
-
-//sqlite 채팅방 페이징 조회
-export const getMessagesFromSqliteByPaging = (
-  roomId: string,
-  page: number = 0,
-  size: number = 20,
-): Promise<ChatMessage[]> => {
-  const offset = page * size
-  return new Promise((resolve, reject) => {
-    db.transaction((tx: Transaction) => {
-      tx.executeSql(
-        `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
-        [roomId, size, offset],
-        (_tx, results) => {
-          const data: ChatMessage[] = []
-          const rows = results.rows
-
-          for (let i = 0; i < rows.length; i++) {
-            data.push(rows.item(i))
-          }
-
           resolve(data)
         },
         (_tx, error) => {
@@ -403,6 +370,7 @@ export const isMessagesTableExists = async (): Promise<boolean> => {
           resolve(exists)
         },
         (_, error) => {
+          console.log('error', error)
           reject(error)
           return true
         },

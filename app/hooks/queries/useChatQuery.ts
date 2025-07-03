@@ -14,10 +14,11 @@ import {useEffect} from 'react'
 import {
   getMessagesFromLatestRead,
   getMessagesFromSQLite,
+  getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
   subscribeToMessages,
 } from '../../services/chatService'
-import type {ChatMessage, FsSnapshot} from '../../types/firebase'
+import type {ChatMessage} from '../../types/firebase'
 
 const firestore = getFirestore(getApp())
 const PAGE_SIZE = 20
@@ -106,26 +107,28 @@ export const useChatMessagesPaging = (roomId: string | null) => {
   const queryResult = useInfiniteQuery({
     enabled: !!roomId,
     queryKey,
-    queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
-      console.log(pageParam)
+    queryFn: async ({pageParam}: {pageParam?: number}) => {
       try {
         if (!roomId) throw new Error('roomId is null')
-        const localMessages = (await getMessagesFromSQLite(
+        const localMessages = (await getMessagesFromSQLiteByPaging(
           roomId,
+          pageParam, //pageParam은 여기서 마지막 읽은 날짜임
         )) as ChatMessage[]
         if (localMessages?.length > 0) {
           const latestCreated =
             localMessages[localMessages.length - 1]?.createdAt
           // 로컬 데이터의 마지막 날짜 확인
-          const unreadMessages = await getMessagesFromLatestRead(
-            roomId,
-            latestCreated,
-          )
-          const merged = mergeMessages(localMessages, unreadMessages)
+          // const unreadMessages = await getMessagesFromLatestRead(
+          //   roomId,
+          //   latestCreated,
+          // )
+          // const merged = mergeMessages(localMessages, unreadMessages)
+          // console.log('local', merged)
           return {
-            data: merged,
-            lastVisible: merged?.[merged.length - 1] ?? null,
-            isLastPage: merged.length < PAGE_SIZE,
+            data: localMessages,
+            lastVisible:
+              localMessages?.[localMessages.length - 1]?.createdAt ?? null,
+            isLastPage: localMessages.length < PAGE_SIZE,
           }
         }
 
@@ -144,9 +147,11 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           ...doc.data(),
         })) as ChatMessage[]
         await saveMessagesToSQLite(roomId, serverMessages)
+        console.log('server', serverMessages)
         return {
           data: serverMessages,
-          lastVisible: serverMessages?.[serverMessages?.length - 1] ?? null,
+          lastVisible:
+            serverMessages?.[serverMessages?.length - 1]?.createdAt ?? null,
           isLastPage: serverMessages?.length < PAGE_SIZE, //마지막 페이지 유무
         }
       } catch (e) {
@@ -159,6 +164,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
       }
     },
     getNextPageParam: lastPage => {
+      console.log('lastPage', lastPage)
       return lastPage?.isLastPage ? undefined : lastPage?.lastVisible
     },
     initialPageParam: undefined,

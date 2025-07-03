@@ -26,15 +26,18 @@ import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
 import {clearUser, fetchUserById} from './app/store/userSlice'
+import {RootStackParamList} from './app/types/navigate'
 
 const authInstance = getAuth()
-const RootStack = createNativeStackNavigator()
+const RootStack = createNativeStackNavigator<RootStackParamList>()
 
 export function RootNavigator(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
   const dispatch = useDispatch<AppDispatch>()
   useFCMSetup() //FCM 푸시알림 세팅
+
+  console.log('user', user)
 
   const fetchProfile = async (uid: string) => {
     try {
@@ -74,6 +77,8 @@ export function RootNavigator(): React.JSX.Element {
     ;(async () => {
       // const user = await getUserInfo(); // 토큰 or 로컬스토리지 확인
       // 로그인로직 추가되면 바꿔주세요
+
+      if (!navigationRef.isReady() || !user) return
       navigationRef.reset({
         index: 0,
         routes: [

@@ -3,7 +3,8 @@ import {getAuth} from '@react-native-firebase/auth'
 import {getMessaging} from '@react-native-firebase/messaging'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React, {useEffect} from 'react'
-import {navigate} from '../components/navigation/RootNavigation'
+// import {navigate} from '../components/navigation/RootNavigation'
+import {navigateToChat} from '../components/navigation/RootNavigation'
 import {useFCMListener} from '../hooks/useFCM'
 import {authRoutes} from '../hooks/useRoutes'
 
@@ -12,17 +13,9 @@ const authInstance = getAuth()
 
 export default function AppNavigator() {
   const routes = authRoutes()
-  const currentUser = authInstance.currentUser
+  const currentUser = authInstance?.currentUser
 
   useFCMListener(currentUser?.uid)
-
-  function navigateToChat(roomId: string, title?: string) {
-    try {
-      navigate('chatRoom', {roomId, title})
-    } catch (e) {
-      console.log(e)
-    }
-  }
 
   //알림 클릭시 초기 진입 route
   useEffect(() => {

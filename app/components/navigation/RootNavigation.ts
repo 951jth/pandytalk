@@ -1,15 +1,19 @@
 import {createNavigationContainerRef} from '@react-navigation/native'
-import {AppRouteParamList, RootStackParamList} from '../../types/navigate'
+import {RootStackParamList} from '../../types/navigate'
 
-export const navigationRef = createNavigationContainerRef<AppRouteParamList>()
+export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 
-export function navigate<RouteName extends keyof RootStackParamList>(
-  name: RouteName,
-  ...args: RootStackParamList[RouteName] extends undefined
-    ? []
-    : [params: RootStackParamList[RouteName]]
-) {
-  if (navigationRef.isReady()) {
-    navigationRef.navigate(name, ...(args as [RootStackParamList[RouteName]]))
+export function navigateToChat(roomId: string, title?: string) {
+  if (!navigationRef.isReady() && !roomId && !title) {
+    console.warn('❗ navigationRef is not ready yet.')
+    return
   }
+
+  navigationRef.navigate('app', {
+    screen: 'chatRoom',
+    params: {
+      roomId,
+      title,
+    },
+  } satisfies RootStackParamList['app']) // ✅ 타입 강제 만족
 }

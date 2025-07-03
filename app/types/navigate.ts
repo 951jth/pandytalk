@@ -1,12 +1,9 @@
+import {NavigatorScreenParams} from '@react-navigation/native'
+
 export type TabParamList = {
   users: undefined
   chats: undefined
   profile: undefined
-}
-
-export type AuthStackParamList = {
-  main: undefined
-  chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
 }
 
 export type NoAuthStackParamList = {
@@ -18,19 +15,11 @@ export type NoAuthStackParamList = {
 
 export type AppRouteParamList = {
   // Auth
-  main: undefined
+  main: NavigatorScreenParams<TabParamList>
   chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
-
-  // Tabs
-  users: undefined
-  chats: undefined
-  profile: undefined
-
-  // NoAuth
-  login: undefined
 }
 
 export type RootStackParamList = {
-  app: undefined
-  auth: undefined
+  app: NavigatorScreenParams<AppRouteParamList>
+  auth: NavigatorScreenParams<NoAuthStackParamList>
 }

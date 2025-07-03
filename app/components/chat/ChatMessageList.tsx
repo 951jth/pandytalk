@@ -26,8 +26,8 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     isFetchingNextPage,
     refetch,
   } = useChatMessagesPaging(roomId)
-
-  const messages = data?.pages.flatMap(page => page.data) ?? []
+  console.log('data', data)
+  const messages = data?.pages?.flatMap(page => page.data) ?? []
   console.log(data?.pageParams)
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
@@ -117,12 +117,18 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       inverted
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      onScroll={({nativeEvent}) => {
-        if (nativeEvent.contentOffset.y <= 0) {
-          // 🔁 페이징 or 이전 메시지 불러오기
-          if (hasNextPage) fetchNextPage()
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
         }
       }}
+      // onScroll={({nativeEvent}) => {
+      //   if (nativeEvent.contentOffset.y <= 0) {
+      //     console.log('next page')
+      //     // 🔁 페이징 or 이전 메시지 불러오기
+      //     if (hasNextPage) fetchNextPage()
+      //   }
+      // }}
       // refreshing={isLoading}
       // onRefresh={refetch}
     />

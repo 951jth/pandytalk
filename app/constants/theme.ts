@@ -6,40 +6,31 @@ const fonts = {
   // MD3 typography 기준 설정
   displayLarge: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   displayMedium: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   displaySmall: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   headlineLarge: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   headlineMedium: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   headlineSmall: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   titleLarge: {
     fontFamily: 'BMDOHYEON',
     // fontFamily: 'System', // label (라벨)
-    fontWeight: 'normal',
   },
   titleMedium: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   titleSmall: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   bodyLarge: {
     // fontFamily: 'BMDOHYEON',
@@ -49,23 +40,18 @@ const fonts = {
   bodyMedium: {
     // fontFamily: 'BMDOHYEON',
     fontFamily: 'System', // placeholder
-    fontWeight: 'normal',
   },
   bodySmall: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   labelLarge: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   labelMedium: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
   labelSmall: {
     fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal',
   },
 }
 
