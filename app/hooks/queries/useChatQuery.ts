@@ -8,6 +8,7 @@ import {
   orderBy,
   query,
   startAfter,
+  Timestamp,
 } from '@react-native-firebase/firestore'
 import {useInfiniteQuery, useQuery, useQueryClient} from '@tanstack/react-query'
 import {useEffect} from 'react'
@@ -108,30 +109,48 @@ export const useChatMessagesPaging = (roomId: string | null) => {
     enabled: !!roomId,
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
+      console.log('roomId', roomId)
       try {
-        if (!roomId) throw new Error('roomId is null')
-        const localMessages = (await getMessagesFromSQLiteByPaging(
-          roomId,
-          pageParam, //pageParam은 여기서 마지막 읽은 날짜임
-        )) as ChatMessage[]
-        if (localMessages?.length > 0) {
-          const latestCreated =
-            localMessages[localMessages.length - 1]?.createdAt
-          // 로컬 데이터의 마지막 날짜 확인
-          // const unreadMessages = await getMessagesFromLatestRead(
-          //   roomId,
-          //   latestCreated,
-          // )
-          // const merged = mergeMessages(localMessages, unreadMessages)
-          // console.log('local', merged)
+        // if (!roomId) throw new Error('roomId is null')
+        if (!roomId)
           return {
-            data: localMessages,
-            lastVisible:
-              localMessages?.[localMessages.length - 1]?.createdAt ?? null,
-            isLastPage: localMessages.length < PAGE_SIZE,
+            data: [] as ChatMessage[],
+            lastVisible: undefined,
+            isLastPage: true,
+          }
+        console.log('exist roomId')
+        try {
+          const localMessages = (await getMessagesFromSQLiteByPaging(
+            roomId,
+            pageParam, //pageParam은 여기서 마지막 읽은 날짜임
+          )) as ChatMessage[]
+          console.log('get local message')
+          if (localMessages?.length > 0) {
+            const latestCreated =
+              localMessages[localMessages.length - 1]?.createdAt
+            // 로컬 데이터의 마지막 날짜 확인
+            // const unreadMessages = await getMessagesFromLatestRead(
+            //   roomId,
+            //   latestCreated,
+            // )
+            // const merged = mergeMessages(localMessages, unreadMessages)
+            // console.log('local', merged)
+            return {
+              data: localMessages,
+              lastVisible:
+                localMessages?.[localMessages.length - 1]?.createdAt ?? null,
+              isLastPage: localMessages.length < PAGE_SIZE,
+            }
+          }
+        } catch (e) {
+          console.log('get localmessage error', e)
+          return {
+            data: [],
+            lastVisible: null,
+            isLastPage: true,
           }
         }
-
+        console.log('pageParam', pageParam)
         // 로컬에 없으면 Firestore에서 가져오기
         const messagesRef = collection(firestore, 'chats', roomId, 'messages')
         let q = query(
@@ -139,7 +158,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           orderBy('createdAt', 'desc'),
           limit(PAGE_SIZE),
         )
-        if (pageParam) q = query(q, startAfter(pageParam))
+        if (pageParam) q = query(q, startAfter(Timestamp.fromMillis(pageParam)))
 
         const snapshot = await getDocs(q)
         const serverMessages = snapshot.docs.map(doc => ({
@@ -147,7 +166,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           ...doc.data(),
         })) as ChatMessage[]
         await saveMessagesToSQLite(roomId, serverMessages)
-        console.log('server', serverMessages)
         return {
           data: serverMessages,
           lastVisible:
@@ -165,6 +183,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
     },
     getNextPageParam: lastPage => {
       console.log('lastPage', lastPage)
+      console.log(lastPage?.isLastPage ? undefined : lastPage?.lastVisible)
       return lastPage?.isLastPage ? undefined : lastPage?.lastVisible
     },
     initialPageParam: undefined,
@@ -176,8 +195,23 @@ export const useChatMessagesPaging = (roomId: string | null) => {
   useEffect(() => {
     if (!roomId) return
     const unsubscribe = subscribeToMessages(roomId, async msgs => {
+      console.log('no pass')
       await saveMessagesToSQLite(roomId, msgs)
-      queryClient.setQueryData(queryKey, msgs)
+      // queryClient.setQueryData(queryKey, msgs)
+      queryClient.setQueryData(queryKey, (prev: any) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          pages: prev.pages.map((page: any, i: number) =>
+            i === 0
+              ? {
+                  ...page,
+                  data: mergeMessages(msgs, page.data),
+                }
+              : page,
+          ),
+        }
+      })
     })
 
     return () => {

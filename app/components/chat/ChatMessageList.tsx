@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
@@ -17,7 +17,6 @@ interface Props {
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const members = roomInfo?.memberInfos ?? []
-  const [isMount, setIsMount] = useState(false)
   const {
     data,
     isLoading,
@@ -110,18 +109,19 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   return (
     <FlatList
       style={styles.flex}
-      data={messages}
+      data={Array.isArray(messages) ? messages : []}
       keyExtractor={(item, index) => item.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
       inverted
       keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
+      refreshing={isLoading}
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
         }
       }}
+      onRefresh={refetch}
       // onScroll={({nativeEvent}) => {
       //   if (nativeEvent.contentOffset.y <= 0) {
       //     console.log('next page')
@@ -130,7 +130,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       //   }
       // }}
       // refreshing={isLoading}
-      // onRefresh={refetch}
     />
   )
 }

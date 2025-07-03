@@ -5,6 +5,7 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
+import EmptyData from '../components/common/EmptyData'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
@@ -56,6 +57,8 @@ export default function ChatRoomScreen() {
       }
     }, [currentRid, user?.id]),
   )
+
+  if (!currentRid) return <EmptyData />
 
   return (
     <>
