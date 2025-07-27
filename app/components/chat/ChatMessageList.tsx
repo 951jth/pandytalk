@@ -37,9 +37,10 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
     const nextItem = messages?.[index + 1] ?? null
+    const prevItem = messages?.[index - 1] ?? null
     const hideProfile = isSameSender(item, nextItem)
     const hideMinute = isSameMinute(item, nextItem)
-    const hideDate = isSameDate(item, nextItem)
+    const hideDate = isSameDate(prevItem, item)
 
     const member = members?.find(mem => mem?.uid === item?.senderId)
 
