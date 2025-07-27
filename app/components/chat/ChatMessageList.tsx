@@ -40,19 +40,12 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     const prevItem = messages?.[index - 1] ?? null
     const hideProfile = isSameSender(item, nextItem)
     const hideMinute = isSameMinute(item, nextItem)
-    const hideDate = isSameDate(prevItem, item)
+    const hideDate = isSameDate(item, nextItem)
 
     const member = members?.find(mem => mem?.uid === item?.senderId)
 
     return (
       <>
-        {!hideDate && (
-          <View style={styles.chatDateWrap}>
-            <Text style={styles.chatDateText}>
-              {dayjs(item?.createdAt).format('YYYY년 MM월 DD일 ddd')}
-            </Text>
-          </View>
-        )}
         <View
           style={[
             styles.chatRow,
@@ -120,6 +113,13 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
             </>
           )}
         </View>
+        {!hideDate && (
+          <View style={styles.chatDateWrap}>
+            <Text style={styles.chatDateText}>
+              {dayjs(item?.createdAt).format('YYYY년 MM월 DD일 ddd')}
+            </Text>
+          </View>
+        )}
       </>
     )
   }
