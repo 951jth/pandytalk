@@ -14,6 +14,8 @@ import {
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
+import dayjs from 'dayjs'
+import {useRef} from 'react'
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../store/sqlite'
 import {ChatMessage, RoomInfo, User} from '../types/firebase'
@@ -113,16 +115,27 @@ export const getChatMessages = async (roomId: string) => {
  * @param onMessage 콜백 (새 메시지 수신 시)
  * @returns unsubscribe 함수 (리스너 해제용)
  */
-export const subscribeToMessages = (
+// ✅ 비동기 함수로 정의
+export const subscribeToMessages = async (
   roomId: string,
+  lastCreatedAt: number | null,
   onMessage: (message: any) => void,
 ) => {
+  const lastCreatedAtRef = useRef(lastCreatedAt || null)
   const db = getFirestore(getApp())
   const messagesRef = collection(db, 'chats', roomId, 'messages')
 
-  const q = query(messagesRef, orderBy('createdAt', 'desc'))
-
+  // const lastCreatedAt = await getLatestMessageCreatedAtFromSQLite(roomId)
+  const q = lastCreatedAt
+    ? query(
+        messagesRef,
+        orderBy('createdAt', 'desc'),
+        where('createdAt', '>', Timestamp.fromMillis(lastCreatedAt)),
+      )
+    : query(messagesRef, orderBy('createdAt', 'desc'))
+  console.log('query', q)
   const unsubscribe = onSnapshot(q, snapshot => {
+    console.log('lastCreatedAt', lastCreatedAt)
     const messages = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -130,7 +143,7 @@ export const subscribeToMessages = (
     onMessage(messages)
   })
 
-  return unsubscribe
+  return unsubscribe // ✅ 진짜 해제 함수 리턴
 }
 
 //채팅 보내기
@@ -251,6 +264,7 @@ export const saveMessagesToSQLite = async (
     db.transaction(
       (tx: Transaction) => {
         messages.forEach(msg => {
+          //동일한 아이디 기준으로 데이터를 대체하고, 아닌경우 추가하는 쿼리임
           tx.executeSql(
             `INSERT OR REPLACE INTO messages (id, roomId, text, senderId, createdAt, type, imageUrl)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -295,6 +309,11 @@ export const getMessagesFromSQLiteByPaging = async (
           for (let i = 0; i < result.rows.length; i++) {
             messages.push(result.rows.item(i))
           }
+          // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
+          // const sortedMessages = messages.sort(
+          //   (a, b) => a.createdAt - b.createdAt,
+          // )
+
           resolve(messages)
         },
         (_, error) => {
@@ -381,9 +400,10 @@ export const isMessagesTableExists = async (): Promise<boolean> => {
 
 //채팅창 마지막 메세지 날짜 조회
 export const getLatestMessageCreatedAtFromSQLite = async (
-  roomId: string,
+  roomId: string | null,
 ): Promise<number | null> => {
   return new Promise((resolve, reject) => {
+    if (!roomId) return resolve(null)
     db.transaction((tx: Transaction) => {
       tx.executeSql(
         `SELECT createdAt FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1`,
@@ -391,6 +411,7 @@ export const getLatestMessageCreatedAtFromSQLite = async (
         (_, result) => {
           if (result.rows.length > 0) {
             const latest = result.rows.item(0).createdAt
+            console.log(dayjs(latest).format('YYYY.MM.DD HH:mm:ss'))
             resolve(latest)
           } else {
             resolve(null) // 데이터가 없는 경우
@@ -398,7 +419,7 @@ export const getLatestMessageCreatedAtFromSQLite = async (
         },
         (_, error) => {
           console.error('❌ 최신 메시지 createdAt 조회 실패:', error)
-          reject(error)
+          reject(null)
           return true
         },
       )
@@ -424,4 +445,46 @@ export const getMessagesFromLatestRead = async (
     ...doc.data(),
   })) as ChatMessage[]
   return messages ?? []
+}
+
+//채팅방 초기화
+export const clearMessagesFromSQLite = (roomId: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      (tx: Transaction) => {
+        tx.executeSql(
+          'DELETE FROM messages WHERE roomId = ?',
+          [roomId],
+          () => {
+            resolve() // 성공 시
+          },
+          (_tx, error) => {
+            reject(error) // 실패 시
+            return false
+          },
+        )
+      },
+      error => {
+        reject(error) // 트랜잭션 자체 실패 시
+      },
+    )
+  })
+}
+
+//모든 sqlite 초기화
+export const clearAllMessagesFromSQLite = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM messages', // 모든 메시지 삭제
+        [],
+        () => resolve(),
+        (_, error) => {
+          console.log('SQLite delete error:', error)
+          reject(error)
+          return false
+        },
+      )
+    })
+  })
 }

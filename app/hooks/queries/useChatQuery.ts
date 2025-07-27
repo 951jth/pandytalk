@@ -8,29 +8,49 @@ import {
   orderBy,
   query,
   startAfter,
-  Timestamp,
+  where,
 } from '@react-native-firebase/firestore'
-import {useInfiniteQuery, useQuery, useQueryClient} from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/react-query'
 import {useEffect} from 'react'
 import {
+  clearMessagesFromSQLite,
+  getLatestMessageCreatedAtFromSQLite,
   getMessagesFromLatestRead,
-  getMessagesFromSQLite,
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
-  subscribeToMessages,
 } from '../../services/chatService'
 import type {ChatMessage} from '../../types/firebase'
+
+type MessagePage = {
+  data: ChatMessage[]
+  hasNext: boolean
+  nextCursor?: string
+}
+
+// ✅ 올바른 타입: Infinite Query용
+type MessagesInfiniteData = InfiniteData<MessagePage>
 
 const firestore = getFirestore(getApp())
 const PAGE_SIZE = 20
 
-//채팅 메세지 조회
+//채팅 메세지 조회 (실시간 들어오는 메세지)
 export const listenToMessages = (
   roomId: string,
   onUpdate: (messages: ChatMessage[]) => void,
 ) => {
-  const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-  const q = query(messagesRef, orderBy('createdAt', 'desc'))
+  // const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+  const lastCreatedAt = getLatestMessageCreatedAtFromSQLite(roomId)
+
+  const q = query(
+    collection(firestore, 'chats', roomId, 'messages'),
+    orderBy('createdAt'),
+    startAfter(lastCreatedAt),
+  )
 
   const unsubscribe = onSnapshot(q, snapshot => {
     const messages = snapshot.docs.map(doc => ({
@@ -43,137 +63,73 @@ export const listenToMessages = (
   return unsubscribe
 }
 
-export const useChatMessages = (roomId: string | null) => {
-  const queryClient = useQueryClient()
-  const queryKey = ['chatMessages', roomId]
-
-  // ✅ React Query - SQLite or Firestore 최초 조회
-  const queryResult = useQuery<ChatMessage[]>({
-    enabled: !!roomId,
-    queryKey,
-    queryFn: async () => {
-      try {
-        if (!roomId) throw new Error('roomId is null')
-        const localMessages = (await getMessagesFromSQLite(
-          roomId,
-        )) as ChatMessage[]
-        if (localMessages?.length > 0) {
-          const latestCreated =
-            localMessages[localMessages.length - 1]?.createdAt
-
-          const unreadMessages = await getMessagesFromLatestRead(
-            roomId,
-            latestCreated,
-          )
-          const merged = mergeMessages(localMessages, unreadMessages)
-          return merged
-        }
-
-        // 로컬에 없으면 Firestore에서 가져오기
-        const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-        let q = query(messagesRef, orderBy('createdAt', 'desc'))
-
-        const snapshot = await getDocs(q)
-        const serverMessages: ChatMessage[] = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as ChatMessage[]
-        await saveMessagesToSQLite(roomId, serverMessages)
-        return serverMessages
-      } catch (e) {}
-    },
-    staleTime: Infinity,
-    refetchOnMount: false,
-  })
-
-  // ✅ 실시간 구독: 변경 시 SQLite 저장 + 캐시 업데이트
-  useEffect(() => {
-    if (!roomId) return
-    const unsubscribe = subscribeToMessages(roomId, async msgs => {
-      await saveMessagesToSQLite(roomId, msgs)
-      queryClient.setQueryData(queryKey, msgs)
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [roomId])
-
-  return queryResult
-}
-
 export const useChatMessagesPaging = (roomId: string | null) => {
   const queryClient = useQueryClient()
+  const pageSize = 20
   const queryKey = ['chatMessages', roomId]
   const queryResult = useInfiniteQuery({
     enabled: !!roomId,
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
-      console.log('roomId', roomId)
       try {
-        // if (!roomId) throw new Error('roomId is null')
+        console.log('roomId', roomId)
         if (!roomId)
           return {
             data: [] as ChatMessage[],
             lastVisible: undefined,
             isLastPage: true,
           }
-        console.log('exist roomId')
-        try {
-          const localMessages = (await getMessagesFromSQLiteByPaging(
-            roomId,
-            pageParam, //pageParam은 여기서 마지막 읽은 날짜임
-          )) as ChatMessage[]
-          console.log('get local message')
-          if (localMessages?.length > 0) {
-            const latestCreated =
-              localMessages[localMessages.length - 1]?.createdAt
-            // 로컬 데이터의 마지막 날짜 확인
-            // const unreadMessages = await getMessagesFromLatestRead(
-            //   roomId,
-            //   latestCreated,
-            // )
-            // const merged = mergeMessages(localMessages, unreadMessages)
-            // console.log('local', merged)
+        const localMessages = (await getMessagesFromSQLiteByPaging(
+          roomId,
+          pageParam, //pageParam은 여기서 마지막 읽은 날짜임
+        )) as ChatMessage[]
+        if (localMessages.length < pageSize) {
+          console.log('on server load cursor: ', pageParam)
+          // CASE 1. 로컬에 없으면 Firestore에서 가져오기
+          const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+          let q = query(
+            messagesRef,
+            orderBy('createdAt', 'desc'),
+            limit(PAGE_SIZE),
+          )
+          if (pageParam) q = query(q, where('createdAt', '<', pageParam))
+
+          const snapshot = await getDocs(q)
+          const serverMessages = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as ChatMessage[]
+          console.log('serverMessages', serverMessages)
+          if (serverMessages.length > 0) {
+            //서버데이터가 있으면 그대로 sqlite에 push
+            await saveMessagesToSQLite(roomId, serverMessages)
+            // ✅ 왜 서버에서 가져온 데이터를 그대로 리턴하지않고 sqlite에서 다시 조회하고 리턴하는가?
+            // 1. 데이터 소스 일관성 유지
+            // 2. SQLite 저장이 100% 성공했다는 보장 강화
+            // 3. 중복/정렬 문제 예방 : serverMessages가 중복되있으면 오류발생
+            const updatedMessages = await getMessagesFromSQLiteByPaging(
+              roomId,
+              pageParam,
+            )
             return {
-              data: localMessages,
+              data: updatedMessages,
               lastVisible:
-                localMessages?.[localMessages.length - 1]?.createdAt ?? null,
-              isLastPage: localMessages.length < PAGE_SIZE,
+                updatedMessages[updatedMessages.length - 1]?.createdAt ?? null,
+              isLastPage: updatedMessages.length < PAGE_SIZE,
             }
           }
-        } catch (e) {
-          console.log('get localmessage error', e)
+        } else {
+          console.log('localMessages', localMessages)
+          // CASE 2. 로컬데이터가 충분히 있는 경우
           return {
-            data: [],
-            lastVisible: null,
-            isLastPage: true,
+            data: localMessages,
+            lastVisible:
+              localMessages?.[localMessages.length - 1]?.createdAt ?? null,
+            isLastPage: localMessages.length < PAGE_SIZE,
           }
         }
-        console.log('pageParam', pageParam)
-        // 로컬에 없으면 Firestore에서 가져오기
-        const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-        let q = query(
-          messagesRef,
-          orderBy('createdAt', 'desc'),
-          limit(PAGE_SIZE),
-        )
-        if (pageParam) q = query(q, startAfter(Timestamp.fromMillis(pageParam)))
-
-        const snapshot = await getDocs(q)
-        const serverMessages = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as ChatMessage[]
-        await saveMessagesToSQLite(roomId, serverMessages)
-        return {
-          data: serverMessages,
-          lastVisible:
-            serverMessages?.[serverMessages?.length - 1]?.createdAt ?? null,
-          isLastPage: serverMessages?.length < PAGE_SIZE, //마지막 페이지 유무
-        }
       } catch (e) {
-        console.error('chat paging', e)
+        //에러처리, 동일한 리턴값을 유지해야함
         return {
           data: [] as ChatMessage[],
           lastVisible: null,
@@ -182,44 +138,102 @@ export const useChatMessagesPaging = (roomId: string | null) => {
       }
     },
     getNextPageParam: lastPage => {
-      console.log('lastPage', lastPage)
-      console.log(lastPage?.isLastPage ? undefined : lastPage?.lastVisible)
       return lastPage?.isLastPage ? undefined : lastPage?.lastVisible
     },
     initialPageParam: undefined,
-    staleTime: Infinity,
+    staleTime: 5000,
     refetchOnMount: false,
   })
 
-  // ✅ 실시간 구독: 변경 시 SQLite 저장 + 캐시 업데이트
-  useEffect(() => {
+  const resetChatMessages = async () => {
     if (!roomId) return
-    const unsubscribe = subscribeToMessages(roomId, async msgs => {
-      console.log('no pass')
-      await saveMessagesToSQLite(roomId, msgs)
-      // queryClient.setQueryData(queryKey, msgs)
-      queryClient.setQueryData(queryKey, (prev: any) => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          pages: prev.pages.map((page: any, i: number) =>
-            i === 0
-              ? {
-                  ...page,
-                  data: mergeMessages(msgs, page.data),
-                }
-              : page,
-          ),
-        }
+    try {
+      // 1. 현재 해당 쿼리가 fetching 중인지 확인
+      const isFetching = queryClient.isFetching({queryKey}) > 0
+      if (isFetching) {
+        console.log('🛑 Already refetching. Skipping reset.')
+        return
+      }
+      // 2. SQLite 메시지 삭제
+      await clearMessagesFromSQLite(roomId)
+      // 3. React Query 캐시 제거
+      await queryClient.invalidateQueries({
+        queryKey,
+        refetchType: 'active',
       })
+    } catch (e) {
+      console.log('e', e)
+    }
+  }
+
+  return {
+    ...queryResult,
+    resetChatMessages,
+  }
+}
+
+export const useSubscriptionMessage = (
+  roomId: string | null | undefined,
+  lastCreatedAt: number | null | undefined,
+) => {
+  const db = getFirestore(getApp()) // ✅ 훅 밖에서 선언되더라도 안전
+  const queryClient = useQueryClient() // ✅ 항상 호출되도록
+
+  useEffect(() => {
+    if (!roomId || lastCreatedAt == null) return
+    const messagesRef = collection(db, 'chats', roomId, 'messages')
+    let q = query(messagesRef, orderBy('createdAt', 'desc'))
+
+    if (lastCreatedAt) q = query(q, where('createdAt', '>', lastCreatedAt))
+
+    const unsubscribe = onSnapshot(q, async snapshot => {
+      const newMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ChatMessage[]
+      console.log('newMessages', newMessages)
+      if (newMessages.length > 0) {
+        await saveMessagesToSQLite(roomId, newMessages)
+
+        queryClient.setQueryData(
+          ['chatMessages', roomId],
+          (old: MessagesInfiniteData | undefined) => {
+            if (!old) return
+            const merged = mergeMessages(old.pages[0].data, newMessages)
+            return {
+              ...old,
+              pages: [{...old.pages[0], data: merged}, ...old.pages.slice(1)],
+            }
+          },
+        )
+      }
     })
 
-    return () => {
-      unsubscribe()
-    }
-  }, [roomId])
+    return () => unsubscribe()
+  }, [roomId, lastCreatedAt])
+}
 
-  return queryResult
+// 채팅방 데이터 최신화
+export const useSyncUnreadMessages = (
+  roomId: string | null,
+  localMessages: ChatMessage[],
+) => {
+  const latestCreatedAt = localMessages?.[0]?.createdAt
+  const isSyncEnabled =
+    !!roomId && localMessages.length > 0 && !!latestCreatedAt
+  return useQuery({
+    queryKey: ['unreadMessagesSync', roomId],
+    queryFn: async () => {
+      const unread = await getMessagesFromLatestRead(roomId!, latestCreatedAt)
+      // console.log('unread', unread)
+      return [...unread, ...localMessages]
+      // return mergeMessages(unread, localMessages)
+    },
+    enabled: isSyncEnabled,
+    staleTime: 0, // ✅ 캐시된 데이터는 즉시 stale 처리됨
+    refetchOnMount: true,
+    refetchOnWindowFocus: true, // ✅ 포커스 복귀 시 자동 동기화
+  })
 }
 
 //메세지 중복 제거 및 병합
@@ -229,5 +243,5 @@ function mergeMessages(
 ): ChatMessage[] {
   const map = new Map<string, ChatMessage>()
   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
-  return Array.from(map.values()).sort((a, b) => a.createdAt - b.createdAt)
+  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
 }

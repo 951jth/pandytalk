@@ -5,7 +5,6 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
-import EmptyData from '../components/common/EmptyData'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
@@ -37,10 +36,11 @@ export default function ChatRoomScreen() {
     if (!rid && user?.uid !== targetIds?.[0] && user?.uid && targetIds?.[0]) {
       rid = await getDirectMessageRoomId(user.uid, targetIds?.[0])
     }
-    if (rid)
+    if (rid) {
       getChatRoomInfo(rid).then(res => {
         setRoomInfo(res || null)
       })
+    }
   }
 
   useEffect(() => {
@@ -57,8 +57,7 @@ export default function ChatRoomScreen() {
       }
     }, [currentRid, user?.id]),
   )
-
-  if (!currentRid) return <EmptyData />
+  // if (!currentRid) return <EmptyData />
 
   return (
     <>

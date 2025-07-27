@@ -12,16 +12,16 @@ import {
   getAuth,
   onAuthStateChanged,
 } from '@react-native-firebase/auth'
+import AppNavigator from './app/navigation/AppNavigator'
+import AuthNavigator from './app/navigation/AuthNavigator'
+
+import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-
-import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {navigationRef} from './app/components/navigation/RootNavigation'
 import {useFCMSetup} from './app/hooks/useFCM'
 import {initialRouteName} from './app/hooks/useRoutes'
-import AppNavigator from './app/navigation/AppNavigator'
-import AuthNavigator from './app/navigation/AuthNavigator'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
@@ -71,6 +71,7 @@ export function RootNavigator(): React.JSX.Element {
         console.log('이미 messages 테이블 있음')
       }
     })
+    // initTimeOffset()
   }, [])
 
   useEffect(() => {

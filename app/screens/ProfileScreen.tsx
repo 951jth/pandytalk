@@ -6,11 +6,13 @@ import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
 import React, {useEffect, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
+import {Button} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import InputForm from '../components/description/InputForm'
 import EditProfile from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
+import {useResetAllQueryCache} from '../hooks/useCommonQuery'
 import {initialUserInfo} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import {AppDispatch} from '../store/store'
@@ -28,6 +30,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const dispatch = useDispatch<AppDispatch>()
   const queryClient = useQueryClient()
   const uid = authInstance.currentUser?.uid
+  const {resetAll} = useResetAllQueryCache()
 
   const formItems = [
     {label: '닉네임', key: 'nickname'},
@@ -117,6 +120,11 @@ export default function ProfileScreen(): React.JSX.Element {
           loading={submitting}
           onSubmit={formValues => updateUserProfile(formValues)}
         />
+        {user?.authority == 'ADMIN' && (
+          <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
+            캐시 초기화
+          </Button>
+        )}
       </View>
     </View>
   )
@@ -144,5 +152,10 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  cleanButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
 })

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import {ChatMessage} from '../types/firebase'
 
 export const isSameSender = (
@@ -25,4 +26,17 @@ export const isSameMinute = (
     prevDate.getHours() === currentDate.getHours() &&
     prevDate.getMinutes() === currentDate.getMinutes()
   )
+}
+
+//이전 채팅과 현재채팅의 날짜 비교 함수
+export const isSameDate = (
+  prev: ChatMessage | null,
+  current: ChatMessage | null,
+) => {
+  if (!prev || !prev?.createdAt || !current?.createdAt) return false
+
+  const prevDate = dayjs(prev.createdAt).format('YYYY-MM-DD')
+  const currentDate = dayjs(current.createdAt).format('YYYY-MM-DD')
+
+  return prevDate === currentDate
 }
