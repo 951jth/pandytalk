@@ -40,3 +40,13 @@ export const isSameDate = (
 
   return prevDate === currentDate
 }
+
+//메세지 중복 제거 및 병합
+export function mergeMessages(
+  existing: ChatMessage[],
+  incoming: ChatMessage[],
+): ChatMessage[] {
+  const map = new Map<string, ChatMessage>()
+  ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
+  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
+}

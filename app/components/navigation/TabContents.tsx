@@ -2,7 +2,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {tabScreens} from '../../hooks/useRoutes'
+import {tabScreens} from '../../hooks/useScreens'
 
 const Tab = createBottomTabNavigator()
 

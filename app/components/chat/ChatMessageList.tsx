@@ -116,7 +116,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
         {!hideDate && (
           <View style={styles.chatDateWrap}>
             <Text style={styles.chatDateText}>
-              {dayjs(item?.createdAt).format('YYYY년 MM월 DD일 ddd')}
+              {dayjs(item?.createdAt).format('YYYY년 MM월 DD일 dddd')}
             </Text>
           </View>
         )}
@@ -143,8 +143,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       keyboardShouldPersistTaps="handled"
       refreshing={isLoading}
       onEndReached={() => {
-        console.log('isScrolll')
-        console.log(hasNextPage, isFetchingNextPage)
         if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
         }

@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import {StyleSheet} from 'react-native'
 import {BottomNavigation, Icon} from 'react-native-paper'
-import {authRoutes} from '../../hooks/useRoutes'
+import {authRoutes} from '../../hooks/useScreens'
 
 const AppContents: React.FC = () => {
   // authRoutes는 LayoutItem[] 타입이며, 우리는 그 중 첫 번째 layout의 children을 사용

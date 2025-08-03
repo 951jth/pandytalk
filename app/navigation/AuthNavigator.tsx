@@ -1,6 +1,6 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
-import {noAuthRoutes} from '../hooks/useRoutes'
+import {noAuthRoutes} from '../hooks/useScreens'
 
 export default function AuthNavigator() {
   const Stack = createNativeStackNavigator()

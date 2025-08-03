@@ -4,6 +4,7 @@ import {getFirestore} from 'firebase-admin/firestore'
 import {getMessaging, MulticastMessage} from 'firebase-admin/messaging' // ✅ 올바른 경로
 import {logger} from 'firebase-functions'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
+import {removeFcmTokenFromUser} from './utils/fcm'
 
 initializeApp()
 const db = getFirestore()
@@ -46,6 +47,7 @@ export const sendNewMessageNotification = onDocumentCreated(
 
       // 2. 수신자들의 fcmToken 조회
       const tokens: string[] = []
+      let targetUsers: {uid: string; fcmToken: string}[] = []
 
       for (const uid of receiverIds) {
         const userSnap = await db.doc(`users/${uid}`).get()
@@ -53,19 +55,20 @@ export const sendNewMessageNotification = onDocumentCreated(
         if (!userData) continue
 
         const fcmTokens = userData.fcmTokens
+
         if (Array.isArray(fcmTokens)) {
-          tokens.push(...fcmTokens.filter(Boolean)) // null/undefined 방지
+          targetUsers = fcmTokens.map(fcmToken => ({uid, fcmToken}))
         }
       }
 
-      if (tokens.length === 0) {
+      if (targetUsers.length === 0) {
         logger.info('❌ 전송할 토큰 없음')
         return
       }
 
       // 3. 멀티캐스트 메시지 생성
       const multicastMessage: MulticastMessage = {
-        tokens,
+        tokens: targetUsers?.map(user => user?.fcmToken),
         notification: {
           title: message?.senderName ?? '새 메시지 도착!',
           body: text ?? '내용이 없습니다',
@@ -110,9 +113,26 @@ export const sendNewMessageNotification = onDocumentCreated(
         `✅ 푸시 전송 완료: 성공 ${response.successCount} / 실패 ${response.failureCount}`,
       )
       logger.info(tokens)
-      response.responses.forEach((res, i) => {
+      response.responses.forEach(async (res, i) => {
+        const {uid, fcmToken} = targetUsers[i]
         if (!res.success) {
-          console.error(`❌ FCM 실패: [${tokens[i]}] → ${res.error?.message}`)
+          logger.error('❌ FCM 전송 실패', {
+            uid,
+            fcmToken,
+            error: res.error?.message,
+            code: res.error?.code,
+          })
+          const code = res.error?.code || res.error?.message
+          // 삭제 대상인 경우 처리
+          const deletableErrors = [
+            'messaging/invalid-registration-token',
+            'messaging/registration-token-not-registered',
+            'Requested entity was not found',
+          ]
+
+          if (code && deletableErrors.includes(code)) {
+            await removeFcmTokenFromUser(uid, fcmToken) // ← 직접 구현한 삭제 함수
+          }
         } else {
           console.log(`✅ 성공: ${tokens[i]}`)
         }

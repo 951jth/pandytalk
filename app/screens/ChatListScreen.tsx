@@ -9,10 +9,8 @@ import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
-import {
-  updateChatLastReadCache,
-  useMyChatsInfinite,
-} from '../hooks/useInfiniteQuery'
+import {useMyChatsInfinite} from '../hooks/queries/useChatRoomQuery'
+import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/hooks'
 import type {User} from '../types/firebase'

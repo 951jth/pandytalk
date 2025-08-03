@@ -14,9 +14,9 @@ import {
   requestPermission,
 } from '@react-native-firebase/messaging'
 import {useQueryClient} from '@tanstack/react-query'
-import {useEffect} from 'react'
+import {useEffect, useRef} from 'react'
 import {PermissionsAndroid, Platform} from 'react-native'
-import {PushMessage} from '../types/firebase'
+import type {PushMessage} from '../types/firebase'
 import {updateChatListCache} from './useInfiniteQuery'
 
 // iOS 권한 : alert, badge, sound, provisional 선택 가능
@@ -36,9 +36,9 @@ const AuthorizationStatus = {
 
 export function useFCMSetup() {
   const authInstance = getAuth()
-  const currentUser = authInstance.currentUser
   useEffect(() => {
     const firestore = getFirestore()
+    const currentUser = getAuth().currentUser
     async function setup() {
       try {
         if (!currentUser?.uid) return
@@ -76,6 +76,7 @@ export function useFCMSetup() {
           await messaging.registerDeviceForRemoteMessages()
         }
         const token = await messaging.getToken()
+        console.log('token', token)
         await setDoc(
           doc(firestore, 'users', currentUser.uid),
           {fcmTokens: arrayUnion(token)},
@@ -87,65 +88,62 @@ export function useFCMSetup() {
     }
 
     setup()
-  }, [currentUser])
+  }, [authInstance])
 }
 
-//수신등록
+//현재 미사용.
+//수신 후 채팅방 목록 (읽음 카운트 밎 생성) 실시간 갱신
 export function useFCMListener(userId: string | null | undefined) {
   const queryClient = useQueryClient()
-  if (!userId) return
+  const hasMounted = useRef(false) //마운트될떄 한번만 호출되도록
+
   useEffect(() => {
+    if (!userId || hasMounted.current) return
+    hasMounted.current = true
+
     const app = getApp()
     const messaging = getMessaging(app)
 
     const updateChatList = (remoteMessage: any) => {
       const data = remoteMessage?.data
-      if (data) {
-        updateChatListCache(queryClient, userId, {
-          chatId: data.chatId,
-          pushType: data.pushType,
-          senderId: data.senderId,
-          text: data.text,
-          type: data.type,
-          imageUrl: data.imageUrl || '',
-          senderName: data.senderName || '',
-          senderPicURL: data.senderPicURL || '',
-          createdAt: Number(data.createdAt),
-        } as PushMessage)
-        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
-      }
+      if (!data) return
+
+      updateChatListCache(queryClient, userId, {
+        chatId: data.chatId,
+        pushType: data.pushType,
+        senderId: data.senderId,
+        text: data.text,
+        type: data.type,
+        imageUrl: data.imageUrl || '',
+        senderName: data.senderName || '',
+        senderPicURL: data.senderPicURL || '',
+        createdAt: Number(data.createdAt),
+      } as PushMessage)
     }
 
-    // ✅ 포그라운드 수신
     const unsubscribe = onMessage(messaging, async remoteMessage => {
-      console.log('음음?')
-      const type = remoteMessage?.data?.pushType
-      if (type === 'chat') {
+      if (remoteMessage?.data?.pushType === 'chat') {
         console.log('[FCM] foreground tap: 채팅 목록 새로고침')
         updateChatList(remoteMessage)
       }
     })
 
-    // ✅ 백그라운드 탭
     onNotificationOpenedApp(messaging, remoteMessage => {
-      const type = remoteMessage?.data?.pushType
-      if (type === 'chat') {
+      if (remoteMessage?.data?.pushType === 'chat') {
         console.log('[FCM] background tap: 채팅 목록 새로고침')
         updateChatList(remoteMessage)
-        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
       }
     })
 
-    // ✅ 종료 상태에서 푸시로 실행된 경우
     getInitialNotification(messaging).then(remoteMessage => {
-      const type = remoteMessage?.data?.pushType
-      if (type === 'chat') {
+      if (remoteMessage?.data?.pushType === 'chat') {
         console.log('[FCM] quit → 실행됨: 채팅 목록 새로고침')
         updateChatList(remoteMessage)
-        // queryClient.invalidateQueries({queryKey: ['chats', userId]})
       }
     })
 
-    return () => unsubscribe()
-  }, [userId, queryClient])
+    return () => {
+      unsubscribe()
+    }
+  }, [userId])
 }

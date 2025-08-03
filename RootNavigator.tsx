@@ -20,8 +20,9 @@ import {AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import {navigationRef} from './app/components/navigation/RootNavigation'
-import {useFCMSetup} from './app/hooks/useFCM'
-import {initialRouteName} from './app/hooks/useRoutes'
+import {useFCMListener, useFCMSetup} from './app/hooks/useFCM'
+import {useFCMPushHandler} from './app/hooks/useFCMPush'
+import {initialRouteName} from './app/hooks/useScreens'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {AppDispatch} from './app/store/store'
@@ -36,7 +37,8 @@ export function RootNavigator(): React.JSX.Element {
   const [initializing, setInitializing] = useState<boolean>(true)
   const dispatch = useDispatch<AppDispatch>()
   useFCMSetup() //FCM 푸시알림 세팅
-
+  useFCMListener(user?.uid) //FCM -> 채팅방 목록 갱신
+  useFCMPushHandler() //푸쉬알림 -> 채팅방 이동 핸들링
   console.log('user', user)
 
   const fetchProfile = async (uid: string) => {
@@ -74,12 +76,10 @@ export function RootNavigator(): React.JSX.Element {
     // initTimeOffset()
   }, [])
 
+  //앱 초기 마운트시 경로 지정
   useEffect(() => {
     ;(async () => {
-      // const user = await getUserInfo(); // 토큰 or 로컬스토리지 확인
-      // 로그인로직 추가되면 바꿔주세요
-
-      if (!navigationRef.isReady() || !user) return
+      if (!navigationRef.isReady()) return
       navigationRef.reset({
         index: 0,
         routes: [

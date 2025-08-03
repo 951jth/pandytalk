@@ -25,6 +25,7 @@ import {
   saveMessagesToSQLite,
 } from '../../services/chatService'
 import type {ChatMessage} from '../../types/firebase'
+import {mergeMessages} from '../../utils/chat'
 
 type MessagePage = {
   data: ChatMessage[]
@@ -213,7 +214,7 @@ export const useSubscriptionMessage = (
   }, [roomId, lastCreatedAt])
 }
 
-// 채팅방 데이터 최신화
+// 채팅방 데이터 최신화 (현재 snapshot으로 대체함 안씀)
 export const useSyncUnreadMessages = (
   roomId: string | null,
   localMessages: ChatMessage[],
@@ -234,14 +235,4 @@ export const useSyncUnreadMessages = (
     refetchOnMount: true,
     refetchOnWindowFocus: true, // ✅ 포커스 복귀 시 자동 동기화
   })
-}
-
-//메세지 중복 제거 및 병합
-function mergeMessages(
-  existing: ChatMessage[],
-  incoming: ChatMessage[],
-): ChatMessage[] {
-  const map = new Map<string, ChatMessage>()
-  ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
-  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
 }

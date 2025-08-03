@@ -8,7 +8,7 @@ import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
-import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
+import {updateChatLastReadCache} from '../hooks/queries/useChatRoomQuery'
 import {
   getChatRoomInfo,
   getDirectMessageRoomId,
@@ -41,6 +41,7 @@ export default function ChatRoomScreen() {
         setRoomInfo(res || null)
       })
     }
+    console.log('chatRoomId', rid)
   }
 
   useEffect(() => {
