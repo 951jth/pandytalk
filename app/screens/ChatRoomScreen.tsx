@@ -14,8 +14,8 @@ import {
   getDirectMessageRoomId,
   updateLastRead,
 } from '../services/chatService'
-import {useAppSelector} from '../store/hooks'
-import {RoomInfo, User} from '../types/firebase'
+import {useAppSelector} from '../store/reduxHooks'
+import {ChatListItem, type User} from '../types/firebase'
 import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatRoomScreen() {
@@ -23,7 +23,7 @@ export default function ChatRoomScreen() {
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const {roomId, targetIds, title} =
     route.params as AppRouteParamList['chatRoom']
-  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null)
+  const [roomInfo, setRoomInfo] = useState<ChatListItem | null>(null)
   const currentRid = roomId || roomInfo?.id || null //현재 채팅방 아이디
   const targetMember = roomInfo?.memberInfos?.find(
     member => member?.id == targetIds?.[0], //채팅방이 없으면 targetIds는 필수로 들고와야함
@@ -41,7 +41,6 @@ export default function ChatRoomScreen() {
         setRoomInfo(res || null)
       })
     }
-    console.log('chatRoomId', rid)
   }
 
   useEffect(() => {

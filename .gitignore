@@ -79,3 +79,36 @@ android/app/build/
 ios/Pods/
 .env
 
+# RN 번들 & 에셋
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/assets/*.packager
+android/app/src/main/res/drawable-*/rn_*      # 번들 시 생기는 아이콘/스플래시 등
+ios/main.jsbundle
+
+# 빌드 산출물
+android/**/build/
+android/.gradle/
+ios/build/
+ios/DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcarchive
+
+# 패키지 매니저/IDE 캐시
+node_modules/
+*.iml
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# 배포 파일
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
+
+# 키/서명(실수 방지)
+*.keystore
+*.jks
+*.p12
+*.mobileprovision

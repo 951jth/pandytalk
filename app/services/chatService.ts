@@ -18,7 +18,7 @@ import dayjs from 'dayjs'
 import {useRef} from 'react'
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../store/sqlite'
-import {ChatMessage, RoomInfo, User} from '../types/firebase'
+import {ChatListItem, ChatMessage, User} from '../types/firebase'
 import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
@@ -53,7 +53,7 @@ export const getDirectMessageRoomId = async (
 //채팅방 정보 조회 (멤버 및 채팅방 정보들들)
 export const getChatRoomInfo = async (
   roomId: string,
-): Promise<RoomInfo | void> => {
+): Promise<ChatListItem | void> => {
   // 1. chats/{roomId} 문서에서 members 배열 가져오기
   try {
     const chatDocRef = doc(firestore, 'chats', roomId)
@@ -61,7 +61,7 @@ export const getChatRoomInfo = async (
     if (!chatSnap.exists()) {
       throw new Error('채팅방이 존재하지 않습니다.')
     }
-    let roomInfo = {id: chatSnap.id, ...chatSnap?.data()} as RoomInfo
+    let roomInfo = {id: chatSnap.id, ...chatSnap?.data()} as ChatListItem
     const uids: string[] = chatSnap?.data()?.members ?? []
 
     // 2. users 컬렉션에서 해당 uid들의 유저 정보 가져오기
@@ -185,13 +185,13 @@ export const createChatRoom = async (
   options?: {
     name?: string
     image?: string
-    type?: RoomInfo['type']
+    type?: ChatListItem['type']
   },
 ): Promise<string | null> => {
   try {
     const sortedIds = [userId, ...targetIds].sort()
     const chatRef = collection(firestore, 'chats')
-    const newRoom: Omit<RoomInfo, 'id'> = {
+    const newRoom: Omit<ChatListItem, 'id'> = {
       type: options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm'),
       createdAt: Date.now(),
       members: sortedIds?.filter(Boolean),
@@ -218,7 +218,7 @@ export const createChatRoom = async (
  */
 export const updateChatRoom = async (
   roomId: string,
-  roomData: Partial<Omit<RoomInfo, 'id'>>,
+  roomData: Partial<Omit<ChatListItem, 'id'>>,
 ): Promise<void> => {
   try {
     const chatDocRef = doc(firestore, 'chats', roomId)

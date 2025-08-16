@@ -2,13 +2,13 @@ import {getAuth} from '@react-native-firebase/auth'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 // import {navigate} from '../components/navigation/RootNavigation'
-import {authRoutes} from '../hooks/useScreens'
+import {appRoutes} from '../hooks/useScreens'
 
 const Stack = createNativeStackNavigator()
 const authInstance = getAuth()
 
 export default function AppNavigator() {
-  const routes = authRoutes()
+  const routes = appRoutes()
 
   //알림 클릭시 초기 진입 route
   // useEffect(() => {

@@ -1,12 +1,12 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
-import {noAuthRoutes} from '../hooks/useScreens'
+import {authRoutes} from '../hooks/useScreens'
 
 export default function AuthNavigator() {
   const Stack = createNativeStackNavigator()
   return (
     <Stack.Navigator initialRouteName={'login'}>
-      {noAuthRoutes?.map(route => {
+      {authRoutes?.map(route => {
         return (
           <Stack.Screen
             key={route.name}

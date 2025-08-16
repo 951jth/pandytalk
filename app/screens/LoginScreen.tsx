@@ -1,7 +1,9 @@
 import pandy from '@assets/images/pandy_visible.png'
 import {getAuth, signInWithEmailAndPassword} from '@react-native-firebase/auth'
+import {useNavigation} from '@react-navigation/native'
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {useState} from 'react'
-import {Image, StyleSheet, View} from 'react-native'
+import {Image, StyleSheet, TouchableOpacity, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import {Button, Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
@@ -9,6 +11,7 @@ import KeyboardViewWrapper from '../components/container/KeyboardUtilitiesWrappe
 import CustomInput from '../components/input/CustomInput'
 import {PasswordInput} from '../components/input/PasswordInput'
 import COLORS from '../constants/color'
+import type {AuthStackParamList} from '../types/navigate'
 
 type formTypes = {
   email: string
@@ -16,14 +19,12 @@ type formTypes = {
 }
 
 export default function LoginScreen() {
-  const [formValues, setFormValues] = useState<formTypes>({
-    email: '',
-    password: '',
-  })
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [error, setError] = useState<String | null>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AuthStackParamList, 'addGuest'>>()
   const authInstance = getAuth()
   const onSubmit = async () => {
     try {
@@ -39,7 +40,7 @@ export default function LoginScreen() {
 
   const handleFirebaseAuthError = (error: any) => {
     let message = '알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
-
+    console.log('error', error)
     switch (error?.code) {
       case 'auth/invalid-email':
         message = '이메일 형식이 올바르지 않습니다.'
@@ -55,6 +56,22 @@ export default function LoginScreen() {
         break
       case 'auth/too-many-requests':
         message = '잠시 후 다시 시도해주세요. 요청이 너무 많습니다.'
+        break
+      case 'auth/invalid-credential':
+        // 잘못된 이메일/비밀번호
+        message = `잘못된 이메일/비밀번호 입니다.`
+        break
+      case 'auth/user-not-found':
+        // 해당 이메일 계정 없음
+        message = `해당 이메일 계정이 없습니다.`
+        break
+      case 'auth/invalid-email':
+        // 이메일 형식 잘못됨
+        message = `이메일 형식 잘못됨`
+        break
+      case 'auth/user-disabled':
+        // 계정이 비활성화됨
+        message = `계정이 비활성화 됐습니다.`
         break
       // 필요시 추가
     }
@@ -92,6 +109,15 @@ export default function LoginScreen() {
               loading={loading}>
               로그인
             </Button>
+          </View>
+          <View style={styles.addOnRow}>
+            <View style={styles.line}></View>
+            <TouchableOpacity
+              style={styles.addGuestButton}
+              onPress={() => navigation.navigate('addGuest')}>
+              <Text style={styles.addGuestText}>게스트 신청</Text>
+            </TouchableOpacity>
+            <View style={styles.line}></View>
           </View>
         </LinearGradient>
       </KeyboardViewWrapper>
@@ -141,5 +167,29 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
+    fontFamily: 'BMDOHYEON',
+    marginTop: 8,
   },
+  addOnRow: {
+    marginTop: 20,
+    position: 'relative',
+    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
+  },
+  addGuestButton: {
+    padding: 8,
+    margin: -8,
+  },
+  line: {
+    backgroundColor: '#FFF',
+    // position: 'absolute',
+    // left: 0,
+    // top: 5,
+    // width: '100%',
+    height: 2,
+    flex: 1,
+  },
+  addGuestText: {fontFamily: 'BMDOHYEON', color: '#FFF', zIndex: 1},
 })

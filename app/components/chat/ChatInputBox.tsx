@@ -1,4 +1,5 @@
 import {getAuth} from '@react-native-firebase/auth'
+import {useQueryClient} from '@tanstack/react-query'
 import React, {useState} from 'react'
 import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {ImagePickerResponse} from 'react-native-image-picker'
@@ -30,6 +31,8 @@ export default function ChatInputBox({
   const authInstance = getAuth()
   const currentUser = authInstance.currentUser
   const [loading, setLoading] = useState<boolean>(false)
+  const queryClient = useQueryClient()
+
   // const onNewChatRoom = () => {
   //   createChatRoom()
   // }
@@ -76,7 +79,7 @@ export default function ChatInputBox({
 
       if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
       if (rid) {
-        await sendMessage(rid, message)
+        await sendMessage(rid, message as ChatMessage)
         getRoomId()
       }
     } catch (e) {

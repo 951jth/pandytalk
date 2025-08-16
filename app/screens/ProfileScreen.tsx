@@ -14,7 +14,7 @@ import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
 import {useResetAllQueryCache} from '../hooks/useCommonQuery'
 import {initialUserInfo} from '../services/userService'
-import {useAppSelector} from '../store/hooks'
+import {useAppSelector} from '../store/reduxHooks'
 import {AppDispatch} from '../store/store'
 import {fetchUserById} from '../store/userSlice'
 import {isLocalFile} from '../utils/file'
@@ -37,13 +37,15 @@ export default function ProfileScreen(): React.JSX.Element {
     {label: '이메일', key: 'email', fixed: true},
     {
       label: '권한',
+      key: 'authority',
       contents: user?.authority ? authority?.[user?.authority] : '-',
     },
     {
       label: '최근 접속일',
+      key: 'lastSeen',
       contents: dayjs(Number(user?.lastSeen))?.format('YYYY-MM-DD hh:mm:ss'),
     },
-    {label: '게스트 여부', contents: user?.isGuest ? 'Y' : 'N'},
+    {label: '게스트 여부', key: 'isGuest', contents: user?.isGuest ? 'Y' : 'N'},
   ]
   const initialFormValues = {
     // ...user,

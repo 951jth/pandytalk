@@ -16,8 +16,6 @@ import {
 import {useQueryClient} from '@tanstack/react-query'
 import {useEffect, useRef} from 'react'
 import {PermissionsAndroid, Platform} from 'react-native'
-import type {PushMessage} from '../types/firebase'
-import {updateChatListCache} from './useInfiniteQuery'
 
 // iOS 권한 : alert, badge, sound, provisional 선택 가능
 const iosPermOptions = {
@@ -107,18 +105,18 @@ export function useFCMListener(userId: string | null | undefined) {
     const updateChatList = (remoteMessage: any) => {
       const data = remoteMessage?.data
       if (!data) return
-
-      updateChatListCache(queryClient, userId, {
-        chatId: data.chatId,
-        pushType: data.pushType,
-        senderId: data.senderId,
-        text: data.text,
-        type: data.type,
-        imageUrl: data.imageUrl || '',
-        senderName: data.senderName || '',
-        senderPicURL: data.senderPicURL || '',
-        createdAt: Number(data.createdAt),
-      } as PushMessage)
+      queryClient.invalidateQueries({queryKey: ['chats', userId]})
+      // updateChatListCache(queryClient, userId, {
+      //   chatId: data.chatId,
+      //   pushType: data.pushType,
+      //   senderId: data.senderId,
+      //   text: data.text,
+      //   type: data.type,
+      //   imageUrl: data.imageUrl || '',
+      //   senderName: data.senderName || '',
+      //   senderPicURL: data.senderPicURL || '',
+      //   createdAt: Number(data.createdAt),
+      // } as PushMessage)
     }
 
     const unsubscribe = onMessage(messaging, async remoteMessage => {

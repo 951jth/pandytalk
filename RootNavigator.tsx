@@ -35,11 +35,17 @@ const RootStack = createNativeStackNavigator<RootStackParamList>()
 export function RootNavigator(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
+  const [navReady, setNavReady] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
   useFCMSetup() //FCM 푸시알림 세팅
   useFCMListener(user?.uid) //FCM -> 채팅방 목록 갱신
   useFCMPushHandler() //푸쉬알림 -> 채팅방 이동 핸들링
-  console.log('user', user)
+
+  useEffect(() => {
+    if (navigationRef.isReady()) {
+      setNavReady(true) // ✅ 네비 준비됨
+    }
+  }, [navigationRef.current]) // ref.current 감지는 제한적이므로 아래 onReady 병행 권장
 
   const fetchProfile = async (uid: string) => {
     try {
@@ -78,6 +84,7 @@ export function RootNavigator(): React.JSX.Element {
 
   //앱 초기 마운트시 경로 지정
   useEffect(() => {
+    if (!navReady) return
     ;(async () => {
       if (!navigationRef.isReady()) return
       navigationRef.reset({
@@ -89,7 +96,6 @@ export function RootNavigator(): React.JSX.Element {
         ],
       })
     })()
-
     //앱이 백그라운드 → 포그라운드로 돌아올 때 lastSeen을 갱신
     const subscription = AppState.addEventListener('change', nextAppState => {
       if (nextAppState === 'active' && user?.uid) {
@@ -100,7 +106,7 @@ export function RootNavigator(): React.JSX.Element {
       }
     })
     return () => subscription.remove()
-  }, [user])
+  }, [user, navReady])
 
   if (initializing) {
     return (

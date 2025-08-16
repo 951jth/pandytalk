@@ -6,8 +6,9 @@ export type TabParamList = {
   profile: undefined
 }
 
-export type NoAuthStackParamList = {
+export type AuthStackParamList = {
   login: undefined
+  addGuest: undefined
 }
 
 // 필요 없다면 RootStackParamList 제거 가능
@@ -21,5 +22,5 @@ export type AppRouteParamList = {
 
 export type RootStackParamList = {
   app: NavigatorScreenParams<AppRouteParamList>
-  auth: NavigatorScreenParams<NoAuthStackParamList>
+  auth: NavigatorScreenParams<AuthStackParamList>
 }

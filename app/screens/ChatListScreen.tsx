@@ -9,15 +9,23 @@ import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
-import {useMyChatsInfinite} from '../hooks/queries/useChatRoomQuery'
-import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
+import {
+  updateChatLastReadCache,
+  useChatListHeadSubscription,
+  useMyChatsInfinite,
+} from '../hooks/queries/useChatRoomQuery'
+// import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
-import {useAppSelector} from '../store/hooks'
-import type {User} from '../types/firebase'
+import {useAppSelector} from '../store/reduxHooks'
+import type {ChatListItem, User} from '../types/firebase'
 import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatListScreen() {
-  const {data: user} = useAppSelector(state => state.user)
+  const {
+    data: user,
+    loading: userLoading,
+    error,
+  } = useAppSelector(state => state.user)
   const queryClient = useQueryClient()
   const {
     data,
@@ -26,16 +34,20 @@ export default function ChatListScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useMyChatsInfinite(user?.uid) as any
+  } = useMyChatsInfinite(user?.uid) as any //채팅방 목록 조회
+
+  useChatListHeadSubscription(user?.uid) //채팅방 데이터 실시간 감지
+
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
   const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
+
   const [targetMembers, setTargetMembers] = useState<User[]>([])
-  const chatsWithMemberInfo = chats?.map((chat: any) => {
-    const targetId = chat?.members.find((mId: string) => mId !== user?.uid)
+  const chatsWithMemberInfo = chats?.map((chat: ChatListItem) => {
+    const targetId = chat?.members?.find((mId: string) => mId !== user?.uid)
     const findMember = targetMembers?.find(member => member?.uid == targetId)
     return {...chat, targetId, findMember}
   })
@@ -99,8 +111,9 @@ export default function ChatListScreen() {
       />
       <FlatList
         data={
-          chatsWithMemberInfo?.filter((chat: any) =>
-            chat.findMember?.nickname?.toLowerCase()?.includes(searchText),
+          chatsWithMemberInfo?.filter(
+            (chat: ChatListItem & {findMember: User}) =>
+              chat.findMember?.nickname?.toLowerCase()?.includes(searchText),
           ) ?? []
         }
         keyExtractor={e => e?.id}

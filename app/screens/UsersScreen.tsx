@@ -9,7 +9,7 @@ import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/queries/useUserQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
-import {useAppSelector} from '../store/hooks'
+import {useAppSelector} from '../store/reduxHooks'
 import {AppRouteParamList} from '../types/navigate'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)

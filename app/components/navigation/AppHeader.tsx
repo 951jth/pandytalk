@@ -3,9 +3,9 @@ import {useNavigation, useNavigationState} from '@react-navigation/native'
 import React, {ReactNode} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
-import {authRoutes, tabScreens} from '../../hooks/useScreens'
+import {appRoutes, tabScreens} from '../../hooks/useScreens'
 import {updateUserOffline} from '../../services/userService'
-import {useAppSelector} from '../../store/hooks'
+import {useAppSelector} from '../../store/reduxHooks'
 import {clearUser} from '../../store/userSlice'
 const authInstance = getAuth()
 
@@ -18,7 +18,7 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
   const navigation = useNavigation()
   const canGoBack = navigation.canGoBack()
   const allRoutes =
-    authRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
+    appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
   const tabs = tabScreens() // 동적일 수도 있음
   const {data: user, loading, error} = useAppSelector(state => state.user)
 

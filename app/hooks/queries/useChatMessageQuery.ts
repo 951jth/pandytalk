@@ -73,7 +73,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       try {
-        console.log('roomId', roomId)
         if (!roomId)
           return {
             data: [] as ChatMessage[],
@@ -100,7 +99,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             id: doc.id,
             ...doc.data(),
           })) as ChatMessage[]
-          console.log('serverMessages', serverMessages)
           if (serverMessages.length > 0) {
             //서버데이터가 있으면 그대로 sqlite에 push
             await saveMessagesToSQLite(roomId, serverMessages)
@@ -192,7 +190,6 @@ export const useSubscriptionMessage = (
         id: doc.id,
         ...doc.data(),
       })) as ChatMessage[]
-      console.log('newMessages', newMessages)
       if (newMessages.length > 0) {
         await saveMessagesToSQLite(roomId, newMessages)
 

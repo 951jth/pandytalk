@@ -1,6 +1,7 @@
 import React from 'react'
 import MainLayout from '../components/layout/MainLayout'
 import TabContents from '../components/navigation/TabContents'
+import AddGuestScreen from '../screens/AddGuestScreen'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -46,7 +47,7 @@ const tabScreens = (): RouteItem[] => {
   ]
 }
 
-const authRoutes = (): LayoutItem[] => {
+const appRoutes = (): LayoutItem[] => {
   return [
     {
       key: 'main',
@@ -73,13 +74,18 @@ const authRoutes = (): LayoutItem[] => {
     },
   ]
 }
-const noAuthRoutes: RouteItem[] = [
+
+const authRoutes: RouteItem[] = [
   {
     name: 'login',
     component: LoginScreen,
+  },
+  {
+    name: 'addGuest',
+    component: AddGuestScreen,
   },
 ]
 
 const initialRouteName = 'main'
 
-export {authRoutes, initialRouteName, noAuthRoutes, tabScreens}
+export {appRoutes, authRoutes, initialRouteName, tabScreens}

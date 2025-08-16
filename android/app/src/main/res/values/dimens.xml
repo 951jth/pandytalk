@@ -1,0 +1,3 @@
+<resources>
+    <dimen name="splash_logo_size">220dp</dimen> <!-- 폰 기본 -->
+</resources>

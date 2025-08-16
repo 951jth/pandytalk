@@ -6,9 +6,9 @@ import COLORS from '../../constants/color'
 import {
   useChatMessagesPaging,
   useSubscriptionMessage,
-} from '../../hooks/queries/useChatQuery'
+} from '../../hooks/queries/useChatMessageQuery'
 import {getLatestMessageCreatedAtFromSQLite} from '../../services/chatService'
-import {ChatMessage, RoomInfo} from '../../types/firebase'
+import {ChatListItem, ChatMessage} from '../../types/firebase'
 import {isSameDate, isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
 import ImageViewer from '../common/ImageViewer'
@@ -16,7 +16,7 @@ import ImageViewer from '../common/ImageViewer'
 interface Props {
   roomId: string | null
   userId: string | null | undefined
-  roomInfo: RoomInfo | null
+  roomInfo: ChatListItem | null
   inputComponent?: React.ComponentType<any> | React.ReactElement | null
 }
 
@@ -41,7 +41,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     const hideProfile = isSameSender(item, nextItem)
     const hideMinute = isSameMinute(item, nextItem)
     const hideDate = isSameDate(item, nextItem)
-
     const member = members?.find(mem => mem?.uid === item?.senderId)
 
     return (

@@ -31,7 +31,7 @@ export interface PushMessage extends ChatMessage {
   pushType: string
 }
 
-export interface RoomInfo {
+export interface ChatListItem {
   id?: string
   type: 'dm' | 'group'
   createdAt?: number
