@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {User} from '../../types/firebase'
+import type {User} from '../../types/auth'
 
 interface ChatMemberProps {
   item: User

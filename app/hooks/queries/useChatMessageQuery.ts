@@ -24,7 +24,7 @@ import {
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
 } from '../../services/chatService'
-import type {ChatMessage} from '../../types/firebase'
+import type {ChatMessage} from '../../types/chat'
 import {mergeMessages} from '../../utils/chat'
 
 type MessagePage = {

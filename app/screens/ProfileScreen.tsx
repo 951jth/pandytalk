@@ -8,7 +8,8 @@ import React, {useEffect, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {Button} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-import InputForm from '../components/description/InputForm'
+import InputForm from '../components/form/InputForm'
+import EditInput from '../components/input/EditInput'
 import EditProfile from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
@@ -17,6 +18,7 @@ import {initialUserInfo} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
 import {AppDispatch} from '../store/store'
 import {fetchUserById} from '../store/userSlice'
+import type {FormItem} from '../types/form'
 import {isLocalFile} from '../utils/file'
 
 const authInstance = getAuth()
@@ -32,9 +34,29 @@ export default function ProfileScreen(): React.JSX.Element {
   const uid = authInstance.currentUser?.uid
   const {resetAll} = useResetAllQueryCache()
 
-  const formItems = [
-    {label: '닉네임', key: 'nickname'},
-    {label: '이메일', key: 'email', fixed: true},
+  const formItems: FormItem[] = [
+    {
+      label: '닉네임',
+      key: 'nickname',
+      render: (value, onChange, edit) => (
+        <EditInput value={value} onChangeText={onChange} edit={edit} />
+      ),
+      validation: {
+        // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
+        maxLength: 20,
+        pattern: /^[A-Za-z0-9가-힣 _-]{2,20}$/,
+        message:
+          '닉네임은 2-20자, 한글/영문/숫자/공백/언더스코어/하이픈만 가능합니다.',
+        customFn: (v: string) => {
+          if (!v) return '닉네임을 입력하세요.'
+          if (v.trim().length < 2)
+            return '닉네임은 공백 제외 2자 이상이어야 합니다.'
+          if (/^\s|\s$/.test(v)) return '앞/뒤 공백은 제거해주세요.'
+          return true // 통과
+        },
+      },
+    },
+    {label: '이메일', key: 'email', contents: user?.email},
     {
       label: '권한',
       key: 'authority',
@@ -45,7 +67,6 @@ export default function ProfileScreen(): React.JSX.Element {
       key: 'lastSeen',
       contents: dayjs(Number(user?.lastSeen))?.format('YYYY-MM-DD hh:mm:ss'),
     },
-    {label: '게스트 여부', key: 'isGuest', contents: user?.isGuest ? 'Y' : 'N'},
   ]
   const initialFormValues = {
     // ...user,
@@ -101,9 +122,11 @@ export default function ProfileScreen(): React.JSX.Element {
       <View style={styles.contents}>
         <InputForm
           items={formItems}
-          initialData={user || initialFormValues}
+          formData={user}
           editable={true}
-          buttonLabel="프로필 "
+          labelWidth={100}
+          buttonLabel="프로필 수정"
+          initialValues={initialFormValues}
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
@@ -158,6 +181,6 @@ const styles = StyleSheet.create({
   cleanButton: {
     position: 'absolute',
     top: 0,
-    right: 0,
+    left: 0,
   },
 })

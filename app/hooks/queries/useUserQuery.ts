@@ -10,7 +10,8 @@ import {
   startAt,
 } from '@react-native-firebase/firestore'
 import {useInfiniteQuery} from '@tanstack/react-query'
-import type {FsSnapshot, User} from '../../types/firebase'
+import type {User} from '../../types/auth'
+import type {FsSnapshot} from '../../types/firebase'
 
 const firestore = getFirestore()
 const PAGE_SIZE = 10

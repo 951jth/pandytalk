@@ -9,13 +9,14 @@ interface EditInputProps extends TextInputProps {
 }
 
 export default function EditInput({
-  edit,
+  edit = true,
+  style,
   ...others
 }: EditInputProps): React.JSX.Element {
   const [focused, setFocused] = useState<boolean>(false)
   return edit ? (
     <TextInput
-      style={[styles.input, focused && styles.focusedInput, others.style]}
+      style={[styles.input, focused && styles.focusedInput, style]}
       underlineColor="transparent"
       activeUnderlineColor="transparent"
       mode="flat"
@@ -24,7 +25,7 @@ export default function EditInput({
         setFocused(true)
         others?.onFocus?.(e)
       }}
-      onBlur={() => {
+      onBlur={e => {
         setFocused(false)
         others?.onBlur && others?.onBlur(e)
       }}

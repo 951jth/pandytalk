@@ -17,7 +17,8 @@ import {
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
-import type {ChatListItem, User} from '../types/firebase'
+import type {User} from '../types/auth'
+import type {ChatListItem} from '../types/chat'
 import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatListScreen() {

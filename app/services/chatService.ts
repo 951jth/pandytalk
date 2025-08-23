@@ -18,7 +18,8 @@ import dayjs from 'dayjs'
 import {useRef} from 'react'
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../store/sqlite'
-import {ChatListItem, ChatMessage, User} from '../types/firebase'
+import type {User} from '../types/auth'
+import type {ChatListItem, ChatMessage} from '../types/chat'
 import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())

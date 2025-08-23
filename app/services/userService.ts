@@ -15,7 +15,7 @@ import {
 import {getMessaging} from '@react-native-firebase/messaging'
 import {AppDispatch} from '../store/store'
 import {setUser} from '../store/userSlice'
-import {User} from '../types/firebase'
+import type {User} from '../types/auth'
 
 const app = getApp()
 const firestore = getFirestore(app)
@@ -119,7 +119,9 @@ export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
  * @param userIds 조회할 userId 문자열 배열
  * @returns User[] 유저 정보 배열
  */
-export const getUsersByIds = async (userIds: string[]): Promise<User[]> => {
+export const getUsersByIds = async (
+  userIds: string[],
+): Promise<User[] | any> => {
   if (!userIds || userIds.length === 0) return []
 
   const chunkSize = 10

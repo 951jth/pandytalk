@@ -10,7 +10,8 @@ import {
   getChatRoomInfo,
   sendMessage,
 } from '../../services/chatService'
-import {ChatMessage, User} from '../../types/firebase'
+import type {User} from '../../types/auth'
+import type {ChatMessage} from '../../types/chat'
 import {firebaseImageUpload} from '../../utils/file'
 import UploadButton from '../upload/UploadButton'
 

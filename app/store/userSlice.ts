@@ -1,7 +1,7 @@
 // app/store/userSlice.ts
 import {doc, getDoc, getFirestore} from '@react-native-firebase/firestore'
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
-import {User} from '../types/firebase'
+import type {User} from '../types/auth'
 
 type UserState = {
   data: User | null

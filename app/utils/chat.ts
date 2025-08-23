@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import {ChatMessage} from '../types/firebase'
+import type {ChatMessage} from '../types/chat'
 
 export const isSameSender = (
   prev: ChatMessage | null,

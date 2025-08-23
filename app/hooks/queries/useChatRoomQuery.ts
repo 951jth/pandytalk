@@ -18,7 +18,8 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
-import type {ChatListItem, FsSnapshot, PushMessage} from '../../types/firebase'
+import type {ChatListItem, PushMessage} from '../../types/chat'
+import type {FsSnapshot} from '../../types/firebase'
 import {useDebouncedCallback} from '../useDebounceCallback'
 
 interface pageType {

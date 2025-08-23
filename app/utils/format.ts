@@ -1,9 +1,10 @@
 import dayjs from 'dayjs'
-import {PushMessage} from '../types/firebase'
+import type {PushMessage} from '../types/chat'
 
 // 푸시 메세지 타입 변환 함수
 export function parsePushMessage(data: {[key: string]: string}): PushMessage {
   return {
+    id: data.chatId,
     chatId: data.chatId,
     pushType: data.pushType,
     senderId: data.senderId,
@@ -36,3 +37,5 @@ export function removeEmpty<T extends Record<string, any>>(
     ),
   ) as any
 }
+
+export const toStr = (v: any) => (v == null ? '' : String(v))

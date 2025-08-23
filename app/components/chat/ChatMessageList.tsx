@@ -8,7 +8,7 @@ import {
   useSubscriptionMessage,
 } from '../../hooks/queries/useChatMessageQuery'
 import {getLatestMessageCreatedAtFromSQLite} from '../../services/chatService'
-import {ChatListItem, ChatMessage} from '../../types/firebase'
+import type {ChatListItem, ChatMessage} from '../../types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime} from '../../utils/format'
 import ImageViewer from '../common/ImageViewer'

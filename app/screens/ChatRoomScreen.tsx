@@ -15,7 +15,8 @@ import {
   updateLastRead,
 } from '../services/chatService'
 import {useAppSelector} from '../store/reduxHooks'
-import {ChatListItem, type User} from '../types/firebase'
+import type {User} from '../types/auth'
+import type {ChatListItem} from '../types/chat'
 import {AppRouteParamList} from '../types/navigate'
 
 export default function ChatRoomScreen() {
