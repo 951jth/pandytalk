@@ -55,7 +55,7 @@ export default function ChatMember({
           {item?.status == 'online' && <View style={styles.point} />}
         </View>
         <View style={styles.contents}>
-          <Text style={styles.name}>{item?.nickname}</Text>
+          <Text style={styles.name}>{item?.displayName}</Text>
           <Text style={styles.status}>
             {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
             {item?.lastSeen

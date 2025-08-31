@@ -1,26 +1,47 @@
-import React, {useState} from 'react'
+import storage from '@react-native-firebase/storage'
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  type ForwardedRef,
+} from 'react'
 import {Image, StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
 import COLORS from '../../constants/color'
+import {auth} from '../../store/firestore'
+import {isLocalFile} from '../../utils/file'
 import {requestPhotoPermission} from '../../utils/permission'
 import DefaultProfile from '../common/DefaultProfile'
 
 interface propTypes {
-  previewUrl: string | null
-  setPreviewUrl: (value: string) => void
+  // previewUrl: string | null
+  // setPreviewUrl: (value: string) => void
+  defaultUrl: string | null
   edit?: boolean
   boxSize?: number
   iconSize?: number
 }
 
-export default function EditProfile({
-  previewUrl,
-  setPreviewUrl = () => {},
-  edit,
-  boxSize = 150,
-  iconSize = 120,
-}: propTypes): React.JSX.Element {
+export interface profileInputRef {
+  upload: () => Promise<string | null>
+  getImage: () => string | null
+  setImage: (value: string) => void
+}
+
+//ref로 받도록 수정함
+export default forwardRef(function EditProfile(
+  {
+    // previewUrl,
+    // setPreviewUrl = () => {},
+    defaultUrl,
+    edit,
+    boxSize = 150,
+    iconSize = 120,
+  }: propTypes,
+  ref: ForwardedRef<profileInputRef>,
+) {
+  const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   // const [imageUri, setImageUri] = useState<string | null>(uri)
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -81,6 +102,27 @@ export default function EditProfile({
     }
   }
 
+  const uploadImage = async (): Promise<string | null> => {
+    try {
+      if (previewUrl && isLocalFile(previewUrl)) {
+        const fileName = `profile_${Date.now()}.jpg`
+        const uid = auth.currentUser?.uid
+        const ref = storage().ref(`profiles/${uid}/${fileName}`)
+        await ref.putFile(previewUrl)
+        const newPhotoURL = await ref.getDownloadURL()
+        return newPhotoURL
+      } else return null
+    } catch (e) {
+      return null
+    }
+  }
+
+  useImperativeHandle(ref, () => ({
+    upload: () => uploadImage(),
+    getImage: () => previewUrl,
+    setImage: (url: string) => setPreviewUrl(url),
+  }))
+
   return (
     <View style={styles.profile}>
       {previewUrl ? (
@@ -122,7 +164,7 @@ export default function EditProfile({
       )}
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   profile: {

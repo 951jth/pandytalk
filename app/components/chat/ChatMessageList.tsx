@@ -88,7 +88,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
               <View style={{marginLeft: hideProfile ? 55 : 0}}>
                 {/* 닉네임 */}
                 {!hideProfile && (
-                  <Text style={styles.nickname}>{member?.nickname}</Text>
+                  <Text style={styles.nickname}>{member?.displayName}</Text>
                 )}
                 <View style={styles.otherChat}>
                   {/* 상대 채팅 */}

@@ -1,12 +1,15 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../constants/color'
-import {tabScreens} from '../../hooks/useScreens'
+import COLORS from '../constants/color'
+import {tabScreens} from '../hooks/useScreens'
+import {useAppSelector} from '../store/reduxHooks'
 
 const Tab = createBottomTabNavigator()
 
-export default function TabContents(): React.JSX.Element {
+export default function TabScreenNavigator(): React.JSX.Element {
+  const {data: user} = useAppSelector(state => state?.user)
+  // const tabs = useMemo(() => tabScreens(), [user])
   const tabs = tabScreens()
   return (
     <Tab.Navigator

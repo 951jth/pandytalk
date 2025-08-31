@@ -10,6 +10,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
   Timestamp,
   updateDoc,
   where,
@@ -236,7 +237,7 @@ export const updateLastRead = async (roomId: string, userId: string) => {
   try {
     const chatDocRef = doc(firestore, 'chats', roomId)
     await updateDoc(chatDocRef, {
-      [`lastReadTimestamps.${userId}`]: Date.now(), // ✅ number(ms)
+      [`lastReadTimestamps.${userId}`]: serverTimestamp(), // ✅ number(ms)
     })
   } catch (e) {
     console.error('채팅방 정보 업데이트 실패:', e)

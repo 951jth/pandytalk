@@ -51,7 +51,7 @@ export default function ChatInputBox({
       }
       let message = {
         senderPicURL: user?.photoURL,
-        senderName: user?.nickname,
+        senderName: user?.displayName,
         senderId: user?.uid,
         text: text,
         type: type || 'text',

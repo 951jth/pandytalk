@@ -12,5 +12,6 @@ export const fileUpload: any = async (uid: string, previewUrl: string) => {
     return newPhotoURL
   } catch (e) {
     console.error('fileUpload error', e)
+    return null
   }
 }

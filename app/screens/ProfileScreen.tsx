@@ -1,16 +1,22 @@
 import {getAuth} from '@react-native-firebase/auth'
-import {doc, getFirestore, updateDoc} from '@react-native-firebase/firestore'
-import storage from '@react-native-firebase/storage'
+import {
+  doc,
+  getFirestore,
+  serverTimestamp,
+  updateDoc,
+} from '@react-native-firebase/firestore'
 import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {Button} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import InputForm from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
-import EditProfile from '../components/upload/EditProfile'
+import EditProfile, {
+  type profileInputRef,
+} from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
 import {useResetAllQueryCache} from '../hooks/useCommonQuery'
@@ -19,7 +25,6 @@ import {useAppSelector} from '../store/reduxHooks'
 import {AppDispatch} from '../store/store'
 import {fetchUserById} from '../store/userSlice'
 import type {FormItem} from '../types/form'
-import {isLocalFile} from '../utils/file'
 
 const authInstance = getAuth()
 
@@ -32,12 +37,13 @@ export default function ProfileScreen(): React.JSX.Element {
   const dispatch = useDispatch<AppDispatch>()
   const queryClient = useQueryClient()
   const uid = authInstance.currentUser?.uid
+  const profileRef = useRef<profileInputRef | null>(null)
   const {resetAll} = useResetAllQueryCache()
 
   const formItems: FormItem[] = [
     {
       label: '닉네임',
-      key: 'nickname',
+      key: 'displayName',
       render: (value, onChange, edit) => (
         <EditInput value={value} onChangeText={onChange} edit={edit} />
       ),
@@ -74,8 +80,8 @@ export default function ProfileScreen(): React.JSX.Element {
     authority: 'USER',
     email: user?.email ?? '',
     isGuest: true,
-    lastSeen: Date.now(),
-    nickname: user?.email,
+    lastSeen: serverTimestamp(),
+    displayName: user?.email,
     photoURL: '',
     status: 'online',
   } //초기값이 없는 경우 강제로넣어줌
@@ -87,11 +93,8 @@ export default function ProfileScreen(): React.JSX.Element {
       setSubmitting(true)
       const firestore = getFirestore()
       const userRef = doc(firestore, 'users', uid)
-      if (previewUrl && isLocalFile(previewUrl)) {
-        const fileName = `profile_${Date.now()}.jpg`
-        const ref = storage().ref(`profiles/${uid}/${fileName}`)
-        await ref.putFile(previewUrl)
-        const newPhotoURL = await ref.getDownloadURL()
+      const newPhotoURL = await profileRef?.current?.upload()
+      if (newPhotoURL) {
         formValues = {
           ...initialFormValues,
           ...formValues,
@@ -130,9 +133,11 @@ export default function ProfileScreen(): React.JSX.Element {
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
+                ref={profileRef}
                 edit={edit}
-                previewUrl={previewUrl}
-                setPreviewUrl={setPreviewUrl}
+                // previewUrl={previewUrl}
+                defaultUrl={previewUrl}
+                // setPreviewUrl={setPreviewUrl}
               />
             </View>
           }
@@ -140,7 +145,7 @@ export default function ProfileScreen(): React.JSX.Element {
           setEdit={bool => {
             setEdit(bool)
             setFormValues(cloneDeep(formValues))
-            if (!bool && user?.photoURL) setPreviewUrl(user.photoURL)
+            // if (!bool && user?.photoURL) setPreviewUrl(user.photoURL)
           }}
           loading={submitting}
           onSubmit={formValues => updateUserProfile(formValues)}

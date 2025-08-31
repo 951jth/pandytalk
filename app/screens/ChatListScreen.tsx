@@ -92,11 +92,11 @@ export default function ChatListScreen() {
       if (newIds.length === 0) return
       getUsersByIds(newIds).then(res => {
         // 캐시에 추가
-        res.forEach(user => fetchedMemberIdsRef.current.add(user?.uid))
+        res.forEach((user: User) => fetchedMemberIdsRef.current.add(user?.uid))
         // 기존 캐시 + 신규 결과 병합
         setTargetMembers(prev => {
           const prevMap = new Map(prev.map(u => [u.id, u]))
-          res.forEach(u => prevMap.set(u.id, u))
+          res.forEach((u: User) => prevMap.set(u.id, u))
           return Array.from(prevMap.values())
         })
       })
@@ -114,7 +114,7 @@ export default function ChatListScreen() {
         data={
           chatsWithMemberInfo?.filter(
             (chat: ChatListItem & {findMember: User}) =>
-              chat.findMember?.nickname?.toLowerCase()?.includes(searchText),
+              chat.findMember?.displayName?.toLowerCase()?.includes(searchText),
           ) ?? []
         }
         keyExtractor={e => e?.id}
@@ -155,7 +155,7 @@ export default function ChatListScreen() {
               </View>
               <View style={styles.contents}>
                 <Text style={styles.name}>
-                  {isDM ? findMember?.nickname : '-'}
+                  {isDM ? findMember?.displayName : '-'}
                 </Text>
                 <Text
                   style={styles.lastMessage}

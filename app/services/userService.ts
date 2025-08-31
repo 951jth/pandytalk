@@ -8,6 +8,7 @@ import {
   getDocs,
   getFirestore,
   query,
+  serverTimestamp,
   setDoc,
   updateDoc,
   where,
@@ -36,7 +37,7 @@ export async function updateLastSeen(uid: string): Promise<void> {
 
   try {
     await updateDoc(userRef, {
-      lastSeen: Date.now(),
+      lastSeen: serverTimestamp(),
       status: 'online',
     })
   } catch (error) {
@@ -70,7 +71,7 @@ export const generateGuestUsers = async () => {
       email: `guest${current}@example.com`,
       isGuest: true,
       lastSeen: current,
-      nickname: `게스트${current}`,
+      displayName: `게스트${current}`,
       photoURL: '',
       status: 'offline',
     }
@@ -96,8 +97,8 @@ export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
     authority: 'USER',
     email: currentUser?.email ?? '',
     isGuest: true,
-    lastSeen: Date.now(),
-    nickname: currentUser?.email ?? '',
+    lastSeen: serverTimestamp(),
+    displayName: currentUser?.email ?? '',
     photoURL: '',
     status: 'online',
   } as User
@@ -130,10 +131,15 @@ export const getUsersByIds = async (
   for (let i = 0; i < userIds.length; i += chunkSize) {
     chunks.push(userIds.slice(i, i + chunkSize))
   }
-  // 🔹 병렬로 모든 쿼리 실행
+
+  //현재 나와 관계되고, 승인된 유저들만 조회
   const results = await Promise.all(
     chunks.map(async chunk => {
-      const q = query(collection(firestore, 'users'), where('uid', 'in', chunk))
+      const q = query(
+        collection(firestore, 'users'),
+        where('uid', 'in', chunk),
+        where('accountStatus', '==', 'confirm'),
+      )
       const snapshot = await getDocs(q)
       return snapshot.docs.map(doc => {
         if (doc?.id) return {id: doc?.id, ...doc.data()} as User

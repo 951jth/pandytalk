@@ -3,10 +3,9 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import debounce from 'lodash/debounce'
 import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
-import {ActivityIndicator} from 'react-native-paper'
 import ChatMember from '../components/card/ChatMember'
+import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
-import COLORS from '../constants/color'
 import {useUsersInfinite} from '../hooks/queries/useUserQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {useAppSelector} from '../store/reduxHooks'
@@ -66,7 +65,8 @@ export default function UsersScreen(): React.JSX.Element {
               item={item}
               onPress={() => {
                 dismissKeyboard()
-                if (!isKeyboardVisible) moveToChatRoom(item.uid, item?.nickname)
+                if (!isKeyboardVisible)
+                  moveToChatRoom(item.uid, item?.displayName)
               }}
             />
           )
@@ -74,10 +74,16 @@ export default function UsersScreen(): React.JSX.Element {
         onEndReached={() => {
           if (hasNextPage) fetchNextPage()
         }}
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
-          ) : null
+        ListEmptyComponent={
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingBottom: 12,
+            }}>
+            <EmptyData text={`아직 유저가 없네요.`} />
+          </View>
         }
         refreshing={isLoading}
         onRefresh={refetch}
@@ -95,5 +101,6 @@ const styles = StyleSheet.create({
   friendsContainer: {
     paddingHorizontal: 12,
     paddingTop: 4,
+    flexGrow: 1,
   },
 })

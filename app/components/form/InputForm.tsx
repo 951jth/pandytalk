@@ -66,10 +66,10 @@ export default function InputForm({
 
   const onEditChange = (bool: boolean) => {
     setEdit(bool)
-    if (!bool) {
-      setFormValues(resetValues?.current)
-      setErrors({}) // 편집 종료 시 에러 초기화
-    }
+    // if (!bool) {
+    //   setFormValues(resetValues?.current)
+    //   // setErrors({}) // 편집 종료 시 에러 초기화
+    // }
   }
 
   useEffect(() => {
@@ -108,6 +108,7 @@ export default function InputForm({
                       labelStyle,
                     ]}>
                     {item?.label}
+                    {item?.required && <Text style={styles.required}>*</Text>}
                   </Text>
 
                   <View style={[styles.contents, contentsStyle, {fontSize}]}>
@@ -215,4 +216,5 @@ const styles = StyleSheet.create({
     color: '#D32F2F',
     paddingHorizontal: 24,
   },
+  required: {color: '#D32F2F'},
 })

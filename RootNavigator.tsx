@@ -16,7 +16,7 @@ import AppNavigator from './app/navigation/AppNavigator'
 import AuthNavigator from './app/navigation/AuthNavigator'
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import {AppState, StatusBar, View} from 'react-native'
+import {Alert, AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import {navigationRef} from './app/components/navigation/RootNavigation'
@@ -25,8 +25,9 @@ import {useFCMPushHandler} from './app/hooks/useFCMPush'
 import {initialRouteName} from './app/hooks/useScreens'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
+import {useAppSelector} from './app/store/reduxHooks'
 import {AppDispatch} from './app/store/store'
-import {clearUser, fetchUserById} from './app/store/userSlice'
+import {clearUser, fetchUserById, logout} from './app/store/userSlice'
 import {RootStackParamList} from './app/types/navigate'
 
 const authInstance = getAuth()
@@ -36,6 +37,8 @@ export function RootNavigator(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
   const [navReady, setNavReady] = useState(false)
+  const {data: userInfo, loading, error} = useAppSelector(state => state.user)
+
   const dispatch = useDispatch<AppDispatch>()
   useFCMSetup() //FCM 푸시알림 세팅
   useFCMListener(user?.uid) //FCM -> 채팅방 목록 갱신
@@ -50,7 +53,17 @@ export function RootNavigator(): React.JSX.Element {
   const fetchProfile = async (uid: string) => {
     try {
       const profile = await dispatch(fetchUserById(uid)).unwrap()
-      await updateLastSeen(uid)
+      if (profile?.accountStatus !== 'confirm') {
+        Alert.alert(
+          '승인 대기 중',
+          '회원님의 게스트 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
+        )
+
+        user?.uid && (await updateUserOffline(user.uid))
+        await logout(dispatch)
+      } else {
+        await updateLastSeen(uid)
+      }
     } catch (err: any) {
       console.error('❌ 유저 정보 로딩 실패:', err)
     }
@@ -90,7 +103,7 @@ export function RootNavigator(): React.JSX.Element {
       navigationRef.reset({
         index: 0,
         routes: [
-          user
+          userInfo?.accountStatus == 'confirm'
             ? {name: 'app', params: {screen: initialRouteName}}
             : {name: 'auth', params: {screen: 'login'}},
         ],
@@ -98,6 +111,8 @@ export function RootNavigator(): React.JSX.Element {
     })()
     //앱이 백그라운드 → 포그라운드로 돌아올 때 lastSeen을 갱신
     const subscription = AppState.addEventListener('change', nextAppState => {
+      if (userInfo?.accountStatus !== 'confirm') return
+
       if (nextAppState === 'active' && user?.uid) {
         updateLastSeen(user.uid)
       }
@@ -106,7 +121,7 @@ export function RootNavigator(): React.JSX.Element {
       }
     })
     return () => subscription.remove()
-  }, [user, navReady])
+  }, [userInfo, navReady])
 
   if (initializing) {
     return (
