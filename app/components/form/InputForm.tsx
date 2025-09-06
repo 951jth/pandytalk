@@ -1,6 +1,13 @@
-// InputForm.tsx (교체용)
+// InputForm.tsx (교체용: ref + useImperativeHandle 추가)
 import {get} from 'lodash'
-import React, {Fragment, useEffect, useRef, useState} from 'react'
+import React, {
+  forwardRef,
+  Fragment,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import {
   ScrollView,
   StyleProp,
@@ -19,7 +26,7 @@ import {
 } from '../../utils/validation'
 import {CustomButton} from '../button/CustomButton'
 
-interface propsType {
+interface Props {
   items: FormItem[]
   initialValues?: object | null
   style?: StyleProp<ViewStyle>
@@ -38,48 +45,81 @@ interface propsType {
   onSubmit?: (value: any) => void
   onFormChange?: (key: string, value: string | number, meta: object) => any
   formData?: object | null
+  onCancel?: () => void
 }
 
-export default function InputForm({
-  items = [],
-  initialValues = {},
-  style = {},
-  labelWidth = 80,
-  fontSize = 16,
-  rowsStyle = {},
-  labelStyle = {},
-  contentsStyle = {},
-  editable = false,
-  buttonLabel = '',
-  topElement,
-  bottomElement,
-  edit = false,
-  setEdit = bool => {},
-  loading = false,
-  onSubmit = values => {},
-  onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
-  formData,
-}: propsType): React.JSX.Element {
+// 🔗 외부에서 사용할 ref 타입
+export interface InputFormRef {
+  /** 현재 formValues를 깊은 복사로 반환 */
+  getValues: () => Record<string, any>
+  /** formValues를 통째로 교체 (기존 값 덮어씀) */
+  setValues: (next: Record<string, any> | null | undefined) => void
+  /** formValues 일부만 갱신 (merge) */
+  updateValues: (patch: Partial<Record<string, any>>) => void
+}
+
+const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
+  {
+    items = [],
+    initialValues = {},
+    style = {},
+    labelWidth = 80,
+    fontSize = 16,
+    rowsStyle = {},
+    labelStyle = {},
+    contentsStyle = {},
+    editable = false,
+    buttonLabel = '',
+    topElement,
+    bottomElement,
+    edit = false,
+    setEdit = bool => {},
+    loading = false,
+    onSubmit = values => {},
+    onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
+    onCancel = () => {},
+    formData,
+  }: Props,
+  ref,
+) {
   const resetValues = useRef<object>({})
   const [formValues, setFormValues] = useState<object | null>(initialValues)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({}) // 에러메시지 표기
 
   const onEditChange = (bool: boolean) => {
     setEdit(bool)
-    // if (!bool) {
-    //   setFormValues(resetValues?.current)
-    //   // setErrors({}) // 편집 종료 시 에러 초기화
-    // }
   }
 
   useEffect(() => {
     if (formData) {
-      console.log('formData', formData)
       resetValues.current = formData
       setFormValues(formData)
       setErrors({})
     }
   }, [formData])
+
+  // ✅ 외부로 노출할 메서드들
+  useImperativeHandle(
+    ref,
+    (): InputFormRef => ({
+      getValues: () => {
+        // 객체를 직접 반환하면 외부에서 mutate할 수 있으니 얕은 복사
+        return {...(formValues ?? {})} as Record<string, any>
+      },
+      setValues: next => {
+        setFormValues(next ?? {})
+        // 값 전체 교체 시 에러도 초기화 (필요 시 주석 처리)
+        setErrors({})
+      },
+      updateValues: patch => {
+        if (!patch || typeof patch !== 'object') return
+        setFormValues(prev => ({...(prev ?? {}), ...patch}))
+        // 부분 갱신 시 유효성 체크가 필요하면 아래 로직 확장 가능
+        // Object.entries(patch).forEach(([k, v]) => { ...validateField... });
+      },
+    }),
+    [formValues],
+  )
 
   return (
     <>
@@ -89,7 +129,10 @@ export default function InputForm({
             icon="close"
             size={20}
             style={styles.backBtn}
-            onTouchEnd={() => onEditChange(false)}
+            onTouchEnd={() => {
+              onEditChange(false)
+              onCancel()
+            }}
           />
         )}
 
@@ -98,6 +141,7 @@ export default function InputForm({
           {items?.map((item: FormItem) => {
             const {key, render, meta, rowStyle} = item
             const value = get(formValues ?? {}, key) // 기본값 '' 대신 값 그대로
+
             return (
               <Fragment key={key}>
                 <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
@@ -169,7 +213,9 @@ export default function InputForm({
       </View>
     </>
   )
-}
+})
+
+export default InputForm
 
 const styles = StyleSheet.create({
   container: {

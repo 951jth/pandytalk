@@ -3,6 +3,7 @@ import {Keyboard} from 'react-native'
 
 export default function useKeyboardFocus() {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false) //키보드 포커싱 유무
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
 
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardDidShow', () =>

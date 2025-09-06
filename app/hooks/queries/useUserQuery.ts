@@ -28,7 +28,7 @@ export const useUsersInfinite = (searchText: string = '') => {
       if (searchText) {
         q = query(
           usersRef,
-          where('accountStatus', '==', 'confirm'),
+          where('isConfirmed', '==', true),
           orderBy('displayName', 'asc'),
           orderBy('status', 'desc'),
           orderBy('lastSeen', 'desc'),
@@ -39,7 +39,7 @@ export const useUsersInfinite = (searchText: string = '') => {
       } else {
         q = query(
           usersRef,
-          where('accountStatus', '==', 'confirm'),
+          where('isConfirmed', '==', true),
           orderBy('status', 'desc'),
           orderBy('lastSeen', 'desc'),
           limit(PAGE_SIZE),
@@ -54,7 +54,6 @@ export const useUsersInfinite = (searchText: string = '') => {
         uid: doc?.id,
         ...doc.data(),
       })) as User[]
-      console.log('users', users)
       return {
         users, //데이터
         lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null, //현재 보고 있는 페이지커서
@@ -73,44 +72,51 @@ export const usePendingUsersInfinity = (searchText: string = '') => {
   return useInfiniteQuery({
     queryKey: ['pending-users', searchText],
     queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
-      const usersRef = collection(firestore, 'users')
-      // let q = query(usersRef, orderBy('status', 'desc'), limit(PAGE_SIZE));
-      let q = null
+      try {
+        const usersRef = collection(firestore, 'users')
+        // let q = query(usersRef, orderBy('status', 'desc'), limit(PAGE_SIZE));
+        let q = null
 
-      if (searchText) {
-        q = query(
-          usersRef,
-          where('accountStatus', '!=', 'confirm'),
-          orderBy('displayName', 'asc'),
-          orderBy('status', 'desc'),
-          orderBy('lastSeen', 'desc'),
-          startAt(searchText),
-          endAt(searchText + '\uf8ff'),
-          limit(PAGE_SIZE),
-        )
-      } else {
-        q = query(
-          usersRef,
-          where('accountStatus', '!=', 'confirm'),
-          orderBy('status', 'desc'),
-          orderBy('lastSeen', 'desc'),
-          limit(PAGE_SIZE),
-        )
-      }
+        if (searchText) {
+          q = query(
+            usersRef,
+            orderBy('displayName', 'asc'),
+            orderBy('status', 'desc'),
+            orderBy('createdAt', 'desc'),
+            startAt(searchText),
+            endAt(searchText + '\uf8ff'),
+            limit(PAGE_SIZE),
+          )
+        } else {
+          q = query(
+            usersRef,
+            orderBy('status', 'desc'),
+            orderBy('createdAt', 'desc'),
+            limit(PAGE_SIZE),
+          )
+        }
 
-      //다음 페이지 요청
-      if (pageParam) q = query(q, startAfter(pageParam))
+        //다음 페이지 요청
+        if (pageParam) q = query(q, startAfter(pageParam))
 
-      const snapshot = await getDocs(q)
-      console.log('snapshot', snapshot)
-      const users = snapshot.docs.map(doc => ({
-        uid: doc?.id,
-        ...doc.data(),
-      })) as User[]
-      return {
-        users, //데이터
-        lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null, //현재 보고 있는 페이지커서
-        isLastPage: snapshot.docs.length < PAGE_SIZE, //마지막 페이지 유무
+        const snapshot = await getDocs(q)
+        console.log('snapshot', snapshot)
+        const users = snapshot.docs.map(doc => ({
+          uid: doc?.id,
+          ...doc.data(),
+        })) as User[]
+        return {
+          users, //데이터
+          lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null, //현재 보고 있는 페이지커서
+          isLastPage: snapshot.docs.length < PAGE_SIZE, //마지막 페이지 유무
+        }
+      } catch (e) {
+        console.log('error', e)
+        return {
+          users: [], //데이터
+          lastVisible: null, //현재 보고 있는 페이지커서
+          isLastPage: true, //마지막 페이지 유무
+        }
       }
     },
     //queryFn에서 return 하는 값들
@@ -118,5 +124,13 @@ export const usePendingUsersInfinity = (searchText: string = '') => {
       return lastPage.isLastPage ? undefined : lastPage.lastVisible
     },
     initialPageParam: undefined,
+    // onError: (err: any) => {
+    //   console.log('error', err)
+    //   return {
+    //     users: [], //데이터
+    //     lastVisible: null, //현재 보고 있는 페이지커서
+    //     isLastPage: true, //마지막 페이지 유무
+    //   }
+    // },
   })
 }

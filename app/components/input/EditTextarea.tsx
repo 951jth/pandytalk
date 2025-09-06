@@ -11,7 +11,7 @@ interface Props extends TextInputProps {
   lineHeight?: number // 기본 22
 }
 
-export default function EditTextInput({
+export default function EditTextArea({
   edit = true,
   hasError = false,
   minRows = 2,

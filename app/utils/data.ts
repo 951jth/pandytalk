@@ -1,4 +1,4 @@
-import {inputFormItemType} from '../types/form'
+import {FormItem} from '../types/form'
 
 export function getValueByDataIndex<T = any>(
   obj: Record<string, any>,
@@ -69,13 +69,13 @@ export function setArrayByDataIndex<T = any>(
 
 //item값으로 validation 체크(required: true만 검증함)
 export function validationCheckByItems(
-  items: inputFormItemType[],
-  checkObj: object,
+  items: FormItem[],
+  checkObj: object | any,
 ): any {
   // const items = [
   //   {label: '에러항목 한글명', key: 'object key값', required: true}
   // ]
-  const requiredValues: inputFormItemType[] = items?.filter(e => e?.required)
+  const requiredValues: FormItem[] = items?.filter(e => e?.required)
   const errorValues: any[] = []
   requiredValues.forEach(value => {
     // if (!value?.key) return

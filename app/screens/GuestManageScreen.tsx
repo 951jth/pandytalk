@@ -1,21 +1,21 @@
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
-import {FlatList, StyleSheet, Text, View} from 'react-native'
+import {FlatList, StyleSheet, View} from 'react-native'
+import RequestMember from '../components/card/RequestMember'
 import SearchInput from '../components/input/SearchInput'
+import RequestMemberDetailModal from '../components/modal/RequestMemberDetailModal'
 import {usePendingUsersInfinity} from '../hooks/queries/useUserQuery'
 import type {User} from '../types/auth'
 
-const RequestMember = ({member}: {member: User}) => {
-  return (
-    <View>
-      <Text>{member?.displayName}</Text>
-    </View>
-  )
+type modalProps = {
+  open: boolean | null | undefined
+  record?: User | object | null
 }
 
 export default function GuestManageScreen() {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
+  const [modalProps, setModalProps] = useState<modalProps>({open: false})
   const {
     data,
     isLoading,
@@ -24,8 +24,20 @@ export default function GuestManageScreen() {
     isFetchingNextPage,
     refetch,
   } = usePendingUsersInfinity(searchText)
+
+  const RenderItem = ({item}: {item: User}) => {
+    return (
+      <RequestMember
+        item={item}
+        onPress={item => {
+          // console.log('item', item)
+          setModalProps({open: true, record: item})
+        }}
+      />
+    )
+  }
+
   const users = (data?.pages.flatMap(page => page.users) as User[]) ?? []
-  console.log('users', users)
   const debouncedSetSearchText = useMemo(
     () =>
       debounce((text: string) => {
@@ -49,7 +61,19 @@ export default function GuestManageScreen() {
       />
       <FlatList
         data={users}
-        renderItem={item => <RequestMember member={item} />}
+        renderItem={({item}) => <RenderItem item={item} />}
+        refreshing={isLoading}
+        onRefresh={refetch}
+        onEndReached={() => {
+          if (hasNextPage) fetchNextPage()
+        }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.friendsContainer}
+      />
+      <RequestMemberDetailModal
+        open={!!modalProps?.open}
+        setOpen={boolean => setModalProps({open: boolean, record: null})}
+        record={modalProps?.record as User}
       />
     </View>
   )
@@ -57,4 +81,9 @@ export default function GuestManageScreen() {
 
 const styles = StyleSheet.create({
   container: {flex: 1},
+  friendsContainer: {
+    paddingHorizontal: 12,
+    paddingTop: 4,
+    flexGrow: 1,
+  },
 })

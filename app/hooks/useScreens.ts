@@ -49,7 +49,7 @@ const tabScreens = (): RouteItem[] => {
           name: 'guest',
           title: '게스트 관리',
           component: GuestManageScreen,
-          icon: 'account-circle',
+          icon: 'account-multiple-plus',
           filtered: user?.authority !== 'ADMIN',
         },
       ].filter(e => !e.filtered),

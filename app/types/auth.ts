@@ -8,23 +8,24 @@ export interface User {
   authority: 'ADMIN' | 'MANAGER' | 'USER'
   status: 'online' | 'offline'
   photoURL?: string
-  lastSeen?: Timestamp | number | null // RN Firebase 기준 차후 TimeStamp 로 변경예정
-  isGuest?: boolean //현재는 무조건 TRuE
+  lastSeen?: Timestamp | number | null // RN Firebase 기준 차후 Timestamp로 변경예정
+  isGuest?: boolean // 현재는 무조건 TRUE
   note: string // 신청 메모(사용자 입력)
   intro: string // 소개(사용자 입력)
   groupId?: string | null // 선택: 그룹 운영 시
 
   // 상태/검토 정보
-  accountStatus?: 'pending' | 'confirm' | 'reject'
+  accountStatus: 'pending' | 'confirm' | 'reject'
   approvedAt?: Timestamp | null
   approvedBy?: string | null // admin uid
   rejectedAt?: Timestamp | null
   rejectedBy?: string | null
-  emailVerified?: boolean //이메일 인증 여부
+  emailVerified?: boolean // 이메일 인증 여부
+  isConfirmed?: boolean // firebase collection 조건비교용
 
   // 메타 시간
-  createdAt: Timestamp
-  updatedAt?: Timestamp
+  createdAt: Timestamp | null
+  updatedAt?: Timestamp | number | null
 }
 
 export interface requestUser {
@@ -50,7 +51,7 @@ export interface GuestApplication {
   groupId?: string | null // 선택: 그룹 운영 시
 
   // 상태/검토 정보
-  accountStatus?: 'pending' | 'confirm' | 'reject'
+  accountStatus: 'pending' | 'confirm' | 'reject' | 'stop'
   approvedAt?: Timestamp | null
   approvedBy?: string | null // admin uid
   rejectedAt?: Timestamp | null

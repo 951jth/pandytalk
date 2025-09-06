@@ -3,16 +3,16 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from '@react-native-firebase/auth'
-import {
+import fs, {
   addDoc,
   collection,
   doc,
   getDocs,
   limit,
   query,
-  serverTimestamp,
   setDoc,
   startAfter,
+  updateDoc,
   where,
   writeBatch,
 } from '@react-native-firebase/firestore'
@@ -21,7 +21,8 @@ import type {Timestamp} from 'firebase-admin/firestore'
 import {orderBy} from 'lodash'
 import {Alert} from 'react-native'
 import {auth, firestore} from '../store/firestore'
-import type {GuestApplication, requestUser} from '../types/auth'
+import store from '../store/store'
+import type {GuestApplication, requestUser, User} from '../types/auth'
 import {fileUpload} from './fileService'
 
 export async function signInEmail(email: string, password: string) {
@@ -63,7 +64,7 @@ export async function submitSignupRequest({
       newPhotoURL = await fileUpload(uid, photoURL)
     }
     // 3) users/{uid} 신청 정보 저장 (승인 대기)
-    const nowTime = serverTimestamp()
+    const nowTime = fs.FieldValue.serverTimestamp()
     await updateProfile(cred.user, {displayName, photoURL: newPhotoURL})
 
     //     await setDoc(doc(db, 'users', cred.user.uid), {
@@ -87,6 +88,7 @@ export async function submitSignupRequest({
       groupId: null,
       accountStatus: 'pending', // 'pending' | 'confirm' | 'reject'
       emailVerified: cred.user.emailVerified ?? false,
+      isConfirmed: false,
 
       createdAt: nowTime,
       updatedAt: nowTime,
@@ -116,7 +118,7 @@ export async function submitSignupRequestRegacy({
   intro,
 }: GuestApplication) {
   try {
-    const nowTime = serverTimestamp()
+    const nowTime = fs.FieldValue.serverTimestamp()
 
     // 1) 중복 신청 방지 (pending/confirm 상태에 같은 이메일 존재하면 차단)
     const dupQ = query(
@@ -222,4 +224,41 @@ export async function deleteNonPrivilegedUsers() {
   }
 
   return {deleted: totalDeleted}
+}
+
+export const memberStatusUpdate = async (
+  status: User['accountStatus'],
+  formValues: User,
+) => {
+  try {
+    const nowTime = fs.FieldValue.serverTimestamp()
+    const state = store.getState()
+    const currentAdminUid = state?.user?.data?.uid // ✅ 여기서 직접 uid 가져오기
+    console.log(formValues, currentAdminUid)
+    if (!formValues?.uid) return
+    if (!currentAdminUid) return
+    // Firestore doc 참조 (users 컬렉션)
+    const userRef = doc(firestore, 'users', formValues.uid)
+
+    // 업데이트 payload
+    const payload: Partial<User> = {
+      ...formValues,
+      accountStatus: status,
+      updatedAt: nowTime, // Firestore 서버 시간 기준
+    }
+
+    // 상태별 처리 (승인/거절 시 메타정보 기록)
+    if (status === 'confirm') {
+      payload.approvedAt = nowTime
+      payload.approvedBy = currentAdminUid // 현재 로그인한 관리자 uid
+    } else if (status === 'reject') {
+      payload.rejectedAt = nowTime
+      payload.rejectedBy = currentAdminUid
+    }
+
+    await updateDoc(userRef, payload)
+    console.log('✅ 사용자 상태 업데이트 완료:', payload)
+  } catch (error) {
+    console.error('🔥 사용자 상태 업데이트 실패:', error)
+  }
 }
