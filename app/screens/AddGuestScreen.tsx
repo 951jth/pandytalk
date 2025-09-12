@@ -2,6 +2,7 @@ import React, {useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
+import {useDispatch} from 'react-redux'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import InputForm from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
@@ -12,6 +13,8 @@ import EditProfile, {
 } from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {submitSignupRequest} from '../services/authService'
+import type {AppDispatch} from '../store/store'
+import {logout} from '../store/userSlice'
 import type {requestUser} from '../types/auth'
 import type {FormItem} from '../types/form'
 
@@ -26,6 +29,8 @@ const initialData = {
 export default function AddGuestScreen() {
   const [previewUrl, setPreviewUrl] = useState<string | null>('')
   const profileRef = useRef<profileInputRef | null>(null)
+  const [loading, setLoading] = useState(false)
+  const dispatch = useDispatch<AppDispatch>()
   const items: FormItem[] = [
     {
       key: 'email',
@@ -130,15 +135,23 @@ export default function AddGuestScreen() {
   ]
 
   async function handleAddGuest(formValues: requestUser) {
-    const photoURL = profileRef.current?.getImage()
-    const res = await submitSignupRequest({...formValues, photoURL})
-    if (res.ok) {
-      Alert.alert(
-        '성공',
-        '관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.',
-      )
-    } else {
-      Alert.alert('실패', res.message)
+    try {
+      const photoURL = await profileRef.current?.getImage()
+      setLoading(true)
+      const res = await submitSignupRequest({...formValues, photoURL})
+      if (res.ok) {
+        Alert.alert(
+          '성공',
+          '관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.',
+        )
+        await logout(dispatch)
+      } else {
+        Alert.alert('실패', res.message)
+      }
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -158,8 +171,8 @@ export default function AddGuestScreen() {
                   edit={true}
                   defaultUrl={previewUrl}
                   // setPreviewUrl={setPreviewUrl}
-                  boxSize={120}
-                  iconSize={90}
+                  boxSize={100}
+                  iconSize={75}
                 />
                 <Text style={styles.notiText}>
                   {`관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.`}
@@ -169,6 +182,7 @@ export default function AddGuestScreen() {
             style={styles.inputForm}
             initialValues={initialData}
             onSubmit={handleAddGuest}
+            loading={loading}
           />
         </View>
       </KeyboardUtilitiesWrapper>
@@ -211,5 +225,6 @@ const styles = StyleSheet.create({
     fontFamily: 'BMDOHYEON',
     textAlign: 'center',
     marginTop: 16,
+    fontSize: 12,
   },
 })

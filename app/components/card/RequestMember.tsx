@@ -1,3 +1,4 @@
+import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from '@utils/dayjs'
 import React from 'react'
 import {
@@ -13,7 +14,6 @@ import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import type {User} from '../../types/auth'
 import ColorChip from '../chip/ColorChip'
-import ColorButton from './ColorButton'
 
 interface RequestMember {
   item: User
@@ -21,20 +21,20 @@ interface RequestMember {
   onPress: (uid: object) => void
 }
 
-const ButtonsByType = {
-  pending: [
-    {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
-    {label: '거절', bgColor: '#F44336', onPress: () => {}},
-  ],
-  confirm: [
-    {label: '수정', bgColor: '#2E7D32', onPress: () => {}},
-    {label: '정지', bgColor: '#FF9800', onPress: () => {}},
-  ],
-  reject: [
-    {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
-    {label: '삭제', bgColor: '#F44336', onPress: () => {}},
-  ],
-}
+// const ButtonsByType = {
+//   pending: [
+//     {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
+//     {label: '거절', bgColor: '#F44336', onPress: () => {}},
+//   ],
+//   confirm: [
+//     {label: '수정', bgColor: '#2E7D32', onPress: () => {}},
+//     {label: '정지', bgColor: '#FF9800', onPress: () => {}},
+//   ],
+//   reject: [
+//     {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
+//     {label: '삭제', bgColor: '#F44336', onPress: () => {}},
+//   ],
+// }
 
 export default function RequestMember({
   item,
@@ -73,11 +73,14 @@ export default function RequestMember({
         <View style={styles.contents}>
           <Text style={styles.name}>{item?.displayName}</Text>
           <Text style={styles.status}>
-            {dayjs(item?.createdAt?.toDate()).format('YYYY-MM-DD')}
+            {/* doc.updatedAt instanceof Timestamp ? doc.updatedAt.toDate() : null */}
+            {item?.createdAt instanceof Timestamp
+              ? dayjs(item?.createdAt?.toDate()).format('YYYY-MM-DD')
+              : '-'}
           </Text>
           <Text style={styles.email}>{item?.email || '-'}</Text>
           <ColorChip status={item.accountStatus} />
-          <View style={styles.buttons}>
+          {/* <View style={styles.buttons}>
             {(ButtonsByType?.[item.accountStatus] || [])?.map(button => {
               return (
                 <ColorButton
@@ -88,7 +91,7 @@ export default function RequestMember({
                 />
               )
             })}
-          </View>
+          </View> */}
         </View>
       </View>
     </Pressable>

@@ -48,7 +48,7 @@ export default function UsersScreen(): React.JSX.Element {
     // cleanup 함수로 debounce 취소
     return () => debouncedSetSearchText.cancel()
   }, [input])
-
+  console.log('users', users)
   return (
     <View style={styles.container}>
       <SearchInput

@@ -17,6 +17,7 @@ type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   setOpen: (next: boolean) => void
   children?: React.ReactNode
   record?: User
+  onComplete?: () => void
 }
 
 const ButtonsByType = {
@@ -36,18 +37,18 @@ const ButtonsByType = {
   ],
   confirm: [
     {
-      label: '삭제',
-      //   bgColor: '#E8F5E9',
-      //   textColor: '#2E7D32',
-      bgColor: '#FFEBEE',
-      textColor: '#C62828',
-      status: 'delete',
-    },
-    {
       label: '정지',
       bgColor: '#FFF3E0',
       textColor: '#FF9800',
       status: 'pending',
+    },
+    {
+      label: '수정',
+      bgColor: '#E8F5E9',
+      textColor: '#2E7D32',
+      // bgColor: '#FFEBEE',
+      // textColor: '#C62828',
+      status: 'confirm', //수정은 현재 일반유저만 가능
     },
   ],
   reject: [
@@ -74,22 +75,35 @@ export default function RequestMemberDetailModal({
 }: propTypes) {
   const formRef = useRef<any | null>(null)
   const queryClient = useQueryClient()
+  const profileRef = useRef<any | null>(null)
 
-  const handleMemberStatusUpdate = (
+  const handleMemberStatusUpdate = async (
     status: User['accountStatus'] & 'delete',
   ) => {
-    if (!status) return
-    if (status == 'delete') {
-      //TODO 삭제로직 구현중
-      return
-    } else {
-      const formValues = formRef.current.getValues() as User
-      memberStatusUpdate(status, formValues)
-        .then(() => {
-          setOpen(false)
-          queryClient.invalidateQueries({queryKey: ['pending-users', 'users']})
-        })
-        .catch(e => console.log(e))
+    try {
+      console.log('status', status)
+      if (!status) return
+      if (status == 'delete') {
+        //TODO 삭제로직 구현중
+        return
+      } else {
+        console.log(profileRef.current)
+        const formValues = formRef.current.getValues() as User
+        const photoURL = await profileRef.current.upload()
+        console.log(photoURL)
+        await memberStatusUpdate(status, {...formValues, photoURL})
+        setOpen(false)
+        queryClient.invalidateQueries({queryKey: ['pending-users', 'users']})
+
+        // memberStatusUpdate(status, {...formValues, photoURL})
+        //   .then(() => {
+        //     setOpen(false)
+        //     queryClient.invalidateQueries({queryKey: ['pending-users', 'users']})
+        //   })
+        //   .catch(e => console.log(e))
+      }
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -194,10 +208,11 @@ export default function RequestMemberDetailModal({
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
-                edit={false}
+                edit={true}
                 defaultUrl={record?.photoURL || null}
                 boxSize={120}
                 iconSize={90}
+                ref={profileRef}
               />
             </View>
           }

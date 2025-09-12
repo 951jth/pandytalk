@@ -113,6 +113,7 @@ export default forwardRef(function EditProfile(
         return newPhotoURL
       } else return null
     } catch (e) {
+      console.log(e)
       return null
     }
   }

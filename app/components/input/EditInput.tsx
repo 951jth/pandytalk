@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     paddingHorizontal: 0,
     height: 40,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Roboto',
   },
   focusedInput: {

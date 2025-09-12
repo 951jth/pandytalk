@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: 'BMDOHYEON',
-    fontSize: 12,
+    fontSize: 10,
     paddingTop: 8,
   },
   contents: {

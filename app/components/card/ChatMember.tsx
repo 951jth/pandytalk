@@ -1,3 +1,4 @@
+import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from '@utils/dayjs'
 import React from 'react'
 import {
@@ -24,6 +25,10 @@ export default function ChatMember({
   style,
   onPress = () => {},
 }: ChatMemberProps) {
+  const lastSeen =
+    item?.lastSeen instanceof Timestamp
+      ? item?.lastSeen?.toDate()
+      : item?.lastSeen
   return (
     <Pressable
       onPress={() => onPress(item.uid)}
@@ -58,9 +63,7 @@ export default function ChatMember({
           <Text style={styles.name}>{item?.displayName}</Text>
           <Text style={styles.status}>
             {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
-            {item?.lastSeen
-              ? dayjs(Number(item?.lastSeen)).fromNow()
-              : '알 수 없음'}
+            {lastSeen ? dayjs(Number(lastSeen)).fromNow() : '알 수 없음'}
           </Text>
         </View>
       </View>

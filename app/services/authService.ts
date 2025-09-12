@@ -10,6 +10,7 @@ import fs, {
   getDocs,
   limit,
   query,
+  serverTimestamp,
   setDoc,
   startAfter,
   updateDoc,
@@ -78,9 +79,9 @@ export async function submitSignupRequest({
 
     await setDoc(doc(firestore, 'users', uid), {
       uid: cred.user.uid,
-      email: cred.user.email,
-      displayName: cred.user.displayName,
-      photoURL: cred?.user?.photoURL || null,
+      email: cred?.user?.email,
+      displayName: cred?.user?.displayName || displayName,
+      photoURL: cred?.user?.photoURL || newPhotoURL || null,
       authority: 'USER',
       status: 'offline',
       note: (note ?? '').trim(),
@@ -92,19 +93,48 @@ export async function submitSignupRequest({
 
       createdAt: nowTime,
       updatedAt: nowTime,
+      lastSeen: nowTime,
     })
     return {ok: true, uid: uid}
   } catch (e) {
+    console.log(e)
     const err = e as FirebaseError
     // Firestore 인덱스 필요 시(복합쿼리) 에러가 날 수 있습니다.
     // 콘솔에서 제시하는 인덱스 링크로 한 번 생성하면 해결됩니다.
     return {
       ok: false,
       code: err.code,
-      message:
-        err.code === 'permission-denied'
-          ? '권한이 없습니다. 잠시 후 다시 시도해주세요.'
-          : '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.',
+      message: (() => {
+        switch (err.code) {
+          // 인증/권한 관련
+          case 'auth/email-already-in-use':
+            return '이미 사용 중인 이메일입니다.'
+          case 'auth/invalid-email':
+            return '이메일 형식이 올바르지 않습니다.'
+          case 'auth/weak-password':
+            return '비밀번호가 너무 약합니다. (6자 이상 권장)'
+          case 'auth/user-not-found':
+            return '해당 계정을 찾을 수 없습니다.'
+          case 'auth/wrong-password':
+            return '비밀번호가 올바르지 않습니다.'
+          case 'auth/too-many-requests':
+            return '잠시 후 다시 시도해주세요. (로그인 시도 과다)'
+          case 'permission-denied':
+            return '권한이 없습니다. 잠시 후 다시 시도해주세요.'
+
+          // Firestore / Storage 등 공통
+          case 'unavailable':
+            return '현재 서비스를 이용할 수 없습니다. 네트워크 상태를 확인해주세요.'
+          case 'deadline-exceeded':
+            return '요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.'
+          case 'resource-exhausted':
+            return '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.'
+
+          // 기본
+          default:
+            return '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.'
+        }
+      })(),
     }
   }
 }
@@ -231,7 +261,8 @@ export const memberStatusUpdate = async (
   formValues: User,
 ) => {
   try {
-    const nowTime = fs.FieldValue.serverTimestamp()
+    // const nowTime = fs.FieldValue.serverTimestamp()
+    const nowTime = serverTimestamp()
     const state = store.getState()
     const currentAdminUid = state?.user?.data?.uid // ✅ 여기서 직접 uid 가져오기
     console.log(formValues, currentAdminUid)
@@ -244,9 +275,10 @@ export const memberStatusUpdate = async (
     const payload: Partial<User> = {
       ...formValues,
       accountStatus: status,
+      isConfirmed: status == 'confirm',
       updatedAt: nowTime, // Firestore 서버 시간 기준
     }
-
+    console.log('payload', payload)
     // 상태별 처리 (승인/거절 시 메타정보 기록)
     if (status === 'confirm') {
       payload.approvedAt = nowTime

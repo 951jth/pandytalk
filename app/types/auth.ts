@@ -1,3 +1,4 @@
+import type {FieldValue} from '@react-native-firebase/firestore'
 import type {Timestamp} from 'firebase-admin/firestore'
 
 export interface User {
@@ -8,7 +9,7 @@ export interface User {
   authority: 'ADMIN' | 'MANAGER' | 'USER'
   status: 'online' | 'offline'
   photoURL?: string
-  lastSeen?: Timestamp | number | null // RN Firebase 기준 차후 Timestamp로 변경예정
+  lastSeen?: Timestamp | number | FieldValue | null // RN Firebase 기준 차후 Timestamp로 변경예정
   isGuest?: boolean // 현재는 무조건 TRUE
   note: string // 신청 메모(사용자 입력)
   intro: string // 소개(사용자 입력)
@@ -16,16 +17,16 @@ export interface User {
 
   // 상태/검토 정보
   accountStatus: 'pending' | 'confirm' | 'reject'
-  approvedAt?: Timestamp | null
+  approvedAt?: Timestamp | FieldValue | null
   approvedBy?: string | null // admin uid
-  rejectedAt?: Timestamp | null
+  rejectedAt?: Timestamp | FieldValue | null
   rejectedBy?: string | null
   emailVerified?: boolean // 이메일 인증 여부
   isConfirmed?: boolean // firebase collection 조건비교용
 
   // 메타 시간
-  createdAt: Timestamp | null
-  updatedAt?: Timestamp | number | null
+  createdAt: Timestamp | FieldValue | null
+  updatedAt?: Timestamp | FieldValue | null
 }
 
 export interface requestUser {

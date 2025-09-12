@@ -65,7 +65,8 @@ export function RootNavigator(): React.JSX.Element {
         await updateLastSeen(uid)
       }
     } catch (err: any) {
-      console.error('❌ 유저 정보 로딩 실패:', err)
+      // user?.uid && (await updateUserOffline(user.uid))
+      console.log('❌ 유저 정보 로딩 실패:', err)
     }
   }
 
@@ -97,6 +98,7 @@ export function RootNavigator(): React.JSX.Element {
 
   //앱 초기 마운트시 경로 지정
   useEffect(() => {
+    console.log('userInfo', userInfo)
     if (!navReady) return
     ;(async () => {
       if (!navigationRef.isReady()) return

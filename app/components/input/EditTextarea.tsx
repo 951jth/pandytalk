@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderBottomWidth: 0, // 기본은 0
     paddingHorizontal: 0,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Roboto',
   },
   focusedInput: {
