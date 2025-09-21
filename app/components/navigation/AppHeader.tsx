@@ -1,5 +1,6 @@
 import {getAuth} from '@react-native-firebase/auth'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {ReactNode} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
@@ -9,6 +10,7 @@ import {updateUserOffline} from '../../services/userService'
 import {useAppSelector} from '../../store/reduxHooks'
 import type {AppDispatch} from '../../store/store'
 import {logout} from '../../store/userSlice'
+import type {RootStackParamList} from '../../types/navigate'
 const authInstance = getAuth()
 
 interface propTypes {
@@ -18,7 +20,8 @@ interface propTypes {
 
 export default function AppHeader({title, rightActions = []}: propTypes) {
   console.log('title', title)
-  const navigation = useNavigation()
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const canGoBack = navigation.canGoBack()
   const allRoutes =
     appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
@@ -47,6 +50,7 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
     try {
       user?.uid && (await updateUserOffline(user.uid))
       await logout(dispatch)
+      navigation.navigate('auth', {screen: 'login'})
       // 필요시 로그인 화면으로 리디렉션
     } catch (e) {
       console.log('로그아웃 실패:', e)

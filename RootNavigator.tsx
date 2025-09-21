@@ -72,6 +72,7 @@ export function RootNavigator(): React.JSX.Element {
 
   useEffect(() => {
     const subscriber = onAuthStateChanged(authInstance, userInfo => {
+      console.log('check!')
       setUser(userInfo)
       if (userInfo?.uid) {
         fetchProfile(userInfo?.uid)

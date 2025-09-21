@@ -3,25 +3,60 @@ import {getAuth, signInWithEmailAndPassword} from '@react-native-firebase/auth'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {useState} from 'react'
-import {Image, StyleSheet, TouchableOpacity, View} from 'react-native'
+import {Alert, Image, StyleSheet, TouchableOpacity, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import {Button, Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import KeyboardViewWrapper from '../components/container/KeyboardUtilitiesWrapper'
-import CustomInput from '../components/input/CustomInput'
-import {PasswordInput} from '../components/input/PasswordInput'
+import EditInput from '../components/input/EditInput'
+import PasswordInput from '../components/input/PasswordInput'
 import COLORS from '../constants/color'
 import type {AuthStackParamList} from '../types/navigate'
+import {validateField} from '../utils/validation'
 
 type formTypes = {
   email: string
   password: string
 }
 
+type errorsType = {
+  email: string | null
+  password: string | null
+}
+
+const validationMap = {
+  email: {
+    key: 'email',
+    pattern: /^.{8,32}$/, // 길이 8~32자
+    message: '현재 입력한 비밀번호와 다릅니다.',
+    validation: {
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: '이메일 형식이 올바르지 않습니다.',
+      customFn: (v: string) => {
+        if (!v) return '이메일을 입력하세요.'
+        if (v !== v.trim()) return '앞뒤 공백을 제거해주세요.'
+        return true
+      },
+    },
+  },
+  password: {
+    key: 'password',
+    pattern: /^.{8,32}$/, // 길이 8~32자
+    message: '비밀번호는 8-32자여야 합니다.',
+    customFn: (v: string) => {
+      if (!v) return '비밀번호를 입력하세요.'
+      if (!/[A-Za-z]/.test(v) || !/[0-9]/.test(v))
+        return '영문과 숫자를 모두 포함하세요.'
+      if (/\s/.test(v)) return '공백은 사용할 수 없습니다.'
+      return true
+    },
+  },
+}
+
 export default function LoginScreen() {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
-  const [error, setError] = useState<String | null>('')
+  const [errors, setErrors] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList, 'addGuest'>>()
@@ -30,6 +65,7 @@ export default function LoginScreen() {
     try {
       setLoading(true)
       // const {email, password} = formValues
+      if (!email || !password) return
       await signInWithEmailAndPassword(authInstance, email, password)
     } catch (error: any) {
       handleFirebaseAuthError(error)
@@ -75,13 +111,25 @@ export default function LoginScreen() {
         break
       // 필요시 추가
     }
-    setError(message)
+    Alert.alert(message)
+    // setError(message)
   }
 
   // const onFormChange = (key: string, value: string) => {
   //   setFormValues(old => ({...old, [key]: value}))
   // }
 
+  const validateCheck = (key: 'email' | 'password', value: string) => {
+    if (!key) return
+    if (!value || value == '') {
+      return setErrors(null)
+    }
+    const item = validationMap?.[key] || null
+    if (!item) return
+    const msg = validateField(item, value, item)
+    setErrors(msg || null)
+  }
+  // const isBtnDisabled = hasAnyError(errors)
   return (
     <SafeAreaView style={{flex: 1}}>
       <KeyboardViewWrapper useTouchable={true}>
@@ -91,17 +139,23 @@ export default function LoginScreen() {
           <Image source={pandy} style={styles.image} resizeMode="none" />
           {/* <Text style={styles.title}>어서오세요!</Text> */}
           <View style={styles.card}>
-            <CustomInput
-              label="이메일"
-              mode="outlined"
-              onChangeText={setEmail}
+            <EditInput
+              type="outlined"
+              value={email}
+              onChangeText={text => {
+                setEmail(text)
+                validateCheck('email', text)
+              }}
+              placeholder="이메일을 입력해주세요."
             />
             <PasswordInput
-              mode="outlined"
-              // onChangeText={e => onFormChange('password', e)}
-              onChangeText={setPassword}
+              type="outlined"
+              value={password}
+              onChangeText={text => {
+                setPassword(text)
+              }}
             />
-            <Text style={styles.errorText}>{error}</Text>
+            {errors && <Text style={styles.errorText}>{errors}</Text>}
             <Button
               onTouchEnd={onSubmit}
               mode="contained"
@@ -149,6 +203,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
     borderRadius: 16,
+    gap: 8,
   },
   title: {
     fontSize: 20,
@@ -157,7 +212,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
   },
   submitBtn: {
-    marginTop: 20,
     width: '100%',
     borderRadius: 8,
   },
@@ -168,7 +222,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontFamily: 'BMDOHYEON',
-    marginTop: 8,
   },
   addOnRow: {
     marginTop: 20,

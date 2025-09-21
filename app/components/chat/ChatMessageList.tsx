@@ -134,7 +134,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   return (
     <FlatList
       style={styles.flex}
-      data={Array.isArray(messages) ? messages : []}
+      data={messages || []}
       keyExtractor={(item, index) => `${item.id}-${item.createdAt}-${index}`}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}

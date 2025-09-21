@@ -7,6 +7,7 @@ import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesW
 import InputForm from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
 import EditTextArea from '../components/input/EditTextarea'
+import PasswordInput from '../components/input/PasswordInput'
 import AppHeader from '../components/navigation/AppHeader'
 import EditProfile, {
   type profileInputRef,
@@ -31,6 +32,7 @@ export default function AddGuestScreen() {
   const profileRef = useRef<profileInputRef | null>(null)
   const [loading, setLoading] = useState(false)
   const dispatch = useDispatch<AppDispatch>()
+  const formRef = useRef<any | null>(null)
   const items: FormItem[] = [
     {
       key: 'email',
@@ -51,6 +53,7 @@ export default function AddGuestScreen() {
           onChangeText={onChange}
           autoCapitalize="none"
           keyboardType="email-address"
+          placeholder="이메일을 입력해주세요."
         />
       ),
     },
@@ -70,7 +73,24 @@ export default function AddGuestScreen() {
         },
       },
       render: (value, onChange) => (
-        <EditInput value={value} onChangeText={onChange} secureTextEntry />
+        <PasswordInput value={value} onChangeText={onChange} />
+      ),
+    },
+    {
+      key: 'passwordCheck',
+      label: `비밀번호\n확인`,
+      required: true,
+      validation: {
+        pattern: /^.{8,32}$/, // 길이 8~32자
+        message: '현재 입력한 비밀번호와 다릅니다.',
+        customFn: (v: string, allValues: any) => {
+          console.log('v', v)
+          console.log('allValues', allValues)
+          return allValues?.password == v
+        },
+      },
+      render: (value, onChange) => (
+        <PasswordInput value={value} onChangeText={onChange} />
       ),
     },
     {
@@ -144,7 +164,9 @@ export default function AddGuestScreen() {
           '성공',
           '관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.',
         )
+        //요청 등록시 auth 가 세팅되서 다시 로그인해제
         await logout(dispatch)
+        formRef.current.resetValues()
       } else {
         Alert.alert('실패', res.message)
       }
@@ -161,7 +183,7 @@ export default function AddGuestScreen() {
       <KeyboardUtilitiesWrapper>
         <View style={styles.inner}>
           <InputForm
-            edit={true}
+            ref={formRef}
             editable={true}
             items={items}
             buttonLabel="게스트 신청"

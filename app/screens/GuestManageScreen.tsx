@@ -30,7 +30,6 @@ export default function GuestManageScreen() {
       <RequestMember
         item={item}
         onPress={item => {
-          // console.log('item', item)
           setModalProps({open: true, record: item})
         }}
       />

@@ -79,7 +79,7 @@ export const isEmpty = (v: any) =>
 export const validateField = (
   formItem: FormItem,
   value: string,
-  allValues: object,
+  allValues: object | null,
 ) => {
   const {required, validation, children} = formItem
   if (children) return //children은 커스텀 세팅이기 떄문에 별도의 검증을 하지않음

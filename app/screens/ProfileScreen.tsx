@@ -8,7 +8,7 @@ import {
 import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
-import React, {useEffect, useRef, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {Button} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
@@ -30,6 +30,7 @@ const authInstance = getAuth()
 
 export default function ProfileScreen(): React.JSX.Element {
   const {data: user, loading, error} = useAppSelector(state => state.user)
+  const userInfo = useMemo(() => user, [user])
   const [formValues, setFormValues] = useState<object | null>()
   const [edit, setEdit] = useState<boolean>(false)
   const [submitting, setSubmitting] = useState<boolean>(false)
@@ -45,7 +46,7 @@ export default function ProfileScreen(): React.JSX.Element {
       label: '닉네임',
       key: 'displayName',
       render: (value, onChange, edit) => (
-        <EditInput value={value} onChangeText={onChange} edit={edit} />
+        <EditInput value={value} onChangeText={onChange} />
       ),
       validation: {
         // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
@@ -117,15 +118,15 @@ export default function ProfileScreen(): React.JSX.Element {
 
   useEffect(() => {
     // setFormValues(user as object)
-    if (user?.photoURL) setPreviewUrl(user.photoURL)
-  }, [user])
+    if (userInfo?.photoURL) setPreviewUrl(userInfo.photoURL)
+  }, [userInfo])
 
   return (
     <View style={styles.container}>
       <View style={styles.contents}>
         <InputForm
           items={formItems}
-          formData={user}
+          formData={userInfo}
           editable={true}
           labelWidth={100}
           buttonLabel="프로필 수정"
@@ -134,16 +135,16 @@ export default function ProfileScreen(): React.JSX.Element {
             <View style={styles.profileWrap}>
               <EditProfile
                 ref={profileRef}
-                edit={edit}
+                edit={true}
                 // previewUrl={previewUrl}
                 defaultUrl={previewUrl}
                 // setPreviewUrl={setPreviewUrl}
               />
             </View>
           }
-          edit={edit}
+          edit={true}
           setEdit={bool => {
-            setEdit(bool)
+            // setEdit(bool)
             setFormValues(cloneDeep(formValues))
             // if (!bool && user?.photoURL) setPreviewUrl(user.photoURL)
           }}
@@ -176,6 +177,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3, // Android 그림자
+    paddingVertical: 20,
+    paddingHorizontal: 16,
   },
   profileWrap: {
     flexDirection: 'column',

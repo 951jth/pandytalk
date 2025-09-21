@@ -2,8 +2,10 @@ import React, {useMemo} from 'react'
 import MainLayout from '../components/layout/MainLayout'
 import TabScreenNavigator from '../navigation/TabScreenNavigator'
 import AddGuestScreen from '../screens/AddGuestScreen'
+import AdminMenuScreen from '../screens/AdminMenuScreen'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
+import GroupManageScreen from '../screens/GroupManageScreen'
 import GuestManageScreen from '../screens/GuestManageScreen'
 import LoginScreen from '../screens/LoginScreen'
 import ProfileScreen from '../screens/ProfileScreen'
@@ -45,11 +47,19 @@ const tabScreens = (): RouteItem[] => {
           component: ProfileScreen,
           icon: 'account-circle',
         },
+        // {
+        //   name: 'guest',
+        //   title: '게스트 관리',
+        //   component: GuestManageScreen,
+        //   icon: 'account-multiple-plus',
+        //   filtered: user?.authority !== 'ADMIN',
+        // }
+
         {
-          name: 'guest',
-          title: '게스트 관리',
-          component: GuestManageScreen,
-          icon: 'account-multiple-plus',
+          name: 'admin-menu',
+          title: '관리자 메뉴',
+          component: AdminMenuScreen,
+          icon: 'menu',
           filtered: user?.authority !== 'ADMIN',
         },
       ].filter(e => !e.filtered),
@@ -70,6 +80,16 @@ const appRoutes = (): LayoutItem[] => {
           name: 'main',
           title: '유저 찾기',
           component: TabScreenNavigator, // 실제 탭 화면
+        },
+        {
+          name: 'guest-manage',
+          title: '게스트 관리',
+          component: GuestManageScreen,
+        },
+        {
+          name: 'group-manage',
+          title: '그룹 관리',
+          component: GroupManageScreen,
         },
       ],
     },

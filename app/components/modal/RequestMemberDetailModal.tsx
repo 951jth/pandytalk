@@ -9,6 +9,7 @@ import ColorButton from '../card/ColorButton'
 import InputForm from '../form/InputForm'
 import EditInput from '../input/EditInput'
 import EditTextArea from '../input/EditTextarea'
+import GroupSelect from '../select/GroupSelect'
 import EditProfile from '../upload/EditProfile'
 import CustomModal from './CustomModal'
 
@@ -20,19 +21,28 @@ type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   onComplete?: () => void
 }
 
+//현재는 하드코딩하지만, 추후 그룹 dto로 옵션 관리할 예정임
+const groupOptions = [
+  {label: '관리자', value: 'admin'},
+  {label: '친구', value: 'friend'},
+  {label: '개인문의', value: 'scret'},
+  {label: '모임', value: 'moim'},
+  {label: '가족', value: 'family'},
+]
+
 const ButtonsByType = {
   pending: [
-    {
-      label: '승인',
-      bgColor: '#E8F5E9',
-      textColor: '#2E7D32',
-      status: 'confirm',
-    },
     {
       label: '거절',
       bgColor: '#FFEBEE',
       textColor: '#C62828',
       status: 'reject',
+    },
+    {
+      label: '승인',
+      bgColor: '#E8F5E9',
+      textColor: '#2E7D32',
+      status: 'confirm',
     },
   ],
   confirm: [
@@ -173,6 +183,15 @@ export default function RequestMemberDetailModal({
       ),
     },
     {
+      key: 'groupId',
+      label: '그룹설정',
+      required: true,
+      render: (value, onChange) => (
+        // <Select options={groupOptions} value={value} onChange={onChange} />
+        <GroupSelect value={value} onChange={onChange} />
+      ),
+    },
+    {
       key: 'intro',
       label: '소개',
       validation: {
@@ -192,14 +211,8 @@ export default function RequestMemberDetailModal({
   ]
 
   return (
-    <CustomModal
-      open={open}
-      setOpen={setOpen}
-      transparent={true}
-      onRequestClose={() => setOpen(false)}
-      {...props}>
+    <CustomModal visible={open} onClose={() => setOpen(false)}>
       <View style={styles.container}>
-        {/* <KeyboardUtilitiesWrapper> */}
         <InputForm
           edit={true}
           editable={false}
@@ -210,15 +223,14 @@ export default function RequestMemberDetailModal({
               <EditProfile
                 edit={true}
                 defaultUrl={record?.photoURL || null}
-                boxSize={120}
-                iconSize={90}
+                boxSize={100}
+                iconSize={75}
                 ref={profileRef}
               />
             </View>
           }
           initialValues={record}
           rowsStyle={{paddingVertical: 0}}
-          style={{flex: 1}}
           bottomElement={
             record?.accountStatus && (
               <View style={styles.buttons}>
@@ -248,7 +260,6 @@ export default function RequestMemberDetailModal({
           onCancel={() => setOpen(false)}
           ref={formRef}
         />
-        {/* </KeyboardUtilitiesWrapper> */}
       </View>
     </CustomModal>
   )
@@ -257,9 +268,10 @@ export default function RequestMemberDetailModal({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFF',
+    height: 460,
+    // flex: 1,
     // minHeight: 600,
     // maxHeight: 600,
-    height: 460,
   },
   profileWrap: {
     flexDirection: 'column',

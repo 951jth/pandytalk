@@ -18,6 +18,8 @@ export type AppRouteParamList = {
   // Auth
   main: NavigatorScreenParams<TabParamList>
   chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
+  'guest-manage': undefined
+  'group-manage': undefined
 }
 
 export type RootStackParamList = {

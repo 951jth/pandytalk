@@ -56,6 +56,8 @@ export interface InputFormRef {
   setValues: (next: Record<string, any> | null | undefined) => void
   /** formValues 일부만 갱신 (merge) */
   updateValues: (patch: Partial<Record<string, any>>) => void
+  // formValues 폼데이터 입력값 초기화
+  resetValues: () => void
 }
 
 const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
@@ -117,6 +119,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         // 부분 갱신 시 유효성 체크가 필요하면 아래 로직 확장 가능
         // Object.entries(patch).forEach(([k, v]) => { ...validateField... });
       },
+      resetValues: () => setFormValues(formData || null),
     }),
     [formValues],
   )
@@ -130,7 +133,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             size={20}
             style={styles.backBtn}
             onTouchEnd={() => {
-              onEditChange(false)
+              // onEditChange(false)
               onCancel()
             }}
           />
@@ -165,7 +168,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
                           setFormValues(old => {
                             const next = {...(old ?? {}), [key]: val}
                             // 실시간 단일 필드 검증
-                            const msg = validateField(item, val, item)
+                            const msg = validateField(item, val, formValues)
                             setErrors(prev => {
                               const copy = {...prev}
                               if (msg) copy[key] = msg
@@ -195,15 +198,12 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             <CustomButton
               mode="contained"
               onTouchEnd={() => {
-                if (edit) {
-                  const errorsFields = validateAllFields(
-                    items,
-                    (formValues ?? {}) as any,
-                  )
-                  if (hasAnyError(errorsFields)) return setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
-                  onSubmit?.(formValues)
-                }
-                onEditChange(!edit)
+                const errorsFields = validateAllFields(
+                  items,
+                  (formValues ?? {}) as any,
+                )
+                if (hasAnyError(errorsFields)) return setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
+                onSubmit?.(formValues)
               }}
               loading={loading}>
               {buttonLabel}
@@ -222,8 +222,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: COLORS.background,
     position: 'relative',
-    paddingVertical: 20,
-    paddingHorizontal: 16,
   },
   row: {
     borderColor: '#D9D9D9',
@@ -235,6 +233,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   label: {
     fontFamily: 'BMDOHYEON',
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#D32F2F',
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
   },
   required: {color: '#D32F2F'},
 })

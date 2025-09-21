@@ -277,6 +277,7 @@ export const memberStatusUpdate = async (
       accountStatus: status,
       isConfirmed: status == 'confirm',
       updatedAt: nowTime, // Firestore 서버 시간 기준
+      lastSeen: nowTime, //sorting 조건에 포함되야 하기떄문에, 수정시간을 기준으로 값을 넣어줌
     }
     console.log('payload', payload)
     // 상태별 처리 (승인/거절 시 메타정보 기록)
