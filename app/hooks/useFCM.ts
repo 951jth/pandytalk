@@ -1,5 +1,9 @@
 import {getApp} from '@react-native-firebase/app'
-import {getAuth} from '@react-native-firebase/auth'
+import {
+  getAuth,
+  onAuthStateChanged,
+  type FirebaseAuthTypes,
+} from '@react-native-firebase/auth'
 import {
   arrayUnion,
   doc,
@@ -14,8 +18,9 @@ import {
   requestPermission,
 } from '@react-native-firebase/messaging'
 import {useQueryClient} from '@tanstack/react-query'
-import {useEffect, useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {PermissionsAndroid, Platform} from 'react-native'
+import {auth} from '../store/firestore'
 
 // iOS 권한 : alert, badge, sound, provisional 선택 가능
 const iosPermOptions = {
@@ -33,11 +38,28 @@ const AuthorizationStatus = {
 }
 
 export function useFCMSetup() {
-  const authInstance = getAuth()
+  // const authInstance = getAuth()
+  // const {data: userInfo} = useAppSelector(state => state?.user)
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(
+    auth.currentUser,
+  )
+
+  // 1) Auth 변화 구독: 로그인/로그아웃/재로그인 모두 잡음
+  useEffect(() => {
+    const unsub = onAuthStateChanged(
+      auth,
+      (user: FirebaseAuthTypes.User | null) => {
+        setUser(user)
+      },
+    )
+    return unsub
+  }, [])
+
   useEffect(() => {
     const firestore = getFirestore()
     const currentUser = getAuth().currentUser
-    async function setup() {
+
+    ;(async () => {
       try {
         if (!currentUser?.uid) return
         // iOS 권한 요청
@@ -83,13 +105,11 @@ export function useFCMSetup() {
       } catch (e) {
         console.error('useFCMSetup', e)
       }
-    }
-
-    setup()
-  }, [authInstance])
+    })()
+  }, [user])
 }
 
-//현재 미사용.
+//현재 미사용
 //수신 후 채팅방 목록 (읽음 카운트 밎 생성) 실시간 갱신
 export function useFCMListener(userId: string | null | undefined) {
   const queryClient = useQueryClient()

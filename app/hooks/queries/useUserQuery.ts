@@ -4,6 +4,7 @@ import {
   getDocs,
   getFirestore,
   limit,
+  or,
   orderBy,
   query,
   startAfter,
@@ -20,52 +21,75 @@ const PAGE_SIZE = 10
 
 export const useUsersInfinite = (searchText: string = '') => {
   const {data: userInfo} = useAppSelector(state => state.user)
-
   return useInfiniteQuery({
-    queryKey: ['users', searchText, userInfo?.groupId ?? null],
+    queryKey: [
+      'users',
+      searchText,
+      userInfo?.groupId ?? null,
+      userInfo?.authority ?? null, // 권한 변경 시 캐시 분기
+    ],
+    enabled: !!userInfo, // 프로필 준비 후 실행
     queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
-      const usersRef = collection(firestore, 'users')
+      try {
+        const usersRef = collection(firestore, 'users')
 
-      // 공통 제약 조건 빌드
-      const cons = [where('isConfirmed', '==', true)]
+        // 1) 기본 필터
+        const filters: any[] = [where('isConfirmed', '==', true)]
 
-      // ✅ admin이 아니면 해당 groupId로 제한
-      if (userInfo?.groupId && userInfo.groupId !== 'admin') {
-        cons.push(where('groupId', '==', userInfo.groupId))
-      }
+        // 2) 비관리자면: (내 그룹) OR (ADMIN) 만
+        if (userInfo?.authority !== 'ADMIN') {
+          filters.push(
+            or(
+              where('authority', '==', 'ADMIN'),
+              where('groupId', '==', userInfo?.groupId ?? '__NONE__'),
+            ),
+          )
+        }
+        // ADMIN은 제한 없음(전체 조회)
+        // 3) 베이스 쿼리
+        let q = query(usersRef, ...filters)
 
-      if (searchText) {
-        cons.push(
-          orderBy('displayName', 'asc'),
-          orderBy('status', 'desc'),
-          orderBy('lastSeen', 'desc'),
-          startAt(searchText),
-          endAt(searchText + '\uf8ff'),
-          limit(PAGE_SIZE),
-        )
-      } else {
-        cons.push(
-          orderBy('status', 'desc'),
-          orderBy('lastSeen', 'desc'),
-          limit(PAGE_SIZE),
-        )
-      }
+        // 3) 검색/정렬
+        if (searchText) {
+          q = query(
+            q,
+            orderBy('displayName', 'asc'),
+            orderBy('status', 'desc'),
+            orderBy('lastSeen', 'desc'),
+            startAt(searchText),
+            endAt(searchText + '\uf8ff'),
+            limit(PAGE_SIZE),
+          )
+        } else {
+          q = query(
+            q,
+            orderBy('status', 'desc'),
+            orderBy('lastSeen', 'desc'),
+            limit(PAGE_SIZE),
+          )
+        }
 
-      let q = query(usersRef, ...cons)
+        // 4) 페이지네이션
+        if (pageParam) q = query(q, startAfter(pageParam))
 
-      // 다음 페이지
-      if (pageParam) q = query(q, startAfter(pageParam))
-
-      const snapshot = await getDocs(q)
-      const users = snapshot.docs.map(doc => ({
-        uid: doc.id,
-        ...doc.data(),
-      })) as User[]
-
-      return {
-        users,
-        lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
-        isLastPage: snapshot.docs.length < PAGE_SIZE,
+        const snapshot = await getDocs(q)
+        const users = snapshot.docs.map(doc => ({
+          uid: doc.id,
+          ...doc.data(),
+        })) as User[]
+        console.log('users', users)
+        return {
+          users,
+          lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
+          isLastPage: snapshot.docs.length < PAGE_SIZE,
+        }
+      } catch (e) {
+        console.log(e)
+        return {
+          users: [],
+          lastVisible: null,
+          isLastPage: true,
+        }
       }
     },
     getNextPageParam: lastPage =>

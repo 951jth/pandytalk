@@ -2,16 +2,14 @@
  * Sample React Native App
  * https://github.com/facebook/react-native
  *
-//  * @format
  */
-
-import React, {useEffect, useState} from 'react'
 
 import {
   FirebaseAuthTypes,
   getAuth,
   onAuthStateChanged,
 } from '@react-native-firebase/auth'
+import React, {useEffect, useState} from 'react'
 import AppNavigator from './app/navigation/AppNavigator'
 import AuthNavigator from './app/navigation/AuthNavigator'
 
@@ -19,10 +17,11 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import {Alert, AppState, StatusBar, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-import {navigationRef} from './app/components/navigation/RootNavigation'
-import {useFCMListener, useFCMSetup} from './app/hooks/useFCM'
+// reset 제거 → navigationRef 불필요
+// import {navigationRef} from './app/components/navigation/RootNavigation'
+import {useFCMSetup} from './app/hooks/useFCM'
 import {useFCMPushHandler} from './app/hooks/useFCMPush'
-import {initialRouteName} from './app/hooks/useScreens'
+// import {initialRouteName} from './app/hooks/useScreens'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {useAppSelector} from './app/store/reduxHooks'
@@ -36,19 +35,12 @@ const RootStack = createNativeStackNavigator<RootStackParamList>()
 export function RootNavigator(): React.JSX.Element {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState<boolean>(true)
-  const [navReady, setNavReady] = useState(false)
-  const {data: userInfo, loading, error} = useAppSelector(state => state.user)
+  const {data: userInfo, loading} = useAppSelector(state => state.user)
 
   const dispatch = useDispatch<AppDispatch>()
-  useFCMSetup() //FCM 푸시알림 세팅
-  useFCMListener(user?.uid) //FCM -> 채팅방 목록 갱신
-  useFCMPushHandler() //푸쉬알림 -> 채팅방 이동 핸들링
-
-  useEffect(() => {
-    if (navigationRef.isReady()) {
-      setNavReady(true) // ✅ 네비 준비됨
-    }
-  }, [navigationRef.current]) // ref.current 감지는 제한적이므로 아래 onReady 병행 권장
+  useFCMSetup() // FCM 푸시알림 세팅
+  // useFCMListener(user?.uid) // FCM -> 채팅방 목록 갱신
+  useFCMPushHandler() // 푸쉬알림 -> 채팅방 이동 핸들링
 
   const fetchProfile = async (uid: string) => {
     try {
@@ -58,33 +50,31 @@ export function RootNavigator(): React.JSX.Element {
           '승인 대기 중',
           '회원님의 게스트 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
         )
-
         user?.uid && (await updateUserOffline(user.uid))
         await logout(dispatch)
       } else {
         await updateLastSeen(uid)
       }
     } catch (err: any) {
-      // user?.uid && (await updateUserOffline(user.uid))
       console.log('❌ 유저 정보 로딩 실패:', err)
     }
   }
 
+  // FB Auth 상태 감시
   useEffect(() => {
-    const subscriber = onAuthStateChanged(authInstance, userInfo => {
-      console.log('check!')
-      setUser(userInfo)
-      if (userInfo?.uid) {
-        fetchProfile(userInfo?.uid)
+    const subscriber = onAuthStateChanged(authInstance, fbUser => {
+      setUser(fbUser)
+      if (fbUser?.uid) {
+        fetchProfile(fbUser.uid)
       } else {
         dispatch(clearUser()) // 로그아웃 or 비인증
       }
       if (initializing) setInitializing(false)
     })
-
-    return subscriber // unsubscribe on unmount
+    return subscriber
   }, [dispatch])
 
+  // 로컬 DB 테이블 준비 (그대로 유지)
   useEffect(() => {
     isMessagesTableExists().then(exists => {
       if (!exists) {
@@ -94,64 +84,45 @@ export function RootNavigator(): React.JSX.Element {
         console.log('이미 messages 테이블 있음')
       }
     })
-    // initTimeOffset()
   }, [])
 
-  //앱 초기 마운트시 경로 지정
+  // AppState에 따른 lastSeen/오프라인 처리 (그대로 유지하되 분리)
   useEffect(() => {
-    console.log('userInfo', userInfo)
-    if (!navReady) return
-    ;(async () => {
-      if (!navigationRef.isReady()) return
-      navigationRef.reset({
-        index: 0,
-        routes: [
-          userInfo?.accountStatus == 'confirm'
-            ? {name: 'app', params: {screen: initialRouteName}}
-            : {name: 'auth', params: {screen: 'login'}},
-        ],
-      })
-    })()
-    //앱이 백그라운드 → 포그라운드로 돌아올 때 lastSeen을 갱신
+    if (userInfo?.accountStatus !== 'confirm' || !user?.uid) return
     const subscription = AppState.addEventListener('change', nextAppState => {
-      if (userInfo?.accountStatus !== 'confirm') return
-
-      if (nextAppState === 'active' && user?.uid) {
-        updateLastSeen(user.uid)
-      }
-      if (nextAppState === 'background' && user?.uid) {
-        updateUserOffline(user.uid)
-      }
+      if (nextAppState === 'active') updateLastSeen(user.uid)
+      if (nextAppState === 'background') updateUserOffline(user.uid)
     })
     return () => subscription.remove()
-  }, [userInfo, navReady])
+  }, [userInfo?.accountStatus, user?.uid])
 
-  if (initializing) {
+  const shouldShowSplash = initializing || (loading && !userInfo)
+
+  // 초기/프로필 로딩 중 스플래시
+  if (shouldShowSplash) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <ActivityIndicator />
       </View>
     )
-  } // 초기 로딩 중에는 화면 렌더 안 함
+  }
+
+  // ✅ 선언적 Auth Gate: reset 없이 스크린 전환
+  const isConfirmed = !!user && userInfo?.accountStatus === 'confirm'
 
   return (
     <>
       <StatusBar
         translucent={false}
-        backgroundColor="#FFF" // Android 배경
-        barStyle={'dark-content'}
+        backgroundColor="#FFF"
+        barStyle="dark-content"
       />
-      <RootStack.Navigator>
-        <RootStack.Screen
-          name="app"
-          component={AppNavigator}
-          options={{headerShown: false}}
-        />
-        <RootStack.Screen
-          name="auth"
-          component={AuthNavigator}
-          options={{headerShown: false}}
-        />
+      <RootStack.Navigator screenOptions={{headerShown: false}}>
+        {isConfirmed ? (
+          <RootStack.Screen name="app" component={AppNavigator} />
+        ) : (
+          <RootStack.Screen name="auth" component={AuthNavigator} />
+        )}
       </RootStack.Navigator>
     </>
   )

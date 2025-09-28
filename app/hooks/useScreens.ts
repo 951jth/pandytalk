@@ -9,6 +9,7 @@ import GroupManageScreen from '../screens/GroupManageScreen'
 import GuestManageScreen from '../screens/GuestManageScreen'
 import LoginScreen from '../screens/LoginScreen'
 import ProfileScreen from '../screens/ProfileScreen'
+import UserSelectScreen from '../screens/UserSelectScreen'
 import UsersScreen from '../screens/UsersScreen'
 import {useAppSelector} from '../store/reduxHooks'
 
@@ -90,6 +91,11 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-manage',
           title: '그룹 관리',
           component: GroupManageScreen,
+        },
+        {
+          name: 'user-select',
+          title: '유저 선택',
+          component: UserSelectScreen,
         },
       ],
     },

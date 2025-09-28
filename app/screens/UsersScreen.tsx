@@ -12,7 +12,6 @@ import {useAppSelector} from '../store/reduxHooks'
 import {AppRouteParamList} from '../types/navigate'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
-
 export default function UsersScreen(): React.JSX.Element {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
@@ -24,8 +23,8 @@ export default function UsersScreen(): React.JSX.Element {
     isFetchingNextPage,
     refetch,
   } = useUsersInfinite(searchText)
-  const {data: user, loading, error} = useAppSelector(state => state.user)
 
+  const {data: user, loading, error} = useAppSelector(state => state.user)
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
   const users = data?.pages.flatMap(page => page.users) ?? []
@@ -48,7 +47,7 @@ export default function UsersScreen(): React.JSX.Element {
     // cleanup 함수로 debounce 취소
     return () => debouncedSetSearchText.cancel()
   }, [input])
-  console.log('users', users)
+
   return (
     <View style={styles.container}>
       <SearchInput

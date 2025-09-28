@@ -1,6 +1,7 @@
 // components/inputs/Select.tsx
 import React, {useMemo, useRef, useState} from 'react'
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Modal,
@@ -20,31 +21,24 @@ type Option<T extends string | number> = {label: string; value: T}
 
 export type SelectProps<T extends string | number = string> = {
   value?: T | null
-  options: Option<T>[]
+  options: Option<T>[] // 부모가 동적으로 관리
   onChange: (value: T, option: Option<T>) => void
   placeholder?: string
   disabled?: boolean
   error?: boolean
-  searchable?: boolean
+
+  /** 오토컴플리트 */
+  autocomplete?: boolean // true면 상단 검색창 노출
+  onTextChange?: (q: string) => void // 입력 변화 전달 (선택)
+  loading?: boolean // 외부 로딩 표시 (선택)
 
   /** 스타일 */
   type?: 'outlined' | 'borderless'
-  containerStyle?: StyleProp<ViewStyle> // 바깥 래퍼(보더/레이아웃)
-  style?: StyleProp<ViewStyle> // 트리거 영역
-  textStyle?: StyleProp<TextStyle> // 선택 텍스트
-  listStyle?: StyleProp<ViewStyle> // 드롭다운 박스
+  containerStyle?: StyleProp<ViewStyle>
+  style?: StyleProp<ViewStyle>
+  textStyle?: StyleProp<TextStyle>
+  listStyle?: StyleProp<ViewStyle>
 }
-
-// function measureAnchorWithInsets(
-//   ref: React.RefObject<View>,
-//   yOffset: number,
-// ): Promise<Anchor> {
-//   return new Promise(resolve => {
-//     ref.current?.measureInWindow((x, y, w, h) => {
-//       resolve({x, y: y + yOffset, w, h})
-//     })
-//   })
-// }
 
 export default function Select<T extends string | number = string>({
   value = null,
@@ -53,7 +47,9 @@ export default function Select<T extends string | number = string>({
   placeholder = '선택하세요',
   disabled,
   error,
-  searchable = false,
+  autocomplete = false,
+  onTextChange,
+  loading = false,
   type = 'borderless',
   containerStyle,
   style,
@@ -64,60 +60,41 @@ export default function Select<T extends string | number = string>({
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(false)
   const [anchor, setAnchor] = useState({x: 0, y: 0, w: 0, h: 0})
-  const [query, setQuery] = useState('')
+  const [text, setText] = useState('')
   const insets = useSafeAreaInsets()
+
   const selected = useMemo(
     () => options.find(o => o.value === value) ?? null,
     [options, value],
   )
-  const headerHeight = 0 //네비게이션 헤더 사용시
-  const filtered = useMemo(() => {
-    if (!searchable || !query.trim()) return options
-    const q = query.trim().toLowerCase()
-    return options.filter(o => o.label.toLowerCase().includes(q))
-  }, [options, searchable, query])
 
   const openMenu = () => {
     if (disabled) return
-
     anchorRef.current?.measureInWindow((x, y, w, h) => {
       setAnchor({x, y, w, h})
       setOpen(true)
       setFocused(true)
+      // 필요하면 열릴 때 초기 조회 트리거
+      if (autocomplete && onTextChange) onTextChange(text)
     })
   }
-
-  // const openMenu = async () => {
-  //   if (disabled) return
-  //   // SafeArea 상단(insets.top) + (선택)헤더 높이를 더해 보정
-  //   const yOffset = insets.top + headerHeight
-
-  //   const a = await measureAnchorWithInsets(anchorRef, yOffset)
-  //   setAnchor(a)
-  //   setOpen(true)
-  //   setFocused(true)
-  // }
 
   const closeMenu = () => {
     setOpen(false)
     setFocused(false)
-    setQuery('')
+    setText('')
+    if (autocomplete && onTextChange) onTextChange('') // 필요 없으면 지워도 됨
   }
 
-  // ── 드롭다운 위치 계산(아래 공간 부족하면 위로 띄움)
+  // 드롭다운 위치 계산
   const {height: screenH} = Dimensions.get('window')
-  const GAP = 6 // 트리거와 드롭다운 사이 여백
-  const SAFE = 12 // 화면 경계 여백
+  const GAP = 6
+  const SAFE = 12
   const MAX_LIST = 300
-
-  const spaceBelow = screenH - (anchor.y + anchor.h + insets.bottom) - SAFE // 아래 여백 공간
-  const spaceAbove = anchor.y - SAFE - insets.top //위 여백 공간
-
-  // 아래 공간이 부족하고 위가 더 넓으면 위로 오픈
+  const spaceBelow = screenH - (anchor.y + anchor.h + insets.bottom) - SAFE
+  const spaceAbove = anchor.y - SAFE - insets.top
   const openUp = spaceAbove >= spaceBelow
-
   const maxH = Math.min(MAX_LIST, openUp ? spaceAbove : spaceBelow)
-
   const positionStyle = openUp
     ? {bottom: spaceBelow + anchor.h - GAP - SAFE}
     : {top: spaceAbove + GAP + anchor.h}
@@ -160,9 +137,7 @@ export default function Select<T extends string | number = string>({
         transparent
         animationType="fade"
         onRequestClose={closeMenu}>
-        {/* 배경 클릭으로 닫기 */}
         <Pressable style={StyleSheet.absoluteFill} onPress={closeMenu} />
-
         <View
           style={[
             styles.dropdown,
@@ -171,14 +146,17 @@ export default function Select<T extends string | number = string>({
               left: anchor.x,
               width: anchor.w,
               maxHeight: maxH,
-              ...positionStyle, // ← 위/아래 자동 배치
+              ...positionStyle,
             },
             listStyle,
           ]}>
-          {searchable && (
+          {autocomplete && (
             <TextInput
-              value={query}
-              onChangeText={setQuery}
+              value={text}
+              onChangeText={t => {
+                setText(t)
+                onTextChange?.(t)
+              }}
               placeholder="검색"
               placeholderTextColor="#9AA0A6"
               style={styles.search}
@@ -188,7 +166,7 @@ export default function Select<T extends string | number = string>({
           )}
 
           <FlatList
-            data={filtered}
+            data={options}
             keyExtractor={item => String(item.value)}
             keyboardShouldPersistTaps="handled"
             renderItem={({item}) => {
@@ -211,6 +189,13 @@ export default function Select<T extends string | number = string>({
                 </Pressable>
               )
             }}
+            ListFooterComponent={
+              loading ? (
+                <View style={{paddingVertical: 10, alignItems: 'center'}}>
+                  <ActivityIndicator color={COLORS.primary} />
+                </View>
+              ) : null
+            }
           />
         </View>
       </Modal>
@@ -226,8 +211,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'transparent',
   },
-
-  // borderless(밑줄 스타일)
+  // borderless
   boxBorderless: {borderRadius: 0},
   boxBorderlessBlurred: {borderBottomWidth: 0},
   boxBorderlessFocused: {
@@ -235,8 +219,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     marginBottom: 4,
   },
-
-  // outlined(사각 보더)
+  // outlined
   boxOutlined: {borderRadius: 16, backgroundColor: '#FFF'},
   boxOutlinedBlurred: {borderWidth: 1, borderColor: '#DFDFDF'},
   boxOutlinedFocused: {borderWidth: 2, borderColor: COLORS.primary},
@@ -264,8 +247,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DFDFDF',
     overflow: 'hidden',
-    elevation: 6, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    elevation: 6,
+    shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 8,
     shadowOffset: {width: 0, height: 4},

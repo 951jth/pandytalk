@@ -14,7 +14,7 @@ export interface User {
   note: string // 신청 메모(사용자 입력)
   intro: string // 소개(사용자 입력)
   groupId?: string | null // 선택: 그룹 운영 시
-
+  groupName?: string | null | undefined
   // 상태/검토 정보
   accountStatus: 'pending' | 'confirm' | 'reject'
   approvedAt?: Timestamp | FieldValue | null

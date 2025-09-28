@@ -11,7 +11,10 @@ import React from 'react'
 import {PaperProvider} from 'react-native-paper'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {Provider} from 'react-redux'
-import {navigationRef} from './app/components/navigation/RootNavigation'
+import {
+  navigationRef,
+  onNavReady,
+} from './app/components/navigation/RootNavigation'
 import theme from './app/constants/theme'
 import store from './app/store/store'
 import {RootNavigator} from './RootNavigator'
@@ -24,7 +27,7 @@ function App(): React.JSX.Element {
       <QueryClientProvider client={queryClient}>
         <PaperProvider theme={theme}>
           <SafeAreaProvider>
-            <NavigationContainer ref={navigationRef}>
+            <NavigationContainer ref={navigationRef} onReady={onNavReady}>
               <RootNavigator />
             </NavigationContainer>
           </SafeAreaProvider>

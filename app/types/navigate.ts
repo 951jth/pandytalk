@@ -20,6 +20,7 @@ export type AppRouteParamList = {
   chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
   'guest-manage': undefined
   'group-manage': undefined
+  'user-select': undefined
 }
 
 export type RootStackParamList = {

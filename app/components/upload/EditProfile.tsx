@@ -111,7 +111,7 @@ export default forwardRef(function EditProfile(
         await ref.putFile(previewUrl)
         const newPhotoURL = await ref.getDownloadURL()
         return newPhotoURL
-      } else return null
+      } else return previewUrl || null
     } catch (e) {
       console.log(e)
       return null

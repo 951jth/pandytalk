@@ -9,6 +9,7 @@ function useFCMPushHandler() {
     const messaging = getMessaging(app)
     // 앱 종료 상태에서 푸시 클릭
     messaging.getInitialNotification().then(remoteMessage => {
+      // console.log('check!')
       if (
         remoteMessage?.data?.pushType === 'chat' &&
         remoteMessage?.data?.chatId

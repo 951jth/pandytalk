@@ -64,6 +64,7 @@ export default function ProfileScreen(): React.JSX.Element {
       },
     },
     {label: '이메일', key: 'email', contents: user?.email},
+    // {label: '그룹', key: 'groupName', contents: user?.groupName},
     {
       label: '권한',
       key: 'authority',
@@ -151,11 +152,9 @@ export default function ProfileScreen(): React.JSX.Element {
           loading={submitting}
           onSubmit={formValues => updateUserProfile(formValues)}
         />
-        {user?.authority == 'ADMIN' && (
-          <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
-            캐시 초기화
-          </Button>
-        )}
+        <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
+          캐시 초기화
+        </Button>
       </View>
     </View>
   )

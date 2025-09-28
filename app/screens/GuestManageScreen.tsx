@@ -73,6 +73,7 @@ export default function GuestManageScreen() {
         open={!!modalProps?.open}
         setOpen={boolean => setModalProps({open: boolean, record: null})}
         record={modalProps?.record as User}
+        onRefresh={refetch}
       />
     </View>
   )

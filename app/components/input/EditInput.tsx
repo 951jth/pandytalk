@@ -1,5 +1,5 @@
 // components/inputs/EditInput.tsx
-import React, {useMemo, useRef, useState} from 'react'
+import React, {useMemo, useRef, useState, type ReactNode} from 'react'
 import {
   Pressable,
   Text as RNText,
@@ -22,6 +22,7 @@ export type EditInputProps = Omit<RNTextInputProps, 'value' | 'style'> & {
   style?: StyleProp<TextStyle>
   /** secureTextEntry가 있을 때 토글 아이콘 표시 여부 */
   showPasswordToggle?: boolean
+  rightElement?: ReactNode
 }
 
 export default function EditInput({
@@ -33,6 +34,7 @@ export default function EditInput({
   onFocus,
   onBlur,
   showPasswordToggle = true,
+  rightElement,
   ...rest
 }: EditInputProps) {
   const [focused, setFocused] = useState(false)
@@ -133,6 +135,7 @@ export default function EditInput({
           <Icon source={show ? 'eye-off' : 'eye'} size={22} color="#5D5D5D" />
         </Pressable>
       )}
+      {rightElement && <View style={styles.rightElement}>{rightElement}</View>}
     </View>
   )
 }
@@ -169,6 +172,13 @@ const styles = StyleSheet.create({
   rightAdornment: {
     position: 'absolute',
     right: 8,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  rightElement: {
+    position: 'absolute',
+    right: 0,
     top: 0,
     bottom: 0,
     justifyContent: 'center',

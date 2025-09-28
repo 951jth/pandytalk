@@ -2,17 +2,28 @@ import {createNavigationContainerRef} from '@react-navigation/native'
 
 export const navigationRef = createNavigationContainerRef<any>()
 
+let ready = false
+const queue: Array<() => void> = []
+
+export const onNavReady = () => {
+  ready = true
+  while (queue.length) queue.shift()?.()
+}
+
 export function navigateToChat(roomId: string, title?: string) {
-  if (!navigationRef.isReady() && !roomId && !title) {
-    console.warn('❗ navigationRef is not ready yet.')
-    return
+  const task = () => {
+    // 1뎁스
+    navigationRef.navigate('app', {
+      screen: 'chatRoom',
+      params: {roomId, title},
+    })
   }
 
-  navigationRef.navigate('app', {
-    screen: 'chatRoom',
-    params: {
-      roomId,
-      title,
-    },
-  }) // ✅ 타입 강제 만족
+  if (!roomId) return console.warn('❗ roomId is required.')
+
+  if (!navigationRef.isReady() || !ready) {
+    queue.push(task)
+    return
+  }
+  task()
 }

@@ -4,7 +4,7 @@ import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
-import {FlatList, Image, Pressable, StyleSheet, View} from 'react-native'
+import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {ActivityIndicator, Icon, Text} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
@@ -15,6 +15,7 @@ import {
   useMyChatsInfinite,
 } from '../hooks/queries/useChatRoomQuery'
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
+import PressableWrapper from '../components/common/PressableWrapper'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
@@ -123,22 +124,9 @@ export default function ChatListScreen() {
           const findMember = item?.findMember
           const targetId = findMember?.id
           return (
-            <Pressable
+            <PressableWrapper
               onPress={() => moveToChatRoom(item.id, targetId)}
-              style={({pressed}) => [
-                {
-                  marginBottom: 8,
-                  borderRadius: 8,
-                  shadowColor: '#000',
-                  shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
-                  shadowOpacity: 0.1,
-                  shadowRadius: pressed ? 1 : 3,
-                  elevation: pressed ? 1 : 3,
-                  backgroundColor: '#FFF',
-                  transform: [{scale: pressed ? 0.98 : 1}],
-                },
-                styles.chatRoom,
-              ]}>
+              style={styles.chatRoom}>
               <View style={styles.frame}>
                 {findMember?.photoURL ? (
                   <Image
@@ -176,7 +164,7 @@ export default function ChatListScreen() {
                   </View>
                 )}
               </View>
-            </Pressable>
+            </PressableWrapper>
           )
         }}
         onEndReached={() => {

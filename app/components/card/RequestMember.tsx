@@ -1,19 +1,12 @@
 import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from '@utils/dayjs'
 import React from 'react'
-import {
-  Image,
-  Pressable,
-  StyleProp,
-  StyleSheet,
-  Text,
-  View,
-  ViewStyle,
-} from 'react-native'
+import {Image, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import type {User} from '../../types/auth'
 import ColorChip from '../chip/ColorChip'
+import PressableWrapper from '../common/PressableWrapper'
 
 interface RequestMember {
   item: User
@@ -42,22 +35,7 @@ export default function RequestMember({
   onPress = () => {},
 }: RequestMember) {
   return (
-    <Pressable
-      onPress={() => onPress(item)}
-      style={({pressed}) => [
-        {
-          marginBottom: 8,
-          borderRadius: 8,
-          shadowColor: '#000',
-          shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
-          shadowOpacity: 0.1,
-          shadowRadius: pressed ? 1 : 3,
-          elevation: pressed ? 1 : 3,
-          backgroundColor: '#FFF',
-          transform: [{scale: pressed ? 0.98 : 1}],
-        },
-        style,
-      ]}>
+    <PressableWrapper onPress={() => onPress(item)} style={style}>
       <View style={[styles.friend, style]}>
         <View style={styles.frame}>
           {item?.photoURL ? (
@@ -94,7 +72,7 @@ export default function RequestMember({
           </View> */}
         </View>
       </View>
-    </Pressable>
+    </PressableWrapper>
   )
 }
 

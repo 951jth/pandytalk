@@ -10,6 +10,7 @@ import InputForm from '../form/InputForm'
 import EditInput from '../input/EditInput'
 import EditTextArea from '../input/EditTextarea'
 import GroupSelect from '../select/GroupSelect'
+import Select from '../select/Select'
 import EditProfile from '../upload/EditProfile'
 import CustomModal from './CustomModal'
 
@@ -19,16 +20,8 @@ type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   children?: React.ReactNode
   record?: User
   onComplete?: () => void
+  onRefresh?: () => void
 }
-
-//현재는 하드코딩하지만, 추후 그룹 dto로 옵션 관리할 예정임
-const groupOptions = [
-  {label: '관리자', value: 'admin'},
-  {label: '친구', value: 'friend'},
-  {label: '개인문의', value: 'scret'},
-  {label: '모임', value: 'moim'},
-  {label: '가족', value: 'family'},
-]
 
 const ButtonsByType = {
   pending: [
@@ -71,7 +64,7 @@ const ButtonsByType = {
     {
       label: '삭제',
       bgColor: '#F44336',
-      textColor: '#2E7D32',
+      textColor: '#FFF',
       status: 'delete',
     },
   ],
@@ -81,6 +74,7 @@ export default function RequestMemberDetailModal({
   open,
   setOpen = () => {},
   record,
+  onRefresh,
   ...props
 }: propTypes) {
   const formRef = useRef<any | null>(null)
@@ -100,11 +94,9 @@ export default function RequestMemberDetailModal({
         console.log(profileRef.current)
         const formValues = formRef.current.getValues() as User
         const photoURL = await profileRef.current.upload()
-        console.log(photoURL)
         await memberStatusUpdate(status, {...formValues, photoURL})
         setOpen(false)
-        queryClient.invalidateQueries({queryKey: ['pending-users', 'users']})
-
+        onRefresh?.()
         // memberStatusUpdate(status, {...formValues, photoURL})
         //   .then(() => {
         //     setOpen(false)
@@ -182,6 +174,32 @@ export default function RequestMemberDetailModal({
         />
       ),
     },
+    {
+      key: 'authority',
+      label: '권한설정',
+      required: true,
+      render: (value, onChange) => (
+        <Select
+          options={[
+            {
+              label: '관리자',
+              value: 'ADMIN',
+            },
+            {
+              label: '운영자',
+              value: 'MANAGER',
+            },
+            {
+              label: '일반유저',
+              value: 'USER',
+            },
+          ]}
+          value={value}
+          onChange={onChange}
+        />
+      ),
+    },
+
     {
       key: 'groupId',
       label: '그룹설정',
@@ -268,7 +286,7 @@ export default function RequestMemberDetailModal({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFF',
-    height: 460,
+    height: 470,
     // flex: 1,
     // minHeight: 600,
     // maxHeight: 600,

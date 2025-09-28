@@ -4,6 +4,7 @@ export interface Group {
   createdAt: FirebaseFirestore.Timestamp
   memo?: string
   ownerId?: string
+  ownerName?: string
   photoURL?: string
   //   memberCount: number;
   //   settings?: { allowDM?: boolean };
