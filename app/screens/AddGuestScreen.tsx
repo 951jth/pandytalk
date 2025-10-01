@@ -193,8 +193,8 @@ export default function AddGuestScreen() {
                   edit={true}
                   defaultUrl={previewUrl}
                   // setPreviewUrl={setPreviewUrl}
-                  boxSize={100}
-                  iconSize={75}
+                  boxSize={120}
+                  iconSize={90}
                 />
                 <Text style={styles.notiText}>
                   {`관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.`}
@@ -216,7 +216,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.outerColor,
-    padding: 16,
   },
   inner: {
     padding: 8,
@@ -230,12 +229,13 @@ const styles = StyleSheet.create({
   },
   inputForm: {
     borderRadius: 16,
-    // // ✅ 그림자 효과 (iOS + Android 호환)
+    // ✅ 그림자 효과 (iOS + Android 호환)
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3, // Android 전용 그림자
+    padding: 16,
   },
   profileWrap: {
     flexDirection: 'column',

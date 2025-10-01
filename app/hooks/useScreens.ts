@@ -37,25 +37,24 @@ const tabScreens = (): RouteItem[] => {
       [
         {
           name: 'users',
-          title: '유저 찾기',
+          title: '홈',
           component: UsersScreen,
-          icon: 'account-group',
+          icon: 'home',
         },
         {name: 'chats', title: '채팅', component: ChatListScreen, icon: 'chat'},
+        {
+          name: 'group-chat',
+          title: '그룹 채팅',
+          component: GuestManageScreen,
+          icon: 'account-multiple',
+          filtered: user?.authority !== 'ADMIN',
+        },
         {
           name: 'profile',
           title: '프로필',
           component: ProfileScreen,
           icon: 'account-circle',
         },
-        // {
-        //   name: 'guest',
-        //   title: '게스트 관리',
-        //   component: GuestManageScreen,
-        //   icon: 'account-multiple-plus',
-        //   filtered: user?.authority !== 'ADMIN',
-        // }
-
         {
           name: 'admin-menu',
           title: '관리자 메뉴',

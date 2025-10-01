@@ -1,5 +1,5 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
-import {get} from 'lodash'
+import {cloneDeep, get} from 'lodash'
 import React, {
   forwardRef,
   Fragment,
@@ -45,7 +45,7 @@ interface Props {
   onSubmit?: (value: any) => void
   onFormChange?: (key: string, value: string | number, meta: object) => any
   formData?: object | null
-  onCancel?: () => void
+  onReset?: () => void
 }
 
 // 🔗 외부에서 사용할 ref 타입
@@ -74,13 +74,12 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     buttonLabel = '',
     topElement,
     bottomElement,
-    edit = false,
     setEdit = bool => {},
     loading = false,
     onSubmit = values => {},
     onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
-    onCancel = () => {},
     formData,
+    onReset,
   }: Props,
   ref,
 ) {
@@ -94,8 +93,8 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
 
   useEffect(() => {
     if (formData) {
-      resetValues.current = formData
-      setFormValues(formData)
+      resetValues.current = cloneDeep(formData)
+      setFormValues(cloneDeep(formData))
       setErrors({})
     }
   }, [formData])
@@ -127,14 +126,14 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   return (
     <>
       <View style={[styles.container, style]}>
-        {edit && (
+        {onReset && (
           <IconButton
-            icon="close"
+            icon="refresh"
             size={20}
             style={styles.backBtn}
             onTouchEnd={() => {
               // onEditChange(false)
-              onCancel()
+              onReset?.()
             }}
           />
         )}
@@ -162,25 +161,21 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
                     {item?.contents ? (
                       <Text style={styles.textContent}>{item?.contents}</Text>
                     ) : (
-                      render?.(
-                        value as string,
-                        (val: any) => {
-                          setFormValues(old => {
-                            const next = {...(old ?? {}), [key]: val}
-                            // 실시간 단일 필드 검증
-                            const msg = validateField(item, val, formValues)
-                            setErrors(prev => {
-                              const copy = {...prev}
-                              if (msg) copy[key] = msg
-                              else delete copy[key]
-                              return copy
-                            })
-                            return next
+                      render?.(value as string, (val: any) => {
+                        setFormValues(old => {
+                          const next = {...(old ?? {}), [key]: val}
+                          // 실시간 단일 필드 검증
+                          const msg = validateField(item, val, formValues)
+                          setErrors(prev => {
+                            const copy = {...prev}
+                            if (msg) copy[key] = msg
+                            else delete copy[key]
+                            return copy
                           })
-                          onFormChange(key, val, meta)
-                        },
-                        edit,
-                      )
+                          return next
+                        })
+                        onFormChange(key, val, meta)
+                      })
                     )}
                   </View>
                 </View>

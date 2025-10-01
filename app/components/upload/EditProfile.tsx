@@ -36,8 +36,8 @@ export default forwardRef(function EditProfile(
     // setPreviewUrl = () => {},
     defaultUrl,
     edit,
-    boxSize = 150,
-    iconSize = 120,
+    boxSize = 120,
+    iconSize = 90,
   }: propTypes,
   ref: ForwardedRef<profileInputRef>,
 ) {

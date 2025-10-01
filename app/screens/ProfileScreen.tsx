@@ -10,9 +10,9 @@ import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
-import {Button} from 'react-native-paper'
+import {Button, IconButton} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-import InputForm from '../components/form/InputForm'
+import InputForm, {InputFormRef} from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
 import EditProfile, {
   type profileInputRef,
@@ -30,7 +30,7 @@ const authInstance = getAuth()
 
 export default function ProfileScreen(): React.JSX.Element {
   const {data: user, loading, error} = useAppSelector(state => state.user)
-  const userInfo = useMemo(() => user, [user])
+  const userInfo = useMemo(() => cloneDeep(user), [user])
   const [formValues, setFormValues] = useState<object | null>()
   const [edit, setEdit] = useState<boolean>(false)
   const [submitting, setSubmitting] = useState<boolean>(false)
@@ -39,6 +39,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const queryClient = useQueryClient()
   const uid = authInstance.currentUser?.uid
   const profileRef = useRef<profileInputRef | null>(null)
+  const formRef = useRef<InputFormRef | null>(null)
   const {resetAll} = useResetAllQueryCache()
 
   const formItems: FormItem[] = [
@@ -130,13 +131,12 @@ export default function ProfileScreen(): React.JSX.Element {
           formData={userInfo}
           editable={true}
           labelWidth={100}
-          buttonLabel="프로필 수정"
+          buttonLabel="프로필 저장"
           initialValues={initialFormValues}
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
                 ref={profileRef}
-                edit={true}
                 // previewUrl={previewUrl}
                 defaultUrl={previewUrl}
                 // setPreviewUrl={setPreviewUrl}
@@ -144,17 +144,21 @@ export default function ProfileScreen(): React.JSX.Element {
             </View>
           }
           edit={true}
-          setEdit={bool => {
-            // setEdit(bool)
-            setFormValues(cloneDeep(formValues))
-            // if (!bool && user?.photoURL) setPreviewUrl(user.photoURL)
-          }}
           loading={submitting}
           onSubmit={formValues => updateUserProfile(formValues)}
+          ref={formRef}
         />
         <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
           캐시 초기화
         </Button>
+        <IconButton
+          icon="refresh"
+          size={20}
+          style={styles.resetBtn}
+          onTouchEnd={() => {
+            formRef.current?.resetValues()
+          }}
+        />
       </View>
     </View>
   )
@@ -187,7 +191,12 @@ const styles = StyleSheet.create({
   },
   cleanButton: {
     position: 'absolute',
-    top: 0,
+    top: 5,
     left: 0,
+  },
+  resetBtn: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
 })
