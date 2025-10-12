@@ -14,7 +14,13 @@ import AppNavigator from './app/navigation/AppNavigator'
 import AuthNavigator from './app/navigation/AuthNavigator'
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import {Alert, AppState, StatusBar, View} from 'react-native'
+import {
+  Alert,
+  AppState,
+  InteractionManager,
+  StatusBar,
+  View,
+} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 // reset 제거 → navigationRef 불필요
@@ -22,6 +28,8 @@ import {useDispatch} from 'react-redux'
 import {useFCMSetup} from './app/hooks/useFCM'
 import {useFCMPushHandler} from './app/hooks/useFCMPush'
 // import {initialRouteName} from './app/hooks/useScreens'
+import {safeCall} from '@utils/call'
+import {throttle} from 'lodash'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {useAppSelector} from './app/store/reduxHooks'
@@ -40,6 +48,15 @@ export function RootNavigator(): React.JSX.Element {
   const dispatch = useDispatch<AppDispatch>()
   useFCMSetup() // FCM 푸시알림 세팅
   // useFCMListener(user?.uid) // FCM -> 채팅방 목록 갱신
+
+  const onActive = throttle((uid: string) => {
+    safeCall(() => updateLastSeen(uid))
+  }, 1000)
+
+  const onBg = throttle((uid: string) => {
+    safeCall(() => updateUserOffline(uid))
+  }, 1000)
+
   useFCMPushHandler() // 푸쉬알림 -> 채팅방 이동 핸들링
 
   const fetchProfile = async (uid: string) => {
@@ -50,16 +67,25 @@ export function RootNavigator(): React.JSX.Element {
           '승인 대기 중',
           '회원님의 게스트 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
         )
-        user?.uid && (await updateUserOffline(user.uid))
-        await logout(dispatch)
+        // 1) 즉시 네트워크 쓰기/로그아웃 금지 → 충돌/중첩 방지
+        InteractionManager.runAfterInteractions(() => {
+          Promise.resolve()
+            .then(() => (user?.uid ? updateUserOffline(user.uid) : undefined))
+            .then(() => logout(dispatch))
+            .catch(e => console.warn('[logout flow]', e))
+        })
       } else {
-        await updateLastSeen(uid)
+        // 승인된 경우도 실패흡수
+        try {
+          await updateLastSeen(uid)
+        } catch (e) {
+          console.warn(e)
+        }
       }
-    } catch (err: any) {
+    } catch (err) {
       console.log('❌ 유저 정보 로딩 실패:', err)
     }
   }
-
   // FB Auth 상태 감시
   useEffect(() => {
     const subscriber = onAuthStateChanged(authInstance, fbUser => {
@@ -76,24 +102,29 @@ export function RootNavigator(): React.JSX.Element {
 
   // 로컬 DB 테이블 준비 (그대로 유지)
   useEffect(() => {
-    isMessagesTableExists().then(exists => {
-      if (!exists) {
-        console.log('messages 테이블이 없어 초기화 시작')
-        initChatTables()
-      } else {
-        console.log('이미 messages 테이블 있음')
+    // 좋은 질문이에요 — InteractionManager.runAfterInteractions는 React Native에서 “UI가 완전히 안정된 이후에 실행할 콜백”을 예약하는 도구입니다.
+    // 즉, **화면 렌더링/애니메이션/제스처 같은 상호작용(interactions)**이 모두 끝난 뒤에 비동기 로직을 실행시킵니다.
+    const task = InteractionManager.runAfterInteractions(async () => {
+      try {
+        const exists = await isMessagesTableExists()
+        if (!exists) initChatTables()
+      } catch (e) {
+        console.warn('[sqlite init]', e) // 크래시 방지
       }
     })
+    return () => task.cancel()
   }, [])
 
-  // AppState에 따른 lastSeen/오프라인 처리 (그대로 유지하되 분리)
   useEffect(() => {
     if (userInfo?.accountStatus !== 'confirm' || !user?.uid) return
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (nextAppState === 'active') updateLastSeen(user.uid)
-      if (nextAppState === 'background') updateUserOffline(user.uid)
+    let prev = AppState.currentState
+    // AppState 이벤트는 inactive→active처럼 연달아 여러 번 들어올 수 있어서, 스로틀링 적용
+    const sub = AppState.addEventListener('change', next => {
+      if (next === 'active' && prev !== 'active') onActive(user.uid)
+      if (next === 'background' && prev !== 'background') onBg(user.uid)
+      prev = next
     })
-    return () => subscription.remove()
+    return () => sub.remove()
   }, [userInfo?.accountStatus, user?.uid])
 
   const shouldShowSplash = initializing || (loading && !userInfo)
