@@ -7,6 +7,7 @@ export interface Group {
   ownerName?: string
   photoURL?: string
   members?: GroupMembers[]
+  memberCount?: number
   //   memberCount: number;
   //   settings?: { allowDM?: boolean };
 }

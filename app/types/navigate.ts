@@ -4,15 +4,13 @@ export type TabParamList = {
   users: undefined
   chats: undefined
   profile: undefined
+  'group-chat': {groupId: string} | undefined
 }
 
 export type AuthStackParamList = {
   login: undefined
   addGuest: undefined
 }
-
-// 필요 없다면 RootStackParamList 제거 가능
-// export type RootStackParamList = { ... };
 
 export type AppRouteParamList = {
   // Auth
@@ -21,6 +19,7 @@ export type AppRouteParamList = {
   'guest-manage': undefined
   'group-manage': undefined
   'user-select': undefined
+  'group-chat': {groupId?: string} | undefined
 }
 
 export type RootStackParamList = {

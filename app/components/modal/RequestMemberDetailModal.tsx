@@ -1,6 +1,6 @@
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useRef} from 'react'
-import {Modal, StyleSheet, View} from 'react-native'
+import {Alert, Modal, StyleSheet, View} from 'react-native'
 import COLORS from '../../constants/color'
 import {memberStatusUpdate} from '../../services/authService'
 import type {User} from '../../types/auth'
@@ -96,6 +96,7 @@ export default function RequestMemberDetailModal({
         const photoURL = await profileRef.current.upload()
         await memberStatusUpdate(status, {...formValues, photoURL})
         setOpen(false)
+        Alert.alert('수정 완료', '게스트 멤버 정보 수정 완료')
         onRefresh?.()
         // memberStatusUpdate(status, {...formValues, photoURL})
         //   .then(() => {
@@ -275,7 +276,6 @@ export default function RequestMemberDetailModal({
               </View>
             )
           }
-          onCancel={() => setOpen(false)}
           ref={formRef}
         />
       </View>

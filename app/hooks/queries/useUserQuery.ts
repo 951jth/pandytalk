@@ -77,7 +77,6 @@ export const useUsersInfinite = (searchText: string = '') => {
           uid: doc.id,
           ...doc.data(),
         })) as User[]
-        console.log('users', users)
         return {
           users,
           lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,

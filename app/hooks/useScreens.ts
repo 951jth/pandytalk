@@ -5,6 +5,7 @@ import AddGuestScreen from '../screens/AddGuestScreen'
 import AdminMenuScreen from '../screens/AdminMenuScreen'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
+import GroupChatRoomScreen from '../screens/GroupChatRoomScreen'
 import GroupManageScreen from '../screens/GroupManageScreen'
 import GuestManageScreen from '../screens/GuestManageScreen'
 import LoginScreen from '../screens/LoginScreen'
@@ -12,14 +13,17 @@ import ProfileScreen from '../screens/ProfileScreen'
 import UserSelectScreen from '../screens/UserSelectScreen'
 import UsersScreen from '../screens/UsersScreen'
 import {useAppSelector} from '../store/reduxHooks'
+import type {TabParamList} from '../types/navigate'
 
 type RouteItem = {
   name: string
   title?: string
-  component: React.ComponentType<any>
+  component?: React.ComponentType<any>
   options?: object
   icon?: string
   filtered?: boolean
+  path?: string
+  getParams?: () => TabParamList[keyof TabParamList] // ← 추가
 }
 
 type LayoutItem = {
@@ -45,9 +49,9 @@ const tabScreens = (): RouteItem[] => {
         {
           name: 'group-chat',
           title: '그룹 채팅',
-          component: GuestManageScreen,
+          // component: GroupChatRoomScreen,
           icon: 'account-multiple',
-          filtered: user?.authority !== 'ADMIN',
+          path: 'group-chat',
         },
         {
           name: 'profile',
@@ -78,7 +82,7 @@ const appRoutes = (): LayoutItem[] => {
       children: [
         {
           name: 'main',
-          title: '유저 찾기',
+          title: '홈',
           component: TabScreenNavigator, // 실제 탭 화면
         },
         {
@@ -104,7 +108,13 @@ const appRoutes = (): LayoutItem[] => {
         headerShown: false,
       },
       children: [
-        {name: 'chatRoom', title: 'ChatRoom', component: ChatRoomScreen},
+        {name: 'chatRoom', title: '채탕방', component: ChatRoomScreen},
+        {
+          name: 'group-chat',
+          title: '그룹 채팅',
+          component: GroupChatRoomScreen,
+          icon: 'account-multiple',
+        },
       ],
     },
   ]

@@ -26,20 +26,21 @@ import {
 } from '../../services/chatService'
 import type {ChatMessage} from '../../types/chat'
 import {mergeMessages} from '../../utils/chat'
-
-type MessagePage = {
-  data: ChatMessage[]
-  hasNext: boolean
-  nextCursor?: string
-}
+import {toMillisFromServerTime, toRNFTimestamp} from '../../utils/firebase'
 
 // ✅ 올바른 타입: Infinite Query용
-type MessagesInfiniteData = InfiniteData<MessagePage>
+type MessagesPage = {
+  data: ChatMessage[]
+  lastVisible: number | null // 다음 커서(ms). ServerTime 금지
+  isLastPage: boolean
+}
+
+type MessagesInfiniteData = InfiniteData<MessagesPage>
 
 const firestore = getFirestore(getApp())
-const PAGE_SIZE = 20
+const PAGE_SIZE = 15
 
-//채팅 메세지 조회 (실시간 들어오는 메세지)
+//채팅 메세지 조회 (실시간 들어오는 메세지), 현재 사용X
 export const listenToMessages = (
   roomId: string,
   onUpdate: (messages: ChatMessage[]) => void,
@@ -66,7 +67,6 @@ export const listenToMessages = (
 
 export const useChatMessagesPaging = (roomId: string | null) => {
   const queryClient = useQueryClient()
-  const pageSize = 20
   const queryKey = ['chatMessages', roomId]
   const queryResult = useInfiniteQuery({
     enabled: !!roomId,
@@ -76,15 +76,19 @@ export const useChatMessagesPaging = (roomId: string | null) => {
         if (!roomId)
           return {
             data: [] as ChatMessage[],
-            lastVisible: undefined,
+            lastVisible: null,
             isLastPage: true,
           }
+        const ms = toMillisFromServerTime(pageParam)
+        const ts = toRNFTimestamp(pageParam)
+
         const localMessages = (await getMessagesFromSQLiteByPaging(
           roomId,
-          pageParam, //pageParam은 여기서 마지막 읽은 날짜임
+          ms, //pageParam은 여기서 마지막 읽은 날짜임
+          PAGE_SIZE,
         )) as ChatMessage[]
-        if (localMessages.length < pageSize) {
-          console.log('on server load cursor: ', pageParam)
+        if (localMessages?.length || 0 < PAGE_SIZE) {
+          const ts = toRNFTimestamp(pageParam)
           // CASE 1. 로컬에 없으면 Firestore에서 가져오기
           const messagesRef = collection(firestore, 'chats', roomId, 'messages')
           let q = query(
@@ -92,13 +96,23 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             orderBy('createdAt', 'desc'),
             limit(PAGE_SIZE),
           )
-          if (pageParam) q = query(q, where('createdAt', '<', pageParam))
+          if (ts) q = query(q, where('createdAt', '<', ts))
 
           const snapshot = await getDocs(q)
-          const serverMessages = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as ChatMessage[]
+          const result = snapshot.docs.map(
+            doc =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+              }) as ChatMessage,
+          )
+          //데이터를 조회할떄는, createdAt은 number로 조회함
+          const serverMessages = result?.map(e => ({
+            ...e,
+            createdAt: e?.createdAt
+              ? toMillisFromServerTime(e?.createdAt)
+              : Date.now(),
+          }))
           if (serverMessages.length > 0) {
             //서버데이터가 있으면 그대로 sqlite에 push
             await saveMessagesToSQLite(roomId, serverMessages)
@@ -108,7 +122,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             // 3. 중복/정렬 문제 예방 : serverMessages가 중복되있으면 오류발생
             const updatedMessages = await getMessagesFromSQLiteByPaging(
               roomId,
-              pageParam,
+              ms,
             )
             return {
               data: updatedMessages,
@@ -118,7 +132,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             }
           }
         } else {
-          console.log('localMessages', localMessages)
           // CASE 2. 로컬데이터가 충분히 있는 경우
           return {
             data: localMessages,
@@ -128,6 +141,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           }
         }
       } catch (e) {
+        console.log(e)
         //에러처리, 동일한 리턴값을 유지해야함
         return {
           data: [] as ChatMessage[],
@@ -177,13 +191,24 @@ export const useSubscriptionMessage = (
 ) => {
   const db = getFirestore(getApp()) // ✅ 훅 밖에서 선언되더라도 안전
   const queryClient = useQueryClient() // ✅ 항상 호출되도록
-
+  // const ms = toMillisFromServerTime(lastCreatedAt);
+  // console.log(d)
   useEffect(() => {
-    if (!roomId || lastCreatedAt == null) return
+    if (!roomId) return
     const messagesRef = collection(db, 'chats', roomId, 'messages')
-    let q = query(messagesRef, orderBy('createdAt', 'desc'))
-
-    if (lastCreatedAt) q = query(q, where('createdAt', '>', lastCreatedAt))
+    let q = query(messagesRef, orderBy('createdAt', 'desc'), limit(50))
+    const ts = toRNFTimestamp(lastCreatedAt)
+    const init: MessagesInfiniteData = {
+      pages: [
+        {
+          data: [] as ChatMessage[],
+          lastVisible: null, // 쓰지 않으면 null
+          isLastPage: true, // 초기엔 true로 둬도 무방
+        },
+      ],
+      pageParams: [undefined],
+    }
+    if (ts) q = query(q, where('createdAt', '>', ts))
 
     const unsubscribe = onSnapshot(q, async snapshot => {
       const newMessages = snapshot.docs.map(doc => ({
@@ -192,18 +217,27 @@ export const useSubscriptionMessage = (
       })) as ChatMessage[]
       if (newMessages.length > 0) {
         await saveMessagesToSQLite(roomId, newMessages)
+        try {
+          queryClient.setQueryData(
+            ['chatMessages', roomId],
+            (old: MessagesInfiniteData | undefined) => {
+              const cur = old ?? init
 
-        queryClient.setQueryData(
-          ['chatMessages', roomId],
-          (old: MessagesInfiniteData | undefined) => {
-            if (!old) return
-            const merged = mergeMessages(old.pages[0].data, newMessages)
-            return {
-              ...old,
-              pages: [{...old.pages[0], data: merged}, ...old.pages.slice(1)],
-            }
-          },
-        )
+              const merged = mergeMessages(
+                cur.pages[0]?.data || [],
+                newMessages,
+              )
+              return {
+                ...old,
+                pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
+              }
+            },
+          )
+        } catch (e) {
+          console.log(e)
+        } finally {
+          return init
+        }
       }
     })
 

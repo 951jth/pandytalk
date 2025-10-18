@@ -4,8 +4,11 @@ import {Icon} from 'react-native-paper'
 import COLORS from '../constants/color'
 import {tabScreens} from '../hooks/useScreens'
 import {useAppSelector} from '../store/reduxHooks'
+import {ActionTabButton} from '../tabs/ActionTabBarButton'
+import type {AppRouteParamList} from '../types/navigate'
 
 const Tab = createBottomTabNavigator()
+const EmptyScreen: React.FC = () => null
 
 export default function TabScreenNavigator(): React.JSX.Element {
   const {data: user} = useAppSelector(state => state?.user)
@@ -36,8 +39,17 @@ export default function TabScreenNavigator(): React.JSX.Element {
         <Tab.Screen
           key={route.name}
           name={route.name}
-          component={route.component}
-          options={{title: route.title ?? route.name}}
+          component={route.component ?? EmptyScreen}
+          options={{
+            title: route.title ?? route.name,
+            tabBarButton: btnProps => (
+              <ActionTabButton
+                {...btnProps}
+                target={route.path as keyof AppRouteParamList}
+                params={route.getParams?.()}
+              />
+            ),
+          }}
         />
       ))}
     </Tab.Navigator>

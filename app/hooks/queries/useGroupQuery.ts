@@ -1,17 +1,32 @@
-// hooks/useGroupsInfinity.ts
 import {
   collection,
   getDocs,
   limit,
-  orderBy,
   query,
   startAfter,
   type FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore'
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query'
+import {orderBy} from 'lodash'
+import {getGroupInfo} from '../../services/groupService'
 import {firestore} from '../../store/firestore'
 import type {FsSnapshot} from '../../types/firebase'
 import type {Group} from '../../types/group'
+
+export const useGroup = (groupId?: string | null) => {
+  return useQuery({
+    queryKey: ['group', groupId],
+    enabled: !!groupId,
+    queryFn: async () => {
+      if (groupId) {
+        const data = await getGroupInfo(groupId)
+        return data
+      }
+    },
+    // staleTime: 60_000,                       // 1분 동안 fresh
+    // gcTime: 5 * 60_000,                      // v5: 캐시 정리 시간(기존 cacheTime)
+  })
+}
 
 const DEFAULT_PAGE_SIZE = 20
 const DEFAULT_BATCH_SIZE = 200

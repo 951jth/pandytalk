@@ -11,16 +11,18 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  startAfter,
   Timestamp,
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
+// import {FieldValue} from 'firebase-admin/firestore'
 import {useRef} from 'react'
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../store/sqlite'
 import type {User} from '../types/auth'
-import type {ChatListItem, ChatMessage} from '../types/chat'
+import type {ChatListItem, ChatMessage, ServerTime} from '../types/chat'
+import {toRNFTimestamp} from '../utils/firebase'
 import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
@@ -52,41 +54,99 @@ export const getDirectMessageRoomId = async (
   }
 }
 
+//타입별 멤버 조회 호출 함수,(dm, group) : 과거
+//멤버 정보가 바뀌게 될 수 있어서, id로 별도로 조회해야함.
+const setChatMembersInfo = async (roomInfo: ChatListItem) => {
+  try {
+    //현재는 그룹의 멤버가 변경되면 클라우드펑션에서 자동으로 채팅멤버 세팅해줘서 사용 switch 문 사용하지않음
+    let uids = roomInfo?.members ?? []
+    // //1. 멤버 아이디들 세팅
+    // switch (roomInfo.type) {
+    //   //CASE 1. DM 채팅 (1:1, or 1:N) uids
+    //   case 'dm':
+    //     uids = roomInfo?.members ?? []
+    //     break
+    //   //CASE 2. GROUP 채팅 uids
+    //   case 'group':
+    //     const gid = roomInfo?.groupId as string
+    //     if (!gid) return roomInfo
+    //     const groupMemsRef = collection(firestore, 'groups', gid, 'members')
+    //     const gq = query(groupMemsRef)
+    //     const gSnapshot = await getDocs(gq)
+    //     const gMembers =
+    //       gSnapshot?.docs?.map(
+    //         doc =>
+    //           ({
+    //             id: doc.id,
+    //             ...doc.data(),
+    //           }) as User,
+    //       ) || []
+    //     uids = gMembers?.map(e => e.id as string) ?? []
+
+    //     break
+    // }
+    //2. id를 기반으로 현재 멤버들의 정보 세팅
+    if (uids) {
+      // users 컬렉션에서 해당 uid들의 유저 정보 가져오기
+      const usersRef = collection(firestore, 'users')
+      // ⚠️ Firestore의 where('uid', 'in', [...])는 최대 10개까지 지원
+      const q = query(usersRef, where('uid', 'in', uids.slice(0, 10))) // 제한 고려
+
+      const snapshot = await getDocs(q)
+
+      const memberInfos =
+        snapshot?.docs?.map(
+          doc =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            }) as User,
+        ) || []
+      roomInfo.members = uids
+      roomInfo.memberInfos = memberInfos
+    }
+    return roomInfo
+  } catch (e) {
+    console.log(e)
+    return roomInfo
+  }
+}
+
 //채팅방 정보 조회 (멤버 및 채팅방 정보들들)
 export const getChatRoomInfo = async (
   roomId: string,
 ): Promise<ChatListItem | void> => {
   // 1. chats/{roomId} 문서에서 members 배열 가져오기
   try {
+    console.log('roomId: ', roomId)
     const chatDocRef = doc(firestore, 'chats', roomId)
     const chatSnap = await getDoc(chatDocRef)
     if (!chatSnap.exists()) {
       throw new Error('채팅방이 존재하지 않습니다.')
     }
+    // console.log('chatSnap', chatSnap)
     let roomInfo = {id: chatSnap.id, ...chatSnap?.data()} as ChatListItem
-    const uids: string[] = chatSnap?.data()?.members ?? []
 
     // 2. users 컬렉션에서 해당 uid들의 유저 정보 가져오기
-    const usersRef = collection(firestore, 'users')
-
+    // const uids: string[] = chatSnap?.data()?.members ?? []
+    // const usersRef = collection(firestore, 'users')
     // ⚠️ Firestore의 where('uid', 'in', [...])는 최대 10개까지 지원
-    const q = query(usersRef, where('uid', 'in', uids.slice(0, 10))) // 제한 고려
+    // const q = query(usersRef, where('uid', 'in', uids.slice(0, 10))) // 제한 고려
 
-    const snapshot = await getDocs(q)
+    // const snapshot = await getDocs(q)
 
-    const members =
-      snapshot?.docs?.map(
-        doc =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-          }) as User,
-      ) || []
-
-    roomInfo.memberInfos = members || null
+    // const members =
+    //   snapshot?.docs?.map(
+    //     doc =>
+    //       ({
+    //         id: doc.id,
+    //         ...doc.data(),
+    //       }) as User,
+    //   ) || []
+    roomInfo = await setChatMembersInfo(roomInfo)
     return roomInfo || null
   } catch (e) {
-    console.error('getChatRoomInfo error', e)
+    console.log('getChatRoomInfo error', e)
   }
 }
 
@@ -117,7 +177,7 @@ export const getChatMessages = async (roomId: string) => {
  * @param onMessage 콜백 (새 메시지 수신 시)
  * @returns unsubscribe 함수 (리스너 해제용)
  */
-// ✅ 비동기 함수로 정의
+// 비동기 함수로 정의, 미사용
 export const subscribeToMessages = async (
   roomId: string,
   lastCreatedAt: number | null,
@@ -156,13 +216,13 @@ export const sendMessage = async (
   try {
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     const chatRoomRef = doc(firestore, 'chats', roomId)
-
+    // Alert.alert('시간', JSON.stringify(FieldValue.serverTimestamp()))
     const newMessage = {
       senderId: message.senderId,
       text: message.text ?? '',
       type: message.type,
       imageUrl: message.imageUrl ?? '',
-      createdAt: Date.now(),
+      createdAt: serverTimestamp(),
       senderPicURL: message?.senderPicURL,
       senderName: message?.senderName,
     }
@@ -195,7 +255,7 @@ export const createChatRoom = async (
     const chatRef = collection(firestore, 'chats')
     const newRoom: Omit<ChatListItem, 'id'> = {
       type: options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm'),
-      createdAt: Date.now(),
+      createdAt: serverTimestamp(),
       members: sortedIds?.filter(Boolean),
       name: options?.name ?? '',
       image: options?.image ?? '',
@@ -290,9 +350,10 @@ export const saveMessagesToSQLite = async (
 
 export const getMessagesFromSQLiteByPaging = async (
   roomId: string,
-  cursorCreatedAt?: number,
+  cursorCreatedAt?: number | null,
   pageSize: number = 20,
 ): Promise<ChatMessage[]> => {
+  console.log('cursorCreatedAt', cursorCreatedAt)
   return new Promise((resolve, reject) => {
     db.transaction((tx: Transaction) => {
       const query = cursorCreatedAt
@@ -315,7 +376,7 @@ export const getMessagesFromSQLiteByPaging = async (
           // const sortedMessages = messages.sort(
           //   (a, b) => a.createdAt - b.createdAt,
           // )
-
+          console.log('get sql messages', messages)
           resolve(messages)
         },
         (_, error) => {
@@ -413,7 +474,6 @@ export const getLatestMessageCreatedAtFromSQLite = async (
         (_, result) => {
           if (result.rows.length > 0) {
             const latest = result.rows.item(0).createdAt
-            console.log(dayjs(latest).format('YYYY.MM.DD HH:mm:ss'))
             resolve(latest)
           } else {
             resolve(null) // 데이터가 없는 경우
@@ -432,14 +492,17 @@ export const getLatestMessageCreatedAtFromSQLite = async (
 //마지막 데이터 날짜 이후로 데이터 존재여부 확인
 export const getMessagesFromLatestRead = async (
   roomId: string,
-  latestCreated: number,
+  latestCreated: number | ServerTime | null,
 ) => {
+  if (!latestCreated) return []
   console.log('latestCreated', latestCreated)
+  const cursor = toRNFTimestamp(latestCreated)
   const messagesRef = collection(firestore, 'chats', roomId, 'messages')
   const q = query(
     messagesRef,
     orderBy('createdAt', 'desc'),
-    where('createdAt', '>', Timestamp.fromMillis(latestCreated)),
+    startAfter(cursor),
+    // where('createdAt', '>', Timestamp.fromMillis(latestCreated)),
   )
   const snapshot = await getDocs(q)
   const messages = snapshot?.docs?.map(doc => ({

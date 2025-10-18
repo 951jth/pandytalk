@@ -1,5 +1,5 @@
-import dayjs from 'dayjs'
 import type {ChatMessage} from '../types/chat'
+import {formatServerDate, toMillisFromServerTime} from './firebase'
 
 export const isSameSender = (
   prev: ChatMessage | null,
@@ -34,9 +34,10 @@ export const isSameDate = (
   current: ChatMessage | null,
 ) => {
   if (!prev || !prev?.createdAt || !current?.createdAt) return false
-
-  const prevDate = dayjs(prev.createdAt).format('YYYY-MM-DD')
-  const currentDate = dayjs(current.createdAt).format('YYYY-MM-DD')
+  const prevDate = formatServerDate(prev.createdAt, 'YYYY-MM-DD')
+  const currentDate = formatServerDate(current.createdAt, 'YYYY-MM-DD')
+  // const prevDate = dayjs(prev.createdAt).format('YYYY-MM-DD')
+  // const currentDate = dayjs(current.createdAt).format('YYYY-MM-DD')
 
   return prevDate === currentDate
 }
@@ -46,7 +47,22 @@ export function mergeMessages(
   existing: ChatMessage[],
   incoming: ChatMessage[],
 ): ChatMessage[] {
+  // console.log('existing', existing)
+  // console.log('incoming', incoming)
   const map = new Map<string, ChatMessage>()
   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
-  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
+  return Array.from(map.values()).sort(
+    (a, b) =>
+      (toMillisFromServerTime(b.createdAt) || 0) -
+      (toMillisFromServerTime(a.createdAt) || 0),
+  ) // 최신순 정렬
 }
+
+// export function mergeMessages(
+//   existing: ChatMessage[],
+//   incoming: ChatMessage[],
+// ): ChatMessage[] {
+//   const map = new Map<string, ChatMessage>()
+//   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
+//   return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
+// }

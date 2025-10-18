@@ -8,6 +8,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
   startAfter,
   where,
   type FirebaseFirestoreTypes,
@@ -20,6 +21,7 @@ import {
 import {useEffect} from 'react'
 import type {ChatListItem, PushMessage} from '../../types/chat'
 import type {FsSnapshot} from '../../types/firebase'
+import {sortKey} from '../../utils/firebase'
 import {useDebouncedCallback} from '../useDebounceCallback'
 
 interface pageType {
@@ -218,17 +220,14 @@ export function updateChatListCache(
     const newRoom: ChatListItem = {
       id: message.chatId,
       lastMessage: message,
-      createdAt: message.createdAt,
+      createdAt: serverTimestamp(),
       unreadCount: 1,
       type: 'dm',
       members: [userId, message.senderId], // 또는 다른 방식으로 초기화
     }
     updatedFlat = [newRoom, ...flatList]
   }
-  updatedFlat.sort(
-    (a, b) =>
-      (b?.lastMessage?.createdAt || 0) - (a?.lastMessage?.createdAt || 0),
-  )
+  updatedFlat.sort((a, b) => sortKey(b) - sortKey(a))
   // 기존과 같은 page 크기로 다시 나누기 (여기선 첫 페이지 길이 기준)
   const perPage = PAGE_SIZE
   const newPages: pageType[] = []
@@ -267,7 +266,8 @@ export function updateChatLastReadCache(
             unreadCount: 0,
             lastReadTimestamps: {
               ...chat.lastReadTimestamps,
-              [userId]: Date.now(),
+              [userId]: serverTimestamp(),
+              // [userId]: FieldValue.serverTimestamp(),
             },
           }
         : chat

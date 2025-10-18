@@ -21,7 +21,6 @@ type propTypes = {
 }
 
 export default function GuestGroup({item, onPress, style}: propTypes) {
-  console.log('onPress', onPress)
   return (
     <PressableWrapper onPress={() => onPress(item)} style={styles.groupItem}>
       <View style={[styles.friend, style]}>

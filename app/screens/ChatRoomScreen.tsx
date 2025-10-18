@@ -32,7 +32,7 @@ export default function ChatRoomScreen() {
   const rightActions: ReactNode[] = []
   const queryClient = useQueryClient()
 
-  const getRoomId = async () => {
+  const getRoomInfo = async () => {
     let rid = currentRid
     if (!rid && user?.uid !== targetIds?.[0] && user?.uid && targetIds?.[0]) {
       rid = await getDirectMessageRoomId(user.uid, targetIds?.[0])
@@ -45,7 +45,7 @@ export default function ChatRoomScreen() {
   }
 
   useEffect(() => {
-    getRoomId()
+    getRoomInfo()
   }, [])
 
   useFocusEffect(
@@ -58,7 +58,6 @@ export default function ChatRoomScreen() {
       }
     }, [currentRid, user?.id]),
   )
-  // if (!currentRid) return <EmptyData />
 
   return (
     <>
@@ -79,7 +78,7 @@ export default function ChatRoomScreen() {
               roomId={currentRid}
               user={user as User}
               targetIds={targetIds}
-              getRoomId={getRoomId}
+              getRoomInfo={getRoomInfo}
             />
           </View>
         </KeyboardUtilitiesWrapper>

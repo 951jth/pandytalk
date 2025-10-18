@@ -25,8 +25,8 @@ export interface User {
   isConfirmed?: boolean // firebase collection 조건비교용
 
   // 메타 시간
-  createdAt: Timestamp | FieldValue | null
-  updatedAt?: Timestamp | FieldValue | null
+  createdAt: FirebaseFirestore.Timestamp | Timestamp | FieldValue | null
+  updatedAt?: FirebaseFirestore.Timestamp | Timestamp | FieldValue | null
 }
 
 export interface requestUser {

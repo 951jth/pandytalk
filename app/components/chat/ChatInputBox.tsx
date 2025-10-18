@@ -5,11 +5,7 @@ import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {ImagePickerResponse} from 'react-native-image-picker'
 import {IconButton, TextInput} from 'react-native-paper'
 import COLORS from '../../constants/color'
-import {
-  createChatRoom,
-  getChatRoomInfo,
-  sendMessage,
-} from '../../services/chatService'
+import {createChatRoom, sendMessage} from '../../services/chatService'
 import type {User} from '../../types/auth'
 import type {ChatMessage} from '../../types/chat'
 import {firebaseImageUpload} from '../../utils/file'
@@ -18,21 +14,22 @@ import UploadButton from '../upload/UploadButton'
 interface propTypes {
   roomId?: string | null
   user: User
-  targetIds?: Array<string> | null
-  getRoomId: () => void
+  targetIds?: Array<string> | null //채팅방이 없어서 만들어야 하는 경우.
+  getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
 }
 
 export default function ChatInputBox({
   roomId,
   user,
   targetIds,
-  getRoomId,
+  getRoomInfo,
 }: propTypes) {
   const [text, setText] = useState<string>('')
   const authInstance = getAuth()
   const currentUser = authInstance.currentUser
   const [loading, setLoading] = useState<boolean>(false)
   const queryClient = useQueryClient()
+  console.log('roomId', roomId)
 
   // const onNewChatRoom = () => {
   //   createChatRoom()
@@ -43,11 +40,13 @@ export default function ChatInputBox({
     result?: ImagePickerResponse,
   ) => {
     if (!user?.uid) return
+
     try {
       let rid = roomId
       setLoading(true)
       if (!rid && targetIds?.[0]) {
         rid = await createChatRoom(user?.uid, targetIds)
+        getRoomInfo?.()
       }
       let message = {
         senderPicURL: user?.photoURL,
@@ -57,40 +56,37 @@ export default function ChatInputBox({
         type: type || 'text',
         imageUrl: '',
       }
+
       if (type == 'image') {
         const image = result?.assets?.[0]
         if (image?.uri && result) {
-          console.log('roomId', rid)
           const filePath = `chat_images/${rid}/${image.fileName}`
           const uploadProm = await firebaseImageUpload(result, filePath)
           if (uploadProm) {
             message.imageUrl = uploadProm?.downloadUrl
             message.text = uploadProm.fileName
           }
-          console.log('currentUser', currentUser?.uid)
-          rid &&
-            getChatRoomInfo(rid).then(res => {
-              console.log('res', res)
-              console.log('members', res?.members)
-            })
+          // rid &&
+          //   getChatRoomInfo(rid).then(res => {
+          //     console.log('res', res)
+          //     console.log('members', res?.members)
+          //   })
         } else {
           return // 이미지 없으면 중단
         }
       }
-
       if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
       if (rid) {
         await sendMessage(rid, message as ChatMessage)
-        getRoomId()
       }
     } catch (e) {
       Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')
       console.log('error', e)
     } finally {
       setLoading(false)
+      setText('')
+      Keyboard.dismiss()
     }
-    setText('')
-    Keyboard.dismiss()
   }
 
   return (

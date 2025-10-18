@@ -1,7 +1,4 @@
 import firestore from '@react-native-firebase/firestore'
-import {useSelector} from 'react-redux'
-import store, {type RootState} from '../store/store'
-import {setTimeOffset} from '../store/timeSlice'
 
 /**
  * Firestore 서버 시간(ms)을 반환하는 RN Firebase 전용 함수
@@ -29,17 +26,4 @@ export async function getServerTimeInMillis(): Promise<number> {
     console.error('🔥 RN Firebase 서버 시간 가져오기 실패:', error)
     throw error
   }
-}
-
-export async function initTimeOffset() {
-  const serverTime = await getServerTimeInMillis()
-  const clientTime = Date.now()
-  const offset = serverTime - clientTime
-  store.dispatch(setTimeOffset(offset))
-}
-
-export function useServerNow(): number {
-  //현재 firebase 서버시간을 알려주는 함수임
-  const offset = useSelector((state: RootState) => state.time.offset)
-  return Date.now() + (offset ?? 0)
 }

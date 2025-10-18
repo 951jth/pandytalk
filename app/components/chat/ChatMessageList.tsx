@@ -1,4 +1,3 @@
-import dayjs from 'dayjs'
 import React, {useEffect, useState} from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
@@ -7,10 +6,13 @@ import {
   useChatMessagesPaging,
   useSubscriptionMessage,
 } from '../../hooks/queries/useChatMessageQuery'
-import {getLatestMessageCreatedAtFromSQLite} from '../../services/chatService'
+import {
+  getLatestMessageCreatedAtFromSQLite,
+  getMessagesFromSQLite,
+} from '../../services/chatService'
 import type {ChatListItem, ChatMessage} from '../../types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '../../utils/chat'
-import {formatChatTime} from '../../utils/format'
+import {formatChatTime, formatServerDate} from '../../utils/firebase'
 import ImageViewer from '../common/ImageViewer'
 
 interface Props {
@@ -18,9 +20,15 @@ interface Props {
   userId: string | null | undefined
   roomInfo: ChatListItem | null
   inputComponent?: React.ComponentType<any> | React.ReactElement | null
+  chatType?: ChatListItem['type']
 }
 
-export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
+export default function ChatMessageList({
+  roomId,
+  userId,
+  roomInfo,
+  chatType = 'dm',
+}: Props) {
   const members = roomInfo?.memberInfos ?? []
   const {
     data,
@@ -33,6 +41,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null)
   useSubscriptionMessage(roomId, lastCreatedAt) //채팅방 구독설정
 
+  console.log('members', members)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
@@ -41,8 +50,8 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     const hideProfile = isSameSender(item, nextItem)
     const hideMinute = isSameMinute(item, nextItem)
     const hideDate = isSameDate(item, nextItem)
-    const member = members?.find(mem => mem?.uid === item?.senderId)
-
+    const member = members?.find(mem => mem?.id === item?.senderId)
+    console.log('member', member)
     return (
       <>
         <View
@@ -71,6 +80,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
             </View>
           ) : (
             <>
+              {/* 상대 체팅 */}
               {!hideProfile && (
                 //프로필
                 <View style={styles.frame}>
@@ -112,10 +122,11 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
             </>
           )}
         </View>
+        {/* 날짜 표기 */}
         {!hideDate && (
           <View style={styles.chatDateWrap}>
             <Text style={styles.chatDateText}>
-              {dayjs(item?.createdAt).format('YYYY년 MM월 DD일 dddd')}
+              {formatServerDate(item?.createdAt, 'YYYY년 MM월 DD일 dddd')}
             </Text>
           </View>
         )}
@@ -126,9 +137,13 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   useEffect(() => {
     //가장 마지막 채팅의 최근 날짜로 subscription
     if (!roomId) return
-    getLatestMessageCreatedAtFromSQLite(roomId).then(res =>
-      setLastCreatedAt(res),
-    )
+    getMessagesFromSQLite(roomId).then(res => {
+      console.log('all messages', res)
+    })
+    getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
+      console.log(res)
+      setLastCreatedAt(res)
+    })
   }, [data, roomId])
 
   return (

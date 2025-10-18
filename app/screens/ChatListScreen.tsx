@@ -21,6 +21,7 @@ import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
 import type {ChatListItem} from '../types/chat'
 import {AppRouteParamList} from '../types/navigate'
+import {formatServerDate} from '../utils/firebase'
 
 export default function ChatListScreen() {
   const {
@@ -153,7 +154,9 @@ export default function ChatListScreen() {
                 </Text>
                 <Text style={styles.lastSendTime}>
                   {item?.lastMessage?.createdAt
-                    ? dayjs(Number(item?.lastMessage?.createdAt)).fromNow()
+                    ? dayjs(
+                        formatServerDate(item?.lastMessage?.createdAt),
+                      ).fromNow()
                     : '알 수 없음'}
                 </Text>
                 {!!item?.unreadCount && (
