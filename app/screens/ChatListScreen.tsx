@@ -1,6 +1,5 @@
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
@@ -10,9 +9,8 @@ import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
 import {
-  updateChatLastReadCache,
-  useChatListHeadSubscription,
   useMyChatsInfinite,
+  useSubscribeChatList,
 } from '../hooks/queries/useChatRoomQuery'
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import PressableWrapper from '../components/common/PressableWrapper'
@@ -29,7 +27,6 @@ export default function ChatListScreen() {
     loading: userLoading,
     error,
   } = useAppSelector(state => state.user)
-  const queryClient = useQueryClient()
   const {
     data,
     isLoading,
@@ -38,8 +35,8 @@ export default function ChatListScreen() {
     isFetchingNextPage,
     refetch,
   } = useMyChatsInfinite(user?.uid) as any //채팅방 목록 조회
-
-  useChatListHeadSubscription(user?.uid) //채팅방 데이터 실시간 감지
+  useSubscribeChatList(user?.uid) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
+  // useChatListHeadSubscription(user?.uid) //채팅방 데이터 실시간 감지
 
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
@@ -47,13 +44,19 @@ export default function ChatListScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
   const chats = data?.pages.flatMap((page: any) => page?.chats ?? []) ?? []
-
   const [targetMembers, setTargetMembers] = useState<User[]>([])
-  const chatsWithMemberInfo = chats?.map((chat: ChatListItem) => {
-    const targetId = chat?.members?.find((mId: string) => mId !== user?.uid)
-    const findMember = targetMembers?.find(member => member?.uid == targetId)
-    return {...chat, targetId, findMember}
-  })
+
+  const chatsWithMemberInfo = useMemo(
+    () =>
+      chats?.map((chat: ChatListItem) => {
+        const targetId = chat?.members?.find((mId: string) => mId !== user?.uid)
+        const findMember = targetMembers?.find(
+          member => member?.uid == targetId,
+        )
+        return {...chat, targetId, findMember}
+      }),
+    [chats, targetMembers],
+  )
 
   const memberIds = useMemo(() => {
     if (!chats || !Array.isArray(chats)) return []
@@ -76,7 +79,7 @@ export default function ChatListScreen() {
 
   const moveToChatRoom = (roomId: string, uid: string) => {
     if (!user?.uid) return
-    updateChatLastReadCache(queryClient, roomId, user?.uid)
+    // updateChatLastReadCache(queryClient, roomId, user?.uid)
     navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
   }
 

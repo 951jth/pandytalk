@@ -25,6 +25,7 @@ export const sendNewMessageNotification = onDocumentCreated(
       // 1) 채팅방에서 members 배열 조회 (필요시 groupMembers로 대체)
       const chatDoc = await db.doc(`chats/${chatId}`).get()
       let members = chatDoc.get('members') as string[]
+      const chatType = chatDoc.get('type')
       if (!Array.isArray(members) || members.length < 2) {
         logger.warn(`⚠️ members 필드 오류, chatId=${chatId}`)
         return
@@ -79,6 +80,7 @@ export const sendNewMessageNotification = onDocumentCreated(
           imageUrl: message.imageUrl ?? '',
           createdAt: String(message.createdAt ?? Date.now()),
           pushType: 'chat',
+          chatType,
         },
       }
 

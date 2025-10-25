@@ -25,12 +25,12 @@ import {ActivityIndicator} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 // reset 제거 → navigationRef 불필요
 // import {navigationRef} from './app/components/navigation/RootNavigation'
-import {useFCMSetup} from './app/hooks/useFCM'
-import {useFCMPushHandler} from './app/hooks/useFCMPush'
-// import {initialRouteName} from './app/hooks/useScreens'
 import {safeCall} from '@utils/call'
 import {throttle} from 'lodash'
+import {useFCMSetup} from './app/hooks/useFCM'
+import {useFCMPushHandler} from './app/hooks/useFCMPush'
 import {initChatTables, isMessagesTableExists} from './app/services/chatService'
+import {migrateDatabaseIfNeeded} from './app/services/migrationService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {useAppSelector} from './app/store/reduxHooks'
 import {AppDispatch} from './app/store/store'
@@ -107,11 +107,15 @@ export function RootNavigator(): React.JSX.Element {
     const task = InteractionManager.runAfterInteractions(async () => {
       try {
         const exists = await isMessagesTableExists()
-        if (!exists) initChatTables()
+        console.log(exists)
+        if (!exists) {
+          initChatTables()
+        } else migrateDatabaseIfNeeded()
       } catch (e) {
         console.warn('[sqlite init]', e) // 크래시 방지
       }
     })
+
     return () => task.cancel()
   }, [])
 

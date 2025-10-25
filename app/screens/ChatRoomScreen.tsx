@@ -1,4 +1,4 @@
-import {useFocusEffect, useRoute} from '@react-navigation/native'
+import {useRoute} from '@react-navigation/native'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {ReactNode, useEffect, useState} from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -8,12 +8,7 @@ import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
 import COLORS from '../constants/color'
-import {updateChatLastReadCache} from '../hooks/queries/useChatRoomQuery'
-import {
-  getChatRoomInfo,
-  getDirectMessageRoomId,
-  updateLastRead,
-} from '../services/chatService'
+import {getChatRoomInfo, getDirectMessageRoomId} from '../services/chatService'
 import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
 import type {ChatListItem} from '../types/chat'
@@ -43,21 +38,22 @@ export default function ChatRoomScreen() {
       })
     }
   }
-
+  console.log('roomInfo', roomInfo)
   useEffect(() => {
     getRoomInfo()
   }, [])
 
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        if (currentRid && user?.uid) {
-          updateLastRead(currentRid, user.uid) // ✅ 화면 벗어날 때 실행됨
-          updateChatLastReadCache(queryClient, currentRid, user.uid) //현재 query 캐시갱신
-        }
-      }
-    }, [currentRid, user?.id]),
-  )
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     return () => {
+  //       if (currentRid && user?.uid) {
+  //         console.log('roomInfo', roomInfo)
+  //         updateLastRead(currentRid, user.uid) // ✅ 화면 벗어날 때 실행됨
+  //         updateChatLastReadCache(queryClient, currentRid, user.uid) //현재 query 캐시갱신
+  //       }
+  //     }
+  //   }, [currentRid, user?.id]),
+  // )
 
   return (
     <>

@@ -17,7 +17,11 @@ function useFCMPushHandler() {
         console.log('앱 종료 푸시')
         const data = remoteMessage.data
         console.log(data)
-        navigateToChat(data?.chatId as string, data?.senderName as string)
+        navigateToChat(
+          data?.chatId as string,
+          data?.senderName as string,
+          (data?.chatType as string) || 'dm',
+        )
       }
     })
 
@@ -30,7 +34,11 @@ function useFCMPushHandler() {
         console.log('백그라운드 푸시')
         const data = remoteMessage.data
         console.log(data)
-        navigateToChat(data?.chatId as string, data?.senderName as string)
+        navigateToChat(
+          data?.chatId as string,
+          data?.senderName as string,
+          (data?.chatType as string) || 'dm',
+        )
       }
     })
 

@@ -20,6 +20,7 @@ import type {ChatListItem} from '../types/chat'
 import type {AppRouteParamList} from '../types/navigate'
 
 type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
+
 export default function GroupChatRoomScreen() {
   const route = useRoute<GroupChatRoute>()
   const {data: user} = useAppSelector(data => data?.user)
@@ -58,7 +59,7 @@ export default function GroupChatRoomScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardUtilitiesWrapper useTouchable={false}>
-        <AppHeader title={group?.name} />
+        <AppHeader title={group?.name || '그룹 채팅방'} />
         <ChatMessageList
           roomId={group?.id}
           userId={user?.uid}

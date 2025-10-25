@@ -125,7 +125,6 @@ export const onGroupMembersUpdate = onDocumentUpdated(
   {region: 'asia-northeast3', document: 'groups/{groupId}/members/{memberId}'},
   async event => {
     try {
-      console.log('group member update: ', event)
       const groupId = event.params.groupId as string
       // 1) 현재 멤버 전체 스냅샷 (정합성 우선: 전체 재계산)
       // ✅ isActive === false 인 멤버만 조회 (Admin SDK 체이닝)

@@ -3,13 +3,13 @@ import {
   addDoc,
   collection,
   doc,
-  getCountFromServer,
   getDoc,
   getDocs,
   getFirestore,
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   startAfter,
   Timestamp,
@@ -22,7 +22,8 @@ import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../store/sqlite'
 import type {User} from '../types/auth'
 import type {ChatListItem, ChatMessage, ServerTime} from '../types/chat'
-import {toRNFTimestamp} from '../utils/firebase'
+import {exec} from '../utils/data'
+import {toMillisFromServerTime, toRNFTimestamp} from '../utils/firebase'
 import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
@@ -171,73 +172,72 @@ export const getChatMessages = async (roomId: string) => {
   }
 }
 
-/**
- * 실시간 채팅 리스너 설정
- * @param roomId 채팅방 ID
- * @param onMessage 콜백 (새 메시지 수신 시)
- * @returns unsubscribe 함수 (리스너 해제용)
- */
-// 비동기 함수로 정의, 미사용
-export const subscribeToMessages = async (
-  roomId: string,
-  lastCreatedAt: number | null,
-  onMessage: (message: any) => void,
-) => {
-  const lastCreatedAtRef = useRef(lastCreatedAt || null)
-  const db = getFirestore(getApp())
-  const messagesRef = collection(db, 'chats', roomId, 'messages')
-
-  // const lastCreatedAt = await getLatestMessageCreatedAtFromSQLite(roomId)
-  const q = lastCreatedAt
-    ? query(
-        messagesRef,
-        orderBy('createdAt', 'desc'),
-        where('createdAt', '>', Timestamp.fromMillis(lastCreatedAt)),
-      )
-    : query(messagesRef, orderBy('createdAt', 'desc'))
-  console.log('query', q)
-  const unsubscribe = onSnapshot(q, snapshot => {
-    console.log('lastCreatedAt', lastCreatedAt)
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-    onMessage(messages)
-  })
-
-  return unsubscribe // ✅ 진짜 해제 함수 리턴
-}
-
 //채팅 보내기
 export const sendMessage = async (
   roomId: string,
   message: ChatMessage,
 ): Promise<void> => {
-  try {
-    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-    const chatRoomRef = doc(firestore, 'chats', roomId)
-    // Alert.alert('시간', JSON.stringify(FieldValue.serverTimestamp()))
+  const chatRef = doc(firestore, 'chats', roomId)
+  const msgRef = doc(collection(firestore, `chats/${roomId}/messages`)) // 새 메시지 문서 ID 미리 생성
+
+  //runTransaction이란? Firestore의 원자적(atomic) 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
+  //   무엇을 보장하나요?
+  // 원자성: 트랜잭션 내 쓰기는 전부 성공하거나 전부 실패.
+  // 일관성/재시도: 다른 클라이언트가 중간에 값을 바꾸면 SDK가 자동으로 다시 읽고 재시도.
+  // 경합 안전: 시퀀스 증가, 재고 차감, 포인트 적립 같이 “읽은 값 기반 계산”에 적합.
+
+  // 언제 쓰나요? (vs writeBatch)
+  // 트랜잭션: “문서를 읽고 → 그 값으로 계산해서 → 쓴다”가 필요할 때.
+
+  // 배치(writeBatch): “그냥 여러 문서를 한 번에 쓴다”(읽고 계산 X)일 때.
+
+  // 사용 규칙 & 팁
+
+  // 트랜잭션 안에서는 tx.get(docRef)로 ‘문서’만 읽을 수 있음(쿼리 읽기 X).
+
+  // 사이드 이펙트(네트워크 호출/알림 전송 등)는 트랜잭션 밖에서.
+
+  // 실패 시 SDK가 재시도하므로, 순수 계산(idempotent) 로 작성.
+
+  // 한 트랜잭션당 최대 500개 쓰기 권장(일반 배치와 동일 상한).
+
+  // 비용: 읽기/쓰기는 일반과 동일하게 과금되고, 재시도하면 그만큼 읽기/쓰기가 더 발생.
+  await runTransaction(firestore, async tx => {
+    // 1) 현재 lastSeq 읽고 +1
+    const chatSnap = await tx.get(chatRef)
+    const prev = (chatSnap.get('lastSeq') as number) ?? 0
+    const next = prev + 1
+    const now = serverTimestamp()
+
+    // 2) 메시지 문서 작성 (seq 포함)
     const newMessage = {
+      seq: next,
       senderId: message.senderId,
       text: message.text ?? '',
       type: message.type,
       imageUrl: message.imageUrl ?? '',
-      createdAt: serverTimestamp(),
-      senderPicURL: message?.senderPicURL,
-      senderName: message?.senderName,
+      createdAt: now, // 서버시간
+      senderPicURL: message?.senderPicURL ?? null,
+      senderName: message?.senderName ?? null,
     }
+    tx.set(msgRef, newMessage)
 
-    // 1. 메시지 추가
-    await addDoc(messagesRef, newMessage)
-
-    // 2. 마지막 메시지 갱신
-    await updateDoc(chatRoomRef, {
-      lastMessage: newMessage,
+    // 3) 채팅방 문서 갱신 (lastSeq/lastMessage/lastMessageAt)
+    //    방 문서가 없을 가능성이 있으면 update 대신 set(..., {merge:true}) 사용
+    tx.update(chatRef, {
+      lastSeq: next,
+      lastMessageAt: now,
+      lastMessage: {
+        // 리스트 미리보기용 필드만 넣는 걸 권장 (전체 message와 동일하게 둘 수도 있음)
+        seq: next,
+        text: newMessage.text,
+        senderId: newMessage.senderId,
+        createdAt: now,
+        type: newMessage.type,
+        imageUrl: newMessage.imageUrl,
+      },
     })
-  } catch (error) {
-    console.error('메시지 전송 실패:', error)
-    throw error
-  }
+  })
 }
 
 //채팅방 생성
@@ -292,30 +292,23 @@ export const updateChatRoom = async (
   }
 }
 
-//유저 채팅 마지막 읽음 시간 갱신
-export const updateLastRead = async (roomId: string, userId: string) => {
-  try {
-    const chatDocRef = doc(firestore, 'chats', roomId)
-    await updateDoc(chatDocRef, {
-      [`lastReadTimestamps.${userId}`]: serverTimestamp(), // ✅ number(ms)
-    })
-  } catch (e) {
-    console.error('채팅방 정보 업데이트 실패:', e)
-  }
-}
-
-//안읽은 메세지 수 조회
-export const getUnreadCount = async (
+export async function updateLastRead(
   roomId: string,
   userId: string,
-  lastRead?: number,
-) => {
-  const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-
-  const q = query(messagesRef, where('createdAt', '>', lastRead ?? 0))
-
-  const snapshot = await getCountFromServer(q) // ✅ 빠른 count-only 쿼리
-  return snapshot.data().count
+  seenSeq: number, // 마지막으로 보인 메시지의 seq (모르면 생략)
+) {
+  try {
+    const chatRef = doc(firestore, 'chats', roomId)
+    //현재 채팅방에서 가장 높은 시퀀스 계산하기.
+    await runTransaction(firestore, async tx => {
+      tx.update(chatRef, {
+        [`lastReadSeqs.${userId}`]: seenSeq,
+        [`lastReadTimestamps.${userId}`]: serverTimestamp(),
+      })
+    })
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 export const saveMessagesToSQLite = async (
@@ -325,19 +318,22 @@ export const saveMessagesToSQLite = async (
   return new Promise((resolve, reject) => {
     db.transaction(
       (tx: Transaction) => {
+        console.log('roomID', roomId)
+        console.log('messages', messages)
         messages.forEach(msg => {
           //동일한 아이디 기준으로 데이터를 대체하고, 아닌경우 추가하는 쿼리임
           tx.executeSql(
-            `INSERT OR REPLACE INTO messages (id, roomId, text, senderId, createdAt, type, imageUrl)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT OR REPLACE INTO messages (id, roomId, text, senderId, createdAt, type, imageUrl, seq)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               msg.id,
               roomId,
               msg.text,
               msg.senderId,
-              msg.createdAt,
+              toMillisFromServerTime(msg.createdAt),
               msg.type,
               msg.imageUrl ?? '',
+              msg.seq ?? 1,
             ],
           )
         })
@@ -369,6 +365,7 @@ export const getMessagesFromSQLiteByPaging = async (
         params,
         (_, result) => {
           const messages: ChatMessage[] = []
+          console.log('messages', messages)
           for (let i = 0; i < result.rows.length; i++) {
             messages.push(result.rows.item(i))
           }
@@ -428,7 +425,8 @@ export const initChatTables = () => {
         senderId TEXT,
         createdAt INTEGER,
         type TEXT,
-        imageUrl TEXT
+        imageUrl TEXT,
+        seq INTEGER
       );`,
       [],
       () => console.log('✅ messages table created'),
@@ -436,6 +434,43 @@ export const initChatTables = () => {
         console.error('❌ Failed to create messages table', error)
         return true
       },
+    )
+  })
+}
+
+export async function resetMessagesSchema(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      tx => {
+        exec(tx, `DROP TABLE IF EXISTS messages`)
+        exec(
+          tx,
+          `
+          CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
+            roomId TEXT NOT NULL,
+            text TEXT,
+            senderId TEXT NOT NULL,
+            createdAt INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            imageUrl TEXT,
+            senderPicURL TEXT,
+            senderName TEXT,
+            seq INTEGER
+          )
+        `,
+        )
+        exec(
+          tx,
+          `CREATE INDEX IF NOT EXISTS idx_messages_room_created ON messages (roomId, createdAt DESC)`,
+        )
+        exec(
+          tx,
+          `CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC)`,
+        )
+      },
+      err => reject(err),
+      () => resolve(),
     )
   })
 }
@@ -448,6 +483,7 @@ export const isMessagesTableExists = async (): Promise<boolean> => {
         `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
         [],
         (_, result) => {
+          console.log(result)
           const exists = result.rows.length > 0
           resolve(exists)
         },
@@ -530,6 +566,7 @@ export const clearMessagesFromSQLite = (roomId: string): Promise<void> => {
         )
       },
       error => {
+        console.error('error', error)
         reject(error) // 트랜잭션 자체 실패 시
       },
     )
@@ -539,17 +576,76 @@ export const clearMessagesFromSQLite = (roomId: string): Promise<void> => {
 //모든 sqlite 초기화
 export const clearAllMessagesFromSQLite = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    db.transaction(tx => {
-      tx.executeSql(
-        'DELETE FROM messages', // 모든 메시지 삭제
-        [],
-        () => resolve(),
-        (_, error) => {
-          console.log('SQLite delete error:', error)
-          reject(error)
-          return false
-        },
-      )
-    })
+    db.transaction(
+      (tx: Transaction) => {
+        tx.executeSql(
+          'DELETE FROM messages', // 모든 메시지 삭제
+          [],
+          () => resolve(),
+          (_, error) => {
+            console.log('SQLite delete error:', error)
+            reject(error)
+            return false
+          },
+        )
+        exec(tx, `DROP TABLE`)
+      },
+      error => {
+        console.error('error', error)
+        reject(error) // 트랜잭션 자체 실패 시
+      },
+    )
   })
 }
+
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ미사용ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+/**
+ * 실시간 채팅 리스너 설정
+ * @param roomId 채팅방 ID
+ * @param onMessage 콜백 (새 메시지 수신 시)
+ * @returns unsubscribe 함수 (리스너 해제용)
+ */
+// 비동기 함수로 정의, 미사용
+export const subscribeToMessages = async (
+  roomId: string,
+  lastCreatedAt: number | null,
+  onMessage: (message: any) => void,
+) => {
+  const lastCreatedAtRef = useRef(lastCreatedAt || null)
+  const db = getFirestore(getApp())
+  const messagesRef = collection(db, 'chats', roomId, 'messages')
+
+  // const lastCreatedAt = await getLatestMessageCreatedAtFromSQLite(roomId)
+  const q = lastCreatedAt
+    ? query(
+        messagesRef,
+        orderBy('createdAt', 'desc'),
+        where('createdAt', '>', Timestamp.fromMillis(lastCreatedAt)),
+      )
+    : query(messagesRef, orderBy('createdAt', 'desc'))
+  console.log('query', q)
+  const unsubscribe = onSnapshot(q, snapshot => {
+    console.log('lastCreatedAt', lastCreatedAt)
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    onMessage(messages)
+  })
+
+  return unsubscribe // ✅ 진짜 해제 함수 리턴
+}
+
+//안읽은 메세지 수 조회 현재 seq구조로 변경
+// export const getUnreadCount = async (
+//   roomId: string,
+//   userId: string,
+//   lastRead?: number,
+// ) => {
+//   const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+
+//   const q = query(messagesRef, where('createdAt', '>', lastRead ?? 0))
+
+//   const snapshot = await getCountFromServer(q) // ✅ 빠른 count-only 쿼리
+//   return snapshot.data().count
+// }

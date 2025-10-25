@@ -29,7 +29,6 @@ export default function ChatInputBox({
   const currentUser = authInstance.currentUser
   const [loading, setLoading] = useState<boolean>(false)
   const queryClient = useQueryClient()
-  console.log('roomId', roomId)
 
   // const onNewChatRoom = () => {
   //   createChatRoom()

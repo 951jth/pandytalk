@@ -1,4 +1,4 @@
-import type {ChatMessage} from '../types/chat'
+import type {ChatListItem, ChatMessage} from '../types/chat'
 import {formatServerDate, toMillisFromServerTime} from './firebase'
 
 export const isSameSender = (
@@ -14,17 +14,20 @@ export const isSameMinute = (
   prev: ChatMessage | null,
   current: ChatMessage | null,
 ): boolean => {
-  if (!prev || !prev?.createdAt || !current?.createdAt) return false
+  const pm = toMillisFromServerTime(prev?.createdAt)
+  const cm = toMillisFromServerTime(current?.createdAt)
+  if (pm == null || cm == null) return false
 
-  const prevDate = new Date(Number(prev.createdAt))
-  const currentDate = new Date(Number(current.createdAt))
+  // 서버는 UTC로 타임스탬프를 확정하므로 UTC 컴포넌트로 비교
+  const p = new Date(pm)
+  const c = new Date(cm)
 
   return (
-    prevDate.getFullYear() === currentDate.getFullYear() &&
-    prevDate.getMonth() === currentDate.getMonth() &&
-    prevDate.getDate() === currentDate.getDate() &&
-    prevDate.getHours() === currentDate.getHours() &&
-    prevDate.getMinutes() === currentDate.getMinutes()
+    p.getUTCFullYear() === c.getUTCFullYear() &&
+    p.getUTCMonth() === c.getUTCMonth() &&
+    p.getUTCDate() === c.getUTCDate() &&
+    p.getUTCHours() === c.getUTCHours() &&
+    p.getUTCMinutes() === c.getUTCMinutes()
   )
 }
 
@@ -58,11 +61,18 @@ export function mergeMessages(
   ) // 최신순 정렬
 }
 
-// export function mergeMessages(
-//   existing: ChatMessage[],
-//   incoming: ChatMessage[],
-// ): ChatMessage[] {
-//   const map = new Map<string, ChatMessage>()
-//   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
-//   return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt) // 최신순 정렬
-// }
+export const compareChat = (a: ChatListItem, b: ChatListItem) => {
+  const aLast = toMillisFromServerTime(a.lastMessage?.createdAt)
+  const bLast = toMillisFromServerTime(b.lastMessage?.createdAt)
+  if (aLast !== bLast) return bLast - aLast // desc
+  const aCreated = toMillisFromServerTime(a.createdAt)
+  const bCreated = toMillisFromServerTime(b.createdAt)
+  return bCreated - aCreated // desc
+}
+
+export const getUnreadCount = (data: ChatListItem, userId: string) => {
+  const lastSeq: number = data?.lastSeq ?? 0
+  const myReadSeq: number = data?.lastReadSeqs?.[userId] ?? 0
+  const unreadCount = Math.max(0, lastSeq - myReadSeq)
+  return unreadCount
+}

@@ -16,11 +16,13 @@ import {
 import {
   useInfiniteQuery,
   useQueryClient,
+  type InfiniteData,
   type QueryClient,
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
 import type {ChatListItem, PushMessage} from '../../types/chat'
 import type {FsSnapshot} from '../../types/firebase'
+import {compareChat, getUnreadCount} from '../../utils/chat'
 import {sortKey} from '../../utils/firebase'
 import {useDebouncedCallback} from '../useDebounceCallback'
 
@@ -33,157 +35,249 @@ interface pageType {
 const firestore = getFirestore(getApp())
 const PAGE_SIZE = 20
 
-async function setUnreadMembersByChat(
-  docs: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[],
-  userId: string | null | undefined,
-) {
-  return await Promise.all(
-    docs.map(async doc => {
-      const data = doc.data()
-      const roomId = doc.id
-      const defaultObj = {
-        id: roomId,
-        type: data.type,
-        createdAt: data.createdAt,
-        name: data.name,
-        image: data.image,
-        lastMessage: data.lastMessage,
-        members: data?.members ?? [],
-        lastReadTimestamps: data.lastReadTimestamps ?? null,
-      }
-      // members 필드가 없거나 배열이 아니면 기본 데이터만 리턴
-      if (!data.members || !Array.isArray(data.members)) {
-        return {
-          ...defaultObj,
-          unreadCount: 0,
-        }
-      }
-
-      const lastReadAt = doc.data()?.lastReadTimestamps?.[userId || ''] ?? 0
-
-      const messagesRef = collection(firestore, `chats/${roomId}/messages`)
-      const unreadQ = query(
-        messagesRef,
-        where('createdAt', '>', lastReadAt),
-        where('senderId', '!=', userId),
-      )
-
-      let unreadCount = 0
-      try {
-        const unreadSnap = await getCountFromServer(unreadQ)
-        unreadCount = unreadSnap.data().count
-      } catch (e) {
-        console.warn(`unreadCount fetch failed in room ${roomId}`, e)
-      }
-
-      return {
-        ...defaultObj,
-        unreadCount,
-      }
-    }),
-  )
-}
-
 //내 채팅방 조회
 export const useMyChatsInfinite = (userId: string | null | undefined) => {
   return useInfiniteQuery({
-    enabled: !!userId, // userId 없을 때 쿼리 비활성화
-    queryKey: ['chats', userId],
-    queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
-      const chatsRef = collection(firestore, 'chats')
-      try {
-        let q = query(
-          chatsRef,
-          where('members', 'array-contains', userId),
-          orderBy('lastMessage.createdAt', 'desc'), //가장 마지막 메세지의 생성시간
-          orderBy('createdAt', 'desc'), //생성 날짜 기준
-          limit(PAGE_SIZE),
-        )
-
-        if (pageParam) {
-          q = query(q, startAfter(pageParam))
-        }
-
-        const snapshot = await getDocs(q)
-
-        const chats = await setUnreadMembersByChat(snapshot?.docs, userId)
-
+    enabled: !!userId,
+    queryKey: ['chats', 'dm', userId],
+    initialPageParam: undefined as FsSnapshot | undefined,
+    queryFn: async ({pageParam}) => {
+      if (!userId) {
         return {
-          chats,
-          lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
-          isLastPage: snapshot?.docs?.length < PAGE_SIZE,
-        }
-      } catch (e) {
-        console.error(e)
-        return {
-          chats: [],
+          chats: [] as ChatListItem[],
           lastVisible: null,
           isLastPage: true,
-        } // 또는 fallback
+        }
+      }
+
+      const chatsRef = collection(firestore, 'chats')
+      // 최신 메시지 기준 정렬 + 생성일 보조 정렬 (기존과 동일)
+      let q = query(
+        chatsRef,
+        where('members', 'array-contains', userId),
+        where('type', '==', 'dm'),
+        orderBy('lastMessage.createdAt', 'desc'),
+        orderBy('createdAt', 'desc'),
+        limit(PAGE_SIZE),
+      )
+
+      if (pageParam) {
+        // 여러 orderBy가 있어도 snapshot 커서 하나로 OK
+        q = query(q, startAfter(pageParam))
+      }
+
+      const snapshot = await getDocs(q)
+
+      const chats: ChatListItem[] = snapshot.docs.map(d => {
+        const data = d.data() as any
+        const unreadCount = getUnreadCount(data, userId)
+
+        return {
+          id: d.id,
+          type: data.type,
+          createdAt: data.createdAt,
+          lastMessage: data.lastMessage,
+          lastSeq: data?.lastSeq ?? 0,
+          members: data.members ?? [],
+          lastReadSeqs: data.lastReadSeqs ?? undefined,
+          lastReadTimestamps: data.lastReadTimestamps ?? undefined,
+          unreadCount,
+        }
+      })
+
+      return {
+        chats,
+        lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
+        isLastPage: snapshot.docs.length < PAGE_SIZE,
       }
     },
     getNextPageParam: lastPage =>
-      lastPage?.isLastPage ? undefined : lastPage?.lastVisible,
-    initialPageParam: undefined,
+      lastPage?.isLastPage
+        ? undefined
+        : (lastPage?.lastVisible as FsSnapshot | undefined),
   })
 }
 
-/** 화면 마운트 시 1페이지만 실시간 구독 */
+//채팅방 구독, 안읽음 메세지도 같이 카운트
 /**
- * 채팅방 목록 헤드(첫 페이지)에 스냅샷 구독을 걸고,
- * 변경이 감지되면 ['chats', userId] 쿼리를 invalidate해서 재조회합니다.
+ * 리스트 1페이지만 onSnapshot으로 구독.
+ * 동시에 collectionGroup('members') 에서 내 멤버십을 한 번에 구독.
+ * → unreadCount = max(0, lastSeq - lastReadSeq)
  */
-export function useChatListHeadSubscription(userId: string | null | undefined) {
+export function useSubscribeChatList(uid?: string | null) {
+  const chatsRef = collection(firestore, 'chats')
   const queryClient = useQueryClient()
 
-  //채팅방 갱신이 여러번되더라도 200초동안 반응이 없을떄 다시 조회함
-  const invalidate = useDebouncedCallback((shouldRefetch: Boolean) => {
-    if (!userId) return
-    //invalidateQueries:
-    //  해당하는 캐시 데이터를 “더 이상 최신이 아님” 상태로 표시하는 옵션
-    queryClient.refetchQueries({
-      queryKey: ['chats', userId],
-      type: 'active',
-      // true면 첫 페이지만 리팻칭 하는 옵션
-      exact: !shouldRefetch,
-    })
-  }, 200)
+  // 공통: 평탄화 → 정렬 → 페이지 재쪼개기
+  const rebuildPages = (
+    flat: ChatListItem[],
+    old: InfiniteData<pageType>,
+  ): InfiniteData<pageType> => {
+    flat.sort(compareChat)
+    const newPages: pageType[] = []
+    for (let i = 0; i < flat.length; i += PAGE_SIZE) {
+      const slice = flat.slice(i, i + PAGE_SIZE)
+      newPages.push({
+        chats: slice,
+        lastVisible:
+          old.pages[Math.min(newPages.length, old.pages.length - 1)]
+            ?.lastVisible ?? null,
+        isLastPage: i + PAGE_SIZE >= flat.length,
+      })
+    }
+    return {...old, pages: newPages.length ? newPages : old.pages}
+  }
+
+  /**
+   * ✅ invalidate(action) 설계
+   * - {type:'full'}                         : 전체 refetch (원하면 사용)
+   * - {type:'patch', changes}               : modified만 캐시 패치
+   * - {type:'add', docs}                    : added 문서 캐시 삽입
+   * - {type:'remove', ids}                  : removed 문서 캐시 제거
+   */
+  const invalidate = useDebouncedCallback(
+    (
+      action:
+        | {type: 'full'}
+        | {
+            type: 'patch'
+            changes: FirebaseFirestoreTypes.DocumentChange[]
+          }
+        | {
+            type: 'add'
+            docs: FirebaseFirestoreTypes.DocumentChange[]
+          }
+        | {
+            type: 'remove'
+            ids: string[]
+          },
+    ) => {
+      if (!uid) return
+      if (action.type === 'full') {
+        // 필요 시 전체 재조회(프로젝트 정책에 맞게 선택)
+        // refetch?.()
+        // queryClient.invalidateQueries({ queryKey: ['chats','dm',uid], refetchType: 'active' as any })
+        return
+      }
+
+      // 공통 캐시 갱신 함수
+      // React Query 캐시(무한쿼리)를 “즉시 수정”하기 위한 공용 래퍼
+      const patchCache = (
+        mutator: (
+          flat: ChatListItem[],
+          old: InfiniteData<pageType>,
+        ) => InfiniteData<pageType>,
+      ) => {
+        // flat은 리스트 조작(추가·삭제·정렬)을 한 번에 처리한 값 (1차원 배열)
+        // old는 페이지 메타데이터(lastVisible, isLastPage, 그리고 필요 시 pageParams)를 참고하거나,
+        // 결과를 다시 InfiniteData 구조로 되돌리기 위해 필요합니다.
+        queryClient.setQueriesData<InfiniteData<pageType>>(
+          {queryKey: ['chats', 'dm', uid], exact: false},
+          old => {
+            if (!old) return old
+            const flat: ChatListItem[] = old.pages.flatMap(p => p.chats)
+            return mutator(flat, old)
+          },
+        )
+      }
+
+      if (action.type === 'patch') {
+        const modified = action.changes.filter(c => c.type === 'modified')
+        if (modified.length === 0) return
+        patchCache((flat, old) => {
+          for (const ch of modified) {
+            const id = ch.doc.id
+            const idx = flat.findIndex(x => x.id === id)
+            const data = ch.doc.data() as ChatListItem
+            const fetchData = {
+              ...data,
+              unreadCount: getUnreadCount(data, uid),
+            }
+            if (idx >= 0) flat[idx] = {...flat[idx], ...fetchData, id}
+            else flat.push({...fetchData, id}) // 안전장치
+          }
+          return rebuildPages(flat, old)
+        })
+        return
+      }
+
+      if (action.type === 'add') {
+        if (!action.docs?.length) return
+        patchCache((flat, old) => {
+          for (const ch of action.docs) {
+            const id = ch.doc.id
+            if (flat.some(x => x.id === id)) continue
+            const data = ch.doc.data() as ChatListItem
+            const fetchData = {
+              ...data,
+              unrunreadCount: getUnreadCount(data, uid),
+            }
+            flat.push({...fetchData, id})
+          }
+          return rebuildPages(flat, old)
+        })
+        return
+      }
+
+      if (action.type === 'remove') {
+        if (!action.ids?.length) return
+        patchCache((flat, old) => {
+          const next = flat.filter(x => !action.ids.includes(x.id))
+          return rebuildPages(next, old)
+        })
+        return
+      }
+    },
+    200,
+  )
 
   useEffect(() => {
-    if (!userId) return
+    if (!uid) return
 
-    const chatsRef = collection(firestore, 'chats')
-    // 첫 페이지 기준으로 구독 — 정렬/조건은 useMyChatsInfinite의 queryFn과 동일하게
     const q = query(
       chatsRef,
-      where('members', 'array-contains', userId),
+      where('type', '==', 'dm'),
+      where('members', 'array-contains', uid),
       orderBy('lastMessage.createdAt', 'desc'),
       orderBy('createdAt', 'desc'),
       limit(PAGE_SIZE),
     )
 
+    let isInitial = true
     const unsub = onSnapshot(
       q,
       snap => {
-        // 변경이 실제로 있었을 때만 invalidate
+        if (isInitial) {
+          isInitial = false
+          return // 초기 발행은 refetch 생략
+        }
         const changes = snap.docChanges()
         if (changes.length === 0) return
-        const shouldRefetch = changes.some(c =>
-          ['added', 'removed'].includes(c.type),
-        ) //채팅방에 제거되거나 추가됫다고 감지한 경우에 모든 페이지를 조회하도록
-        //아닌경우 첫페이지만 갱신
 
-        invalidate(shouldRefetch)
+        const added = changes.filter(c => c.type === 'added')
+        const removed = changes.filter(c => c.type === 'removed')
+        const modified = changes.filter(c => c.type === 'modified')
+        // ➕ 추가 즉시 반영
+        if (added.length) {
+          invalidate({type: 'add', docs: added})
+        }
+        // ➖ 제거 즉시 반영
+        if (removed.length) {
+          invalidate({type: 'remove', ids: removed.map(r => r.doc.id)})
+        }
+        // 🔧 수정 즉시 반영
+        if (modified.length) {
+          invalidate({type: 'patch', changes: modified})
+        }
       },
       error => {
-        // 스냅샷 에러 시에도 안전하게 한 번 invalidate(네트워크 복구 후 재조회)
         console.error('[chat head snapshot] error:', error)
-        invalidate(false)
+        // 필요 시: invalidate({ type: 'full' })
       },
     )
 
     return () => unsub()
-  }, [userId, queryClient, invalidate])
+  }, [uid])
 }
 
 //현재 채팅방의 목록 및 최신데이터를 갱신하면 함수임
@@ -275,4 +369,115 @@ export function updateChatLastReadCache(
     return {...page, chats}
   })
   queryClient.setQueryData(queryKey, {...prev, pages: newPages ?? []})
+}
+
+// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 아래는 현재 미사용 함수들ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+/** 화면 마운트 시 1페이지만 실시간 구독 */
+/**
+ * 채팅방 목록 헤드(첫 페이지)에 스냅샷 구독을 걸고,
+ * 변경이 감지되면 ['chats', userId] 쿼리를 invalidate해서 재조회합니다. (현재 미사용)
+ */
+export function useChatListHeadSubscription(userId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  //채팅방 갱신이 여러번되더라도 200초동안 반응이 없을떄 다시 조회함
+  const invalidate = useDebouncedCallback((shouldRefetch: Boolean) => {
+    if (!userId) return
+    //invalidateQueries:
+    //  해당하는 캐시 데이터를 “더 이상 최신이 아님” 상태로 표시하는 옵션
+    queryClient.refetchQueries({
+      queryKey: ['chats', userId],
+      type: 'active',
+      // true면 첫 페이지만 리팻칭 하는 옵션
+      exact: !shouldRefetch,
+    })
+  }, 200)
+
+  useEffect(() => {
+    if (!userId) return
+
+    const chatsRef = collection(firestore, 'chats')
+    // 첫 페이지 기준으로 구독 — 정렬/조건은 useMyChatsInfinite의 queryFn과 동일하게
+    const q = query(
+      chatsRef,
+      where('type', '==', 'dm'),
+      where('members', 'array-contains', userId),
+      orderBy('lastMessage.createdAt', 'desc'),
+      orderBy('createdAt', 'desc'),
+      limit(PAGE_SIZE),
+    )
+
+    const unsub = onSnapshot(
+      q,
+      snap => {
+        // 변경이 실제로 있었을 때만 invalidate
+        const changes = snap.docChanges()
+        if (changes.length === 0) return
+        const shouldRefetch = changes.some(c =>
+          ['added', 'removed'].includes(c.type),
+        ) //채팅방에 제거되거나 추가됫다고 감지한 경우에 모든 페이지를 조회하도록
+        //아닌경우 첫페이지만 갱신
+
+        invalidate(shouldRefetch)
+      },
+      error => {
+        // 스냅샷 에러 시에도 안전하게 한 번 invalidate(네트워크 복구 후 재조회)
+        console.error('[chat head snapshot] error:', error)
+        invalidate(false)
+      },
+    )
+
+    return () => unsub()
+  }, [userId, queryClient, invalidate])
+}
+
+async function setUnreadMembersByChat(
+  docs: FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>[],
+  userId: string | null | undefined,
+) {
+  return await Promise.all(
+    docs.map(async doc => {
+      const data = doc.data()
+      const roomId = doc.id
+      const defaultObj = {
+        id: roomId,
+        type: data.type,
+        createdAt: data.createdAt,
+        name: data.name,
+        image: data.image,
+        lastMessage: data.lastMessage,
+        members: data?.members ?? [],
+        lastReadTimestamps: data.lastReadTimestamps ?? null,
+      }
+      // members 필드가 없거나 배열이 아니면 기본 데이터만 리턴
+      if (!data.members || !Array.isArray(data.members)) {
+        return {
+          ...defaultObj,
+          unreadCount: 0,
+        }
+      }
+
+      const lastReadAt = doc.data()?.lastReadTimestamps?.[userId || ''] ?? 0
+
+      const messagesRef = collection(firestore, `chats/${roomId}/messages`)
+      const unreadQ = query(
+        messagesRef,
+        where('createdAt', '>', lastReadAt),
+        where('senderId', '!=', userId),
+      )
+
+      let unreadCount = 0
+      try {
+        const unreadSnap = await getCountFromServer(unreadQ)
+        unreadCount = unreadSnap.data().count
+      } catch (e) {
+        console.warn(`unreadCount fetch failed in room ${roomId}`, e)
+      }
+
+      return {
+        ...defaultObj,
+        unreadCount,
+      }
+    }),
+  )
 }

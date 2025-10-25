@@ -94,3 +94,19 @@ export function validationCheckByItems(
   //   );
   return errorValues
 }
+
+// 공용 exec 유틸 (Promise 래핑)
+export function exec(tx: any, sql: string, params: any[] = []) {
+  return new Promise<void>((resolve, reject) => {
+    tx.executeSql(
+      sql,
+      params,
+      () => resolve(),
+      (_: any, err: any) => {
+        console.log('[SQLite] exec error:', err, 'SQL:', sql)
+        reject(err)
+        return false
+      },
+    )
+  })
+}

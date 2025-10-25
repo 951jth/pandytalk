@@ -87,6 +87,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           ms, //pageParam은 여기서 마지막 읽은 날짜임
           PAGE_SIZE,
         )) as ChatMessage[]
+        console.log('localMessages', localMessages)
         if (localMessages?.length || 0 < PAGE_SIZE) {
           const ts = toRNFTimestamp(pageParam)
           // CASE 1. 로컬에 없으면 Firestore에서 가져오기
@@ -106,6 +107,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
                 ...doc.data(),
               }) as ChatMessage,
           )
+          console.log('result', result)
           //데이터를 조회할떄는, createdAt은 number로 조회함
           const serverMessages = result?.map(e => ({
             ...e,
@@ -245,6 +247,7 @@ export const useSubscriptionMessage = (
   }, [roomId, lastCreatedAt])
 }
 
+//ㅡㅡㅡㅡㅡ아래는 안쓰는 함수들ㅡㅡㅡㅡㅡㅡ
 // 채팅방 데이터 최신화 (현재 snapshot으로 대체함 안씀)
 export const useSyncUnreadMessages = (
   roomId: string | null,

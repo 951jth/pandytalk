@@ -13,6 +13,16 @@ export interface ChatMessage {
   // createdAt: ServerTime | number
   senderPicURL?: string
   senderName?: string
+  seq?: number
+}
+
+export interface ChatMemberDoc {
+  uid: string // 문서 ID와 동일하게 두되, 필드에도 보관(쿼리용)
+  role?: 'ADMIN' | 'MEMBER'
+  joinedAt?: FirebaseFirestoreTypes.Timestamp | null
+  lastReadSeq: number
+  lastReadAt?: FirebaseFirestoreTypes.Timestamp | null
+  mute?: boolean
 }
 
 export interface PushMessage extends ChatMessage {
@@ -21,7 +31,7 @@ export interface PushMessage extends ChatMessage {
 }
 
 export interface ChatListItem {
-  id?: string
+  id: string
   type: 'dm' | 'group'
   // createdAt?: number
   createdAt: ServerTime
@@ -29,9 +39,12 @@ export interface ChatListItem {
   name?: string // 그룹일 경우만
   image?: string // 그룹일 경우만
   lastMessage?: ChatMessage
+  lastMessageAt?: ServerTime
   memberInfos?: User[] | null
   lastReadTimestamps?: Record<string, number | null> | null
+  lastReadSeqs?: Record<string, number | null>
   unreadCount?: number | null
   chatId?: string
   groupId?: string
+  lastSeq?: number
 }

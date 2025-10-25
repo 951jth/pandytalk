@@ -1,4 +1,5 @@
-import React, {useEffect, useState} from 'react'
+import {useFocusEffect} from '@react-navigation/native'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
@@ -9,6 +10,7 @@ import {
 import {
   getLatestMessageCreatedAtFromSQLite,
   getMessagesFromSQLite,
+  updateLastRead,
 } from '../../services/chatService'
 import type {ChatListItem, ChatMessage} from '../../types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '../../utils/chat'
@@ -39,10 +41,20 @@ export default function ChatMessageList({
     resetChatMessages,
   } = useChatMessagesPaging(roomId)
   const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null)
-  useSubscriptionMessage(roomId, lastCreatedAt) //채팅방 구독설정
-
-  console.log('members', members)
+  console.log('data', data)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
+  useSubscriptionMessage(roomId, lastCreatedAt) //채팅방 구독설정
+  // 포커스 이벤트용 참조값.
+  const roomInfoRef = useRef(roomInfo)
+  const messagesRef = useRef(messages)
+  // 최신값 유지
+  useEffect(() => {
+    roomInfoRef.current = roomInfo
+  }, [roomInfo])
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
   const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
     const isMine = item?.senderId === userId
     const nextItem = messages?.[index + 1] ?? null
@@ -51,7 +63,6 @@ export default function ChatMessageList({
     const hideMinute = isSameMinute(item, nextItem)
     const hideDate = isSameDate(item, nextItem)
     const member = members?.find(mem => mem?.id === item?.senderId)
-    console.log('member', member)
     return (
       <>
         <View
@@ -134,6 +145,23 @@ export default function ChatMessageList({
     )
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        if (userId && roomInfoRef?.current) {
+          const room = roomInfoRef?.current
+          const crntReadSeq = room?.lastReadSeqs?.[userId]
+          const msgs = messagesRef?.current
+          const lastSeq = msgs?.length
+            ? Math.max(...msgs.map(m => m.seq ?? 0))
+            : 0
+          const forceUpdate = crntReadSeq != lastSeq
+          if (forceUpdate) updateLastRead(room?.id, userId, lastSeq) // ✅ 화면 벗어날 때 실행됨
+        }
+      }
+    }, [updateLastRead]),
+  )
+
   useEffect(() => {
     //가장 마지막 채팅의 최근 날짜로 subscription
     if (!roomId) return
@@ -141,7 +169,6 @@ export default function ChatMessageList({
       console.log('all messages', res)
     })
     getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
-      console.log(res)
       setLastCreatedAt(res)
     })
   }, [data, roomId])
