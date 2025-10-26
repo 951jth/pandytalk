@@ -1,6 +1,7 @@
 import {getApp} from '@react-native-firebase/app'
 import {
   collection,
+  doc,
   getCountFromServer,
   getDocs,
   getFirestore,
@@ -19,7 +20,7 @@ import {
   type InfiniteData,
   type QueryClient,
 } from '@tanstack/react-query'
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import type {ChatListItem, PushMessage} from '../../types/chat'
 import type {FsSnapshot} from '../../types/firebase'
 import {compareChat, getUnreadCount} from '../../utils/chat'
@@ -280,6 +281,38 @@ export function useSubscribeChatList(uid?: string | null) {
   }, [uid])
 }
 
+//채팅방 미읽음 카운트 구독 함수, 채팅방 단건 조회임.
+export const useSubscribeChatUnreadCount = (
+  roomId?: string | undefined | null,
+  userId?: string,
+) => {
+  const [unreadCnt, setUnreadCnt] = useState(0)
+  useEffect(() => {
+    if (!roomId || !userId) return
+    const chatRoomRef = doc(firestore, 'chats', roomId)
+
+    const unsub = onSnapshot(
+      chatRoomRef,
+      snap => {
+        if (!snap.exists()) return
+        const chatRoomData = snap.data() as ChatListItem
+        console.log(chatRoomData)
+        const {lastReadSeqs, lastSeq} = chatRoomData
+        const userReadSeq = lastReadSeqs?.[userId] ?? 0
+        const userUnreadSeq = (lastSeq || 0) - userReadSeq
+        setUnreadCnt(userUnreadSeq > 0 ? userUnreadSeq : 0)
+      },
+      error => {
+        console.error('[chat head snapshot] error:', error)
+        // 필요 시: invalidate({ type: 'full' })
+      },
+    )
+
+    return () => unsub()
+  }, [roomId, userId])
+  console.log('unreadCnt', unreadCnt)
+  return {unreadCnt}
+}
 //현재 채팅방의 목록 및 최신데이터를 갱신하면 함수임
 //현재는 채팅방 목록조회시 onSnapShot을 걸어서 사용하지 않고있음.
 export function updateChatListCache(

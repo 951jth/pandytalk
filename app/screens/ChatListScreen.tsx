@@ -19,7 +19,7 @@ import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
 import type {ChatListItem} from '../types/chat'
 import {AppRouteParamList} from '../types/navigate'
-import {formatServerDate} from '../utils/firebase'
+import {toMillisFromServerTime} from '../utils/firebase'
 
 export default function ChatListScreen() {
   const {
@@ -36,7 +36,6 @@ export default function ChatListScreen() {
     refetch,
   } = useMyChatsInfinite(user?.uid) as any //채팅방 목록 조회
   useSubscribeChatList(user?.uid) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
-  // useChatListHeadSubscription(user?.uid) //채팅방 데이터 실시간 감지
 
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
@@ -158,7 +157,7 @@ export default function ChatListScreen() {
                 <Text style={styles.lastSendTime}>
                   {item?.lastMessage?.createdAt
                     ? dayjs(
-                        formatServerDate(item?.lastMessage?.createdAt),
+                        toMillisFromServerTime(item?.lastMessage?.createdAt),
                       ).fromNow()
                     : '알 수 없음'}
                 </Text>

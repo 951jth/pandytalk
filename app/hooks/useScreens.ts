@@ -1,4 +1,5 @@
 import React, {useMemo} from 'react'
+import GroupChatUnreadCount from '../components/badge/GroupChatUnreadCount'
 import MainLayout from '../components/layout/MainLayout'
 import TabScreenNavigator from '../navigation/TabScreenNavigator'
 import AddGuestScreen from '../screens/AddGuestScreen'
@@ -23,7 +24,11 @@ type RouteItem = {
   icon?: string
   filtered?: boolean
   path?: string
+}
+
+type TabRouteItem = RouteItem & {
   getParams?: () => TabParamList[keyof TabParamList] // ← 추가
+  badge?: React.ComponentType<any>
 }
 
 type LayoutItem = {
@@ -34,9 +39,9 @@ type LayoutItem = {
 }
 
 // ✅ 하단 탭에 들어갈 화면 정의 (중앙 집중화): 메인페이지 전용 탭들
-const tabScreens = (): RouteItem[] => {
+const tabScreens = (): TabRouteItem[] => {
   const {data: user} = useAppSelector(state => state?.user)
-  return useMemo<RouteItem[]>(
+  return useMemo<TabRouteItem[]>(
     () =>
       [
         {
@@ -49,9 +54,9 @@ const tabScreens = (): RouteItem[] => {
         {
           name: 'group-chat',
           title: '그룹 채팅',
-          // component: GroupChatRoomScreen,
           icon: 'account-multiple',
           path: 'group-chat',
+          badge: GroupChatUnreadCount,
         },
         {
           name: 'profile',

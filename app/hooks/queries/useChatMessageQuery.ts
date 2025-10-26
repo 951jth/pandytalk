@@ -40,31 +40,6 @@ type MessagesInfiniteData = InfiniteData<MessagesPage>
 const firestore = getFirestore(getApp())
 const PAGE_SIZE = 15
 
-//채팅 메세지 조회 (실시간 들어오는 메세지), 현재 사용X
-export const listenToMessages = (
-  roomId: string,
-  onUpdate: (messages: ChatMessage[]) => void,
-) => {
-  // const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-  const lastCreatedAt = getLatestMessageCreatedAtFromSQLite(roomId)
-
-  const q = query(
-    collection(firestore, 'chats', roomId, 'messages'),
-    orderBy('createdAt'),
-    startAfter(lastCreatedAt),
-  )
-
-  const unsubscribe = onSnapshot(q, snapshot => {
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ChatMessage[]
-    onUpdate(messages)
-  })
-
-  return unsubscribe
-}
-
 export const useChatMessagesPaging = (roomId: string | null) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
@@ -87,7 +62,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           ms, //pageParam은 여기서 마지막 읽은 날짜임
           PAGE_SIZE,
         )) as ChatMessage[]
-        console.log('localMessages', localMessages)
         if (localMessages?.length || 0 < PAGE_SIZE) {
           const ts = toRNFTimestamp(pageParam)
           // CASE 1. 로컬에 없으면 Firestore에서 가져오기
@@ -107,7 +81,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
                 ...doc.data(),
               }) as ChatMessage,
           )
-          console.log('result', result)
           //데이터를 조회할떄는, createdAt은 number로 조회함
           const serverMessages = result?.map(e => ({
             ...e,
@@ -177,7 +150,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
         refetchType: 'active',
       })
     } catch (e) {
-      console.log('e', e)
+      console.log('resetChatMessages error:', e)
     }
   }
 
@@ -224,19 +197,19 @@ export const useSubscriptionMessage = (
             ['chatMessages', roomId],
             (old: MessagesInfiniteData | undefined) => {
               const cur = old ?? init
-
               const merged = mergeMessages(
                 cur.pages[0]?.data || [],
                 newMessages,
               )
               return {
-                ...old,
+                ...(old ?? init),
                 pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
               }
             },
           )
         } catch (e) {
-          console.log(e)
+          console.log('useSubscriptionMessage setQueryData error:', e)
+          return init
         } finally {
           return init
         }
@@ -269,4 +242,29 @@ export const useSyncUnreadMessages = (
     refetchOnMount: true,
     refetchOnWindowFocus: true, // ✅ 포커스 복귀 시 자동 동기화
   })
+}
+
+//채팅 메세지 조회 (실시간 들어오는 메세지), 현재 사용X
+export const listenToMessages = (
+  roomId: string,
+  onUpdate: (messages: ChatMessage[]) => void,
+) => {
+  // const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+  const lastCreatedAt = getLatestMessageCreatedAtFromSQLite(roomId)
+
+  const q = query(
+    collection(firestore, 'chats', roomId, 'messages'),
+    orderBy('createdAt'),
+    startAfter(lastCreatedAt),
+  )
+
+  const unsubscribe = onSnapshot(q, snapshot => {
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as ChatMessage[]
+    onUpdate(messages)
+  })
+
+  return unsubscribe
 }

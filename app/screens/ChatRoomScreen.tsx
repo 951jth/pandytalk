@@ -33,9 +33,16 @@ export default function ChatRoomScreen() {
       rid = await getDirectMessageRoomId(user.uid, targetIds?.[0])
     }
     if (rid) {
-      getChatRoomInfo(rid).then(res => {
-        setRoomInfo(res || null)
-      })
+      console.log('rid', rid)
+      getChatRoomInfo(rid)
+        .then(res => {
+          console.log('result', res)
+          setRoomInfo(res || null)
+        })
+        .catch(e => {
+          console.log(e)
+          setRoomInfo(null)
+        })
     }
   }
   console.log('roomInfo', roomInfo)

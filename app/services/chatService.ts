@@ -119,6 +119,7 @@ export const getChatRoomInfo = async (
 ): Promise<ChatListItem | void> => {
   // 1. chats/{roomId} 문서에서 members 배열 가져오기
   try {
+    if (!roomId) return
     console.log('roomId: ', roomId)
     const chatDocRef = doc(firestore, 'chats', roomId)
     const chatSnap = await getDoc(chatDocRef)
@@ -338,7 +339,10 @@ export const saveMessagesToSQLite = async (
           )
         })
       },
-      error => reject(error),
+      error => {
+        console.log(error)
+        reject(error)
+      },
       () => resolve(),
     )
   })
@@ -419,14 +423,16 @@ export const initChatTables = () => {
   db.transaction(tx => {
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS messages (
-        id TEXT PRIMARY KEY NOT NULL,
-        roomId TEXT NOT NULL,
-        text TEXT,
-        senderId TEXT,
-        createdAt INTEGER,
-        type TEXT,
-        imageUrl TEXT,
-        seq INTEGER
+         id TEXT PRIMARY KEY,
+          roomId TEXT NOT NULL,
+          text TEXT,
+          senderId TEXT NOT NULL,
+          createdAt INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          imageUrl TEXT,
+          senderPicURL TEXT,
+          senderName TEXT,
+          seq INTEGER
       );`,
       [],
       () => console.log('✅ messages table created'),

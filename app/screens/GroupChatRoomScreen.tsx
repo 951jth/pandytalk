@@ -1,8 +1,4 @@
-import {
-  useFocusEffect,
-  useRoute,
-  type RouteProp,
-} from '@react-navigation/native'
+import {useRoute, type RouteProp} from '@react-navigation/native'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useEffect, useState} from 'react'
 import {StyleSheet} from 'react-native'
@@ -11,9 +7,8 @@ import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
-import {updateChatLastReadCache} from '../hooks/queries/useChatRoomQuery'
 import {useGroup} from '../hooks/queries/useGroupQuery'
-import {getChatRoomInfo, updateLastRead} from '../services/chatService'
+import {getChatRoomInfo} from '../services/chatService'
 import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
 import type {ChatListItem} from '../types/chat'
@@ -45,16 +40,16 @@ export default function GroupChatRoomScreen() {
     getRoomInfo()
   }, [])
 
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        if (groupId && user?.uid) {
-          updateLastRead(groupId, user.uid) // ✅ 화면 벗어날 때 실행됨
-          updateChatLastReadCache(queryClient, groupId, user.uid) //현재 query 캐시갱신
-        }
-      }
-    }, [groupId, user?.uid]),
-  )
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     return () => {
+  //       if (groupId && user?.uid) {
+  //         updateLastRead(groupId, user.uid) // ✅ 화면 벗어날 때 실행됨
+  //         updateChatLastReadCache(queryClient, groupId, user.uid) //현재 query 캐시갱신
+  //       }
+  //     }
+  //   }, [groupId, user?.uid]),
+  // )
 
   return (
     <SafeAreaView style={styles.container}>

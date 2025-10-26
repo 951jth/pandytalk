@@ -136,6 +136,7 @@ export default function ProfileScreen(): React.JSX.Element {
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
+                edit={true}
                 ref={profileRef}
                 // previewUrl={previewUrl}
                 defaultUrl={previewUrl}

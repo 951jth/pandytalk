@@ -5,7 +5,7 @@ import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import ChatMember from '../components/card/ChatMember'
 import EmptyData from '../components/common/EmptyData'
-import SearchInput from '../components/input/SearchInput'
+import GroupMainThumnail from '../components/features/user/GroupMainThumnail'
 import {useUsersInfinite} from '../hooks/queries/useUserQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {useAppSelector} from '../store/reduxHooks'
@@ -50,13 +50,14 @@ export default function UsersScreen(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <SearchInput
+      {/* <SearchInput
         placeholder="검색할 닉네임 시작 글자를 입력해주세요."
         value={input}
         onChangeText={setInput}
-      />
+      /> */}
       <FlatList
         data={users?.filter(({uid}) => uid != user?.uid)}
+        ListHeaderComponent={<GroupMainThumnail style={{paddingBottom: 12}} />}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
           return (
@@ -67,6 +68,7 @@ export default function UsersScreen(): React.JSX.Element {
                 if (!isKeyboardVisible)
                   moveToChatRoom(item.uid, item?.displayName)
               }}
+              style={{marginHorizontal: 12}}
             />
           )
         }}
@@ -98,8 +100,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   friendsContainer: {
-    paddingHorizontal: 12,
-    paddingTop: 4,
+    // paddingHorizontal: 12,
+    // paddingTop: 4,
     flexGrow: 1,
   },
 })

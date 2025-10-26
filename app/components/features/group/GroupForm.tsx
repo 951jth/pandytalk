@@ -20,6 +20,7 @@ import {auth, firestore} from '../../../store/firestore'
 import type {FormItem} from '../../../types/form'
 import type {Group} from '../../../types/group'
 import type {AppRouteParamList} from '../../../types/navigate'
+import {formatServerDate} from '../../../utils/firebase'
 import InputForm from '../../form/InputForm'
 import EditInput from '../../input/EditInput'
 import UserSelect from '../../select/UserSelect'
@@ -88,7 +89,12 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
           <EditInput value={value} onChangeText={onChange} />
         ),
       },
-      {key: 'createdAt', label: '생성일'},
+      {
+        key: 'createdAt',
+        label: '생성일',
+        render: (value: string) =>
+          value && <Text>{formatServerDate(value)}</Text>,
+      },
     ],
     [navigation],
   )
@@ -114,6 +120,8 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
           photoURL?: string | null
         } = {
           name: formValues.name.trim(),
+          memo: formValues?.memo?.trim() || '',
+          photoURL: newPhotoURL,
         }
 
         // 새 업로드가 있을 때만 photoURL 갱신(없으면 기존 값 유지)
@@ -157,6 +165,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
       setLoading(false)
     }
   }
+  console.log('record', record)
   return (
     <View style={styles.container}>
       <InputForm

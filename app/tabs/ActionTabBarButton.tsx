@@ -2,7 +2,12 @@ import type {BottomTabBarButtonProps} from '@react-navigation/bottom-tabs'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React from 'react'
-import {TouchableOpacity, type TouchableOpacityProps} from 'react-native'
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  type TouchableOpacityProps,
+} from 'react-native'
 import type {AppRouteParamList} from '../types/navigate'
 
 type AppNav = NativeStackNavigationProp<AppRouteParamList>
@@ -10,11 +15,13 @@ type AppNav = NativeStackNavigationProp<AppRouteParamList>
 type ActionTabButtonProps = BottomTabBarButtonProps & {
   target?: keyof AppRouteParamList // 이동할 탭 이름
   params?: AppRouteParamList[keyof AppRouteParamList] // 탭에 보낼 params
+  BadgeComponent?: React.ComponentType<any>
 }
 
 export function ActionTabButton({
   target,
   params,
+  BadgeComponent,
   accessibilityRole,
   accessibilityState,
   accessibilityLabel,
@@ -27,7 +34,6 @@ export function ActionTabButton({
   //   ...rest
 }: ActionTabButtonProps) {
   const rootNav = useNavigation().getParent<AppNav>()
-
   return (
     <TouchableOpacity
       // ⬇️ 필요한 것만 명시적으로 매핑 (null → undefined 정규화)
@@ -50,6 +56,19 @@ export function ActionTabButton({
       //   onLongPress={onLongPress}
     >
       {children}
+      {BadgeComponent && (
+        <View style={styles.badge}>
+          <BadgeComponent />
+        </View>
+      )}
     </TouchableOpacity>
   )
 }
+
+const styles = StyleSheet.create({
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 10,
+  },
+})

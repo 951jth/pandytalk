@@ -46,7 +46,7 @@ export default function ChatMember({
         },
         style,
       ]}>
-      <View style={[styles.friend, style]}>
+      <View style={[styles.friend]}>
         <View style={styles.frame}>
           {item?.photoURL ? (
             <Image
