@@ -45,7 +45,7 @@ export function convertTimestampsToMillis<T = any>(obj: T): T {
 
 /** ServerTime(FieldValue | Timestamp) → ms number (미확정이면 null) */
 export const toMillisFromServerTime = (v: unknown): number => {
-  if (v == null) return Date.now()
+  if (v == null) return null
 
   // number: ms(>=1e12) 또는 sec
   if (typeof v === 'number') {

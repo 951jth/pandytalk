@@ -1,10 +1,8 @@
-import {getApp} from '@react-native-firebase/app'
 import {
   collection,
   doc,
   getCountFromServer,
   getDocs,
-  getFirestore,
   limit,
   onSnapshot,
   orderBy,
@@ -21,6 +19,10 @@ import {
   type QueryClient,
 } from '@tanstack/react-query'
 import {useEffect, useState} from 'react'
+import {useDispatch} from 'react-redux'
+import {firestore} from '../../store/firestore'
+import {AppDispatch} from '../../store/store'
+import {setDMChatCount, setGroupChatCount} from '../../store/unreadCountSlice'
 import type {ChatListItem, PushMessage} from '../../types/chat'
 import type {FsSnapshot} from '../../types/firebase'
 import {compareChat, getUnreadCount} from '../../utils/chat'
@@ -33,14 +35,16 @@ interface pageType {
   isLastPage: boolean
 }
 
-const firestore = getFirestore(getApp())
 const PAGE_SIZE = 20
 
 //내 채팅방 조회
-export const useMyChatsInfinite = (userId: string | null | undefined) => {
+export const useMyChatsInfinite = (
+  userId: string | null | undefined,
+  type: ChatListItem['type'] = 'dm',
+) => {
   return useInfiniteQuery({
     enabled: !!userId,
-    queryKey: ['chats', 'dm', userId],
+    queryKey: ['chats', type, userId],
     initialPageParam: undefined as FsSnapshot | undefined,
     queryFn: async ({pageParam}) => {
       if (!userId) {
@@ -50,46 +54,48 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
           isLastPage: true,
         }
       }
+      try {
+        const chatsRef = collection(firestore, 'chats')
+        // 최신 메시지 기준 정렬 + 생성일 보조 정렬 (기존과 동일)
+        let q = query(
+          chatsRef,
+          where('members', 'array-contains', userId),
+          where('type', '==', type),
+          orderBy('lastMessageAt', 'desc'),
+          limit(PAGE_SIZE),
+        )
 
-      const chatsRef = collection(firestore, 'chats')
-      // 최신 메시지 기준 정렬 + 생성일 보조 정렬 (기존과 동일)
-      let q = query(
-        chatsRef,
-        where('members', 'array-contains', userId),
-        where('type', '==', 'dm'),
-        orderBy('lastMessage.createdAt', 'desc'),
-        orderBy('createdAt', 'desc'),
-        limit(PAGE_SIZE),
-      )
-
-      if (pageParam) {
-        // 여러 orderBy가 있어도 snapshot 커서 하나로 OK
-        q = query(q, startAfter(pageParam))
-      }
-
-      const snapshot = await getDocs(q)
-
-      const chats: ChatListItem[] = snapshot.docs.map(d => {
-        const data = d.data() as any
-        const unreadCount = getUnreadCount(data, userId)
-
-        return {
-          id: d.id,
-          type: data.type,
-          createdAt: data.createdAt,
-          lastMessage: data.lastMessage,
-          lastSeq: data?.lastSeq ?? 0,
-          members: data.members ?? [],
-          lastReadSeqs: data.lastReadSeqs ?? undefined,
-          lastReadTimestamps: data.lastReadTimestamps ?? undefined,
-          unreadCount,
+        if (pageParam) {
+          // 여러 orderBy가 있어도 snapshot 커서 하나로 OK
+          q = query(q, startAfter(pageParam))
         }
-      })
 
-      return {
-        chats,
-        lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
-        isLastPage: snapshot.docs.length < PAGE_SIZE,
+        const snapshot = await getDocs(q)
+
+        const chats: ChatListItem[] = snapshot.docs.map(d => {
+          const data = d.data() as any
+          const unreadCount = getUnreadCount(data, userId)
+          return {
+            id: d.id,
+            name: data?.name,
+            image: data?.image,
+            type: data.type,
+            createdAt: data.createdAt,
+            lastMessage: data.lastMessage,
+            lastSeq: data?.lastSeq ?? 0,
+            members: data.members ?? [],
+            lastReadSeqs: data.lastReadSeqs ?? undefined,
+            lastReadTimestamps: data.lastReadTimestamps ?? undefined,
+            unreadCount,
+          }
+        })
+        return {
+          chats,
+          lastVisible: snapshot.docs[snapshot.docs.length - 1] ?? null,
+          isLastPage: snapshot.docs.length < PAGE_SIZE,
+        }
+      } catch (e) {
+        console.log(e)
       }
     },
     getNextPageParam: lastPage =>
@@ -105,9 +111,18 @@ export const useMyChatsInfinite = (userId: string | null | undefined) => {
  * 동시에 collectionGroup('members') 에서 내 멤버십을 한 번에 구독.
  * → unreadCount = max(0, lastSeq - lastReadSeq)
  */
-export function useSubscribeChatList(uid?: string | null) {
+export function useSubscribeChatList(
+  uid?: string | null,
+  type: ChatListItem['type'] = 'dm',
+) {
   const chatsRef = collection(firestore, 'chats')
   const queryClient = useQueryClient()
+  const dispatch = useDispatch<AppDispatch>()
+  // 🔹 타입별 디스패치 헬퍼
+  const dispatchBadge = (t: 'dm' | 'group', count: number) => {
+    if (t === 'dm') dispatch(setDMChatCount(count))
+    else dispatch(setGroupChatCount(count))
+  }
 
   // 공통: 평탄화 → 정렬 → 페이지 재쪼개기
   const rebuildPages = (
@@ -163,21 +178,48 @@ export function useSubscribeChatList(uid?: string | null) {
 
       // 공통 캐시 갱신 함수
       // React Query 캐시(무한쿼리)를 “즉시 수정”하기 위한 공용 래퍼
+      // const patchCache = (
+      //   mutator: (
+      //     flat: ChatListItem[],
+      //     old: InfiniteData<pageType>,
+      //   ) => InfiniteData<pageType>,
+      // ) => {
+      //   // flat은 리스트 조작(추가·삭제·정렬)을 한 번에 처리한 값 (1차원 배열)
+      //   // old는 페이지 메타데이터(lastVisible, isLastPage, 그리고 필요 시 pageParams)를 참고하거나,
+      //   // 결과를 다시 InfiniteData 구조로 되돌리기 위해 필요합니다.
+      //   queryClient.setQueriesData<InfiniteData<pageType>>(
+      //     {queryKey: ['chats', type, uid], exact: false},
+      //     old => {
+      //       if (!old) return old
+      //       const flat: ChatListItem[] = old.pages.flatMap(p => p.chats)
+      //       return mutator(flat, old)
+      //     },
+      //   )
+      // }
+
       const patchCache = (
         mutator: (
           flat: ChatListItem[],
           old: InfiniteData<pageType>,
         ) => InfiniteData<pageType>,
       ) => {
-        // flat은 리스트 조작(추가·삭제·정렬)을 한 번에 처리한 값 (1차원 배열)
-        // old는 페이지 메타데이터(lastVisible, isLastPage, 그리고 필요 시 pageParams)를 참고하거나,
-        // 결과를 다시 InfiniteData 구조로 되돌리기 위해 필요합니다.
         queryClient.setQueriesData<InfiniteData<pageType>>(
-          {queryKey: ['chats', 'dm', uid], exact: false},
+          {queryKey: ['chats', type, uid], exact: false},
           old => {
             if (!old) return old
             const flat: ChatListItem[] = old.pages.flatMap(p => p.chats)
-            return mutator(flat, old)
+            const next = mutator(flat, old)
+
+            // ✅ 합계 계산 & Redux 업데이트
+            const nextFlat = next.pages.flatMap(p => p.chats)
+            const sum = nextFlat.reduce(
+              (acc, c) => acc + (c.unreadCount ?? 0),
+              0,
+            )
+            if (type === 'dm') dispatch(setDMChatCount(sum))
+            else dispatch(setGroupChatCount(sum))
+
+            return next
           },
         )
       }
@@ -237,10 +279,9 @@ export function useSubscribeChatList(uid?: string | null) {
 
     const q = query(
       chatsRef,
-      where('type', '==', 'dm'),
+      where('type', '==', type),
       where('members', 'array-contains', uid),
-      orderBy('lastMessage.createdAt', 'desc'),
-      orderBy('createdAt', 'desc'),
+      orderBy('lastMessageAt', 'desc'),
       limit(PAGE_SIZE),
     )
 
@@ -310,7 +351,6 @@ export const useSubscribeChatUnreadCount = (
 
     return () => unsub()
   }, [roomId, userId])
-  console.log('unreadCnt', unreadCnt)
   return {unreadCnt}
 }
 //현재 채팅방의 목록 및 최신데이터를 갱신하면 함수임

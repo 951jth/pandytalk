@@ -2,7 +2,9 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {Icon} from 'react-native-paper'
 import COLORS from '../constants/color'
+import {useSubscribeChatList} from '../hooks/queries/useChatRoomQuery'
 import {tabScreens} from '../hooks/useScreens'
+import {useAppSelector} from '../store/reduxHooks'
 import {ActionTabButton} from '../tabs/ActionTabBarButton'
 import type {AppRouteParamList} from '../types/navigate'
 
@@ -11,6 +13,11 @@ const EmptyScreen: React.FC = () => null
 
 export default function TabScreenNavigator(): React.JSX.Element {
   const tabs = tabScreens()
+  const {data: user} = useAppSelector(state => state?.user)
+  const isAdmin = user?.authority == 'ADMIN' // 혹은 user?.isAdmin
+
+  useSubscribeChatList(user?.uid, 'dm') //채팅 벳지 카운트떄문에 탭 상단으로 이동.
+  useSubscribeChatList(isAdmin ? user?.uid : null, 'group') //그룹채팅은 관리자 일떄만 활서오하 시킴
   return (
     <Tab.Navigator
       screenOptions={({route}) => {
@@ -37,6 +44,7 @@ export default function TabScreenNavigator(): React.JSX.Element {
           key={route.name}
           name={route.name}
           component={route.component ?? EmptyScreen}
+          initialParams={route.getParams?.()}
           options={{
             title: route.title ?? route.name,
             tabBarButton: btnProps => (

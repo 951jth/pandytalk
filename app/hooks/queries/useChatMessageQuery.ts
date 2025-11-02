@@ -16,6 +16,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query'
+import dayjs from 'dayjs'
 import {useEffect} from 'react'
 import {
   clearMessagesFromSQLite,
@@ -47,6 +48,8 @@ export const useChatMessagesPaging = (roomId: string | null) => {
     enabled: !!roomId,
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
+      //pageParam은 마지막 데이터
+      console.count('useChatMessagesPaging')
       try {
         if (!roomId)
           return {
@@ -56,12 +59,18 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           }
         const ms = toMillisFromServerTime(pageParam)
         const ts = toRNFTimestamp(pageParam)
+        console.log('pageParam')
+        console.log(
+          '마지막 데이터 시각:',
+          dayjs(ms).format('YYYY-MM-DD HH:mm:ss'),
+        )
 
         const localMessages = (await getMessagesFromSQLiteByPaging(
           roomId,
           ms, //pageParam은 여기서 마지막 읽은 날짜임
           PAGE_SIZE,
         )) as ChatMessage[]
+        console.log('localMessage:', localMessages)
         if (localMessages?.length || 0 < PAGE_SIZE) {
           const ts = toRNFTimestamp(pageParam)
           // CASE 1. 로컬에 없으면 Firestore에서 가져오기
@@ -89,6 +98,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
               : Date.now(),
           }))
           if (serverMessages.length > 0) {
+            console.log('serverMessages', serverMessages)
             //서버데이터가 있으면 그대로 sqlite에 push
             await saveMessagesToSQLite(roomId, serverMessages)
             // ✅ 왜 서버에서 가져온 데이터를 그대로 리턴하지않고 sqlite에서 다시 조회하고 리턴하는가?
@@ -164,13 +174,11 @@ export const useSubscriptionMessage = (
   roomId: string | null | undefined,
   lastCreatedAt: number | null | undefined,
 ) => {
-  const db = getFirestore(getApp()) // ✅ 훅 밖에서 선언되더라도 안전
+  // const db = getFirestore(getApp()) // ✅ 훅 밖에서 선언되더라도 안전
   const queryClient = useQueryClient() // ✅ 항상 호출되도록
-  // const ms = toMillisFromServerTime(lastCreatedAt);
-  // console.log(d)
   useEffect(() => {
     if (!roomId) return
-    const messagesRef = collection(db, 'chats', roomId, 'messages')
+    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     let q = query(messagesRef, orderBy('createdAt', 'desc'), limit(50))
     const ts = toRNFTimestamp(lastCreatedAt)
     const init: MessagesInfiniteData = {
@@ -191,8 +199,8 @@ export const useSubscriptionMessage = (
         ...doc.data(),
       })) as ChatMessage[]
       if (newMessages.length > 0) {
-        await saveMessagesToSQLite(roomId, newMessages)
         try {
+          await saveMessagesToSQLite(roomId, newMessages)
           queryClient.setQueryData(
             ['chatMessages', roomId],
             (old: MessagesInfiniteData | undefined) => {

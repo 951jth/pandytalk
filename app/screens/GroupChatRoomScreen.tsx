@@ -40,17 +40,6 @@ export default function GroupChatRoomScreen() {
     getRoomInfo()
   }, [])
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     return () => {
-  //       if (groupId && user?.uid) {
-  //         updateLastRead(groupId, user.uid) // ✅ 화면 벗어날 때 실행됨
-  //         updateChatLastReadCache(queryClient, groupId, user.uid) //현재 query 캐시갱신
-  //       }
-  //     }
-  //   }, [groupId, user?.uid]),
-  // )
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardUtilitiesWrapper useTouchable={false}>

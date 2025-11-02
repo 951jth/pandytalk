@@ -12,10 +12,10 @@ export interface FormItem {
   key: string // (필수) 고유값, formValues 세팅 기준
   label?: string // 항목 타이틀
   render?: (
-    value: string,
+    value: any,
     onChange: (value: string | number | null | undefined) => any,
     edit?: boolean, //수정유무
-  ) => any | undefined
+  ) => any | ReactNode | undefined
   children?: ReactNode // 직접 넣는 컴포넌트
   contents?: string
   required?: boolean // 필수값 여부

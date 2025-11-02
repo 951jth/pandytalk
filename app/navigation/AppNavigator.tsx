@@ -52,7 +52,7 @@ export default function AppNavigator() {
             name={route.name}
             options={layoutGroup.options || route.options}>
             {(props: any) => {
-              const Component = route.component
+              const Component = route.component ?? React.Fragment
               const Layout = layoutGroup.layout ?? React.Fragment
 
               return (

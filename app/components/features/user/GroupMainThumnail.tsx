@@ -37,14 +37,17 @@ export default function GroupMainThumnail({
         )}
       </View>
       <View style={styles.textZone}>
-        <Text style={styles.title}>{groupInfo?.name}</Text>
+        <Text style={styles.title}>{groupInfo?.name || '현재 그룹 없음.'}</Text>
         <View style={styles.groupChips}>
           <CustomChip
             title={`멤버수: ${groupInfo?.memberCount || 0}명`}
             bgColor={COLORS.gray}
           />
         </View>
-        <Text style={styles.intro}>{groupInfo?.memo}</Text>
+        <Text style={styles.intro}>
+          {groupInfo?.memo ||
+            '현재 그룹이 설정되지않았습니다.\n관리자를 통해서 그룹이 설정됩니다.'}
+        </Text>
       </View>
     </View>
   )

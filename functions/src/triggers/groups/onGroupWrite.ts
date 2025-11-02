@@ -14,13 +14,6 @@ const PLATFORM_ADMIN_UIDS: string[] = (process.env.PLATFORM_ADMINS ?? '')
   .map(s => s.trim())
   .filter(Boolean)
 
-// (선택) Firestore 설정 문서에서 읽고 싶다면 이렇게:
-// async function getPlatformAdminsFromDoc(): Promise<string[]> {
-//   const snap = await db.doc('config/app').get()
-//   const arr = (snap.get('adminUids') as string[]) || []
-//   return arr.filter(Boolean)
-// }
-
 export const onGroupCreate = onDocumentCreated(
   {
     region: 'asia-northeast3',
@@ -48,9 +41,8 @@ export const onGroupCreate = onDocumentCreated(
 
     // 1) chats/{groupId} 생성(그룹 채팅 1:1 매핑)
     // 2) groups/{groupId}/members/{uid} 생성/활성
-    // 3) users/{uid}/chatList/{groupId} upsert
-    // 4) groups/{groupId}.memberCount 캐시
-    const batch = db.batch()
+    // 3) groups/{groupId}.memberCount 캐시
+    const batch = db.batch() //한번에 여러
     const now = Date.now()
 
     // (1) 채팅방 문서
@@ -65,12 +57,12 @@ export const onGroupCreate = onDocumentCreated(
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
         // 선택: 생성 시점 멤버 스냅샷
-        memberIds: Array.from(initialMemberSet),
+        members: Array.from(initialMemberSet),
       },
       {merge: true},
     )
 
-    // (2)(3) 멤버 문서 & 개인 chatList
+    // (2) group members set
     for (const uid of initialMemberSet) {
       const memRef = db.doc(`groups/${groupId}/members/${uid}`)
       batch.set(
@@ -83,23 +75,9 @@ export const onGroupCreate = onDocumentCreated(
         },
         {merge: true},
       )
-
-      const userChatRef = db.doc(`users/${uid}/chatList/${groupId}`)
-      batch.set(
-        userChatRef,
-        {
-          chatId: groupId,
-          type: 'group',
-          groupId,
-          lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
-          name: name ?? null, // 선택: 리스트용 캐시
-          image: image ?? null, // 선택
-        },
-        {merge: true},
-      )
     }
 
-    // (4) 멤버 수 캐시
+    // (3) 멤버 수 캐시
     const groupRef = db.doc(`groups/${groupId}`)
     batch.set(groupRef, {memberCount: initialMemberSet.size}, {merge: true})
 

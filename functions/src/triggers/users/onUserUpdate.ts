@@ -81,8 +81,5 @@ export const onUserGroupIdUpdated = onDocumentUpdated(
         )
       }
     })
-
-    // batch 사용 안 하므로 제거
-    // await batch.commit()  // ❌ 삭제
   },
 )

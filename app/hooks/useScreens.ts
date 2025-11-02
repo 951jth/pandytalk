@@ -1,4 +1,6 @@
+import type {NativeStackNavigationOptions} from '@react-navigation/native-stack'
 import React, {useMemo} from 'react'
+import ChatUnreadCount from '../components/badge/ChatUnreadCount'
 import GroupChatUnreadCount from '../components/badge/GroupChatUnreadCount'
 import MainLayout from '../components/layout/MainLayout'
 import TabScreenNavigator from '../navigation/TabScreenNavigator'
@@ -20,28 +22,32 @@ type RouteItem = {
   name: string
   title?: string
   component?: React.ComponentType<any>
-  options?: object
+  options?: NativeStackNavigationOptions
   icon?: string
   filtered?: boolean
   path?: string
 }
 
-type TabRouteItem = RouteItem & {
-  getParams?: () => TabParamList[keyof TabParamList] // ← 추가
+//TabParamList의 키 중 하나
+export type TabRouteItem<K extends keyof TabParamList> = RouteItem & {
+  name: K
   badge?: React.ComponentType<any>
+  // 2) TabParamList에 지정한 값만 getParams 검증함.
+  getParams?: () => TabParamList[K]
 }
 
 type LayoutItem = {
   key: string
   layout?: React.ComponentType<any>
-  options?: object
+  options?: NativeStackNavigationOptions
   children: RouteItem[]
 }
 
 // ✅ 하단 탭에 들어갈 화면 정의 (중앙 집중화): 메인페이지 전용 탭들
-const tabScreens = (): TabRouteItem[] => {
+const tabScreens = () => {
   const {data: user} = useAppSelector(state => state?.user)
-  return useMemo<TabRouteItem[]>(
+  const isAdmin = user?.authority == 'ADMIN'
+  return useMemo<TabRouteItem<keyof TabParamList>[]>(
     () =>
       [
         {
@@ -50,13 +56,31 @@ const tabScreens = (): TabRouteItem[] => {
           component: UsersScreen,
           icon: 'home',
         },
-        {name: 'chats', title: '채팅', component: ChatListScreen, icon: 'chat'},
+        {
+          name: 'chats',
+          title: '채팅',
+          component: ChatListScreen,
+          icon: 'chat',
+          getParams: () => ({type: 'dm'}),
+          badge: ChatUnreadCount,
+        },
         {
           name: 'group-chat',
           title: '그룹 채팅',
           icon: 'account-multiple',
           path: 'group-chat',
           badge: GroupChatUnreadCount,
+          filtered: isAdmin,
+        },
+        {
+          //관리자용 그룹채팅 전체보기.
+          name: 'group-chat-list',
+          title: '그룹 채팅',
+          icon: 'account-multiple',
+          component: ChatListScreen,
+          getParams: () => ({type: 'group'}),
+          badge: () => ChatUnreadCount({type: 'group'}),
+          filtered: !isAdmin,
         },
         {
           name: 'profile',
@@ -69,7 +93,7 @@ const tabScreens = (): TabRouteItem[] => {
           title: '관리자 메뉴',
           component: AdminMenuScreen,
           icon: 'menu',
-          filtered: user?.authority !== 'ADMIN',
+          filtered: !isAdmin,
         },
       ].filter(e => !e.filtered),
     [user?.authority ?? null],
@@ -118,7 +142,6 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-chat',
           title: '그룹 채팅',
           component: GroupChatRoomScreen,
-          icon: 'account-multiple',
         },
       ],
     },

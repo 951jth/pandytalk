@@ -18,11 +18,15 @@ export const useGroup = (groupId?: string | null) => {
     queryKey: ['group', groupId],
     enabled: !!groupId,
     queryFn: async () => {
-      if (groupId) {
-        const data = await getGroupInfo(groupId)
-        return data
+      try {
+        const data = groupId ? await getGroupInfo(groupId) : {}
+        return data || {}
+      } catch (e) {
+        console.log(e)
+        return {name: null, memo: null}
       }
     },
+
     // staleTime: 60_000,                       // 1분 동안 fresh
     // gcTime: 5 * 60_000,                      // v5: 캐시 정리 시간(기존 cacheTime)
   })

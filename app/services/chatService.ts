@@ -260,6 +260,7 @@ export const createChatRoom = async (
       members: sortedIds?.filter(Boolean),
       name: options?.name ?? '',
       image: options?.image ?? '',
+      lastMessageAt: serverTimestamp(),
       // lastMessage: message,
     }
 
@@ -299,6 +300,7 @@ export async function updateLastRead(
   seenSeq: number, // 마지막으로 보인 메시지의 seq (모르면 생략)
 ) {
   try {
+    if (!(roomId && userId && seenSeq)) return
     const chatRef = doc(firestore, 'chats', roomId)
     //현재 채팅방에서 가장 높은 시퀀스 계산하기.
     await runTransaction(firestore, async tx => {
@@ -319,8 +321,6 @@ export const saveMessagesToSQLite = async (
   return new Promise((resolve, reject) => {
     db.transaction(
       (tx: Transaction) => {
-        console.log('roomID', roomId)
-        console.log('messages', messages)
         messages.forEach(msg => {
           //동일한 아이디 기준으로 데이터를 대체하고, 아닌경우 추가하는 쿼리임
           tx.executeSql(
@@ -353,7 +353,6 @@ export const getMessagesFromSQLiteByPaging = async (
   cursorCreatedAt?: number | null,
   pageSize: number = 20,
 ): Promise<ChatMessage[]> => {
-  console.log('cursorCreatedAt', cursorCreatedAt)
   return new Promise((resolve, reject) => {
     db.transaction((tx: Transaction) => {
       const query = cursorCreatedAt
@@ -369,7 +368,6 @@ export const getMessagesFromSQLiteByPaging = async (
         params,
         (_, result) => {
           const messages: ChatMessage[] = []
-          console.log('messages', messages)
           for (let i = 0; i < result.rows.length; i++) {
             messages.push(result.rows.item(i))
           }
@@ -377,7 +375,6 @@ export const getMessagesFromSQLiteByPaging = async (
           // const sortedMessages = messages.sort(
           //   (a, b) => a.createdAt - b.createdAt,
           // )
-          console.log('get sql messages', messages)
           resolve(messages)
         },
         (_, error) => {

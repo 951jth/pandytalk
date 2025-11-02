@@ -17,6 +17,7 @@ import {Alert, StyleSheet, Text, View} from 'react-native'
 import {useQueryClient} from '@tanstack/react-query'
 import COLORS from '../../../constants/color'
 import {auth, firestore} from '../../../store/firestore'
+import type {ServerTime} from '../../../types/chat'
 import type {FormItem} from '../../../types/form'
 import type {Group} from '../../../types/group'
 import type {AppRouteParamList} from '../../../types/navigate'
@@ -92,8 +93,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
       {
         key: 'createdAt',
         label: '생성일',
-        render: (value: string) =>
-          value && <Text>{formatServerDate(value)}</Text>,
+        render: value => <Text>{formatServerDate(value as ServerTime)}</Text>,
       },
     ],
     [navigation],
@@ -165,7 +165,6 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
       setLoading(false)
     }
   }
-  console.log('record', record)
   return (
     <View style={styles.container}>
       <InputForm

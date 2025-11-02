@@ -1,5 +1,5 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import React from 'react'
+import React, {Fragment} from 'react'
 import {authRoutes} from '../hooks/useScreens'
 
 export default function AuthNavigator() {
@@ -12,7 +12,7 @@ export default function AuthNavigator() {
             key={route.name}
             name={route.name}
             options={{headerShown: false}}
-            component={route?.component}
+            component={route?.component ?? Fragment}
           />
         )
       })}

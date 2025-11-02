@@ -9,7 +9,6 @@ import {
 } from '../../hooks/queries/useChatMessageQuery'
 import {
   getLatestMessageCreatedAtFromSQLite,
-  getMessagesFromSQLite,
   updateLastRead,
 } from '../../services/chatService'
 import type {ChatListItem, ChatMessage} from '../../types/chat'
@@ -40,8 +39,7 @@ export default function ChatMessageList({
     isFetchingNextPage,
     resetChatMessages,
   } = useChatMessagesPaging(roomId)
-  const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null)
-  console.log('data', data)
+  const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null) //마지막으로 읽은 날짜.
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
   useSubscriptionMessage(roomId, lastCreatedAt) //채팅방 구독설정
   // 포커스 이벤트용 참조값.
@@ -165,9 +163,9 @@ export default function ChatMessageList({
   useEffect(() => {
     //가장 마지막 채팅의 최근 날짜로 subscription
     if (!roomId) return
-    getMessagesFromSQLite(roomId).then(res => {
-      console.log('all messages', res)
-    })
+    // getMessagesFromSQLite(roomId).then(res => {
+    //   console.log('all messages', res)
+    // })
     getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
       setLastCreatedAt(res)
     })

@@ -1,32 +1,32 @@
-import {useNavigation} from '@react-navigation/native'
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import dayjs from 'dayjs'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
-import {FlatList, Image, StyleSheet, View} from 'react-native'
-import {ActivityIndicator, Icon, Text} from 'react-native-paper'
+import {FlatList, StyleSheet, View} from 'react-native'
+import {ActivityIndicator} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
-import {
-  useMyChatsInfinite,
-  useSubscribeChatList,
-} from '../hooks/queries/useChatRoomQuery'
+import {useMyChatsInfinite} from '../hooks/queries/useChatRoomQuery'
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
-import PressableWrapper from '../components/common/PressableWrapper'
+import ChatListItemCard from '../components/features/chat/ChatListItemCard'
 import {getUsersByIds} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
 import type {User} from '../types/auth'
 import type {ChatListItem} from '../types/chat'
 import {AppRouteParamList} from '../types/navigate'
-import {toMillisFromServerTime} from '../utils/firebase'
 
+type ChatRouteParams = RouteProp<AppRouteParamList, 'chats'>
+
+//1:1 (DM), 그룹채팅(group)
 export default function ChatListScreen() {
   const {
     data: user,
     loading: userLoading,
     error,
   } = useAppSelector(state => state.user)
+  const {params} = useRoute<ChatRouteParams>()
+  const type = params?.type ?? 'dm'
   const {
     data,
     isLoading,
@@ -34,8 +34,9 @@ export default function ChatListScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useMyChatsInfinite(user?.uid) as any //채팅방 목록 조회
-  useSubscribeChatList(user?.uid) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
+  } = useMyChatsInfinite(user?.uid, type) as any //채팅방 목록 조회
+  // useSubscribeChatList(user?.uid, type) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
+  // 뱃지기능 떄문에 탭으로 이동시킴.
 
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')
@@ -48,6 +49,7 @@ export default function ChatListScreen() {
   const chatsWithMemberInfo = useMemo(
     () =>
       chats?.map((chat: ChatListItem) => {
+        if (chat?.type == 'group') return chat
         const targetId = chat?.members?.find((mId: string) => mId !== user?.uid)
         const findMember = targetMembers?.find(
           member => member?.uid == targetId,
@@ -77,8 +79,6 @@ export default function ChatListScreen() {
   )
 
   const moveToChatRoom = (roomId: string, uid: string) => {
-    if (!user?.uid) return
-    // updateChatLastReadCache(queryClient, roomId, user?.uid)
     navigation.navigate('chatRoom', {roomId, targetIds: [uid]})
   }
 
@@ -115,61 +115,16 @@ export default function ChatListScreen() {
         onChangeText={setInput}
       />
       <FlatList
-        data={
-          chatsWithMemberInfo?.filter(
-            (chat: ChatListItem & {findMember: User}) =>
-              chat.findMember?.displayName?.toLowerCase()?.includes(searchText),
-          ) ?? []
-        }
+        data={chatsWithMemberInfo ?? []}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
-          const isDM = item?.type == 'dm'
           const findMember = item?.findMember
           const targetId = findMember?.id
           return (
-            <PressableWrapper
-              onPress={() => moveToChatRoom(item.id, targetId)}
-              style={styles.chatRoom}>
-              <View style={styles.frame}>
-                {findMember?.photoURL ? (
-                  <Image
-                    source={{uri: findMember?.photoURL}}
-                    resizeMode="cover"
-                    style={styles.image}
-                  />
-                ) : (
-                  <Icon source="account" size={40} color={COLORS.primary} />
-                )}
-                {findMember?.status == 'online' && (
-                  <View style={styles.point} />
-                )}
-              </View>
-              <View style={styles.contents}>
-                <Text style={styles.name}>
-                  {isDM ? findMember?.displayName : '-'}
-                </Text>
-                <Text
-                  style={styles.lastMessage}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  {item?.lastMessage?.text || '대화 없음'}
-                </Text>
-                <Text style={styles.lastSendTime}>
-                  {item?.lastMessage?.createdAt
-                    ? dayjs(
-                        toMillisFromServerTime(item?.lastMessage?.createdAt),
-                      ).fromNow()
-                    : '알 수 없음'}
-                </Text>
-                {!!item?.unreadCount && (
-                  <View style={styles.unreadMessageBadge}>
-                    <Text style={styles.unreadMessage}>
-                      {item?.unreadCount || 0}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </PressableWrapper>
+            <ChatListItemCard
+              item={item}
+              onPress={item => moveToChatRoom(item.id, targetId)}
+            />
           )
         }}
         onEndReached={() => {

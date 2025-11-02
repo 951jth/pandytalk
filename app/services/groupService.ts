@@ -11,5 +11,6 @@ export async function getGroupInfo(groupId: string) {
     return snap?.data()
   } catch (e) {
     console.log(e)
+    return {}
   }
 }

@@ -48,3 +48,5 @@ export interface ChatListItem {
   groupId?: string
   lastSeq?: number
 }
+
+export type ChatItemWithMemberInfo = ChatListItem & {findMember: User}
