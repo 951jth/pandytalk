@@ -67,3 +67,11 @@ export interface GuestApplication {
   // ownerUid?: string | null // 신청 당사자의 uid(로그인 상태에서 신청하는 경우)
   // reviewerId?: string | null // 검토자 uid
 }
+
+export interface termType {
+  id: string
+  title: string
+  content: string
+  enabled: boolean
+  required?: boolean
+}

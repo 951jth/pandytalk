@@ -4,6 +4,7 @@ import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import {useDispatch} from 'react-redux'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
+import TermAgreementList from '../components/features/terms/TermAgreementList'
 import InputForm from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
 import EditTextArea from '../components/input/EditTextarea'
@@ -180,8 +181,8 @@ export default function AddGuestScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="게스트 신청" />
-      <KeyboardUtilitiesWrapper>
-        <View style={styles.inner}>
+      <View style={styles.inner}>
+        <KeyboardUtilitiesWrapper useTouchable={false}>
           <InputForm
             ref={formRef}
             editable={true}
@@ -192,9 +193,8 @@ export default function AddGuestScreen() {
                 <EditProfile
                   edit={true}
                   defaultUrl={previewUrl}
-                  // setPreviewUrl={setPreviewUrl}
-                  boxSize={120}
-                  iconSize={90}
+                  boxSize={100}
+                  iconSize={75}
                 />
                 <Text style={styles.notiText}>
                   {`관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.`}
@@ -205,9 +205,10 @@ export default function AddGuestScreen() {
             initialValues={initialData}
             onSubmit={handleAddGuest}
             loading={loading}
+            bottomElement={<TermAgreementList />}
           />
-        </View>
-      </KeyboardUtilitiesWrapper>
+        </KeyboardUtilitiesWrapper>
+      </View>
     </SafeAreaView>
   )
 }
@@ -220,11 +221,11 @@ const styles = StyleSheet.create({
   inner: {
     padding: 8,
     flex: 1,
+    flexGrow: 1,
     // backgroundColor: COLORS.background,
   },
   innerContents: {
     flex: 1,
-    padding: 24,
     backgroundColor: COLORS.background,
   },
   inputForm: {
@@ -235,7 +236,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3, // Android 전용 그림자
-    padding: 16,
+    padding: 8,
+    // paddingVertical: 16,
+    // paddingLeft: 16,
+    // paddingRight: 16,
+    // marginRight: -16,
   },
   profileWrap: {
     flexDirection: 'column',

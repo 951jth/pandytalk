@@ -17,7 +17,8 @@ export default function TabScreenNavigator(): React.JSX.Element {
   const isAdmin = user?.authority == 'ADMIN' // 혹은 user?.isAdmin
 
   useSubscribeChatList(user?.uid, 'dm') //채팅 벳지 카운트떄문에 탭 상단으로 이동.
-  useSubscribeChatList(isAdmin ? user?.uid : null, 'group') //그룹채팅은 관리자 일떄만 활서오하 시킴
+  useSubscribeChatList(isAdmin ? user?.uid : null, 'group') //그룹채팅은 관리자 일떄만 활성화 시킴
+
   return (
     <Tab.Navigator
       screenOptions={({route}) => {
