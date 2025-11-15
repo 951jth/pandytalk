@@ -23,6 +23,25 @@
           "other_platform_oauth_client": []
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317149948460:android:ce5a040c5b3464b3ee7f89",
+        "android_client_info": {
+          "package_name": "com.cshchatapp.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgnSrYkfYhhYoYQp8ACObvNhyBUf80baY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
     }
   ],
   "configuration_version": "1"
