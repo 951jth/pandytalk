@@ -15,6 +15,6 @@ export interface Group {
 export interface GroupMembers {
   role: 'OWNER' | 'ADMIN' | 'MEMBER'
   isActive: boolean
-  joinedAt: number
+  joinedAt: FirebaseFirestore.Timestamp
   leftAt?: number | null
 }

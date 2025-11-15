@@ -1,8 +1,8 @@
 {
-  "name": "CSHCHATAPP",
+  "name": "cshchatapp",
   "version": "0.0.1",
   "private": true,
-  "main": "index.tsx",
+  "main": "index.js",
   "scripts": {
     "android": "react-native run-android",
     "android:custom": "react-native run-android --deviceId emulator-5554",
@@ -10,7 +10,9 @@
     "start": "react-native start",
     "lint": "eslint .",
     "test": "jest",
-    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache"
+    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
+    "release-android": "cd android && ./gradlew assembleRelease && cd ..",
+    "clean-android": "cd android && ./gradlew clean && cd .."
   },
   "dependencies": {
     "@react-native-firebase/app": "22.2.1",

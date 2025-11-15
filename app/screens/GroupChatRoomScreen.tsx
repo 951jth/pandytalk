@@ -28,6 +28,7 @@ export default function GroupChatRoomScreen() {
     if (groupId) {
       try {
         const data = await getChatRoomInfo(groupId)
+        console.log('data', data)
         setRoomInfo(data || null)
       } catch (e) {
         //채팅방이 없으면 새로 생성

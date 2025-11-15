@@ -46,6 +46,7 @@ interface Props {
   onFormChange?: (key: string, value: string | number, meta: object) => any
   formData?: object | null
   onReset?: () => void
+  btnDisable?: boolean
 }
 
 // 🔗 외부에서 사용할 ref 타입
@@ -70,26 +71,22 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     rowsStyle = {},
     labelStyle = {},
     contentsStyle = {},
-    editable = false,
-    buttonLabel = '',
+    editable = false, //버튼 생성 유무
+    buttonLabel = '', //컨펌 버튼 라벨
     topElement,
     bottomElement,
-    setEdit = bool => {},
-    loading = false,
+    loading = false, //컨펌 버튼 로딩
     onSubmit = values => {},
     onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
     formData,
     onReset,
+    btnDisable = false,
   }: Props,
   ref,
 ) {
   const resetValues = useRef<object>({})
   const [formValues, setFormValues] = useState<object | null>(initialValues)
   const [errors, setErrors] = useState<Record<string, string | undefined>>({}) // 에러메시지 표기
-
-  const onEditChange = (bool: boolean) => {
-    setEdit(bool)
-  }
 
   useEffect(() => {
     if (formData) {
@@ -200,7 +197,8 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
                 if (hasAnyError(errorsFields)) return setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
                 onSubmit?.(formValues)
               }}
-              loading={loading}>
+              loading={loading}
+              disabled={btnDisable}>
               {buttonLabel}
             </CustomButton>
           )}

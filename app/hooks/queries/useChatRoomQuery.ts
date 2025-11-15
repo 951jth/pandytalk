@@ -176,27 +176,6 @@ export function useSubscribeChatList(
         return
       }
 
-      // 공통 캐시 갱신 함수
-      // React Query 캐시(무한쿼리)를 “즉시 수정”하기 위한 공용 래퍼
-      // const patchCache = (
-      //   mutator: (
-      //     flat: ChatListItem[],
-      //     old: InfiniteData<pageType>,
-      //   ) => InfiniteData<pageType>,
-      // ) => {
-      //   // flat은 리스트 조작(추가·삭제·정렬)을 한 번에 처리한 값 (1차원 배열)
-      //   // old는 페이지 메타데이터(lastVisible, isLastPage, 그리고 필요 시 pageParams)를 참고하거나,
-      //   // 결과를 다시 InfiniteData 구조로 되돌리기 위해 필요합니다.
-      //   queryClient.setQueriesData<InfiniteData<pageType>>(
-      //     {queryKey: ['chats', type, uid], exact: false},
-      //     old => {
-      //       if (!old) return old
-      //       const flat: ChatListItem[] = old.pages.flatMap(p => p.chats)
-      //       return mutator(flat, old)
-      //     },
-      //   )
-      // }
-
       const patchCache = (
         mutator: (
           flat: ChatListItem[],

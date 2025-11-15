@@ -65,7 +65,7 @@ export async function submitSignupRequest({
       newPhotoURL = await fileUpload(uid, photoURL)
     }
     // 3) users/{uid} 신청 정보 저장 (승인 대기)
-    const nowTime = fs.FieldValue.serverTimestamp()
+    const nowTime = serverTimestamp()
     await updateProfile(cred.user, {displayName, photoURL: newPhotoURL})
 
     //     await setDoc(doc(db, 'users', cred.user.uid), {

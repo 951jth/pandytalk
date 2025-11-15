@@ -1,5 +1,6 @@
 package com.cshchatapp
 
+import android.os.Bundle            // ✅ 추가
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -7,16 +8,21 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
 
-  /**
-   * Returns the name of the main component registered from JavaScript. This is used to schedule
-   * rendering of the component.
-   */
-  override fun getMainComponentName(): String = "CSHCHATAPP"
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // ✅ 여기서 savedInstanceState 대신 null을 넘겨서 fragment 복원을 막는다
+        super.onCreate(null)
+    }
 
-  /**
-   * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
-   * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
-   */
-  override fun createReactActivityDelegate(): ReactActivityDelegate =
-      DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+    /**
+     * Returns the name of the main component registered from JavaScript. This is used to schedule
+     * rendering of the component.
+     */
+    override fun getMainComponentName(): String = "cshchatapp"
+
+    /**
+     * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
+     * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
+     */
+    override fun createReactActivityDelegate(): ReactActivityDelegate =
+        DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 }

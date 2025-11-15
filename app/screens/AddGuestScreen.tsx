@@ -4,7 +4,9 @@ import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import {useDispatch} from 'react-redux'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
-import TermAgreementList from '../components/features/terms/TermAgreementList'
+import TermAgreementList, {
+  CheckedRecordType,
+} from '../components/features/terms/TermAgreementList'
 import InputForm from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
 import EditTextArea from '../components/input/EditTextarea'
@@ -14,6 +16,7 @@ import EditProfile, {
   type profileInputRef,
 } from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
+import {checkRequiredTerm, defaultTermsRecord} from '../constants/terms'
 import {submitSignupRequest} from '../services/authService'
 import type {AppDispatch} from '../store/store'
 import {logout} from '../store/userSlice'
@@ -32,6 +35,10 @@ export default function AddGuestScreen() {
   const [previewUrl, setPreviewUrl] = useState<string | null>('')
   const profileRef = useRef<profileInputRef | null>(null)
   const [loading, setLoading] = useState(false)
+  const [checkedRecord, setCheckedRecord] =
+    useState<CheckedRecordType>(defaultTermsRecord)
+  const btnDisable = checkRequiredTerm(checkedRecord)
+
   const dispatch = useDispatch<AppDispatch>()
   const formRef = useRef<any | null>(null)
   const items: FormItem[] = [
@@ -167,7 +174,7 @@ export default function AddGuestScreen() {
         )
         //요청 등록시 auth 가 세팅되서 다시 로그인해제
         await logout(dispatch)
-        formRef.current.resetValues()
+        formRef?.current?.resetValues()
       } else {
         Alert.alert('실패', res.message)
       }
@@ -205,7 +212,13 @@ export default function AddGuestScreen() {
             initialValues={initialData}
             onSubmit={handleAddGuest}
             loading={loading}
-            bottomElement={<TermAgreementList />}
+            btnDisable={btnDisable}
+            bottomElement={
+              <TermAgreementList
+                checkedRecord={checkedRecord}
+                onChange={setCheckedRecord}
+              />
+            }
           />
         </KeyboardUtilitiesWrapper>
       </View>

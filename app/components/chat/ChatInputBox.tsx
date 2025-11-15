@@ -30,10 +30,6 @@ export default function ChatInputBox({
   const [loading, setLoading] = useState<boolean>(false)
   const queryClient = useQueryClient()
 
-  // const onNewChatRoom = () => {
-  //   createChatRoom()
-  // }
-
   const onSendMessage = async (
     type?: ChatMessage['type'],
     result?: ImagePickerResponse,

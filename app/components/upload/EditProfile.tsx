@@ -1,6 +1,7 @@
 import storage from '@react-native-firebase/storage'
 import React, {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useState,
   type ForwardedRef,
@@ -27,6 +28,7 @@ export interface profileInputRef {
   upload: () => Promise<string | null>
   getImage: () => string | null
   setImage: (value: string) => void
+  onReset: () => void
 }
 
 //ref로 받도록 수정함
@@ -44,6 +46,21 @@ export default forwardRef(function EditProfile(
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   // const [imageUri, setImageUri] = useState<string | null>(uri)
   const [loading, setLoading] = useState<boolean>(false)
+
+  useImperativeHandle(ref, () => ({
+    upload: () => uploadImage(),
+    getImage: () => previewUrl,
+    setImage: (url: string) => setPreviewUrl(url),
+    onReset: () => setPreviewUrl(defaultUrl),
+  }))
+
+  useEffect(() => {
+    ;(async () => {
+      // Android 13 이상일 경우 권한 체크
+      const hasPermission = await requestPhotoPermission()
+      if (!hasPermission) return
+    })()
+  }, [])
 
   // 사용자가 이미지 변경 할때마다다 파일업로드 하는방식
   // const pickAndUploadImage = async () => {
@@ -78,10 +95,6 @@ export default forwardRef(function EditProfile(
 
   const pickImage = async () => {
     try {
-      // Android 13 이상일 경우 권한 체크
-      const hasPermission = await requestPhotoPermission()
-      if (!hasPermission) return
-
       const result = await launchImageLibrary({
         mediaType: 'photo',
         selectionLimit: 1,
@@ -117,12 +130,6 @@ export default forwardRef(function EditProfile(
       return null
     }
   }
-
-  useImperativeHandle(ref, () => ({
-    upload: () => uploadImage(),
-    getImage: () => previewUrl,
-    setImage: (url: string) => setPreviewUrl(url),
-  }))
 
   return (
     <View style={styles.profile}>

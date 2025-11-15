@@ -1,5 +1,5 @@
 {
-  "include": ["app", "app/types", "index.ts", "index.tsx", "App.tsx"],
+  "include": ["app", "app/types", "index.ts", "index.js", "App.tsx"],
   "compilerOptions": {
     "baseUrl": ".", // ✅ 프로젝트 루트를 기준으로 alias 적용
     "paths": {

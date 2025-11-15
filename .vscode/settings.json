@@ -34,5 +34,7 @@
   "typescript.preferences.importModuleSpecifier": "relative",
 
   // 🔁 파일 이동 시 import 경로 업데이트
-  "typescript.updateImportsOnFileMove.enabled": "always"
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.compile.nullAnalysis.mode": "automatic"
 }

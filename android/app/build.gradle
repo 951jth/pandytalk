@@ -1,18 +1,12 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
-// ✅ 반드시 com.facebook.react **아래에 위치**
-// project.ext.react = [
-//     entryFile: "index.tsx"
-// ]
+react { autolinkLibrariesWithApp() }
 
-react {
-    autolinkLibrariesWithApp()
-}
-
-def enableProguardInReleaseBuilds = false
+def enableHermes = true
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 android {
@@ -21,58 +15,61 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
 
     namespace = "com.cshchatapp"
+
     defaultConfig {
         applicationId = "com.cshchatapp"
         minSdk = 24
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode = 1
         versionName = "1.0"
-
-        ndk {
-            abiFilters += ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
-        }
+        ndk { abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64" }
     }
 
     signingConfigs {
-        debug {
-            storeFile = file('debug.keystore')
-            storePassword = 'android'
-            keyAlias = 'androiddebugkey'
-            keyPassword = 'android'
+        release {
+            def props = new Properties()
+            def propsFile = rootProject.file("keystore.properties")
+            if (propsFile.exists()) {
+                props.load(new FileInputStream(propsFile))
+                storeFile file(props["storeFile"])
+                storePassword props["storePassword"]
+                keyAlias props["keyAlias"]
+                keyPassword props["keyPassword"]
+            } else {
+                println "⚠️ keystore.properties not found. Release signing will fail."
+            }
         }
     }
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.debug
-            minifyEnabled = false
-            shrinkResources = false
+            applicationIdSuffix ".debug"      // 👉 com.cshchatapp.debug 로 됨
+            // 기본 디버그 서명 사용(명시 안 해도 OK)
+            minifyEnabled false
+            shrinkResources false
         }
-       release {
-            signingConfig = signingConfigs.debug
-            minifyEnabled = false
-            shrinkResources = false
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
         }
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 }
 
 dependencies {
     implementation("com.facebook.react:react-android")
-    if (hermesEnabled.toBoolean()) {
+    if (enableHermes) {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }
+
+    implementation platform('com.google.firebase:firebase-bom:33.5.1')
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
 }
 
-apply plugin: 'com.google.gms.google-services'
-
-dependencies {
-  implementation 'com.google.firebase:firebase-messaging'
-}

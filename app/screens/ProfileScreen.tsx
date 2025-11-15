@@ -157,7 +157,8 @@ export default function ProfileScreen(): React.JSX.Element {
           size={20}
           style={styles.resetBtn}
           onTouchEnd={() => {
-            formRef.current?.resetValues()
+            formRef?.current?.resetValues()
+            profileRef?.current?.onReset()
           }}
         />
       </View>

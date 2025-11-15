@@ -2,7 +2,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import {
   onDocumentCreated,
-  onDocumentUpdated,
+  onDocumentWritten,
 } from 'firebase-functions/v2/firestore'
 import {db} from '../../core/firebase'
 
@@ -99,7 +99,7 @@ export const onGroupCreate = onDocumentCreated(
 )
 
 //그룹의 멤버가 바뀌는 경우, 채팅방 멤버를 갱신하는 항목임
-export const onGroupMembersUpdate = onDocumentUpdated(
+export const onGroupMembersUpdate = onDocumentWritten(
   {region: 'asia-northeast3', document: 'groups/{groupId}/members/{memberId}'},
   async event => {
     try {
@@ -108,14 +108,14 @@ export const onGroupMembersUpdate = onDocumentUpdated(
       // ✅ isActive === false 인 멤버만 조회 (Admin SDK 체이닝)
       const membersSnap = await db
         .collection(`groups/${groupId}/members`)
-        .where('isActive', '!=', false)
+        .where('isActive', '==', true)
         .get()
 
       const receiverIds = membersSnap.docs.map(d => d.id) // 문서 ID=uid 권장
 
       const chatRef = db.doc(`chats/${groupId}`) //그룹채팅의 채팅아이디는 그룹채팅의 아이디와 동일
-      console.log('receiverIds:', receiverIds)
-      chatRef.set(
+      logger.info('receiverIds:', receiverIds)
+      await chatRef.set(
         {
           type: 'group',
           members: receiverIds,
@@ -124,7 +124,7 @@ export const onGroupMembersUpdate = onDocumentUpdated(
         {merge: true},
       )
     } catch (err) {
-      console.error('[onGroupMemberWrite] error', err)
+      logger.error('[onGroupMemberWrite] error', err)
     }
   },
 )

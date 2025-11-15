@@ -112,3 +112,7 @@ node_modules/
 *.jks
 *.p12
 *.mobileprovision
+
+# android keystore
+android/keystore.properties
+android/app/my-release-key.keystore

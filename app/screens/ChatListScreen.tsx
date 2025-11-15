@@ -7,7 +7,10 @@ import {ActivityIndicator} from 'react-native-paper'
 import EmptyData from '../components/common/EmptyData'
 import SearchInput from '../components/input/SearchInput'
 import COLORS from '../constants/color'
-import {useMyChatsInfinite} from '../hooks/queries/useChatRoomQuery'
+import {
+  useMyChatsInfinite,
+  useSubscribeChatList,
+} from '../hooks/queries/useChatRoomQuery'
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
 import ChatListItemCard from '../components/features/chat/ChatListItemCard'
 import {getUsersByIds} from '../services/userService'
@@ -35,8 +38,7 @@ export default function ChatListScreen() {
     isFetchingNextPage,
     refetch,
   } = useMyChatsInfinite(user?.uid, type) as any //채팅방 목록 조회
-  // useSubscribeChatList(user?.uid, type) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
-  // 뱃지기능 떄문에 탭으로 이동시킴.
+  useSubscribeChatList(user?.uid, type) //채팅 목록 구독 (추가, 삭제, 수정(읽음처리등))
 
   const fetchedMemberIdsRef = useRef<Set<string | null>>(new Set())
   const [input, setInput] = useState<string>('')

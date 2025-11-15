@@ -1,51 +1,87 @@
 import {serverTimestamp} from '@react-native-firebase/firestore'
-import React, {useState} from 'react'
+import React, {useMemo, useState} from 'react'
 import {StyleSheet, Text, View} from 'react-native'
-import {Checkbox} from 'react-native-paper'
+import {Checkbox, IconButton} from 'react-native-paper'
 import COLORS from '../../../constants/color'
 import {terms} from '../../../constants/terms'
 import type {termType} from '../../../types/auth'
 import type {ServerTime} from '../../../types/chat'
+import TermViewModal from '../../modal/TermViewModal'
 
-export default function TermAgreementList() {
-  const [checkedRecord, setCheckedRecord] = useState<
-    Record<string, ServerTime | null>
-  >({})
-  const isAllChecked =
-    Object.values(checkedRecord).length > 0 &&
-    Object.values(checkedRecord).every(v => v !== null)
+export type CheckedRecordType = Record<string, ServerTime | null>
+
+type Props = {
+  /** Controlled: 외부에서 전달하는 체크 레코드 (없으면 내부 상태 사용) */
+  checkedRecord?: CheckedRecordType
+  /** 변경 콜백: 외부 제어 시 필수 권장 */
+  onChange?: (next: CheckedRecordType) => void
+}
+
+const defaultCheckedRecord: CheckedRecordType = terms.reduce(
+  (acc, obj) => ({...acc, [obj.id]: null}),
+  {} as CheckedRecordType,
+)
+
+export default (function TermAgreementList({
+  checkedRecord: controlled,
+  onChange,
+}: Props) {
+  // Uncontrolled 모드에서만 사용하는 내부 상태
+  const [innerRecord, setInnerRecord] =
+    useState<CheckedRecordType>(defaultCheckedRecord)
+  const [viewCode, setViewCode] = useState<string | null>(null)
+
+  // 항상 여기서 현재 사용할 소스를 결정
+  const record = controlled ?? innerRecord
+
+  const isAllChecked = useMemo(() => {
+    const values = Object.values(record)
+    return values.length > 0 && values.every(v => v !== null)
+  }, [record])
+
+  // 내부/외부 모두를 커버하는 set 함수
+  const applyRecord = (next: CheckedRecordType) => {
+    if (controlled) {
+      onChange?.(next)
+    } else {
+      setInnerRecord(next)
+      onChange?.(next) // 필요하면 외부에도 알림
+    }
+  }
 
   const handleCheck = (termId: string, isChecked: boolean) => {
-    setCheckedRecord(old => ({
-      ...old,
+    const next: CheckedRecordType = {
+      ...record,
       [termId]: isChecked ? serverTimestamp() : null,
-    }))
+    }
+    applyRecord(next)
   }
 
   const handleAllCheck = () => {
-    console.log('allChecked', isAllChecked)
-    if (!isAllChecked) {
-      // ✅ 전체 해제
-      const cleared = Object.keys(checkedRecord).reduce(
-        (acc, key) => {
-          acc[key] = null
-          return acc
-        },
-        {} as Record<string, null>,
-      )
-      setCheckedRecord(cleared)
+    if (isAllChecked) {
+      // 전체 해제
+      const cleared = Object.keys(record).reduce((acc, key) => {
+        acc[key] = null
+        return acc
+      }, {} as CheckedRecordType)
+      applyRecord(cleared)
     } else {
-      // ✅ 전체 선택 (현재 시간으로 채움)
+      // 전체 선택
       const now = serverTimestamp()
-      const all: Record<string, ServerTime> = Object.keys(checkedRecord).reduce(
-        (acc, key) => {
-          acc[key] = now
-          return acc
-        },
-        {} as Record<string, ServerTime>,
-      )
-      setCheckedRecord(all)
+      const all = Object.keys(record).reduce((acc, key) => {
+        acc[key] = now
+        return acc
+      }, {} as CheckedRecordType)
+      applyRecord(all)
     }
+  }
+
+  const handleMoveTerm = (term: termType) => setViewCode(term.id)
+
+  const handleTermConfirm = (term: termType) => {
+    const now = serverTimestamp()
+    applyRecord({...record, [term.id]: now})
+    setViewCode(null)
   }
 
   return (
@@ -58,22 +94,37 @@ export default function TermAgreementList() {
         />
         <Text style={styles.termTitle}>전체동의</Text>
       </View>
-      {terms?.map((term: termType) => {
-        const isChecked = !!checkedRecord[term?.id]
+
+      {terms.map((term: termType) => {
+        const isChecked = !!record[term.id]
         return (
-          <View style={styles.termItem} key={term?.id}>
+          <View style={styles.termItem} key={term.id}>
             <Checkbox
               status={isChecked ? 'checked' : 'unchecked'}
               onPress={() => handleCheck(term.id, !isChecked)}
-              color={COLORS.primary}
+              color={COLORS.secondary}
             />
-            <Text style={styles.termTitle}>{term?.title}</Text>
+            <Text style={styles.requiredText}>
+              ({term.required ? '필수' : '선택'})
+            </Text>
+            <Text style={styles.termTitle}>{term.title}</Text>
+            <IconButton
+              icon="chevron-right"
+              style={styles.iconRIght}
+              onPress={() => handleMoveTerm(term)}
+            />
           </View>
         )
       })}
+
+      <TermViewModal
+        code={viewCode}
+        onClose={() => setViewCode(null)}
+        onConfirm={handleTermConfirm}
+      />
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   termList: {
@@ -88,5 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  requiredText: {fontSize: 12, fontFamily: 'BMDOHYEON', marginRight: 4},
   termTitle: {color: COLORS.text, fontFamily: 'BMDOHYEON', fontSize: 13},
+  iconRIght: {position: 'absolute', right: 0},
 })

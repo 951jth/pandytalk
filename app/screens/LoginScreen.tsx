@@ -222,6 +222,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'red',
     fontFamily: 'BMDOHYEON',
+    fontSize: 12,
   },
   addOnRow: {
     marginTop: 20,

@@ -1,6 +1,7 @@
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
-import {FlatList, StyleSheet, View} from 'react-native'
+import {FlatList, StyleSheet} from 'react-native'
+import {SafeAreaView} from 'react-native-safe-area-context'
 import RequestMember from '../components/card/RequestMember'
 import SearchInput from '../components/input/SearchInput'
 import RequestMemberDetailModal from '../components/modal/RequestMemberDetailModal'
@@ -52,7 +53,7 @@ export default function GuestManageScreen() {
   }, [input])
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
       <SearchInput
         placeholder="검색할 닉네임 시작 글자를 입력해주세요."
         value={input}
@@ -75,7 +76,7 @@ export default function GuestManageScreen() {
         record={modalProps?.record as User}
         onRefresh={refetch}
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
