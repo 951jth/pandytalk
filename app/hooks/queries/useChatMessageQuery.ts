@@ -17,13 +17,14 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
+
 import {
   clearMessagesFromSQLite,
   getLatestMessageCreatedAtFromSQLite,
-  getMessagesFromLatestRead,
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
-} from '../../services/chatService'
+} from '../../db/sqlite'
+import {getMessagesFromLatestRead} from '../../services/chatService'
 import type {ChatMessage} from '../../types/chat'
 import {mergeMessages} from '../../utils/chat'
 import {toMillisFromServerTime, toRNFTimestamp} from '../../utils/firebase'

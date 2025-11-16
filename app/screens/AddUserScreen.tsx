@@ -187,14 +187,14 @@ export default function AddUserScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="가입 신청" />
+      <AppHeader title="회원 가입" />
       <View style={styles.inner}>
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <InputForm
             ref={formRef}
             editable={true}
             items={items}
-            buttonLabel="가입 신청"
+            buttonLabel="회원 가입"
             topElement={
               <View style={styles.profileWrap}>
                 <EditProfile

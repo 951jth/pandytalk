@@ -3,14 +3,12 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {FlatList, Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
+import {getLatestMessageCreatedAtFromSQLite} from '../../db/sqlite'
 import {
   useChatMessagesPaging,
   useSubscriptionMessage,
 } from '../../hooks/queries/useChatMessageQuery'
-import {
-  getLatestMessageCreatedAtFromSQLite,
-  updateLastRead,
-} from '../../services/chatService'
+import {updateLastRead} from '../../services/chatService'
 import type {ChatListItem, ChatMessage} from '../../types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '../../utils/chat'
 import {formatChatTime, formatServerDate} from '../../utils/firebase'

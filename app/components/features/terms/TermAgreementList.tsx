@@ -90,7 +90,7 @@ export default (function TermAgreementList({
         <Checkbox
           status={isAllChecked ? 'checked' : 'unchecked'}
           onPress={handleAllCheck}
-          color={COLORS.primary}
+          color={COLORS.secondary}
         />
         <Text style={styles.termTitle}>전체동의</Text>
       </View>
