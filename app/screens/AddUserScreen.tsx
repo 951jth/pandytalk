@@ -31,7 +31,7 @@ const initialData = {
   intro: '',
 }
 
-export default function AddGuestScreen() {
+export default function AddUserScreen() {
   const [previewUrl, setPreviewUrl] = useState<string | null>('')
   const profileRef = useRef<profileInputRef | null>(null)
   const [loading, setLoading] = useState(false)
@@ -187,14 +187,14 @@ export default function AddGuestScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <AppHeader title="게스트 신청" />
+      <AppHeader title="가입 신청" />
       <View style={styles.inner}>
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <InputForm
             ref={formRef}
             editable={true}
             items={items}
-            buttonLabel="게스트 신청"
+            buttonLabel="가입 신청"
             topElement={
               <View style={styles.profileWrap}>
                 <EditProfile

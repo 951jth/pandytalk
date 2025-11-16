@@ -65,7 +65,7 @@ export function RootNavigator(): React.JSX.Element {
       if (profile?.accountStatus !== 'confirm') {
         Alert.alert(
           '승인 대기 중',
-          '회원님의 게스트 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
+          '회원님의 가입 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
         )
         // 1) 즉시 네트워크 쓰기/로그아웃 금지 → 충돌/중첩 방지
         InteractionManager.runAfterInteractions(() => {

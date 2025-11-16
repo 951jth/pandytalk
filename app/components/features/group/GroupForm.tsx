@@ -4,17 +4,9 @@ import {
 } from '@react-native-firebase/firestore'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import {useQueryClient} from '@tanstack/react-query'
 import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, Text, View} from 'react-native'
-// import COLORS from '../../constants/color'
-// import {auth, firestore} from '../../store/firestore'
-// import type {FormItem} from '../../types/form'
-// import type {Group} from '../../types/group'
-// import type {AppRouteParamList} from '../../types/navigate'
-// import PandyButton from '../button/PandyButton'
-// import InputForm from '../form/InputForm'
-// import EditInput from '../input/EditInput'
-import {useQueryClient} from '@tanstack/react-query'
 import COLORS from '../../../constants/color'
 import {auth, firestore} from '../../../store/firestore'
 import type {ServerTime} from '../../../types/chat'
@@ -68,17 +60,6 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         label: '그룹장',
         // required: true,
         render: (value, onChange) => (
-          //   <EditInput
-          //     value={value}
-          //     onChangeText={onChange}
-          //     rightElement={
-          //       <PandyButton
-          //         shape="rounded"
-          //         title="선택"
-          //         onPress={() => navigation.navigate('user-select')}
-          //       />
-          //     }
-          //   />
           <UserSelect value={value} onChange={onChange} />
         ),
       },

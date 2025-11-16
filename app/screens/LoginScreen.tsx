@@ -169,7 +169,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.addGuestButton}
               onPress={() => navigation.push('addGuest')}>
-              <Text style={styles.addGuestText}>게스트 신청</Text>
+              <Text style={styles.addGuestText}>가입 신청</Text>
             </TouchableOpacity>
             <View style={styles.line}></View>
           </View>

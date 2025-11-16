@@ -96,7 +96,7 @@ export default function RequestMemberDetailModal({
         const photoURL = await profileRef.current.upload()
         await memberStatusUpdate(status, {...formValues, photoURL})
         setOpen(false)
-        Alert.alert('수정 완료', '게스트 멤버 정보 수정 완료')
+        Alert.alert('수정 완료', '유저 멤버 정보 수정 완료')
         onRefresh?.()
         // memberStatusUpdate(status, {...formValues, photoURL})
         //   .then(() => {
@@ -236,7 +236,7 @@ export default function RequestMemberDetailModal({
           edit={true}
           editable={false}
           items={items}
-          buttonLabel="게스트 신청"
+          buttonLabel="유저 신청"
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile

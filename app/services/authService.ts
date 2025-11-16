@@ -3,8 +3,7 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
 } from '@react-native-firebase/auth'
-import fs, {
-  addDoc,
+import {
   collection,
   doc,
   getDocs,
@@ -14,16 +13,14 @@ import fs, {
   setDoc,
   startAfter,
   updateDoc,
-  where,
   writeBatch,
 } from '@react-native-firebase/firestore'
 import type {FirebaseError} from 'firebase-admin'
-import type {Timestamp} from 'firebase-admin/firestore'
 import {orderBy} from 'lodash'
 import {Alert} from 'react-native'
 import {auth, firestore} from '../store/firestore'
 import store from '../store/store'
-import type {GuestApplication, requestUser, User} from '../types/auth'
+import type {requestUser, User} from '../types/auth'
 import {fileUpload} from './fileService'
 
 export async function signInEmail(email: string, password: string) {
@@ -44,7 +41,7 @@ export async function signInEmail(email: string, password: string) {
  * - 보안규칙: 호출 주체가 실제로 삭제 권한(관리자)이어야 함
  */
 
-//게스트 신청
+//유저 회원가입 신청
 //1. firebase auth 등록 2. users 컬렉션 등록 3. 관리자 승인 필요
 export async function submitSignupRequest({
   email,
@@ -135,70 +132,6 @@ export async function submitSignupRequest({
             return '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.'
         }
       })(),
-    }
-  }
-}
-
-// 게스트 신청서 요청 (현재 미사용)
-export async function submitSignupRequestRegacy({
-  email,
-  password,
-  displayName,
-  note,
-  intro,
-}: GuestApplication) {
-  try {
-    const nowTime = fs.FieldValue.serverTimestamp()
-
-    // 1) 중복 신청 방지 (pending/confirm 상태에 같은 이메일 존재하면 차단)
-    const dupQ = query(
-      collection(firestore, 'guestApplications'),
-      where('email', '==', email),
-      where('accountStatus', 'in', ['pending', 'confirm']),
-    )
-    const dupSnap = await getDocs(dupQ)
-    if (!dupSnap.empty) {
-      throw new Error('이미 신청되었거나 승인된 이메일입니다.')
-    }
-
-    // 2) 신청서 생성
-    const docRef = await addDoc(collection(firestore, 'guestApplications'), {
-      // ---- User 베이스 정보 (guestApplications가 User를 확장하려던 목적을 Firestore 문서로 녹임)
-      email,
-      displayName,
-      photoURL: null, // 필요시 클라에서 수집해서 넣으세요
-      authority: 'USER', // 당신의 User 모델에 맞게 기본 권한 지정
-      status: 'offline', // (선택) 사용자 상태 모델과 일관되게
-
-      // ---- 신청서 전용 입력
-      note: note ?? '',
-      intro: intro ?? '',
-      groupId: null,
-
-      // ---- 승인 상태
-      accountStatus: 'pending', // 'confirm' | 'pending' | 'reject'
-      approvedAt: null as Timestamp | null,
-      approvedBy: null as string | null,
-      rejectedAt: null as Timestamp | null,
-      rejectedBy: null as string | null,
-      emailVerified: false, // 신청 시점에는 보통 false
-
-      // ---- 시간
-      createdAt: nowTime,
-      updatedAt: nowTime,
-    })
-    return {ok: true, applicationId: docRef.id}
-  } catch (e) {
-    const err = e as FirebaseError
-    // Firestore 인덱스 필요 시(복합쿼리) 에러가 날 수 있습니다.
-    // 콘솔에서 제시하는 인덱스 링크로 한 번 생성하면 해결됩니다.
-    return {
-      ok: false,
-      code: err.code,
-      message:
-        err.code === 'permission-denied'
-          ? '권한이 없습니다. 잠시 후 다시 시도해주세요.'
-          : '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.',
     }
   }
 }

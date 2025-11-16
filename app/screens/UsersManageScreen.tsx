@@ -13,7 +13,7 @@ type modalProps = {
   record?: User | object | null
 }
 
-export default function GuestManageScreen() {
+export default function UsersManageScreen() {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const [modalProps, setModalProps] = useState<modalProps>({open: false})

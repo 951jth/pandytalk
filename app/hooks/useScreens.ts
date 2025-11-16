@@ -4,16 +4,16 @@ import ChatUnreadCount from '../components/badge/ChatUnreadCount'
 import GroupChatUnreadCount from '../components/badge/GroupChatUnreadCount'
 import MainLayout from '../components/layout/MainLayout'
 import TabScreenNavigator from '../navigation/TabScreenNavigator'
-import AddGuestScreen from '../screens/AddGuestScreen'
+import AddUserScreen from '../screens/AddUserScreen'
 import AdminMenuScreen from '../screens/AdminMenuScreen'
 import ChatListScreen from '../screens/ChatListScreen'
 import ChatRoomScreen from '../screens/ChatRoomScreen'
 import GroupChatRoomScreen from '../screens/GroupChatRoomScreen'
 import GroupManageScreen from '../screens/GroupManageScreen'
-import GuestManageScreen from '../screens/GuestManageScreen'
 import LoginScreen from '../screens/LoginScreen'
 import ProfileScreen from '../screens/ProfileScreen'
 import UserSelectScreen from '../screens/UserSelectScreen'
+import UsersManageScreen from '../screens/UsersManageScreen'
 import UsersScreen from '../screens/UsersScreen'
 import {useAppSelector} from '../store/reduxHooks'
 import type {TabParamList} from '../types/navigate'
@@ -116,8 +116,8 @@ const appRoutes = (): LayoutItem[] => {
         },
         {
           name: 'guest-manage',
-          title: '게스트 관리',
-          component: GuestManageScreen,
+          title: '유저 관리',
+          component: UsersManageScreen,
         },
         {
           name: 'group-manage',
@@ -155,7 +155,7 @@ const authRoutes: RouteItem[] = [
   },
   {
     name: 'addGuest',
-    component: AddGuestScreen,
+    component: AddUserScreen,
   },
 ]
 
