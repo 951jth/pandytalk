@@ -1,97 +1,103 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 프로젝트 이름: PandyTalk
 
-# Getting Started
+- Firebase 기반의 React Native 1:1/그룹 채팅 앱으로, 개인 프로젝트의 관리자용 커뮤니케이션 도구로 개발되었습니다.
+- 기본적인 개인 간 채팅 기능을 중심으로 설계되었으며, 실제 서비스 환경에서도 활용할 수 있도록 SQLite, React Query 기반의 데이터 캐싱 및 최적화 구조를 적용했습니다.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## 📌 Overview
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+이 프로젝트는 React Native로 개발된 사이드 프로젝트로,
+아래 두 가지 핵심 목표를 가지고 제작되었습니다.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Firebase 요청 횟수를 최소화하여 비용을 최적화하고, 실무에서도 바로 활용 가능한 구조와 모듈을 구현하는 데 집중했습니다.
+- 개인 사용자 간의 1:1 문의 및 그룹채팅 등의 간단한 커뮤니케이션을 위한 경량 채팅 서비스로, 개인 용도 및 사이드 프로젝트용 고객 지원 목적을 갖고 설계되었습니다.
 
-```sh
-# Using npm
-npm start
+---
 
-# OR using Yarn
-yarn start
+## ✨ MVP & 핵심 기능
+
+1. **사용자 로그인/게스트 신청**
+
+- Firebase Authentication 기반 로그인 기능을 제공하며, 게스트 사용자는 약관 동의 후 최소 정보를 입력해 가입을 요청할 수 있습니다.
+- 가입된 게스트는 관리자 승인 후에만 서비스 이용이 가능하도록 하여 운영 제어와 보안성을 강화했습니다
+
+2. **실시간 채팅**
+
+- Firestore의 onSnapshot 기반 실시간 구독으로 1:1 및 그룹 채팅 기능을 구현했습니다.
+- 메시지 변경사항을 구독하여 채팅방별 **읽지 않은 메시지(언리드 카운트)**를 자동 계산하도록 설계했습니다.
+- 불필요한 리스너를 방지하고 성능을 유지하기 위해 채팅방 단위로 구독을 분리해 최적화했습니다.
+
+3. **채팅방 리스트 & 정렬**
+
+- 채팅방 목록 조회, 언리드 메시지 카운트, 신규 채팅방 감지를 각각 커스텀 훅으로 분리해 재사용성과 유지보수성을 강화했습니다.
+- 최근 메시지를 기준으로 채팅방을 자동 정렬하여, 최신 대화가 상단에 노출되도록 구성했습니다.
+
+4. **FCM 푸쉬 알림**
+
+- 1:1 및 그룹 채팅의 새로운 메시지를 감지해 Firebase Cloud Messaging(FCM) 기반 푸시 알림을 발송하도록 구현했습니다.
+- 알림 클릭 시 해당 채팅방으로 직접 navigate 되도록 딥링크 구조로 설계해 사용자 접근성을 높였습니다.
+
+5. **그룹 및 게스트 관리**
+
+- 관리자 계정으로 로그인하면 게스트 및 일반 사용자 관리 탭에 접근할 수 있습니다.
+- 모든 게스트 계정은 관리자의 승인 후에만 서비스 이용이 가능하도록 설계했습니다.
+- 필요 시 관리자가 각 사용자 정보를 수정하거나 상태를 변경할 수 있는 관리 기능을 제공합니다.
+
+---
+
+## 🧰 Tech Stack
+
+### **App Framework**
+
+- **React Native (`@react-native-community/cli`)**  
+  → Android 중심 환경에서 네이티브 모듈 기능을 학습하기 위해 사용하였습니다.
+
+### **Language**
+
+- **TypeScript**  
+  → Firebase 기반 프로젝트 특성상, 안정적인 데이터 모델링을 위해 도입
+
+### **State / Data Management**
+
+- **Redux** — 전역 상태 관리 (유저 정보, 관리자 권한 등)
+- **React Query** — Firestore 데이터 캐싱 및 서버 상태 관리  
+  → Firebase Read 비용 최적화 및 데이터 일관성 유지
+- **SQLite** — 로컬 데이터베이스  
+  → 조회 데이터를 로컬 캐싱해 Firestore 요청을 최소화
+
+### **Backend / Cloud Services**
+
+- **Firebase Authentication** — 사용자/게스트 로그인 및 인증
+- **Firebase Firestore** — 실시간 채팅, 채팅방 및 유저 데이터 저장
+- **Firebase Cloud Functions** — FCM 발송, 관리자 승인 로직 등 서버 사이드 처리 자동화
+
+### **Local DB / Storage**
+
+- **SQLite**  
+  → 메시지 및 목록 데이터를 저장해 빠른 로딩과 네트워크 비용 절감
+
+### **Other Tools / Libraries**
+
+- **FCM (Firebase Cloud Messaging)** — 실시간 메시지 푸시 알림 및 딥링크 네비게이션
+- **onSnapshot (Firestore)** — 메시지 및 언리드 카운트 실시간 감지
+- **Custom Hooks Architecture** — 목록 조회·언리드 카운트·신규 채팅 감지 기능을 모듈화
+- **Firebase Security Rules** — 관리자 권한/게스트 승인 기반 접근 제어
+
+## 🗂 Project Structure
+
+> 실제 폴더 구조와 최대한 비슷하게만 적어두면 좋음
+
+```bash
+.
+├─ android
+├─ ios
+├─ src
+│  ├─ components      # 재사용 UI 컴포넌트
+│  ├─ screens         # 화면 단위 컴포넌트
+│  ├─ hooks           # 커스텀 훅
+│  ├─ store           # 전역 상태 관리
+│  ├─ services        # API / Firebase / 외부 연동
+│  └─ utils           # 유틸 함수
+└─ App.tsx
 ```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
