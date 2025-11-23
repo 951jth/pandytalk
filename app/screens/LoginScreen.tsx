@@ -14,16 +14,6 @@ import COLORS from '../constants/color'
 import type {AuthStackParamList} from '../types/navigate'
 import {validateField} from '../utils/validation'
 
-type formTypes = {
-  email: string
-  password: string
-}
-
-type errorsType = {
-  email: string | null
-  password: string | null
-}
-
 const validationMap = {
   email: {
     key: 'email',
@@ -129,6 +119,7 @@ export default function LoginScreen() {
     const msg = validateField(item, value, item)
     setErrors(msg || null)
   }
+
   // const isBtnDisabled = hasAnyError(errors)
   return (
     <SafeAreaView style={{flex: 1}}>

@@ -1,4 +1,4 @@
-import {Alert, Platform} from 'react-native'
+import {Alert, PermissionsAndroid, Platform} from 'react-native'
 import {check, PERMISSIONS, request, RESULTS} from 'react-native-permissions'
 
 export const requestPhotoPermission = async (): Promise<boolean> => {
@@ -50,4 +50,17 @@ export const requestPhotoPermission = async (): Promise<boolean> => {
   }
 
   return true
+}
+
+export async function ensureAndroidWritePermission() {
+  if (Platform.OS !== 'android') return true
+
+  // Android 13(Tiramisu) 이상이면 READ/WRITE 대신 READ_MEDIA_* 권한 써야 하는데,
+  // Download 폴더만 쓰는 정도면 대개 아래 WRITE_EXTERNAL_STORAGE로도 동작하는 케이스가 많음
+  // (프로젝트 targetSdk/정책에 따라 조정 필요)
+  const granted = await PermissionsAndroid.request(
+    PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+  )
+
+  return granted === PermissionsAndroid.RESULTS.GRANTED
 }

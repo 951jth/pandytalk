@@ -62,11 +62,11 @@ export function mergeMessages(
 }
 
 export const compareChat = (a: ChatListItem, b: ChatListItem) => {
-  const aLast = toMillisFromServerTime(a.lastMessage?.createdAt)
-  const bLast = toMillisFromServerTime(b.lastMessage?.createdAt)
+  const aLast = toMillisFromServerTime(a.lastMessage?.createdAt) ?? 0
+  const bLast = toMillisFromServerTime(b.lastMessage?.createdAt) ?? 0
   if (aLast !== bLast) return bLast - aLast // desc
-  const aCreated = toMillisFromServerTime(a.createdAt)
-  const bCreated = toMillisFromServerTime(b.createdAt)
+  const aCreated = toMillisFromServerTime(a.createdAt) ?? 0
+  const bCreated = toMillisFromServerTime(b.createdAt) ?? 0
   return bCreated - aCreated // desc
 }
 

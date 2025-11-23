@@ -1,4 +1,5 @@
 import {createNavigationContainerRef} from '@react-navigation/native'
+import BootSplash from 'react-native-bootsplash'
 
 export const navigationRef = createNavigationContainerRef<any>()
 
@@ -7,6 +8,9 @@ const queue: Array<() => void> = []
 
 export const onNavReady = () => {
   ready = true
+  // 네비게이션 준비되면 스플래시 숨기기
+  BootSplash.hide({fade: true})
+
   while (queue.length) queue.shift()?.()
 }
 

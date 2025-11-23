@@ -10,26 +10,20 @@ import {
   onAuthStateChanged,
 } from '@react-native-firebase/auth'
 import React, {useEffect, useState} from 'react'
-import AppNavigator from './app/navigation/AppNavigator'
-import AuthNavigator from './app/navigation/AuthNavigator'
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
-import {
-  Alert,
-  AppState,
-  InteractionManager,
-  StatusBar,
-  View,
-} from 'react-native'
-import {ActivityIndicator} from 'react-native-paper'
+import {Alert, AppState, InteractionManager, StatusBar} from 'react-native'
 import {useDispatch} from 'react-redux'
 // reset 제거 → navigationRef 불필요
 // import {navigationRef} from './app/components/navigation/RootNavigation'
 import {safeCall} from '@utils/call'
 import {throttle} from 'lodash'
+import {initChatTables, isMessagesTableExists} from './app/db/sqlite'
 import {useFCMSetup} from './app/hooks/useFCM'
 import {useFCMPushHandler} from './app/hooks/useFCMPush'
-import {initChatTables, isMessagesTableExists} from './app/services/chatService'
+import AppNavigator from './app/navigation/AppNavigator'
+import AuthNavigator from './app/navigation/AuthNavigator'
+import PandySplashScreen from './app/screens/PandySplashScreen'
 import {migrateDatabaseIfNeeded} from './app/services/migrationService'
 import {updateLastSeen, updateUserOffline} from './app/services/userService'
 import {useAppSelector} from './app/store/reduxHooks'
@@ -135,11 +129,7 @@ export function RootNavigator(): React.JSX.Element {
 
   // 초기/프로필 로딩 중 스플래시
   if (shouldShowSplash) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator />
-      </View>
-    )
+    return <PandySplashScreen />
   }
 
   // ✅ 선언적 Auth Gate: reset 없이 스크린 전환

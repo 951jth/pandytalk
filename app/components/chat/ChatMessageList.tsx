@@ -1,6 +1,6 @@
 import {useFocusEffect} from '@react-navigation/native'
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {FlatList, Image, StyleSheet, View} from 'react-native'
+import {FlatList, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {getLatestMessageCreatedAtFromSQLite} from '../../db/sqlite'
@@ -71,13 +71,16 @@ export default function ChatMessageList({
               {/* 내 채팅 */}
               <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
               {item?.type == 'image' && item?.imageUrl && (
-                <ImageViewer
-                  images={[{uri: item?.imageUrl}]}
-                  imageProps={{
-                    resizeMode: 'cover',
-                    style: styles.chatImage,
-                  }}
-                />
+                <View style={styles.chatImage}>
+                  <ImageViewer
+                    images={[{uri: item?.imageUrl}]}
+                    imageProps={{
+                      resizeMode: 'cover',
+                      style: styles.chatImage,
+                    }}
+                    style={styles.chatImage}
+                  />
+                </View>
               )}
               {!hideMinute && item?.createdAt && (
                 <Text style={[styles.chatTime, {left: -60}]}>
@@ -92,10 +95,12 @@ export default function ChatMessageList({
                 //프로필
                 <View style={styles.frame}>
                   {member?.photoURL ? (
-                    <Image
-                      source={{uri: member.photoURL}}
-                      resizeMode="cover"
-                      style={styles.profile}
+                    <ImageViewer
+                      images={[{uri: member?.photoURL}]}
+                      imageProps={{
+                        resizeMode: 'cover',
+                        style: styles.profile,
+                      }}
                     />
                   ) : (
                     <Icon source="account" size={35} color={COLORS.primary} />
@@ -105,7 +110,9 @@ export default function ChatMessageList({
               <View style={{marginLeft: hideProfile ? 55 : 0}}>
                 {/* 닉네임 */}
                 {!hideProfile && (
-                  <Text style={styles.nickname}>{member?.displayName}</Text>
+                  <Text style={styles.nickname}>
+                    {member?.displayName ?? '알수없음'}
+                  </Text>
                 )}
                 <View style={styles.otherChat}>
                   {/* 상대 채팅 */}
@@ -117,6 +124,7 @@ export default function ChatMessageList({
                         resizeMode: 'cover',
                         style: styles.chatImage,
                       }}
+                      style={styles.chatImage}
                     />
                   )}
                   {!hideMinute && (
@@ -184,7 +192,7 @@ export default function ChatMessageList({
           fetchNextPage()
         }
       }}
-      onRefresh={resetChatMessages}
+      // onRefresh={resetChatMessages}
       // onScroll={({nativeEvent}) => {
       //   if (nativeEvent.contentOffset.y <= 0) {
       //     console.log('next page')

@@ -69,7 +69,10 @@ export default function ChatRoomScreen() {
           <View style={styles.inner}>
             <AppHeader
               title={
-                title || targetMember?.displayName || roomInfo?.name || '채팅방'
+                title ||
+                targetMember?.displayName ||
+                `${roomInfo?.name} (그룹)` ||
+                '채팅방'
               }
               rightActions={rightActions}
             />

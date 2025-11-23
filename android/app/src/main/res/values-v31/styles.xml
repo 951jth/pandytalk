@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Android 12+ 용 AppTheme -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- RN 기본 EditText 배경 -->
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+
+        <!-- 앱 기본 배경색 (스플래시 배경과 맞추기) -->
+        <item name="android:windowBackground">@color/splash_bg</item>
+
+        <!-- ✅ Android 12 시스템 스플래시 설정 -->
+        <!-- 맨 처음 0.x초 동안 보일 스플래시 배경색 -->
+        <item name="android:windowSplashScreenBackground">@color/splash_bg</item>
+        <!-- 맨 처음 가운데에 뜨는 아이콘 (기본 앱 아이콘 대신 팬디로) -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/pandy_splash</item>
+        <!-- 필요하면 아이콘 뒤 배경 (동그란 원 배경 색) -->
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_bg</item>
+    </style>
+
+    <!-- BootSplash에서 사용할 테마 (그대로 유지) -->
+    <style name="BootTheme" parent="Theme.BootSplash">
+        <item name="bootSplashBackground">@color/splash_bg</item>
+        <item name="bootSplashLogo">@drawable/pandy_splash</item>
+        <item name="postBootSplashTheme">@style/AppTheme</item>
+    </style>
+
+</resources>

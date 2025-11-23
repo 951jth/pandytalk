@@ -22,9 +22,9 @@ export type AppRouteParamList = {
   // Auth
   // main: undefined
   chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
-  // 'guest-manage': undefined
-  // 'group-manage': undefined
-  // 'user-select': undefined
+  'guest-manage': undefined
+  'group-manage': undefined
+  'user-select': undefined
   chats: {type?: ChatListItem['type']}
   'group-chat': {groupId?: string; type?: ChatListItem['type']} | undefined
 }

@@ -5,12 +5,17 @@ import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ✅ 여기서 savedInstanceState 대신 null을 넘겨서 fragment 복원을 막는다
-        super.onCreate(null)
+        // BootSplash 초기화 (우리가 만든 BootTheme 사용)
+        RNBootSplash.init(this, R.style.BootTheme)
+
+        // 기존 RN 템플릿 그대로 유지 (react-native-screens 쓰면 null 그대로 둬도 됨)
+        super.onCreate(null)  // super.onCreate(savedInstanceState) 써도 되고, 지금처럼 null 유지해도 됨
     }
 
     /**
