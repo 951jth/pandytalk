@@ -18,7 +18,7 @@ import DefaultProfile from '../common/DefaultProfile'
 interface propTypes {
   // previewUrl: string | null
   // setPreviewUrl: (value: string) => void
-  defaultUrl: string | null
+  defaultUrl: string | null | undefined
   edit?: boolean
   boxSize?: number
   iconSize?: number
@@ -26,7 +26,7 @@ interface propTypes {
 
 export interface profileInputRef {
   upload: () => Promise<string | null>
-  getImage: () => string | null
+  getImage: () => string | null | undefined
   setImage: (value: string) => void
   onReset: () => void
 }
