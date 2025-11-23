@@ -47,7 +47,10 @@ export default function ImageViewer({
 
   return (
     <>
-      <TouchableOpacity onPress={() => setVisible(true)} style={[style]}>
+      <TouchableOpacity
+        onPress={() => setVisible(true)}
+        style={[style]}
+        activeOpacity={0.5}>
         <Image {...imageProps} source={{uri: images[0].uri}} />
       </TouchableOpacity>
       <EnhancedImageViewing

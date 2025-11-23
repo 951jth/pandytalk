@@ -8,10 +8,12 @@ import {
 import {useQueryClient} from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {Button, IconButton} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
+import {CustomButton} from '../components/button/CustomButton'
+import WithdrawalButton from '../components/button/WithdrawalButton'
 import InputForm, {InputFormRef} from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
 import EditProfile, {
@@ -25,21 +27,19 @@ import {useAppSelector} from '../store/reduxHooks'
 import {AppDispatch} from '../store/store'
 import {fetchUserById} from '../store/userSlice'
 import type {FormItem} from '../types/form'
+// somewhere like App.tsx or a test screen
 
 const authInstance = getAuth()
 
 export default function ProfileScreen(): React.JSX.Element {
-  const {data: user, loading, error} = useAppSelector(state => state.user)
+  const {data: user} = useAppSelector(state => state.user)
   const userInfo = useMemo(() => cloneDeep(user), [user])
-  const [formValues, setFormValues] = useState<object | null>()
-  const [edit, setEdit] = useState<boolean>(false)
   const [submitting, setSubmitting] = useState<boolean>(false)
-  const [previewUrl, setPreviewUrl] = useState<string | null>('')
   const dispatch = useDispatch<AppDispatch>()
   const queryClient = useQueryClient()
   const uid = authInstance.currentUser?.uid
   const profileRef = useRef<profileInputRef | null>(null)
-  const formRef = useRef<InputFormRef | null>(null)
+  const formRef = useRef<InputFormRef>(null)
   const {resetAll} = useResetAllQueryCache()
 
   const formItems: FormItem[] = [
@@ -89,8 +89,11 @@ export default function ProfileScreen(): React.JSX.Element {
     status: 'online',
   } //초기값이 없는 경우 강제로넣어줌
 
-  const updateUserProfile = async (formValues: object) => {
+  const updateUserProfile = async () => {
     try {
+      const errs = formRef?.current?.onValidate()
+      if (errs) return
+      let formValues = formRef.current?.getValues()
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
       if (!user) initialUserInfo(uid as string, dispatch)
       setSubmitting(true)
@@ -118,11 +121,11 @@ export default function ProfileScreen(): React.JSX.Element {
     }
   }
 
-  useEffect(() => {
-    // setFormValues(user as object)
-    if (userInfo?.photoURL) setPreviewUrl(userInfo.photoURL)
-  }, [userInfo])
-  console.log('userINfo', userInfo)
+  // 테스트용: 버튼 클릭 시 강제 크래시
+  // const forceCrash = () => {
+  //   crashlytics().log('Test crash button clicked')
+  //   crashlytics().crash() // 강제 크래시
+  // }
 
   return (
     <View style={styles.container}>
@@ -130,10 +133,10 @@ export default function ProfileScreen(): React.JSX.Element {
         <InputForm
           items={formItems}
           formData={userInfo}
-          editable={true}
           labelWidth={100}
-          buttonLabel="프로필 저장"
           initialValues={initialFormValues}
+          edit={true}
+          ref={formRef}
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
@@ -143,11 +146,14 @@ export default function ProfileScreen(): React.JSX.Element {
               />
             </View>
           }
-          edit={true}
-          loading={submitting}
-          onSubmit={formValues => updateUserProfile(formValues)}
-          ref={formRef}
         />
+        <View style={styles.buttons}>
+          {/* <CustomButton onTouchEnd={forceCrash}>크래시 테스트</CustomButton> */}
+          <CustomButton loading={submitting} onTouchEnd={updateUserProfile}>
+            프로필 저장
+          </CustomButton>
+          {userInfo?.authority !== 'ADMIN' && <WithdrawalButton />}
+        </View>
         <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
           캐시 초기화
         </Button>
@@ -199,5 +205,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
+  },
+  buttons: {
+    gap: 8,
   },
 })

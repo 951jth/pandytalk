@@ -230,7 +230,7 @@ export const memberStatusUpdate = async (
   }
 }
 
-async function deleteMyAccount() {
+export async function deleteMyAccount() {
   const user = auth.currentUser
 
   if (!user) {
@@ -239,6 +239,7 @@ async function deleteMyAccount() {
 
   try {
     await deleteUser(user)
+    Alert.alert('탈퇴성공', '회원 탈퇴 되었습니다.')
     // 여기서부터는 계정이 Auth에서 삭제된 상태
     // 추가로 Firestore/Storage 데이터도 정리해주면 좋음
   } catch (err: any) {

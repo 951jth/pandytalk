@@ -59,6 +59,8 @@ export interface InputFormRef {
   updateValues: (patch: Partial<Record<string, any>>) => void
   // formValues 폼데이터 입력값 초기화
   resetValues: () => void
+  // 폼값 검증
+  onValidate: () => boolean
 }
 
 const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
@@ -114,6 +116,13 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         setFormValues(prev => ({...(prev ?? {}), ...patch}))
         // 부분 갱신 시 유효성 체크가 필요하면 아래 로직 확장 가능
         // Object.entries(patch).forEach(([k, v]) => { ...validateField... });
+      },
+      onValidate: () => {
+        const errorsFields = validateAllFields(items, (formValues ?? {}) as any)
+        if (hasAnyError(errorsFields)) {
+          setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
+          return true
+        } else return false
       },
       resetValues: () => setFormValues(formData || null),
     }),
