@@ -36,7 +36,6 @@ export default function ChatRoomScreen() {
       console.log('rid', rid)
       getChatRoomInfo(rid)
         .then(res => {
-          console.log('result', res)
           setRoomInfo(res || null)
         })
         .catch(e => {
@@ -45,7 +44,6 @@ export default function ChatRoomScreen() {
         })
     }
   }
-  console.log('roomInfo', roomInfo)
   useEffect(() => {
     getRoomInfo()
   }, [])
@@ -71,8 +69,7 @@ export default function ChatRoomScreen() {
               title={
                 title ||
                 targetMember?.displayName ||
-                `${roomInfo?.name} (그룹)` ||
-                '채팅방'
+                `${roomInfo?.name ?? ''} (그룹)`
               }
               rightActions={rightActions}
             />

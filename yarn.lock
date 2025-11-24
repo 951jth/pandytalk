@@ -1995,10 +1995,10 @@
   dependencies:
     plist "^3.1.0"
 
-"@react-native-firebase/crashlytics@^23.5.0":
-  version "23.5.0"
-  resolved "https://registry.yarnpkg.com/@react-native-firebase/crashlytics/-/crashlytics-23.5.0.tgz#16ccc1ce2d39ec1734b11dcda7f7c177feb0b339"
-  integrity sha512-+coTsJZFOkaF/1qVrv0QXr1js0788PCn6DvEgpnoiEy8jWJi5q8Rza5XWOLqRfkcqp1QsrmSxUFN22pWz8zGXw==
+"@react-native-firebase/crashlytics@^22.2.1":
+  version "22.4.0"
+  resolved "https://registry.yarnpkg.com/@react-native-firebase/crashlytics/-/crashlytics-22.4.0.tgz#1e9093cf5de5c7355bab409b9290ad573bd7335e"
+  integrity sha512-31Trx2jP49eUw6oQjQ1rUtV915rmuhEB/qdVEZqQG7i1M4+a75NNhTvW2cjUjAGG3zPXSmCt3agfkWquUveocQ==
   dependencies:
     stacktrace-js "^2.0.2"
 
