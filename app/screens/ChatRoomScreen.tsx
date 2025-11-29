@@ -36,7 +36,6 @@ export default function ChatRoomScreen() {
       console.log('rid', rid)
       getChatRoomInfo(rid)
         .then(res => {
-          console.log('result', res)
           setRoomInfo(res || null)
         })
         .catch(e => {
@@ -45,7 +44,6 @@ export default function ChatRoomScreen() {
         })
     }
   }
-  console.log('roomInfo', roomInfo)
   useEffect(() => {
     getRoomInfo()
   }, [])

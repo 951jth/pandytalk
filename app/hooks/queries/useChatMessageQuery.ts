@@ -7,7 +7,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  startAfter,
   where,
 } from '@react-native-firebase/firestore'
 import {
@@ -20,11 +19,10 @@ import {useEffect} from 'react'
 
 import {
   clearMessagesFromSQLite,
-  getLatestMessageCreatedAtFromSQLite,
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
 } from '../../db/sqlite'
-import {getMessagesFromLatestRead} from '../../services/chatService'
+import {getChatRoomInfo} from '../../services/chatService'
 import type {ChatMessage} from '../../types/chat'
 import {mergeMessages} from '../../utils/chat'
 import {toMillisFromServerTime, toRNFTimestamp} from '../../utils/firebase'
@@ -88,7 +86,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             createdAt: e?.createdAt
               ? toMillisFromServerTime(e?.createdAt)
               : Date.now(),
-          }))
+          })) as ChatMessage[]
           if (serverMessages.length > 0) {
             //서버데이터가 있으면 그대로 sqlite에 push
             await saveMessagesToSQLite(roomId, serverMessages)
@@ -219,51 +217,17 @@ export const useSubscriptionMessage = (
   }, [roomId, lastCreatedAt])
 }
 
-//ㅡㅡㅡㅡㅡ아래는 안쓰는 함수들ㅡㅡㅡㅡㅡㅡ
-// 채팅방 데이터 최신화 (현재 snapshot으로 대체함 안씀)
-export const useSyncUnreadMessages = (
-  roomId: string | null,
-  localMessages: ChatMessage[],
-) => {
-  const latestCreatedAt = localMessages?.[0]?.createdAt
-  const isSyncEnabled =
-    !!roomId && localMessages.length > 0 && !!latestCreatedAt
-  return useQuery({
-    queryKey: ['unreadMessagesSync', roomId],
+export const useChatRoomInfo = (roomId: string | null) =>
+  useQuery({
+    queryKey: ['chatRoom', roomId],
+    enabled: !!roomId,
     queryFn: async () => {
-      const unread = await getMessagesFromLatestRead(roomId!, latestCreatedAt)
-      // console.log('unread', unread)
-      return [...unread, ...localMessages]
-      // return mergeMessages(unread, localMessages)
+      try {
+        if (!roomId) return
+        const data = await getChatRoomInfo(roomId)
+        return data || {}
+      } catch (e) {
+        return {}
+      }
     },
-    enabled: isSyncEnabled,
-    staleTime: 0, // ✅ 캐시된 데이터는 즉시 stale 처리됨
-    refetchOnMount: true,
-    refetchOnWindowFocus: true, // ✅ 포커스 복귀 시 자동 동기화
   })
-}
-
-//채팅 메세지 조회 (실시간 들어오는 메세지), 현재 사용X
-export const listenToMessages = (
-  roomId: string,
-  onUpdate: (messages: ChatMessage[]) => void,
-) => {
-  // const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-  const lastCreatedAt = getLatestMessageCreatedAtFromSQLite(roomId)
-
-  const q = query(
-    collection(firestore, 'chats', roomId, 'messages'),
-    orderBy('createdAt'),
-    startAfter(lastCreatedAt),
-  )
-
-  const unsubscribe = onSnapshot(q, snapshot => {
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ChatMessage[]
-    onUpdate(messages)
-  })
-
-  return unsubscribe
-}
