@@ -35,7 +35,6 @@ export default function ImageViewer({
   useDownload = true,
   style,
 }: propTypes) {
-  console.log('style', style)
   const [visible, setVisible] = useState(false)
   const {data: userInfo} = useAppSelector(state => state.user)
   if (!images?.[0]?.uri) return null

@@ -30,6 +30,7 @@ import type {FormItem} from '../types/form'
 // somewhere like App.tsx or a test screen
 
 const authInstance = getAuth()
+const debug = true
 
 export default function ProfileScreen(): React.JSX.Element {
   const {data: user} = useAppSelector(state => state.user)
@@ -100,6 +101,7 @@ export default function ProfileScreen(): React.JSX.Element {
       const firestore = getFirestore()
       const userRef = doc(firestore, 'users', uid)
       const newPhotoURL = await profileRef?.current?.upload()
+
       if (newPhotoURL) {
         formValues = {
           ...initialFormValues,
@@ -107,6 +109,7 @@ export default function ProfileScreen(): React.JSX.Element {
           photoURL: newPhotoURL,
         }
       }
+      if (debug) return console.log('formValues', formValues)
       await updateDoc(userRef, {
         ...formValues,
       })

@@ -68,12 +68,9 @@ export default function ChatRoomScreen() {
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <View style={styles.inner}>
             <AppHeader
-              title={
-                title ||
-                targetMember?.displayName ||
-                `${roomInfo?.name} (그룹)` ||
-                '채팅방'
-              }
+              title={`${
+                title || targetMember?.displayName || roomInfo?.name || '채팅방'
+              } ${roomInfo?.type == 'group' ? '(그룹)' : ''}`}
               rightActions={rightActions}
             />
             {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}

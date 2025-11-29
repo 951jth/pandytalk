@@ -71,14 +71,13 @@ export default function ChatMessageList({
               {/* 내 채팅 */}
               <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
               {item?.type == 'image' && item?.imageUrl && (
-                <View style={styles.chatImage}>
+                <View>
                   <ImageViewer
                     images={[{uri: item?.imageUrl}]}
                     imageProps={{
                       resizeMode: 'cover',
                       style: styles.chatImage,
                     }}
-                    style={styles.chatImage}
                   />
                 </View>
               )}
@@ -124,7 +123,6 @@ export default function ChatMessageList({
                         resizeMode: 'cover',
                         style: styles.chatImage,
                       }}
-                      style={styles.chatImage}
                     />
                   )}
                   {!hideMinute && (

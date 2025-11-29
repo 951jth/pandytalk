@@ -138,6 +138,7 @@ export default function LoginScreen() {
                 validateCheck('email', text)
               }}
               placeholder="이메일을 입력해주세요."
+              keyboardType="email-address"
             />
             <PasswordInput
               type="outlined"
