@@ -25,7 +25,6 @@ android {
         versionName = "1.0.1"
        ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
-            // x86, x86_64 빼버리기
         }
     }
 
@@ -51,6 +50,9 @@ android {
             // 기본 디버그 서명 사용(명시 안 해도 OK)
             minifyEnabled false
             shrinkResources false
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            }
         }
         release {
             signingConfig signingConfigs.release

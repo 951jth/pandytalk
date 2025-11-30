@@ -1,13 +1,12 @@
 import React, {useState} from 'react'
 import {
-  Image,
-  ImageProps,
   StyleSheet,
   TouchableOpacity,
   View,
   type StyleProp,
   type ViewStyle,
 } from 'react-native'
+import FastImage, {FastImageProps} from 'react-native-fast-image'
 import EnhancedImageViewing from 'react-native-image-viewing'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
@@ -20,7 +19,7 @@ interface ImageSource {
 
 interface propTypes {
   images: ImageSource[]
-  imageProps?: ImageProps
+  imageProps?: FastImageProps
   index?: number
   setIndex?: (number: number) => void
   useDownload?: boolean
@@ -50,7 +49,11 @@ export default function ImageViewer({
         onPress={() => setVisible(true)}
         style={[style]}
         activeOpacity={0.5}>
-        <Image {...imageProps} source={{uri: images[0].uri}} />
+        <FastImage
+          {...imageProps}
+          source={{uri: images[0].uri}}
+          resizeMode={FastImage.resizeMode.cover}
+        />
       </TouchableOpacity>
       <EnhancedImageViewing
         images={images}

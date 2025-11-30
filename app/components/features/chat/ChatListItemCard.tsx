@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import React from 'react'
-import {Image, StyleSheet, Text, View} from 'react-native'
+import {StyleSheet, Text, View} from 'react-native'
+import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../../constants/color'
 import type {ChatItemWithMemberInfo} from '../../../types/chat'
@@ -26,9 +27,9 @@ export default function ChatListItemCard({item, onPress}: propTypes) {
     <PressableWrapper onPress={() => onPress?.(item)} style={styles.chatRoom}>
       <View style={styles.frame}>
         {viewItem?.image ? (
-          <Image
+          <FastImage
             source={{uri: viewItem?.image}}
-            resizeMode="cover"
+            resizeMode={FastImage.resizeMode.cover}
             style={styles.image}
           />
         ) : (

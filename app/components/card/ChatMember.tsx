@@ -2,7 +2,6 @@ import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from '@utils/dayjs'
 import React from 'react'
 import {
-  Image,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
+import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import type {User} from '../../types/auth'
@@ -49,9 +49,9 @@ export default function ChatMember({
       <View style={[styles.friend]}>
         <View style={styles.frame}>
           {item?.photoURL ? (
-            <Image
+            <FastImage
               source={{uri: item?.photoURL}}
-              resizeMode="cover"
+              resizeMode={FastImage.resizeMode.cover}
               style={styles.image}
             />
           ) : (
