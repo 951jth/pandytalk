@@ -10,7 +10,7 @@ import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
 import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
-import {Button, IconButton} from 'react-native-paper'
+import {IconButton} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 import {CustomButton} from '../components/button/CustomButton'
 import WithdrawalButton from '../components/button/WithdrawalButton'
@@ -22,7 +22,6 @@ import EditProfile, {
 } from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
-import {useResetAllQueryCache} from '../hooks/useCommonQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {initialUserInfo} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
@@ -42,7 +41,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const uid = authInstance.currentUser?.uid
   const profileRef = useRef<profileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
-  const {resetAll} = useResetAllQueryCache()
+  // const {resetAll} = useResetAllQueryCache()
   const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
 
   const formItems: FormItem[] = [
@@ -113,26 +112,38 @@ export default function ProfileScreen(): React.JSX.Element {
     try {
       const errs = formRef?.current?.onValidate()
       if (errs) return
-      let formValues = formRef.current?.getValues()
+
+      const formValues = formRef.current?.getValues() || {}
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
       if (!user) initialUserInfo(uid as string, dispatch)
+
       setSubmitting(true)
       const firestore = getFirestore()
       const userRef = doc(firestore, 'users', uid)
       const newPhotoURL = await profileRef?.current?.upload()
 
-      if (newPhotoURL) {
-        formValues = {
-          ...initialFormValues,
-          ...formValues,
-          photoURL: newPhotoURL,
-        }
+      // 수정 가능한 값만 추출
+      const payload: any = {
+        // 닉네임
+        displayName: formValues.displayName
+          ? String(formValues.displayName).trim()
+          : (user?.displayName ?? ''),
+        // 자기소개
+        intro: formValues.intro
+          ? String(formValues.intro).trim()
+          : (user?.intro ?? ''),
+        // 프로필 사진
+        photoURL: newPhotoURL ?? user?.photoURL ?? null,
+        // 이 화면에서 lastSeen까지 같이 변경하고 싶으면:
+        updatedAt: serverTimestamp(),
+        // lastSeen도 여기서 바꾸고 싶으면 아래 주석 풀기
+        lastSeen: serverTimestamp(),
       }
-      await updateDoc(userRef, {
-        ...formValues,
-      })
+
+      await updateDoc(userRef, payload)
+
       const profile = await dispatch(fetchUserById(uid))
-      queryClient.invalidateQueries({queryKey: ['users']}) //유저 조회 쿼리갱신
+      queryClient.invalidateQueries({queryKey: ['users']})
       Alert.alert('성공', '프로필 정보가 저장되었습니다.')
     } catch (err) {
       console.error('프로필 업데이트 실패:', err)
@@ -150,9 +161,9 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <View style={[styles.container, {paddingBottom: keyboardHeight}]}>
-      <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
+      {/* <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
         캐시 초기화
-      </Button>
+      </Button> */}
       <IconButton
         icon="refresh"
         size={20}

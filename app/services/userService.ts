@@ -57,36 +57,6 @@ export async function updateUserOffline(uid: string): Promise<void> {
   }
 }
 
-//유저 더미 데이터 생성 용
-export const generateGuestUsers = async () => {
-  const promises = []
-  const now = Date.now()
-  for (let i = 1; i <= 10; i++) {
-    const current = now + i
-    const uid = `guest_${current}`
-    const user = {
-      uid,
-      authority: 'USER',
-      email: `guest${current}@example.com`,
-      isGuest: true,
-      lastSeen: current,
-      displayName: `게스트${current}`,
-      photoURL: '',
-      status: 'offline',
-    }
-
-    const userRef = doc(firestore, 'users', uid)
-    promises.push(setDoc(userRef, user))
-  }
-
-  try {
-    await Promise.all(promises)
-    console.log('✅ Guest users created successfully.')
-  } catch (error) {
-    console.error('❌ Failed to create guest users:', error)
-  }
-}
-
 //유저값 초기 데이터세팅
 export const initialUserInfo = async (uid: string, dispatch: AppDispatch) => {
   const userRef = doc(firestore, 'users', uid)

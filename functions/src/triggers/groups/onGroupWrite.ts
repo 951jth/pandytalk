@@ -44,7 +44,6 @@ export const onGroupCreate = onDocumentCreated(
     // 2) groups/{groupId}/members/{uid} 생성/활성
     // 3) groups/{groupId}.memberCount 캐시
     const batch = db.batch() //한번에 여러
-    const now = Date.now()
 
     // (1) 채팅방 문서
     const chatRef = db.doc(`chats/${groupId}`)
@@ -71,7 +70,7 @@ export const onGroupCreate = onDocumentCreated(
         {
           role: roleOf(uid),
           isActive: true,
-          joinedAt: now,
+          joinedAt: admin.firestore.FieldValue.serverTimestamp(),
           leftAt: null,
         },
         {merge: true},

@@ -103,7 +103,7 @@ export const toMillisFromServerTime = (v: unknown): number | null => {
   }
 
   // serverTimestamp() 미확정 sentinel 등이면 null
-  return Date.now()
+  return null
 }
 //ms -> fb timestamp
 export function msToTs(ms?: number | null) {

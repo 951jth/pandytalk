@@ -9,4 +9,4 @@ export {onAuthUserDeleted} from './triggers/users/onUserDelete'
 export {onUserGroupIdUpdated} from './triggers/users/onUserUpdate'
 //firebase login
 //firebase deploy --only functions 로 배포 or
-// firebase deploy --only "functions:sendNewMessageNotification"
+// firebase deploy --only "functions:onGroupCreate"

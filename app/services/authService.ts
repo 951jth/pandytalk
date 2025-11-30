@@ -195,34 +195,36 @@ export const memberStatusUpdate = async (
   formValues: User,
 ) => {
   try {
-    // const nowTime = fs.FieldValue.serverTimestamp()
     const nowTime = serverTimestamp()
     const state = store.getState()
-    const currentAdminUid = state?.user?.data?.uid // ✅ 여기서 직접 uid 가져오기
-    console.log(formValues, currentAdminUid)
+    const currentAdminUid = state?.user?.data?.uid
+
     if (!formValues?.uid) return
     if (!currentAdminUid) return
-    // Firestore doc 참조 (users 컬렉션)
+
     const userRef = doc(firestore, 'users', formValues.uid)
 
-    // 업데이트 payload
+    // 수정 가능한 필드만 골라서 명시적으로 작성
     const payload: Partial<User> = {
-      ...formValues,
       accountStatus: status,
-      isConfirmed: status == 'confirm',
-      updatedAt: nowTime, // Firestore 서버 시간 기준
-      lastSeen: nowTime, //sorting 조건에 포함되야 하기떄문에, 수정시간을 기준으로 값을 넣어줌
+      isConfirmed: status === 'confirm',
+      updatedAt: nowTime,
+      lastSeen: nowTime,
+      note: (formValues.note ?? '').trim(),
+      intro: (formValues.intro ?? '').trim(),
+      // 필요하면 여기서 추가 필드만 직접 나열
+      // displayName: formValues.displayName,
+      // groupId: formValues.groupId,
     }
-    console.log('payload', payload)
-    // 상태별 처리 (승인/거절 시 메타정보 기록)
+
     if (status === 'confirm') {
       payload.approvedAt = nowTime
-      payload.approvedBy = currentAdminUid // 현재 로그인한 관리자 uid
+      payload.approvedBy = currentAdminUid
     } else if (status === 'reject') {
       payload.rejectedAt = nowTime
       payload.rejectedBy = currentAdminUid
     }
-
+    console.log(payload)
     await updateDoc(userRef, payload)
     console.log('✅ 사용자 상태 업데이트 완료:', payload)
   } catch (error) {

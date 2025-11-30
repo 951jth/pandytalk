@@ -10,15 +10,8 @@ import {
   getFirestore,
   setDoc,
 } from '@react-native-firebase/firestore'
-import {
-  getInitialNotification,
-  getMessaging,
-  onMessage,
-  onNotificationOpenedApp,
-  requestPermission,
-} from '@react-native-firebase/messaging'
-import {useQueryClient} from '@tanstack/react-query'
-import {useEffect, useRef, useState} from 'react'
+import {getMessaging, requestPermission} from '@react-native-firebase/messaging'
+import {useEffect, useState} from 'react'
 import {PermissionsAndroid, Platform} from 'react-native'
 import {auth} from '../store/firestore'
 
@@ -107,61 +100,4 @@ export function useFCMSetup() {
       }
     })()
   }, [user])
-}
-
-//현재 미사용
-//수신 후 채팅방 목록 (읽음 카운트 밎 생성) 실시간 갱신
-export function useFCMListener(userId: string | null | undefined) {
-  const queryClient = useQueryClient()
-  const hasMounted = useRef(false) //마운트될떄 한번만 호출되도록
-
-  useEffect(() => {
-    if (!userId || hasMounted.current) return
-    hasMounted.current = true
-
-    const app = getApp()
-    const messaging = getMessaging(app)
-
-    const updateChatList = (remoteMessage: any) => {
-      const data = remoteMessage?.data
-      if (!data) return
-      queryClient.invalidateQueries({queryKey: ['chats', userId]})
-      // updateChatListCache(queryClient, userId, {
-      //   chatId: data.chatId,
-      //   pushType: data.pushType,
-      //   senderId: data.senderId,
-      //   text: data.text,
-      //   type: data.type,
-      //   imageUrl: data.imageUrl || '',
-      //   senderName: data.senderName || '',
-      //   senderPicURL: data.senderPicURL || '',
-      //   createdAt: Number(data.createdAt),
-      // } as PushMessage)
-    }
-
-    const unsubscribe = onMessage(messaging, async remoteMessage => {
-      if (remoteMessage?.data?.pushType === 'chat') {
-        console.log('[FCM] foreground tap: 채팅 목록 새로고침')
-        updateChatList(remoteMessage)
-      }
-    })
-
-    onNotificationOpenedApp(messaging, remoteMessage => {
-      if (remoteMessage?.data?.pushType === 'chat') {
-        console.log('[FCM] background tap: 채팅 목록 새로고침')
-        updateChatList(remoteMessage)
-      }
-    })
-
-    getInitialNotification(messaging).then(remoteMessage => {
-      if (remoteMessage?.data?.pushType === 'chat') {
-        console.log('[FCM] quit → 실행됨: 채팅 목록 새로고침')
-        updateChatList(remoteMessage)
-      }
-    })
-
-    return () => {
-      unsubscribe()
-    }
-  }, [userId])
 }
