@@ -60,10 +60,15 @@ export default function ChatMember({
           {item?.status == 'online' && <View style={styles.point} />}
         </View>
         <View style={styles.contents}>
-          <Text style={styles.name}>{item?.displayName}</Text>
-          <Text style={styles.status}>
-            {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
-            {lastSeen ? dayjs(Number(lastSeen)).fromNow() : '알 수 없음'}
+          <View style={styles.contentsRow}>
+            <Text style={styles.name}>{item?.displayName}</Text>
+            <Text style={styles.status}>
+              {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
+              {lastSeen ? dayjs(Number(lastSeen)).fromNow() : '알 수 없음'}
+            </Text>
+          </View>
+          <Text style={styles.introduce} numberOfLines={2} ellipsizeMode="tail">
+            {item?.intro}
           </Text>
         </View>
       </View>
@@ -100,7 +105,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2CC069',
     width: 14,
     height: 14,
-    // borderRadius: '100%',
     borderRadius: 100,
     borderColor: '#FFF',
     borderWidth: 2,
@@ -112,6 +116,10 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
+  contentsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   name: {
     fontSize: 14,
     color: '#000',
@@ -121,6 +129,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ADB5BD',
     fontFamily: 'BMDOHYEON',
+  },
+  introduce: {
+    fontSize: 12,
+    fontFamily: 'BMDOHYEON',
+    color: '#ADB5BD',
   },
   image: {
     width: 50,

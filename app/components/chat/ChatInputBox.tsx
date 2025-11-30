@@ -1,48 +1,44 @@
-import {getAuth} from '@react-native-firebase/auth'
-import {useQueryClient} from '@tanstack/react-query'
 import React, {useState} from 'react'
 import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {ImagePickerResponse} from 'react-native-image-picker'
 import {IconButton, TextInput} from 'react-native-paper'
 import COLORS from '../../constants/color'
 import {createChatRoom, sendMessage} from '../../services/chatService'
-import type {User} from '../../types/auth'
-import type {ChatMessage} from '../../types/chat'
+import {auth} from '../../store/firestore'
+import type {ChatListItem, ChatMessage} from '../../types/chat'
 import {firebaseImageUpload} from '../../utils/file'
 import UploadButton from '../upload/UploadButton'
 
 interface propTypes {
-  roomId?: string | null
-  user: User
+  roomInfo?: ChatListItem | null
   targetIds?: Array<string> | null //채팅방이 없어서 만들어야 하는 경우.
   getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
+  setCurrentRoomId?: (id: string) => void
 }
 
 export default function ChatInputBox({
-  roomId,
-  user,
+  roomInfo,
   targetIds,
-  getRoomInfo,
+  setCurrentRoomId,
 }: propTypes) {
   const [text, setText] = useState<string>('')
-  const authInstance = getAuth()
-  const currentUser = authInstance.currentUser
+  const user = auth.currentUser
   const [loading, setLoading] = useState<boolean>(false)
-  const queryClient = useQueryClient()
 
   const onSendMessage = async (
     type?: ChatMessage['type'],
     result?: ImagePickerResponse,
   ) => {
     if (!user?.uid) return
-
     try {
-      let rid = roomId
+      let rid = roomInfo?.id
       setLoading(true)
-      if (!rid && targetIds?.[0]) {
-        rid = await createChatRoom(user?.uid, targetIds)
-        getRoomInfo?.()
+      //채팅방 정보가 없으면 현재 채팅방이 생성되지 않았다는 것임.
+      if (!roomInfo && targetIds?.[0]) {
+        rid = (await createChatRoom(user?.uid, targetIds)) as string
+        setCurrentRoomId?.(rid)
       }
+
       let message = {
         senderPicURL: user?.photoURL,
         senderName: user?.displayName,
@@ -51,7 +47,13 @@ export default function ChatInputBox({
         type: type || 'text',
         imageUrl: '',
       }
+      // 🔑 공백만 있는지 체크 (텍스트 메시지일 때만)
+      const trimmedText = text?.trim()
 
+      // 이미지가 아닌 일반 텍스트 메시지인데, 공백만 있으면 전송 안 함
+      if ((type === undefined || type === 'text') && !trimmedText) {
+        return
+      }
       if (type == 'image') {
         const image = result?.assets?.[0]
         if (image?.uri && result) {
@@ -71,6 +73,7 @@ export default function ChatInputBox({
         }
       }
       if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
+
       if (rid) {
         await sendMessage(rid, message as ChatMessage)
       }

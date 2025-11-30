@@ -101,7 +101,6 @@ export function RootNavigator(): React.JSX.Element {
     const task = InteractionManager.runAfterInteractions(async () => {
       try {
         const exists = await isMessagesTableExists()
-        console.log(exists)
         if (!exists) {
           initChatTables()
         } else migrateDatabaseIfNeeded()

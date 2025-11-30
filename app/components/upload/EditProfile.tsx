@@ -6,7 +6,7 @@ import React, {
   useState,
   type ForwardedRef,
 } from 'react'
-import {Image, StyleSheet, View} from 'react-native'
+import {StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
 import COLORS from '../../constants/color'
@@ -14,6 +14,7 @@ import {auth} from '../../store/firestore'
 import {isLocalFile} from '../../utils/file'
 import {requestPhotoPermission} from '../../utils/permission'
 import DefaultProfile from '../common/DefaultProfile'
+import ImageViewer from '../common/ImageViewer'
 
 interface propTypes {
   // previewUrl: string | null
@@ -145,15 +146,16 @@ export default forwardRef(function EditProfile(
           {loading ? (
             <ActivityIndicator size="large" color={COLORS.primary} />
           ) : (
-            <Image
-              source={{uri: previewUrl}}
-              resizeMode="cover"
-              style={{
-                width: boxSize,
-                height: boxSize,
-                borderRadius: boxSize / 2,
+            <ImageViewer
+              images={[{uri: previewUrl}]}
+              imageProps={{
+                resizeMode: 'cover',
+                style: {
+                  width: boxSize,
+                  height: boxSize,
+                  borderRadius: boxSize / 2,
+                },
               }}
-              // loading={loading}
             />
           )}
         </View>

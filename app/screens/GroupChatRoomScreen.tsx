@@ -1,17 +1,14 @@
 import {useRoute, type RouteProp} from '@react-navigation/native'
-import {useQueryClient} from '@tanstack/react-query'
-import React, {useEffect, useState} from 'react'
+import React, {useState} from 'react'
 import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatInputBox from '../components/chat/ChatInputBox'
 import ChatMessageList from '../components/chat/ChatMessageList'
 import KeyboardUtilitiesWrapper from '../components/container/KeyboardUtilitiesWrapper'
 import AppHeader from '../components/navigation/AppHeader'
+import {useChatRoomInfo} from '../hooks/queries/useChatRoomQuery'
 import {useGroup} from '../hooks/queries/useGroupQuery'
-import {getChatRoomInfo} from '../services/chatService'
 import {useAppSelector} from '../store/reduxHooks'
-import type {User} from '../types/auth'
-import type {ChatListItem} from '../types/chat'
 import type {AppRouteParamList} from '../types/navigate'
 
 type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
@@ -19,27 +16,12 @@ type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
 export default function GroupChatRoomScreen() {
   const route = useRoute<GroupChatRoute>()
   const {data: user} = useAppSelector(data => data?.user)
-  const groupId = route?.params?.groupId || user?.groupId
-  const {data: group, isLoading, error} = useGroup(groupId)
-  const [roomInfo, setRoomInfo] = useState<ChatListItem | null>(null)
-  const queryClient = useQueryClient()
-
-  const getRoomInfo = async () => {
-    if (groupId) {
-      try {
-        const data = await getChatRoomInfo(groupId)
-        console.log('data', data)
-        setRoomInfo(data || null)
-      } catch (e) {
-        //채팅방이 없으면 새로 생성
-        console.log(e)
-      }
-    }
-  }
-
-  useEffect(() => {
-    getRoomInfo()
-  }, [])
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(
+    route?.params?.roomId || user?.groupId || null,
+  )
+  //chatId는 groupId와 동일
+  const {data: group, isLoading, error} = useGroup(currentRoomId)
+  const {data: roomInfo} = useChatRoomInfo(currentRoomId)
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +33,7 @@ export default function GroupChatRoomScreen() {
           roomInfo={roomInfo}
           chatType={'group'}
         />
-        <ChatInputBox roomId={group?.id} user={user as User} />
+        <ChatInputBox roomInfo={roomInfo} setCurrentRoomId={setCurrentRoomId} />
       </KeyboardUtilitiesWrapper>
     </SafeAreaView>
   )

@@ -76,3 +76,13 @@ export const getUnreadCount = (data: ChatListItem, userId: string) => {
   const unreadCount = Math.max(0, lastSeq - myReadSeq)
   return unreadCount
 }
+
+export const getDMChatId = (
+  userId?: string,
+  targetId?: string,
+): string | null => {
+  if (!userId || !targetId) return null
+  const sortedIds = [userId, ...targetId].filter(Boolean).sort()
+  const roomId = `${sortedIds[0]}_${sortedIds[1]}`
+  return roomId
+}

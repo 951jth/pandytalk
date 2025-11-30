@@ -10,20 +10,26 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   startAfter,
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
 // import {FieldValue} from 'firebase-admin/firestore'
 import type {User} from '../types/auth'
-import type {ChatListItem, ChatMessage, ServerTime} from '../types/chat'
+import type {
+  ChatItemWithMemberInfo,
+  ChatListItem,
+  ChatMessage,
+  ServerTime,
+} from '../types/chat'
 import {toRNFTimestamp} from '../utils/firebase'
 import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
 
-//채팅방 id 조회
-export const getDirectMessageRoomId = async (
+//채팅방이 이미 있는지 조회하고 없으면 새로 만들어서 RETURN;
+export const getExistChatRoom = async (
   myUid: string,
   targetUid: string,
 ): Promise<string | null> => {
@@ -36,13 +42,15 @@ export const getDirectMessageRoomId = async (
     )
 
     const snapshot = await getDocs(q)
-
-    const existingRoom = snapshot.docs.find(doc => {
+    // const docData = snapshot.
+    const foundDoc = snapshot.docs.find(doc => {
       const members = doc.data().members
       return members?.length == 2 && members.includes(targetUid)
     })
-
-    return existingRoom ? existingRoom.id : null
+    // return foundDoc
+    //   ? ({id: foundDoc.id, ...foundDoc.data()} as ChatListItem)
+    //   : null
+    return foundDoc?.id || null
   } catch (e) {
     console.log(e)
     return null
@@ -100,49 +108,30 @@ const setChatMembersInfo = async (roomInfo: ChatListItem) => {
       roomInfo.members = uids
       roomInfo.memberInfos = memberInfos
     }
-    return roomInfo
+    return roomInfo as ChatItemWithMemberInfo
   } catch (e) {
     console.log(e)
-    return roomInfo
+    return roomInfo as ChatItemWithMemberInfo
   }
 }
 
 //채팅방 정보 조회 (멤버 및 채팅방 정보들들)
-export const getChatRoomInfo = async (
+export const getChatRoomInfoWithMembers = async (
   roomId: string,
-): Promise<ChatListItem | void> => {
+): Promise<ChatItemWithMemberInfo | null> => {
   // 1. chats/{roomId} 문서에서 members 배열 가져오기
   try {
-    if (!roomId) return
-    console.log('roomId: ', roomId)
+    if (!roomId) return null
     const chatDocRef = doc(firestore, 'chats', roomId)
     const chatSnap = await getDoc(chatDocRef)
     if (!chatSnap.exists()) {
       throw new Error('채팅방이 존재하지 않습니다.')
     }
-    // console.log('chatSnap', chatSnap)
     let roomInfo = {id: chatSnap.id, ...chatSnap?.data()} as ChatListItem
-
-    // 2. users 컬렉션에서 해당 uid들의 유저 정보 가져오기
-    // const uids: string[] = chatSnap?.data()?.members ?? []
-    // const usersRef = collection(firestore, 'users')
-    // ⚠️ Firestore의 where('uid', 'in', [...])는 최대 10개까지 지원
-    // const q = query(usersRef, where('uid', 'in', uids.slice(0, 10))) // 제한 고려
-
-    // const snapshot = await getDocs(q)
-
-    // const members =
-    //   snapshot?.docs?.map(
-    //     doc =>
-    //       ({
-    //         id: doc.id,
-    //         ...doc.data(),
-    //       }) as User,
-    //   ) || []
-    roomInfo = await setChatMembersInfo(roomInfo)
-    return roomInfo || null
+    const roomInfoWithMembers = await setChatMembersInfo(roomInfo)
+    return roomInfoWithMembers || null
   } catch (e) {
-    console.log('getChatRoomInfo error', e)
+    return null
   }
 }
 
@@ -235,7 +224,7 @@ export const sendMessage = async (
   })
 }
 
-//채팅방 생성
+// 채팅방 생성
 export const createChatRoom = async (
   userId: string,
   targetIds: string[],
@@ -246,22 +235,40 @@ export const createChatRoom = async (
   },
 ): Promise<string | null> => {
   try {
-    const sortedIds = [userId, ...targetIds].sort()
+    const sortedIds = [userId, ...targetIds].filter(Boolean).sort()
     const chatRef = collection(firestore, 'chats')
+
+    const type: ChatListItem['type'] =
+      options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm')
+
     const newRoom: Omit<ChatListItem, 'id'> = {
-      type: options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm'),
+      type,
       createdAt: serverTimestamp(),
-      members: sortedIds?.filter(Boolean),
+      members: sortedIds,
       name: options?.name ?? '',
       image: options?.image ?? '',
       lastMessageAt: serverTimestamp(),
       // lastMessage: message,
     }
 
-    // 1. 채팅방 생성 (자동 ID)
+    // ⚙️ DM: userA_userB 형식의 고정 ID 사용
+    if (type === 'dm' && sortedIds.length >= 2) {
+      const roomId = `${sortedIds[0]}_${sortedIds[1]}`
+      const roomDocRef = doc(chatRef, roomId)
+
+      // 이미 존재하면 새로 만들지 않고 ID만 리턴
+      const snap = await getDoc(roomDocRef)
+      if (snap.exists()) {
+        return roomId
+      }
+
+      await setDoc(roomDocRef, removeEmpty(newRoom))
+      return roomId
+    }
+
+    // ⚙️ 그룹 채팅은 기존처럼 auto ID 사용
     const docRef = await addDoc(chatRef, removeEmpty(newRoom))
     const roomId = docRef.id
-
     return roomId
   } catch (e) {
     console.error('create room error', e)

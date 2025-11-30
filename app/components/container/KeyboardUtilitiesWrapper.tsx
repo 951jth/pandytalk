@@ -10,15 +10,15 @@ import {
 } from 'react-native'
 interface propTypes {
   children: React.ReactNode
-  keyboardAvoidingView?: KeyboardAvoidingViewProps
-  touchableWithoutFeedback?: TouchableWithoutFeedbackProps
+  keyboardAvoidingViewProps?: KeyboardAvoidingViewProps
+  touchableWithoutFeedbackProps?: TouchableWithoutFeedbackProps
   useTouchable?: boolean
   useAvoiding?: boolean
 }
 export default function KeyboardUtilitiesWrapper({
   children,
-  keyboardAvoidingView,
-  touchableWithoutFeedback,
+  keyboardAvoidingViewProps,
+  touchableWithoutFeedbackProps,
   useTouchable = true,
   useAvoiding = true,
 }: propTypes) {
@@ -47,7 +47,7 @@ export default function KeyboardUtilitiesWrapper({
             behavior="padding"
             keyboardVerticalOffset={50} // Header 높이 고려
             style={{flex: 1}}
-            {...keyboardAvoidingView}>
+            {...keyboardAvoidingViewProps}>
             {WrappedChildren}
           </KeyboardAvoidingView>
         ) : (
@@ -61,7 +61,7 @@ export default function KeyboardUtilitiesWrapper({
         <TouchableWithoutFeedback
           onPress={Keyboard.dismiss}
           accessible={false}
-          {...touchableWithoutFeedback}>
+          {...touchableWithoutFeedbackProps}>
           {WrappedChildren}
         </TouchableWithoutFeedback>
       )

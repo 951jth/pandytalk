@@ -17,7 +17,7 @@ import ImageViewer from '../common/ImageViewer'
 interface Props {
   roomId: string | null
   userId: string | null | undefined
-  roomInfo: ChatListItem | null
+  roomInfo: ChatListItem | null | undefined
   inputComponent?: React.ComponentType<any> | React.ReactElement | null
   chatType?: ChatListItem['type']
 }
@@ -43,6 +43,7 @@ export default function ChatMessageList({
   // 포커스 이벤트용 참조값.
   const roomInfoRef = useRef(roomInfo)
   const messagesRef = useRef(messages)
+
   // 최신값 유지
   useEffect(() => {
     roomInfoRef.current = roomInfo

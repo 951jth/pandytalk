@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import {
   onDocumentCreated,
+  onDocumentUpdated,
   onDocumentWritten,
 } from 'firebase-functions/v2/firestore'
 import {db} from '../../core/firebase'
@@ -98,33 +99,93 @@ export const onGroupCreate = onDocumentCreated(
   },
 )
 
+async function syncGroupToChat(groupId: string) {
+  // 1) 그룹 메타 정보 읽기
+  const groupDocRef = db.doc(`groups/${groupId}`)
+  const groupSnap = await groupDocRef.get()
+
+  if (!groupSnap.exists) {
+    console.warn(`[syncGroupToChat] group not found: ${groupId}`)
+    return
+  }
+
+  const groupData = groupSnap.data() || {}
+  const groupName = groupData.name ?? ''
+  const groupImage = groupData.image ?? groupData.photoURL ?? '' // 둘 다 호환해주고 싶으면 이렇게
+
+  // 2) 활성 멤버 전체 조회
+  const membersSnap = await db
+    .collection(`groups/${groupId}/members`)
+    .where('isActive', '==', true)
+    .get()
+
+  const memberIds = membersSnap.docs.map(d => d.id)
+
+  // 3) chats/{groupId} 업데이트
+  const chatRef = db.doc(`chats/${groupId}`)
+
+  await chatRef.set(
+    {
+      type: 'group',
+      groupId,
+      name: groupName,
+      image: groupImage,
+      members: memberIds,
+      membersCount: memberIds.length,
+      // createdAt, lastMessage, lastMessageAt 등은 최초 생성 시에만 세팅하고
+      // 여기선 건드리지 않는게 보통 좋음
+    },
+    {merge: true},
+  )
+
+  console.log('[syncGroupToChat] synced', {
+    groupId,
+    membersCount: memberIds.length,
+  })
+}
+
 //그룹의 멤버가 바뀌는 경우, 채팅방 멤버를 갱신하는 항목임
+// 그룹 멤버가 바뀌었을 때 (추가/탈퇴/isActive 변경)
 export const onGroupMembersUpdate = onDocumentWritten(
-  {region: 'asia-northeast3', document: 'groups/{groupId}/members/{memberId}'},
+  {
+    region: 'asia-northeast3',
+    document: 'groups/{groupId}/members/{memberId}',
+  },
   async event => {
     try {
       const groupId = event.params.groupId as string
-      // 1) 현재 멤버 전체 스냅샷 (정합성 우선: 전체 재계산)
-      // ✅ isActive === false 인 멤버만 조회 (Admin SDK 체이닝)
-      const membersSnap = await db
-        .collection(`groups/${groupId}/members`)
-        .where('isActive', '==', true)
-        .get()
-
-      const receiverIds = membersSnap.docs.map(d => d.id) // 문서 ID=uid 권장
-
-      const chatRef = db.doc(`chats/${groupId}`) //그룹채팅의 채팅아이디는 그룹채팅의 아이디와 동일
-      logger.info('receiverIds:', receiverIds)
-      await chatRef.set(
-        {
-          type: 'group',
-          members: receiverIds,
-          membersCount: receiverIds.length,
-        },
-        {merge: true},
-      )
+      await syncGroupToChat(groupId)
     } catch (err) {
-      logger.error('[onGroupMemberWrite] error', err)
+      console.error('[onGroupMembersUpdate] error', err)
+    }
+  },
+)
+
+// 그룹 문서의 name/image 등이 변경되었을 때
+export const onGroupMetaUpdate = onDocumentUpdated(
+  {
+    region: 'asia-northeast3',
+    document: 'groups/{groupId}',
+  },
+  async event => {
+    try {
+      const groupId = event.params.groupId as string
+
+      const before = event.data?.before.data() || {}
+      const after = event.data?.after.data() || {}
+
+      // name, image 둘 다 안 바뀐 경우에는 스킵해도 됨 (옵션)
+      const nameChanged = before.name !== after.name
+      const imageChanged = before.image !== after.image
+
+      if (!nameChanged && !imageChanged) {
+        console.log('[onGroupMetaUpdate] no relevant changes, skip', groupId)
+        return
+      }
+
+      await syncGroupToChat(groupId)
+    } catch (err) {
+      console.error('[onGroupMetaUpdate] error', err)
     }
   },
 )

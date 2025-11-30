@@ -15,7 +15,7 @@ export const sendNewMessageNotification = onDocumentCreated(
       console.log('message', message)
       const chatId = event.params.chatId as string
       if (!message || !chatId) {
-        logger.warn('⚠️ message or chatId 누락')
+        logger.info('⚠️ message or chatId 누락')
         return
       }
 

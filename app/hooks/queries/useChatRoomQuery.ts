@@ -13,12 +13,14 @@ import {
 } from '@react-native-firebase/firestore'
 import {
   useInfiniteQuery,
+  useQuery,
   useQueryClient,
   type InfiniteData,
   type QueryClient,
 } from '@tanstack/react-query'
 import {useEffect, useState} from 'react'
 import {useDispatch} from 'react-redux'
+import {getChatRoomInfoWithMembers} from '../../services/chatService'
 import {firestore} from '../../store/firestore'
 import {AppDispatch} from '../../store/store'
 import {setDMChatCount, setGroupChatCount} from '../../store/unreadCountSlice'
@@ -392,6 +394,7 @@ export function updateChatListCache(
 }
 
 //채팅방 최신 메세지 갱신하기 (현재 채팅방 목록조회에서 갱신하기, 채팅방 메세지 추가됬을시)
+//현재는 subcribe message로 바뀌었음.(사용X)
 export function updateChatLastReadCache(
   queryClient: QueryClient,
   chatId: string,
@@ -420,4 +423,21 @@ export function updateChatLastReadCache(
     return {...page, chats}
   })
   queryClient.setQueryData(queryKey, {...prev, pages: newPages ?? []})
+}
+
+export function useChatRoomInfo(roomId: string | null) {
+  return useQuery({
+    queryKey: ['chatRoom', roomId],
+    enabled: !!roomId,
+    queryFn: async () => {
+      try {
+        if (!roomId) return null
+        const roomInfo = await getChatRoomInfoWithMembers(roomId)
+        return roomInfo ?? null
+      } catch (e) {
+        console.log(e)
+        return null
+      }
+    },
+  })
 }

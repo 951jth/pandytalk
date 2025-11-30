@@ -34,7 +34,6 @@ export const fetchUserProfile = async (uid: string): Promise<User | null> => {
 export async function updateLastSeen(uid: string): Promise<void> {
   if (!uid) return
   const userRef = doc(firestore, 'users', uid)
-
   try {
     await updateDoc(userRef, {
       lastSeen: serverTimestamp(),

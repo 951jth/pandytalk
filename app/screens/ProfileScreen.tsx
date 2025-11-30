@@ -16,12 +16,14 @@ import {CustomButton} from '../components/button/CustomButton'
 import WithdrawalButton from '../components/button/WithdrawalButton'
 import InputForm, {InputFormRef} from '../components/form/InputForm'
 import EditInput from '../components/input/EditInput'
+import EditTextArea from '../components/input/EditTextarea'
 import EditProfile, {
   type profileInputRef,
 } from '../components/upload/EditProfile'
 import COLORS from '../constants/color'
 import {authority} from '../constants/korean'
 import {useResetAllQueryCache} from '../hooks/useCommonQuery'
+import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {initialUserInfo} from '../services/userService'
 import {useAppSelector} from '../store/reduxHooks'
 import {AppDispatch} from '../store/store'
@@ -30,7 +32,6 @@ import type {FormItem} from '../types/form'
 // somewhere like App.tsx or a test screen
 
 const authInstance = getAuth()
-const debug = true
 
 export default function ProfileScreen(): React.JSX.Element {
   const {data: user} = useAppSelector(state => state.user)
@@ -42,6 +43,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const profileRef = useRef<profileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
   const {resetAll} = useResetAllQueryCache()
+  const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
 
   const formItems: FormItem[] = [
     {
@@ -71,6 +73,23 @@ export default function ProfileScreen(): React.JSX.Element {
       label: '권한',
       key: 'authority',
       contents: user?.authority ? authority?.[user?.authority] : '-',
+    },
+    {
+      key: 'intro',
+      label: '소개',
+      validation: {
+        maxLength: 200,
+        message: '소개는 최대 200자입니다.',
+      },
+      render: (value, onChange) => (
+        <EditTextArea
+          value={value}
+          onChangeText={onChange}
+          minRows={1}
+          maxRows={6}
+          maxLength={200}
+        />
+      ),
     },
     {
       label: '최근 접속일',
@@ -109,7 +128,6 @@ export default function ProfileScreen(): React.JSX.Element {
           photoURL: newPhotoURL,
         }
       }
-      if (debug) return console.log('formValues', formValues)
       await updateDoc(userRef, {
         ...formValues,
       })
@@ -131,7 +149,19 @@ export default function ProfileScreen(): React.JSX.Element {
   // }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingBottom: keyboardHeight}]}>
+      <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
+        캐시 초기화
+      </Button>
+      <IconButton
+        icon="refresh"
+        size={20}
+        style={styles.resetBtn}
+        onTouchEnd={() => {
+          formRef?.current?.resetValues()
+          profileRef?.current?.onReset()
+        }}
+      />
       <View style={styles.contents}>
         <InputForm
           items={formItems}
@@ -149,25 +179,15 @@ export default function ProfileScreen(): React.JSX.Element {
               />
             </View>
           }
-        />
-        <View style={styles.buttons}>
-          {/* <CustomButton onTouchEnd={forceCrash}>크래시 테스트</CustomButton> */}
-          <CustomButton loading={submitting} onTouchEnd={updateUserProfile}>
-            프로필 저장
-          </CustomButton>
-          {userInfo?.authority !== 'ADMIN' && <WithdrawalButton />}
-        </View>
-        <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
-          캐시 초기화
-        </Button>
-        <IconButton
-          icon="refresh"
-          size={20}
-          style={styles.resetBtn}
-          onTouchEnd={() => {
-            formRef?.current?.resetValues()
-            profileRef?.current?.onReset()
-          }}
+          bottomElement={
+            <View style={styles.buttons}>
+              {/* <CustomButton onTouchEnd={forceCrash}>크래시 테스트</CustomButton> */}
+              <CustomButton loading={submitting} onTouchEnd={updateUserProfile}>
+                프로필 저장
+              </CustomButton>
+              {userInfo?.authority !== 'ADMIN' && <WithdrawalButton />}
+            </View>
+          }
         />
       </View>
     </View>
@@ -178,11 +198,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    position: 'relative',
   },
   contents: {
-    flex: 1,
-    overflow: 'hidden',
+    flexGrow: 1,
     borderRadius: 8,
+    marginBottom: 16,
+    // backgroundColor: 'skyblue',
     backgroundColor: COLORS.background,
     // 그림자 스타일 (iOS + Android)
     shadowColor: '#000',
@@ -193,6 +215,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 16,
   },
+  buttons: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
   profileWrap: {
     flexDirection: 'column',
     alignContent: 'center',
@@ -201,15 +228,14 @@ const styles = StyleSheet.create({
   },
   cleanButton: {
     position: 'absolute',
-    top: 5,
-    left: 0,
+    top: 20,
+    left: 20,
+    zIndex: 1,
   },
   resetBtn: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-  },
-  buttons: {
-    gap: 8,
+    top: 16,
+    right: 16,
+    zIndex: 1,
   },
 })

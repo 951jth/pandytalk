@@ -11,7 +11,6 @@ import {
 } from '@react-native-firebase/firestore'
 import {
   useInfiniteQuery,
-  useQuery,
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query'
@@ -22,7 +21,6 @@ import {
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
 } from '../../db/sqlite'
-import {getChatRoomInfo} from '../../services/chatService'
 import type {ChatMessage} from '../../types/chat'
 import {mergeMessages} from '../../utils/chat'
 import {toMillisFromServerTime, toRNFTimestamp} from '../../utils/firebase'
@@ -115,7 +113,6 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           }
         }
       } catch (e) {
-        console.log(e)
         //에러처리, 동일한 리턴값을 유지해야함
         return {
           data: [] as ChatMessage[],
@@ -216,18 +213,3 @@ export const useSubscriptionMessage = (
     return () => unsubscribe()
   }, [roomId, lastCreatedAt])
 }
-
-export const useChatRoomInfo = (roomId: string | null) =>
-  useQuery({
-    queryKey: ['chatRoom', roomId],
-    enabled: !!roomId,
-    queryFn: async () => {
-      try {
-        if (!roomId) return
-        const data = await getChatRoomInfo(roomId)
-        return data || {}
-      } catch (e) {
-        return {}
-      }
-    },
-  })

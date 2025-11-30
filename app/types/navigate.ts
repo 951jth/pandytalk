@@ -26,7 +26,7 @@ export type AppRouteParamList = {
   'group-manage': undefined
   'user-select': undefined
   chats: {type?: ChatListItem['type']}
-  'group-chat': {groupId?: string; type?: ChatListItem['type']} | undefined
+  'group-chat': {roomId?: string; type?: ChatListItem['type']} | undefined
 }
 
 export type RootStackParamList = {
