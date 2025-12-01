@@ -213,8 +213,8 @@ export const memberStatusUpdate = async (
       note: (formValues.note ?? '').trim(),
       intro: (formValues.intro ?? '').trim(),
       // 필요하면 여기서 추가 필드만 직접 나열
-      // displayName: formValues.displayName,
-      // groupId: formValues.groupId,
+      displayName: formValues.displayName,
+      groupId: formValues.groupId,
     }
 
     if (status === 'confirm') {
