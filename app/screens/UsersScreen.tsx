@@ -10,6 +10,7 @@ import {useUsersInfinite} from '../hooks/queries/useUserQuery'
 import useKeyboardFocus from '../hooks/useKeyboardFocus'
 import {useAppSelector} from '../store/reduxHooks'
 import {AppRouteParamList} from '../types/navigate'
+import {getDMChatId} from '../utils/chat'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 export default function UsersScreen(): React.JSX.Element {
@@ -39,7 +40,10 @@ export default function UsersScreen(): React.JSX.Element {
   )
 
   const moveToChatRoom = (uid: string, title: string) => {
-    navigation.navigate('chatRoom', {targetIds: [uid], title})
+    navigation.navigate('chatRoom', {
+      roomId: getDMChatId(user?.uid, uid),
+      title,
+    })
   }
 
   useEffect(() => {
