@@ -1,6 +1,6 @@
 import {useQueryClient} from '@tanstack/react-query'
 import {Alert} from 'react-native'
-import {initChatTables, resetMessagesSchema} from '../services/chatService'
+import {initChatTables, resetMessagesSchema} from '../db/sqlite'
 
 export const useResetAllQueryCache = () => {
   const queryClient = useQueryClient()

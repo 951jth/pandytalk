@@ -1,4 +1,4 @@
-import type {CheckedRecordType} from '../components/features/terms/TermAgreementList'
+import type {CheckedRecordType} from '../features/auth/components/TermAgreementList'
 
 export const terms = [
   {

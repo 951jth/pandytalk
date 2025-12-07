@@ -1,0 +1,12 @@
+import React from 'react'
+import Select, {type SelectProps} from '../../../components/select/Select'
+import {useAllGroups} from '../hooks/useGroupQuery'
+
+export default function GroupSelect(props: Omit<SelectProps, 'options'>) {
+  const {data: groups = [], isLoading, refetch} = useAllGroups()
+  const groupOptions = groups?.map(group => ({
+    label: group?.name,
+    value: group?.uid,
+  }))
+  return <Select {...props} options={groupOptions} />
+}

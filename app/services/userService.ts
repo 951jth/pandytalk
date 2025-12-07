@@ -37,14 +37,28 @@ export async function updateLastSeen(uid: string): Promise<void> {
   try {
     await updateDoc(userRef, {
       lastSeen: serverTimestamp(),
-      status: 'online',
+
+      status: 'offline',
     })
   } catch (error) {
     console.error('lastSeen 갱신 실패:', error)
   }
 }
 
-//사용자 오프라인 설정
+// 사용자 오프라인 설정
+// 현재 online, offline status는 사용하지 않을 예정
+// 사용자가 사용중인지 사용하지않는지 클라이언트단에서 완벽히 추적하기 어렵고,
+// 현재 앱 구조상 유저의 접속정보를 표기해주는 UX가 중요하지않고,
+// 도리어 파생되는 오류로인해 혼동할 가능성있음
+
+// 유저 상태가 바뀔 수 있는 케이스
+// - AppState 변경 (active ↔ background)
+// - 앱 kill/crash/OS 강제 종료
+// - 네트워크 단절/복구
+// - 기기 재부팅
+// - 로그인/로그아웃/계정 전환
+// - 여러 기기 동시 로그인
+// - RN JS 쓰레드/타이머 제한
 export async function updateUserOffline(uid: string): Promise<void> {
   if (!uid) return
   const userRef = doc(firestore, 'users', uid)

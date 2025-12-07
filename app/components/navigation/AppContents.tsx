@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import {StyleSheet} from 'react-native'
 import {BottomNavigation, Icon} from 'react-native-paper'
-import {appRoutes} from '../../hooks/useScreens'
+import {appRoutes} from '../../features/app/hooks/useScreens'
 
 const AppContents: React.FC = () => {
   // appRoutes LayoutItem[] 타입이며, 우리는 그 중 첫 번째 layout의 children을 사용

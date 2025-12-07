@@ -20,15 +20,7 @@ export function navigateToChat(
   chatType?: string,
 ) {
   const task = () => {
-    // if(chatType == 'group'){
-
-    // }else {
-
-    // }
     if (chatType == 'group') {
-      console.log('roomId: ', roomId)
-      console.log('title: ', title)
-      console.log('chatType: ', chatType)
       // 1뎁스
       navigationRef.navigate('app', {
         screen: 'group-chat',
