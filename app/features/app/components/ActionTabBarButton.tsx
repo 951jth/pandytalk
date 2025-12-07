@@ -8,7 +8,7 @@ import {
   View,
   type TouchableOpacityProps,
 } from 'react-native'
-import type {AppRouteParamList} from '../types/navigate'
+import type {AppRouteParamList} from '../../../types/navigate'
 
 type AppNav = NativeStackNavigationProp<AppRouteParamList>
 
