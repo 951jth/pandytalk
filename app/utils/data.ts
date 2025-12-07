@@ -1,3 +1,4 @@
+import type {InfiniteData} from '@tanstack/react-query'
 import {FormItem} from '../types/form'
 
 export function getValueByDataIndex<T = any>(
@@ -109,4 +110,17 @@ export function exec(tx: any, sql: string, params: any[] = []) {
       },
     )
   })
+}
+
+/**
+ * React Query useInfiniteQuery 결과에서
+ * 원하는 배열 필드만 꺼내서 1차원 배열로 평탄화하는 유틸
+ */
+export function flattenInfiniteQueryData<TItem>(
+  data: InfiniteData<any> | undefined, //page type은 알아서 추론시킴
+  selectItems: (page: any) => TItem[] | undefined = (page: any) =>
+    (page?.data ?? []) as TItem[],
+): TItem[] {
+  if (!data) return []
+  return data.pages.flatMap(page => selectItems(page) ?? [])
 }

@@ -9,7 +9,7 @@ import LoginScreen from '../../auth/screens/LoginScreen'
 import ChatUnreadCount from '../../chat/components/ChatUnreadCount'
 import GroupChatUnreadCount from '../../chat/components/GroupChatUnreadCount'
 import ChatListScreen from '../../chat/screens/ChatListScreen'
-import ChatRoomScreen from '../../chat/screens/ChatRoomScreen'
+import ChatRoomScreen from '../../chat/screens/DmChatRoomScreen'
 import GroupChatRoomScreen from '../../chat/screens/GroupChatRoomScreen'
 import GroupManageScreen from '../../group/screens/GroupManageScreen'
 import ProfileScreen from '../../profile/screens/ProfileScreen'
@@ -137,7 +137,7 @@ const appRoutes = (): LayoutItem[] => {
         headerShown: false,
       },
       children: [
-        {name: 'chatRoom', title: '채탕방', component: ChatRoomScreen},
+        {name: 'dm-chat', title: '채탕방', component: ChatRoomScreen},
         {
           name: 'group-chat',
           title: '그룹 채팅',

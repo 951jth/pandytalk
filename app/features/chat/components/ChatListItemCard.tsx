@@ -14,9 +14,7 @@ type propTypes = {
 }
 
 export default function ChatListItemCard({item, onPress}: propTypes) {
-  const isDM = item?.type == 'dm'
   const findMember = item?.findMember
-  const targetId = findMember?.id
   const nameMaps = {
     dm: {name: findMember?.displayName, image: findMember?.photoURL},
     group: {name: item?.name, image: item?.image},

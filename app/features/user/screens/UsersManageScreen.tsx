@@ -2,10 +2,10 @@ import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import RequestMember from '../../../components/card/RequestMember'
 import SearchInput from '../../../components/input/SearchInput'
 import type {User} from '../../../types/auth'
 import {usePendingUsersInfinity} from '../../chat/hooks/useUserQuery'
+import RequestMemberCard from '../components/RequestMemberCard'
 import RequestMemberDetailModal from '../components/RequestMemberDetailModal'
 
 type modalProps = {
@@ -28,7 +28,7 @@ export default function UsersManageScreen() {
 
   const RenderItem = ({item}: {item: User}) => {
     return (
-      <RequestMember
+      <RequestMemberCard
         item={item}
         onPress={item => {
           setModalProps({open: true, record: item})

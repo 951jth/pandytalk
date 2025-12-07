@@ -78,7 +78,7 @@ export const getUnreadCount = (data: ChatListItem, userId: string) => {
 }
 
 export const getDMChatId = (userId?: string, targetId?: string): string => {
-  const sortedIds = [userId, ...(targetId ?? [])].filter(Boolean).sort()
+  const sortedIds = [userId, targetId].filter(Boolean).sort()
   const roomId = `${sortedIds[0]}_${sortedIds[1]}`
   return roomId
 }

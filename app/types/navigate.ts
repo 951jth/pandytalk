@@ -20,13 +20,12 @@ export type AuthStackParamList = {
 
 export type AppRouteParamList = {
   // Auth
-  // main: undefined
-  chatRoom: {targetIds?: string[]; roomId?: string; title?: string}
+  'dm-chat': {myId: string; targetId: string; title?: string}
+  'group-chat': {roomId: string; type?: ChatListItem['type']} | undefined
   'guest-manage': undefined
   'group-manage': undefined
   'user-select': undefined
   chats: {type?: ChatListItem['type']}
-  'group-chat': {roomId?: string; type?: ChatListItem['type']} | undefined
 }
 
 export type RootStackParamList = {

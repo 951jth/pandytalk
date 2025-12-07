@@ -12,22 +12,15 @@ import ChatInputBox from '../components/ChatInputBox'
 import ChatMessageList from '../components/ChatMessageList'
 import {useChatRoomInfo} from '../hooks/useChatRoomQuery'
 
-export default function ChatRoomScreen() {
+export default function DmChatRoomScreen() {
   const route = useRoute()
   const {data: user, loading, error} = useAppSelector(state => state.user)
-  const {roomId, targetIds, title} =
-    route.params as AppRouteParamList['chatRoom']
-  // const [roomInfo, setRoomInfo] = useState<ChatListItem | null>(null)
-  const findDmID = getDMChatId(user?.uid, targetIds?.[0])
+  const {myId, targetId, title} = route.params as AppRouteParamList['dm-chat'] //DM 채팅은 내아이디와 상대방 아이디 필수
+  const roomId = getDMChatId(myId, targetId)
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(
-    roomId || findDmID || null,
-  ) //현채 채팅방(룸)아이디
-
-  const {data: roomInfo} = useChatRoomInfo(currentRoomId)
-  const targetMember = roomInfo?.memberInfos?.find(
-    member => member?.id == targetIds?.[0], //채팅방이 없으면 targetIds는 필수로 들고와야함
+    roomId || null,
   )
-
+  const {data: roomInfo} = useChatRoomInfo(currentRoomId)
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -35,7 +28,7 @@ export default function ChatRoomScreen() {
           <View style={styles.inner}>
             <AppHeader
               title={`${
-                title || targetMember?.displayName || roomInfo?.name || '채팅방'
+                title || roomInfo?.name || '채팅방'
               } ${roomInfo?.type == 'group' ? '(그룹)' : ''}`}
             />
             {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
@@ -46,7 +39,7 @@ export default function ChatRoomScreen() {
             />
             <ChatInputBox
               roomInfo={roomInfo}
-              targetIds={targetIds}
+              targetIds={[targetId]}
               setCurrentRoomId={setCurrentRoomId}
             />
           </View>

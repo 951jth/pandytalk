@@ -11,7 +11,7 @@ import {firebaseImageUpload} from '../../../utils/file'
 
 interface propTypes {
   roomInfo?: ChatListItem | null
-  targetIds?: Array<string> | null //채팅방이 없어서 만들어야 하는 경우.
+  targetIds?: string[]
   getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
   setCurrentRoomId?: (id: string) => void
 }
@@ -29,15 +29,19 @@ export default function ChatInputBox({
     type?: ChatMessage['type'],
     result?: ImagePickerResponse,
   ) => {
-    if (!user?.uid) return
+    const myId = user?.uid
+    if (!myId) return
     try {
-      let rid = roomInfo?.id
+      let rid = roomInfo?.id || null
       setLoading(true)
-      //채팅방 정보가 없으면 현재 채팅방이 생성되지 않았다는 것임.
-      if (!roomInfo && targetIds?.[0]) {
-        rid = (await createChatRoom(user?.uid, targetIds)) as string
-        setCurrentRoomId?.(rid)
+      if (!roomInfo && targetIds) {
+        rid = await createChatRoom({
+          myId,
+          targetIds,
+        })
       }
+      if (!rid) return
+      setCurrentRoomId?.(rid)
 
       let message = {
         senderPicURL: user?.photoURL,
@@ -63,20 +67,13 @@ export default function ChatInputBox({
             message.imageUrl = uploadProm?.downloadUrl
             message.text = uploadProm.fileName
           }
-          // rid &&
-          //   getChatRoomInfo(rid).then(res => {
-          //     console.log('res', res)
-          //     console.log('members', res?.members)
-          //   })
         } else {
           return // 이미지 없으면 중단
         }
       }
       if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
 
-      if (rid) {
-        await sendMessage(rid, message as ChatMessage)
-      }
+      if (rid) await sendMessage(rid, message as ChatMessage)
     } catch (e) {
       Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')
       console.log('error', e)

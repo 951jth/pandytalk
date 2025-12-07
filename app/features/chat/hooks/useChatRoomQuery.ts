@@ -302,7 +302,7 @@ export function useSubscribeChatList(
     )
 
     return () => unsub()
-  }, [uid])
+  }, [uid, type])
 }
 
 //채팅방 미읽음 카운트 구독 함수, 채팅방 단건 조회임.

@@ -224,54 +224,68 @@ export const sendMessage = async (
   })
 }
 
-// 채팅방 생성
+type CreateChatRoomOptions = {
+  myId: string
+  targetIds: string[] // DM이면 1명, 그룹이면 N명
+  name?: string
+  image?: string
+  type?: ChatListItem['type'] // 명시 안 하면 members 길이로 dm/group 자동 판별
+}
+
+// 채팅방 생성 (DM: aId_bId 고정 ID, 그룹: auto ID)
 export const createChatRoom = async (
-  userId: string,
-  targetIds: string[],
-  options?: {
-    name?: string
-    image?: string
-    type?: ChatListItem['type']
-  },
+  options: CreateChatRoomOptions,
 ): Promise<string | null> => {
+  const {myId, targetIds, name, image} = options
+
   try {
-    const sortedIds = [userId, ...targetIds].filter(Boolean).sort()
     const chatRef = collection(firestore, 'chats')
 
-    const type: ChatListItem['type'] =
-      options?.type ?? (targetIds.length >= 2 ? 'group' : 'dm')
+    // ✅ 멤버 아이디 정리 (현재 유저 + 타겟들)
+    const memberIds = [myId, ...targetIds].filter(Boolean)
+    const sortedIds = Array.from(new Set(memberIds)).sort() // 중복 제거 + 정렬
 
-    const newRoom: Omit<ChatListItem, 'id'> = {
+    // ✅ 타입 자동 판별 (명시된 type이 있으면 우선)
+    const type: ChatListItem['type'] =
+      options.type ?? (sortedIds.length > 2 ? 'group' : 'dm')
+
+    const baseRoom: Omit<ChatListItem, 'id'> = {
       type,
       createdAt: serverTimestamp(),
       members: sortedIds,
-      name: options?.name ?? '',
-      image: options?.image ?? '',
+      name: name ?? '',
+      image: image ?? '',
       lastMessageAt: serverTimestamp(),
       // lastMessage: message,
     }
 
-    // ⚙️ DM: userA_userB 형식의 고정 ID 사용
-    if (type === 'dm' && sortedIds.length >= 2) {
-      const roomId = `${sortedIds[0]}_${sortedIds[1]}`
-      const roomDocRef = doc(chatRef, roomId)
-
-      // 이미 존재하면 새로 만들지 않고 ID만 리턴
-      const snap = await getDoc(roomDocRef)
-      if (snap.exists()) {
-        return roomId
+    // 🟢 DM: aId_bId 형식의 고정 ID 사용
+    if (type === 'dm') {
+      if (sortedIds.length !== 2) {
+        console.warn(
+          '[createChatRoom] DM 타입인데 members가 2명이 아님:',
+          sortedIds,
+        )
       }
 
-      await setDoc(roomDocRef, removeEmpty(newRoom))
-      return roomId
+      const dmRoomId = `${sortedIds[0]}_${sortedIds[1]}`
+      const roomDocRef = doc(chatRef, dmRoomId)
+
+      const snap = await getDoc(roomDocRef)
+      if (snap.exists()) {
+        // 이미 DM 방이 있으면 재사용
+        return dmRoomId
+      }
+
+      await setDoc(roomDocRef, removeEmpty(baseRoom))
+      return dmRoomId
     }
 
-    // ⚙️ 그룹 채팅은 기존처럼 auto ID 사용
-    const docRef = await addDoc(chatRef, removeEmpty(newRoom))
-    const roomId = docRef.id
-    return roomId
+    // 🟣 그룹 채팅: 기존처럼 auto ID 사용
+    const docRef = await addDoc(chatRef, removeEmpty(baseRoom))
+    return docRef.id
   } catch (e) {
-    console.error('create room error', e)
+    console.error('[createChatRoom] error:', e)
     return null
   }
 }

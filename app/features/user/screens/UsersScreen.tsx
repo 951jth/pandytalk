@@ -1,20 +1,18 @@
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import debounce from 'lodash/debounce'
-import React, {useEffect, useMemo, useState} from 'react'
+import React, {useState} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import EmptyData from '../../../components/common/EmptyData'
 import useKeyboardFocus from '../../../hooks/useKeyboardFocus'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {AppRouteParamList} from '../../../types/navigate'
-import {getDMChatId} from '../../../utils/chat'
 import ChatMember from '../../chat/components/ChatMember'
 import {useUsersInfinite} from '../../chat/hooks/useUserQuery'
 import GroupMainThumnail from '../../group/components/GroupMainThumnail'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 export default function UsersScreen(): React.JSX.Element {
-  const [input, setInput] = useState<string>('')
+  // const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const {
     data,
@@ -27,30 +25,32 @@ export default function UsersScreen(): React.JSX.Element {
 
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const navigation =
-    useNavigation<NativeStackNavigationProp<AppRouteParamList, 'chatRoom'>>()
+    useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
   const users = data?.pages.flatMap(page => page.users) ?? []
   const {isKeyboardVisible, dismissKeyboard} = useKeyboardFocus()
 
-  const debouncedSetSearchText = useMemo(
-    () =>
-      debounce((text: string) => {
-        setSearchText(text.toString())
-      }, 300),
-    [],
-  )
+  // const debouncedSetSearchText = useMemo(
+  //   () =>
+  //     debounce((text: string) => {
+  //       setSearchText(text.toString())
+  //     }, 300),
+  //   [],
+  // )
 
-  const moveToChatRoom = (uid: string, title: string) => {
-    navigation.navigate('chatRoom', {
-      roomId: getDMChatId(user?.uid, uid),
+  const moveToChatRoom = (targetId: string, title: string) => {
+    if (!user) return
+    navigation.navigate('dm-chat', {
+      myId: user.uid,
+      targetId,
       title,
     })
   }
 
-  useEffect(() => {
-    debouncedSetSearchText(input)
-    // cleanup 함수로 debounce 취소
-    return () => debouncedSetSearchText.cancel()
-  }, [input])
+  // useEffect(() => {
+  //   debouncedSetSearchText(input)
+  //   // cleanup 함수로 debounce 취소
+  //   return () => debouncedSetSearchText.cancel()
+  // }, [input])
 
   return (
     <View style={styles.container}>
