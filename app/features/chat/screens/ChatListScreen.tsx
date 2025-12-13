@@ -1,14 +1,14 @@
-import {useRoute, type RouteProp} from '@react-navigation/native'
+import { useRoute, type RouteProp } from '@react-navigation/native'
 import React from 'react'
-import {FlatList, StyleSheet, View} from 'react-native'
+import { FlatList, StyleSheet, View } from 'react-native'
 import COLORS from '../../../constants/color'
 // import {updateChatLastReadCache} from '../hooks/useInfiniteQuery'
-import {ActivityIndicator} from 'react-native-paper'
-import EmptyData from '../../../components/common/EmptyData'
+import { ActivityIndicator } from 'react-native-paper'
 import SearchInput from '../../../components/input/SearchInput'
-import {AppRouteParamList} from '../../../types/navigate'
+import EmptyData from '..../../../shared/ui/input/SearchInput
+import { AppRouteParamList } from '../../../types/navigate'
 import ChatListItemCard from '../components/ChatListItemCard'
-import {useChatListScreen} from '../hooks/useChatListScreen'
+import { useChatListScreen } from '../hooks/useChatListScreen'
 
 type ChatRouteParams = RouteProp<AppRouteParamList, 'chats'>
 

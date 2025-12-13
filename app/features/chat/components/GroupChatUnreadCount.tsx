@@ -1,6 +1,6 @@
 import React from 'react'
 import {StyleSheet} from 'react-native'
-import PandyBadge from '../../../components/badge/PandyBadge'
+import PandyBadge from '../../../shared/ui/badge/PandyBadge'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {useSubscribeChatUnreadCount} from '../hooks/useChatRoomQuery'
 

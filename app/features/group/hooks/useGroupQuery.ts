@@ -9,7 +9,7 @@ import {
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query'
 import {orderBy} from 'lodash'
 import {getGroupInfo} from '../../../services/groupService'
-import {firestore} from '../../../store/firestore'
+import {firestore} from '../../../shared/firebase/firestore'
 import type {FsSnapshot} from '../../../types/firebase'
 import type {Group} from '../../../types/group'
 

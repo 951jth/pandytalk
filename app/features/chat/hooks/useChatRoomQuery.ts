@@ -20,9 +20,9 @@ import {
 } from '@tanstack/react-query'
 import {useEffect, useState} from 'react'
 import {useDispatch} from 'react-redux'
-import {useDebouncedCallback} from '../../../hooks/useDebounceCallback'
 import {getChatRoomInfoWithMembers} from '../../../services/chatService'
-import {firestore} from '../../../store/firestore'
+import {firestore} from '../../../shared/firebase/firestore'
+import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
 import {AppDispatch} from '../../../store/store'
 import {
   setDMChatCount,

@@ -10,8 +10,8 @@ import {
   type ViewStyle,
 } from 'react-native'
 import {Icon} from 'react-native-paper'
-import PressableWrapper from '../../../components/common/PressableWrapper'
 import COLORS from '../../../constants/color'
+import PressableWrapper from '../../../shared/ui/common/PressableWrapper'
 import type {Group} from '../../../types/group'
 
 type propTypes = {

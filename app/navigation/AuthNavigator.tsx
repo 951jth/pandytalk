@@ -1,6 +1,6 @@
+import {authRoutes} from '@app/navigation/useScreens'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React, {Fragment} from 'react'
-import {authRoutes} from '../features/app/hooks/useScreens'
 
 export default function AuthNavigator() {
   const Stack = createNativeStackNavigator()

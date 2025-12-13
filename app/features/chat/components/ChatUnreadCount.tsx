@@ -1,5 +1,5 @@
 import React from 'react'
-import PandyBadge from '../../../components/badge/PandyBadge'
+import PandyBadge from '../../../shared/ui/badge/PandyBadge'
 import {useAppSelector} from '../../../store/reduxHooks'
 import type {ChatListItem} from '../../../types/chat'
 

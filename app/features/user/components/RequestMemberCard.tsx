@@ -1,4 +1,4 @@
-import ColorChip from '@components/chip/ColorChip'
+import ColorChip from '@/shared/ui/chip/ColorChip'
 import PressableWrapper from '@components/common/PressableWrapper'
 import COLORS from '@constants/color'
 import {Timestamp} from '@react-native-firebase/firestore'

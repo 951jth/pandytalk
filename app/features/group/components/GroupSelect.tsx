@@ -1,5 +1,5 @@
 import React from 'react'
-import Select, {type SelectProps} from '../../../components/select/Select'
+import Select, {type SelectProps} from '../../../shared/ui/select/Select'
 import {useAllGroups} from '../hooks/useGroupQuery'
 
 export default function GroupSelect(props: Omit<SelectProps, 'options'>) {

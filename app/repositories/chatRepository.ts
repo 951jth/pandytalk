@@ -1,5 +1,5 @@
 import {doc, updateDoc} from '@react-native-firebase/firestore'
-import {firestore} from '../store/firestore'
+import {firestore} from '../shared/firebase/firestore'
 import type {ChatListItem} from '../types/chat'
 
 export default {

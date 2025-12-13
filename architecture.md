@@ -20,7 +20,17 @@
    - 공통 UI → `components/`
    - 도메인 전용 UI → `features/*/components`
 
----
+4. **아티텍쳐 필수 규칙 **
+
+- 규칙 A: app/bootstrap ↔ features ↔ shared 의 의존 방향 고정
+  features/*는 shared/*를 써도 됨 ✅
+  bootstrap은 shared/* + features/*의 “init 함수/훅”을 호출해도 됨 ✅ (오케스트레이션이라)
+  shared는 features를 절대 import하면 안 됨 ❌
+- 규칙 B: “app”은 앱 조립만, “shared”는 인프라/유틸만
+  app/navigation, app/layout, app/providers, app/bootstrap
+  → 앱 프레임/조립
+  shared/firebase, shared/sqlite, shared/ui, shared/hooks
+  → 재사용 가능한 인프라/유틸/순수 UI
 
 ## 📁 Folder Structure
 

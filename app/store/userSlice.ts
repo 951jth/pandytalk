@@ -3,9 +3,9 @@ import {signOut} from '@react-native-firebase/auth'
 import {doc, getDoc, getFirestore} from '@react-native-firebase/firestore'
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {removeFCMTokenOnLogout} from '../services/userService'
+import {auth} from '../shared/firebase/firestore'
 import type {User} from '../types/auth'
 import {convertTimestampsToMillis} from '../utils/firebase'
-import {auth} from './firestore'
 
 type UserState = {
   data: User | null

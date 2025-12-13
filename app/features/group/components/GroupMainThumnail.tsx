@@ -6,10 +6,10 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native'
-import CustomChip from '../../../components/chip/CustomChip'
 import DefaultProfile from '../../../components/common/DefaultProfile'
 import ImageViewer from '../../../components/common/ImageViewer'
 import COLORS from '../../../constants/color'
+import CustomChip from '../../../shared/ui/chip/CustomChip'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {useGroup} from '../hooks/useGroupQuery'
 

@@ -1,7 +1,7 @@
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
-import type {SelectProps} from '../../../components/select/Select'
-import Select from '../../../components/select/Select'
+import type {SelectProps} from '../../../shared/ui/select/Select'
+import Select from '../../../shared/ui/select/Select'
 import {useUsersInfinite} from '../../chat/hooks/useUserQuery'
 
 export default function UserSelect(props: Omit<SelectProps, 'options'>) {

@@ -3,19 +3,16 @@
   "compilerOptions": {
     "baseUrl": ".", // ✅ 프로젝트 루트를 기준으로 alias 적용
     "paths": {
-      "@/*": ["app/*"], // ✅ app 폴더가 소스 루트라면 이렇게,
-      "@assets/*": ["app/assets/*"],
-      "@components/*": ["app/components/*"],
-      "@constants/*": ["app/constants/*"],
-      "@contexts/*": ["app/contexts/*"],
-      "@hooks/*": ["app/hooks/*"],
-      "@navigation/*": ["app/navigation/*"],
+      "@app/*": ["app/*"],
       "@features/*": ["app/features/*"],
+      "@shared/*": ["app/shared/*"],
       "@services/*": ["app/services/*"],
-      "@store/*": ["app/store/*"],
-      "@utils/*": ["app/utils/*"],
-      "@types/*": ["app/types/*"],
-      "@repositories/*": ["app/repositories/*"]
+      "@repositories/*": ["app/repositories/*"],
+      "@navigation/*": ["app/navigation/*"],
+      "@layout/*": ["app/layout/*"],
+      "@providers/*": ["app/providers/*"],
+      "@constants/*": ["app/constants/*"],
+      "@db/*": ["app/db/*"]
     },
     "jsx": "react",
     "moduleResolution": "node",

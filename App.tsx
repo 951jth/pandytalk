@@ -1,8 +1,6 @@
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
- *
-//  * @format
  */
 
 import {NavigationContainer} from '@react-navigation/native'
@@ -11,11 +9,8 @@ import React from 'react'
 import {PaperProvider} from 'react-native-paper'
 import {SafeAreaProvider} from 'react-native-safe-area-context'
 import {Provider} from 'react-redux'
-import {
-  navigationRef,
-  onNavReady,
-} from './app/components/navigation/RootNavigation'
 import theme from './app/constants/theme'
+import {navigationRef, onNavReady} from './app/navigation/RootNavigation'
 import store from './app/store/store'
 import {RootNavigator} from './RootNavigator'
 

@@ -1,11 +1,9 @@
-import {getAuth} from '@react-native-firebase/auth'
+import {appRoutes} from '@app/navigation/useScreens'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 // import {navigate} from '../components/navigation/RootNavigation'
-import {appRoutes} from '../features/app/hooks/useScreens'
 
 const Stack = createNativeStackNavigator()
-const authInstance = getAuth()
 
 export default function AppNavigator() {
   const routes = appRoutes()

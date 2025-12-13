@@ -1,6 +1,6 @@
 // import {FieldValue} from 'firebase-admin/firestore'
 import type {Transaction} from 'react-native-sqlite-storage'
-import {db} from '../store/sqlite'
+import {db} from '../shared/sqlite/sqlite'
 import type {ChatMessage} from '../types/chat'
 import {exec} from '../utils/data'
 import {toMillisFromServerTime} from '../utils/firebase'

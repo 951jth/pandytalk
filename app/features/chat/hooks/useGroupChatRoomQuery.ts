@@ -15,8 +15,8 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
-import {useDebouncedCallback} from '../../../hooks/useDebounceCallback'
-import {firestore} from '../../../store/firestore'
+import {firestore} from '../../../shared/firebase/firestore'
+import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
 import type {ChatListItem} from '../../../types/chat'
 import type {FsSnapshot} from '../../../types/firebase'
 import {compareChat, getUnreadCount} from '../../../utils/chat'
