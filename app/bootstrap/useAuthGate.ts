@@ -14,7 +14,7 @@ import {useDispatch} from 'react-redux'
 export function useAuthGate() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null)
   const dispatch = useDispatch<AppDispatch>()
-  const [initializing, setInitializing] = useState<boolean>(true)
+  const [initializing, setInitializing] = useState<boolean>(true) //앱의 자바스크립트가 붙어야함.
   const {data: userInfo, loading} = useAppSelector(state => state.user)
 
   const fetchProfile = async (uid: string) => {
