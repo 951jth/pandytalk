@@ -1,3 +1,6 @@
+import COLORS from '@app/shared/constants/color'
+import DefaultProfile from '@app/shared/ui/common/DefaultProfile'
+import ImageViewer from '@app/shared/ui/common/ImageViewer'
 import React from 'react'
 import {
   StyleSheet,
@@ -6,9 +9,6 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native'
-import DefaultProfile from '../../../components/common/DefaultProfile'
-import ImageViewer from '../../../components/common/ImageViewer'
-import COLORS from '../../../constants/color'
 import CustomChip from '../../../shared/ui/chip/CustomChip'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {useGroup} from '../hooks/useGroupQuery'

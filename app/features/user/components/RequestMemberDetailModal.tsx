@@ -1,17 +1,19 @@
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useRef} from 'react'
 import {Alert, Modal, StyleSheet, View} from 'react-native'
-import ColorButton from '../../../components/button/ColorButton'
-import EditInput from '../../../components/input/EditInput'
-import EditTextArea from '../../../components/input/EditTextarea'
-import CustomModal from '../../../components/modal/CustomModal'
-import Select from '../../../components/select/Select'
-import EditProfile f../../../shared/ui/select/SelectditProfile'
-import COLORS from '../..../../../shared/ui/upload/EditProfile
+
 import {memberStatusUpdate} from '../../../services/authService'
 import InputForm from '../../../shared/ui/form/InputForm'
-import type {User} from '../../../types/auth'
-import type {FormItem} from '../../../types/form'
+
+import COLORS from '@app/shared/constants/color'
+import {User} from '@app/shared/types/auth'
+import {FormItem} from '@app/shared/types/form'
+import ColorButton from '@app/shared/ui/button/ColorButton'
+import EditInput from '@app/shared/ui/input/EditInput'
+import EditTextArea from '@app/shared/ui/input/EditTextarea'
+import CustomModal from '@app/shared/ui/modal/CustomModal'
+import Select from '@app/shared/ui/select/Select'
+import EditProfile from '@app/shared/ui/upload/EditProfile'
 import GroupSelect from '../../group/components/GroupSelect'
 
 type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {

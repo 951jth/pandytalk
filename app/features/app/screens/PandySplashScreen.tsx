@@ -1,7 +1,7 @@
-import splash from '@assets/images/pandy_splash.png'
+import COLORS from '@app/shared/constants/color'
+import splash from '@shared/assets/images/pandy_splash.png'
 import React from 'react'
 import {Image, StyleSheet, View} from 'react-native'
-import COLORS from '../../../constants/color'
 
 export default function PandySplashScreen() {
   return (

@@ -1,10 +1,10 @@
+import COLORS from '@app/shared/constants/color'
+import {terms} from '@app/shared/constants/terms'
+import {termType} from '@app/shared/types/auth'
+import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import CustomModal from '@app/shared/ui/modal/CustomModal'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
-import {CustomButton} from '../../../components/button/CustomButton'
-import CustomModal from '../../../components/modal/CustomModal'
-import COLORS from '../../../constants/color'
-import {terms} from '../../../constants/terms'
-import type {termType} from '../../../types/auth'
 
 type propTypes = {
   code: string | null

@@ -1,7 +1,7 @@
+import {Group} from '@app/shared/types/group'
+import CustomModal from '@app/shared/ui/modal/CustomModal'
 import React from 'react'
 import {StyleSheet} from 'react-native'
-import CustomModal from '../../../components/modal/CustomModal'
-import type {Group} from '../../../types/group'
 import GroupForm from './GroupForm'
 
 type propTypes = {

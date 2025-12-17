@@ -1,4 +1,5 @@
 // components/inputs/EditInput.tsx
+import COLORS from '@app/shared/constants/color'
 import React, {useMemo, useRef, useState, type ReactNode} from 'react'
 import {
   Pressable,
@@ -12,7 +13,6 @@ import {
   ViewStyle,
 } from 'react-native'
 import {Icon} from 'react-native-paper' // ✅ paper 없이 아이콘
-import COLORS from '../../../constants/color'
 
 export type EditInputProps = Omit<RNTextInputProps, 'value' | 'style'> & {
   edit?: boolean

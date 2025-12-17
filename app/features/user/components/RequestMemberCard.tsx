@@ -1,12 +1,12 @@
-import ColorChip from '@/shared/ui/chip/ColorChip'
-import PressableWrapper from '@components/common/PressableWrapper'
-import COLORS from '@constants/color'
+import COLORS from '@app/shared/constants/color'
+import {User} from '@app/shared/types/auth'
+import ColorChip from '@app/shared/ui/chip/ColorChip'
+import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 import {Timestamp} from '@react-native-firebase/firestore'
-import dayjs from '@utils/dayjs'
+import dayjs from 'dayjs'
 import React from 'react'
 import {Image, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
-import type {User} from '../../../types/auth'
 
 interface RequestMember {
   item: User

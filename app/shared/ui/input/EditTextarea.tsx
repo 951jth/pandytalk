@@ -1,4 +1,5 @@
 // components/inputs/EditTextArea.tsx  (RN 코어 TextInput 버전)
+import COLORS from '@app/shared/constants/color'
 import React, {useCallback, useMemo, useState} from 'react'
 import {
   Platform,
@@ -10,7 +11,6 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import COLORS from '../../../constants/color'
 
 type Props = Omit<
   RNTextInputProps,

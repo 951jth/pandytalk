@@ -27,6 +27,29 @@ export const useChatWithMembersInfo = (
   }, [rawChats])
 
   // 멤버정보를 아이디 : 멤버정보로 매칭
+  //Map 쓰기 좋은 경우:
+  // 키가 string만이 아니라 객체/기타 타입일 때
+  // 키-값 쌍을 자주 추가/삭제/순회해야 할 때
+  // 컬렉션 의미를 명확히 드러내고 싶을 때
+  // size, keys(), values() 같은 메서드를 자주 쓸 때
+
+  //   ✅ Map (new Map())
+  // 용도: 키-값 쌍을 위한 전용 컬렉션
+  // 키:
+  // 아무 타입이나 가능: string, number, 객체, 함수, 심볼 등 전부 가능
+  // 객체를 키로 쓰면 참조(===) 기준
+  // 메서드:
+  // set(key, value)
+  // get(key)
+  // has(key)
+  // delete(key)
+  // clear()
+  // size (길이)
+  // 순회:
+  // for...of map
+  // map.forEach
+  // map.keys(), map.values(), map.entries()
+  // 프로토타입 체인 영향 없음, 딱 저장한 것만 들어있음
   const memberMap = useMemo(() => {
     const map = new Map<string, User>()
     targetMembers.forEach(u => {

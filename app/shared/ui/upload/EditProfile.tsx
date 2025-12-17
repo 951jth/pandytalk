@@ -1,3 +1,4 @@
+import COLORS from '@app/shared/constants/color'
 import storage from '@react-native-firebase/storage'
 import React, {
   forwardRef,
@@ -9,7 +10,6 @@ import React, {
 import {StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import {auth} from '../../firebase/firestore'
 import {isLocalFile} from '../../utils/file'
 import {requestPhotoPermission} from '../../utils/permission'

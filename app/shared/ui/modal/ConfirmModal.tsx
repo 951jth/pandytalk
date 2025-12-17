@@ -1,6 +1,6 @@
+import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {Modal, StyleSheet, Text, View} from 'react-native'
-import COLORS from '../../constants/color'
 import {CustomButton} from '../button/CustomButton'
 
 interface ConfirmModalProps {

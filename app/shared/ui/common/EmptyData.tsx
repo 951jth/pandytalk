@@ -1,4 +1,5 @@
-import pandy from '@assets/images/pandy_colorfull_visible.png'
+// import pandy from '@assets/images/pandy_colorfull_visible.png'
+import pandy from '@shared/assets/images/pandy_colorfull_visible.png'
 import React from 'react'
 import {
   Image,

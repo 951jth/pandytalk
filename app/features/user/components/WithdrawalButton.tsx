@@ -1,8 +1,9 @@
 import React, {useState} from 'react'
 import {StyleSheet} from 'react-native'
-import {CustomButton} from '../../../components/button/CustomButton'
-import ConfirmModal from '../../../components/modal/ConfirmModal'
-import COLORS from '../../../constants/color'
+
+import COLORS from '@app/shared/constants/color'
+import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 import {deleteMyAccount} from '../../../services/authService'
 
 type propTypes = {

@@ -1,4 +1,5 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
+import COLORS from '@app/shared/constants/color'
 import {cloneDeep, get} from 'lodash'
 import React, {
   forwardRef,
@@ -17,7 +18,6 @@ import {
   ViewStyle,
 } from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import {type FormItem} from '../../types/form'
 import {
   hasAnyError,

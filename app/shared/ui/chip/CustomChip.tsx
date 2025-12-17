@@ -1,6 +1,6 @@
+import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
-import COLORS from '../../../constants/color'
 
 // ✅ 승인됨
 // 배경색: #E8F5E9 (연한 그린톤)

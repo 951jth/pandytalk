@@ -1,11 +1,11 @@
+import {tabScreens} from '@app/navigation/useScreens'
+import COLORS from '@app/shared/constants/color'
+import {AppRouteParamList} from '@app/shared/types/navigate'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {Icon} from 'react-native-paper'
-import COLORS from '../constants/color'
 import {ActionTabButton} from '../features/app/components/ActionTabBarButton'
-import {tabScreens} from '../message/hooks/useScreens'
 import {useAppSelector} from '../store/reduxHooks'
-import type {AppRouteParamList} from '../types/navigate'
 
 const Tab = createBottomTabNavigator()
 const EmptyScreen: React.FC = () => null

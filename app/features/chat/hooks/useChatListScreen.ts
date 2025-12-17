@@ -1,11 +1,11 @@
 // features/chat/hooks/useChatListScreen.ts
+import {ChatItemWithMemberInfo} from '@app/shared/types/chat'
+import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {debounce} from 'lodash'
 import {useEffect, useMemo, useState} from 'react'
 import {useAppSelector} from '../../../store/reduxHooks'
-import type {ChatItemWithMemberInfo, ChatListItem} from '../../../types/chat'
-import type {AppRouteParamList} from '../../../types/navigate'
 import {useMyChatsInfinite, useSubscribeChatList} from './useChatRoomQuery' // 기존 구독 훅 그대로 사용
 import {useChatWithMembersInfo} from './useChatWithMembersInfo'
 
@@ -20,19 +20,6 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
   // 검색 인풋 / 디바운스 검색어
   const [input, setInput] = useState('')
   const [searchText, setSearchText] = useState('')
-
-  const debouncedSetSearchText = useMemo(
-    () =>
-      debounce((text: string) => {
-        setSearchText(text.trim())
-      }, 300),
-    [],
-  )
-
-  useEffect(() => {
-    debouncedSetSearchText(input)
-    return () => debouncedSetSearchText.cancel()
-  }, [input, debouncedSetSearchText])
 
   // 채팅 목록 쿼리
   const {
@@ -49,6 +36,20 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
   const rawChats: ChatListItem[] =
     data?.pages.flatMap(page => page?.chats ?? []) ?? []
   const chats = useChatWithMembersInfo(rawChats, user, type)
+
+  const debouncedSetSearchText = useMemo(
+    () =>
+      debounce((text: string) => {
+        setSearchText(text.trim())
+      }, 300),
+    [],
+  )
+
+  useEffect(() => {
+    debouncedSetSearchText(input)
+    return () => debouncedSetSearchText.cancel()
+  }, [input, debouncedSetSearchText])
+
   const filteredChat = chats?.filter(chat => chat?.name?.includes(searchText))
 
   const moveToChatRoom = (targetId?: string | null, roomId?: string) => {

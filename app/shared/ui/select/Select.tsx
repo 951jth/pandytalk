@@ -1,4 +1,5 @@
 // components/inputs/Select.tsx
+import COLORS from '@app/shared/constants/color'
 import React, {useMemo, useRef, useState} from 'react'
 import {
   ActivityIndicator,
@@ -15,7 +16,6 @@ import {
   ViewStyle,
 } from 'react-native'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
-import COLORS from '../../../constants/color'
 
 type Option<T extends string | number> = {label: string; value: T}
 

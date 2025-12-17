@@ -1,5 +1,7 @@
+import COLORS from '@app/shared/constants/color'
+import {User} from '@app/shared/types/auth'
 import {Timestamp} from '@react-native-firebase/firestore'
-import dayjs from '@utils/dayjs'
+import dayjs from 'dayjs'
 import React from 'react'
 import {
   Pressable,
@@ -11,8 +13,6 @@ import {
 } from 'react-native'
 import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../../constants/color'
-import type {User} from '../../../types/auth'
 
 interface ChatMemberProps {
   item: User

@@ -1,3 +1,4 @@
+import COLORS from '@app/shared/constants/color'
 import React, {useState} from 'react'
 import {
   StyleSheet,
@@ -6,7 +7,6 @@ import {
   type ViewStyle,
 } from 'react-native'
 import {Button} from 'react-native-paper'
-import COLORS from '../../constants/color'
 
 type PaperButtonProps = React.ComponentProps<typeof Button>
 

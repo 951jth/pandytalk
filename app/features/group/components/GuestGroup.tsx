@@ -1,3 +1,5 @@
+import COLORS from '@app/shared/constants/color'
+import {Group} from '@app/shared/types/group'
 import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
 import React from 'react'
@@ -10,9 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import PressableWrapper from '../../../shared/ui/common/PressableWrapper'
-import type {Group} from '../../../types/group'
 
 type propTypes = {
   item: Group

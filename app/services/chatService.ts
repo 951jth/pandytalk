@@ -16,6 +16,8 @@ import {
   where,
 } from '@react-native-firebase/firestore'
 // import {FieldValue} from 'firebase-admin/firestore'
+import {toRNFTimestamp} from '../shared/utils/firebase'
+import {removeEmpty} from '../shared/utils/format'
 import type {User} from '../types/auth'
 import type {
   ChatItemWithMemberInfo,
@@ -23,8 +25,6 @@ import type {
   ChatMessage,
   ServerTime,
 } from '../types/chat'
-import {toRNFTimestamp} from '../utils/firebase'
-import {removeEmpty} from '../utils/format'
 
 const firestore = getFirestore(getApp())
 

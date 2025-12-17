@@ -1,24 +1,25 @@
-import React, { useRef, useState } from 'react'
-import { Alert, StyleSheet, View } from 'react-native'
-import { Text } from 'react-native-paper'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useDispatch } from 'react-redux'
-import InputForm from '../../../components/form/InputForm'
-import EditInput from '../../../components/input/EditInput'
-import EditTextArea fro../../../shared/ui/input/EditInputxtarea'
-import PasswordInput from ../../../shared/ui/input/EditTextareaut'
-import AppHeader from '../.../../../shared/ui/input/PasswordInput
-import EditProfile, {
-  type profileInputRef,
-} from '../../../components/upload/EditProfile'
-import C../../../shared/ui/upload/EditProfile
-import { checkRequiredTerm, defaultTermsRecord } from '../../../constants/terms'
-import { submitSignupRequest } from '../../../services/authService'
+import AppHeader from '@app/layout/AppHeader'
+import COLORS from '@app/shared/constants/color'
+import {
+  checkRequiredTerm,
+  defaultTermsRecord,
+} from '@app/shared/constants/terms'
+import {requestUser} from '@app/shared/types/auth'
+import {FormItem} from '@app/shared/types/form'
+import InputForm from '@app/shared/ui/form/InputForm'
+import EditInput from '@app/shared/ui/input/EditInput'
+import EditTextArea from '@app/shared/ui/input/EditTextarea'
+import PasswordInput from '@app/shared/ui/input/PasswordInput'
+import EditProfile, {profileInputRef} from '@app/shared/ui/upload/EditProfile'
+import React, {useRef, useState} from 'react'
+import {Alert, StyleSheet, View} from 'react-native'
+import {Text} from 'react-native-paper'
+import {SafeAreaView} from 'react-native-safe-area-context'
+import {useDispatch} from 'react-redux'
+import {submitSignupRequest} from '../../../services/authService'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
-import type { AppDispatch } from '../../../store/store'
-import { logout } from '../../../store/userSlice'
-import type { requestUser } from '../../../types/auth'
-import type { FormItem } from '../../../types/form'
+import type {AppDispatch} from '../../../store/store'
+import {logout} from '../../../store/userSlice'
 import TermAgreementList, {
   CheckedRecordType,
 } from '../../auth/components/TermAgreementList'

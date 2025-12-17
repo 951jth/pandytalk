@@ -1,7 +1,7 @@
+import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {StyleProp, StyleSheet, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 
 interface Profile {
   boxSize?: number

@@ -1,5 +1,5 @@
 import storage from '@react-native-firebase/storage'
-import {isLocalFile} from '../utils/file'
+import {isLocalFile} from '../shared/utils/file'
 
 //localFile 업로드 로직
 export const fileUpload: any = async (uid: string, previewUrl: string) => {

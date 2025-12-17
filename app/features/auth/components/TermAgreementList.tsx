@@ -1,11 +1,11 @@
+import COLORS from '@app/shared/constants/color'
+import {terms} from '@app/shared/constants/terms'
+import {termType} from '@app/shared/types/auth'
+import {ServerTime} from '@app/shared/types/chat'
 import {serverTimestamp} from '@react-native-firebase/firestore'
 import React, {useMemo, useState} from 'react'
 import {StyleSheet, Text, View} from 'react-native'
 import {Checkbox, IconButton} from 'react-native-paper'
-import COLORS from '../../../constants/color'
-import {terms} from '../../../constants/terms'
-import type {termType} from '../../../types/auth'
-import type {ServerTime} from '../../../types/chat'
 import TermViewModal from './TermViewModal'
 
 export type CheckedRecordType = Record<string, ServerTime | null>

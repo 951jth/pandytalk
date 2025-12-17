@@ -1,5 +1,8 @@
+import {
+  formatServerDate,
+  toMillisFromServerTime,
+} from '@app/shared/utils/firebase'
 import type {ChatListItem, ChatMessage} from '../types/chat'
-import {formatServerDate, toMillisFromServerTime} from './firebase'
 
 export const isSameSender = (
   prev: ChatMessage | null,

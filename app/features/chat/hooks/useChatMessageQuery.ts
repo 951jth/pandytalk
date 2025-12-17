@@ -21,9 +21,12 @@ import {
   getMessagesFromSQLiteByPaging,
   saveMessagesToSQLite,
 } from '../../../db/sqlite'
+import {mergeMessages} from '../../../shared/utils/chat'
+import {
+  toMillisFromServerTime,
+  toRNFTimestamp,
+} from '../../../shared/utils/firebase'
 import type {ChatMessage} from '../../../types/chat'
-import {mergeMessages} from '../../../utils/chat'
-import {toMillisFromServerTime, toRNFTimestamp} from '../../../utils/firebase'
 
 // ✅ 올바른 타입: Infinite Query용
 type MessagesPage = {

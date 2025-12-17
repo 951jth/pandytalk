@@ -17,9 +17,9 @@ import {
 import {useEffect} from 'react'
 import {firestore} from '../../../shared/firebase/firestore'
 import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
+import {compareChat, getUnreadCount} from '../../../shared/utils/chat'
 import type {ChatListItem} from '../../../types/chat'
 import type {FsSnapshot} from '../../../types/firebase'
-import {compareChat, getUnreadCount} from '../../../utils/chat'
 
 interface pageType {
   chats: ChatListItem[]

@@ -1,3 +1,4 @@
+import COLORS from '@app/shared/constants/color'
 import React, {useState} from 'react'
 import {
   StyleSheet,
@@ -9,7 +10,6 @@ import {
 import FastImage, {FastImageProps} from 'react-native-fast-image'
 import EnhancedImageViewing from 'react-native-image-viewing'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {downloadUrl} from '../../utils/file'
 

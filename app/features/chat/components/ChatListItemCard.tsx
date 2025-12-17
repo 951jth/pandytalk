@@ -1,12 +1,12 @@
+import COLORS from '@app/shared/constants/color'
+import {ChatItemWithMemberInfo} from '@app/shared/types/chat'
 import dayjs from 'dayjs'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
 import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import PressableWrapper from '../../../shared/ui/common/PressableWrapper'
-import type {ChatItemWithMemberInfo} from '../../../types/chat'
-import {toMillisFromServerTime} from '../../../utils/firebase'
+import {toMillisFromServerTime} from '../../../shared/utils/firebase'
 
 type propTypes = {
   item: ChatItemWithMemberInfo

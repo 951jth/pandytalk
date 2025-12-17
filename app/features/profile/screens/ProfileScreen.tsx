@@ -12,21 +12,20 @@ import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
 import {IconButton} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-import {CustomButton} from '../../../components/button/CustomButton'
-import EditInput from '../../../components/input/EditInput'
-import EditTextArea from '../../../components/input/EditTextarea'
-import EditProfile, {
-  type profileInputRef,
-} from '../../../components/upload/EditProfile'
-import C../../../shared/ui/upload/EditProfile
-import {authority} from '../../../constants/korean'
-import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
+
+import COLORS from '@app/shared/constants/color'
+import {authority} from '@app/shared/constants/korean'
+import {FormItem} from '@app/shared/types/form'
+import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import EditInput from '@app/shared/ui/input/EditInput'
+import EditTextArea from '@app/shared/ui/input/EditTextarea'
+import EditProfile, {profileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {initialUserInfo} from '../../../services/userService'
+import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import InputForm, {InputFormRef} from '../../../shared/ui/form/InputForm'
 import {useAppSelector} from '../../../store/reduxHooks'
 import {AppDispatch} from '../../../store/store'
 import {fetchUserById} from '../../../store/userSlice'
-import type {FormItem} from '../../../types/form'
 import WithdrawalButton from '../../user/components/WithdrawalButton'
 // somewhere like App.tsx or a test screen
 

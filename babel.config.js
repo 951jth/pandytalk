@@ -15,6 +15,7 @@ module.exports = {
           '@layout': './app/layout',
           '@providers': './app/providers',
           '@constants': './app/constants',
+          '@assets': './app/shared/assets',
           '@db': './app/db',
         },
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],

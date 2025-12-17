@@ -15,7 +15,7 @@ import AuthNavigator from './app/navigation/AuthNavigator'
 
 const RootStack = createNativeStackNavigator<RootStackParamList>()
 
-export function RootNavigator(): React.JSX.Element {
+export function RootNavigator() {
   const {shouldShowSplash, canEnterApp} = useRootAppSetup()
 
   // 초기/프로필 로딩 중 스플래시

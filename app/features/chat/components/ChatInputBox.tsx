@@ -1,13 +1,13 @@
+import COLORS from '@app/shared/constants/color'
+import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import React, {useState} from 'react'
 import {Alert, Keyboard, StyleSheet, View} from 'react-native'
 import {ImagePickerResponse} from 'react-native-image-picker'
 import {IconButton, TextInput} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import {createChatRoom, sendMessage} from '../../../services/chatService'
 import {auth} from '../../../shared/firebase/firestore'
 import UploadButton from '../../../shared/ui/upload/UploadButton'
-import type {ChatListItem, ChatMessage} from '../../../types/chat'
-import {firebaseImageUpload} from '../../../utils/file'
+import {firebaseImageUpload} from '../../../shared/utils/file'
 
 interface propTypes {
   roomInfo?: ChatListItem | null

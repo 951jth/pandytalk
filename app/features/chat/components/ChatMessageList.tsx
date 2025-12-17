@@ -1,14 +1,18 @@
+import COLORS from '@app/shared/constants/color'
+import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import {useFocusEffect} from '@react-navigation/native'
 import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
-import COLORS from '../../../constants/color'
 import {getLatestMessageCreatedAtFromSQLite} from '../../../db/sqlite'
 import {updateLastRead} from '../../../services/chatService'
 import ImageViewer from '../../../shared/ui/common/ImageViewer'
-import type {ChatListItem, ChatMessage} from '../../../types/chat'
-import {isSameDate, isSameMinute, isSameSender} from '../../../utils/chat'
-import {formatChatTime, formatServerDate} from '../../../utils/firebase'
+import {
+  isSameDate,
+  isSameMinute,
+  isSameSender,
+} from '../../../shared/utils/chat'
+import {formatChatTime, formatServerDate} from '../../../shared/utils/firebase'
 import {
   useChatMessagesPaging,
   useSubscriptionMessage,

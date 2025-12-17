@@ -23,6 +23,8 @@ import {useDispatch} from 'react-redux'
 import {getChatRoomInfoWithMembers} from '../../../services/chatService'
 import {firestore} from '../../../shared/firebase/firestore'
 import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
+import {compareChat, getUnreadCount} from '../../../shared/utils/chat'
+import {sortKey} from '../../../shared/utils/firebase'
 import {AppDispatch} from '../../../store/store'
 import {
   setDMChatCount,
@@ -30,8 +32,6 @@ import {
 } from '../../../store/unreadCountSlice'
 import type {ChatListItem, PushMessage} from '../../../types/chat'
 import type {FsSnapshot} from '../../../types/firebase'
-import {compareChat, getUnreadCount} from '../../../utils/chat'
-import {sortKey} from '../../../utils/firebase'
 
 interface pageType {
   chats: ChatListItem[]

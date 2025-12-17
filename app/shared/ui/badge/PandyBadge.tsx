@@ -1,6 +1,6 @@
+import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
-import COLORS from '../../../constants/color'
 
 type propTypes = {
   count: number

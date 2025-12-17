@@ -7,17 +7,18 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, Text, View} from 'react-native'
-import EditInput from '../../../components/input/EditInput'
-import type {profileInputRef} from '../../../components/upload/EditProfile'
-import EditProfile from '../../../co../../../shared/ui/upload/EditProfile
-import COLORS from '../..../../../shared/ui/upload/EditProfile
+
 import {auth, firestore} from '../../../shared/firebase/firestore'
 import InputForm from '../../../shared/ui/form/InputForm'
-import type {ServerTime} from '../../../types/chat'
-import type {FormItem} from '../../../types/form'
-import type {Group} from '../../../types/group'
-import type {AppRouteParamList} from '../../../types/navigate'
-import {formatServerDate} from '../../../utils/firebase'
+
+import COLORS from '@app/shared/constants/color'
+import {ServerTime} from '@app/shared/types/chat'
+import {FormItem} from '@app/shared/types/form'
+import {Group} from '@app/shared/types/group'
+import {AppRouteParamList} from '@app/shared/types/navigate'
+import EditInput from '@app/shared/ui/input/EditInput'
+import EditProfile, {profileInputRef} from '@app/shared/ui/upload/EditProfile'
+import {formatServerDate} from '../../../shared/utils/firebase'
 import UserSelect from '../../user/components/UserSelect'
 
 const initialValues = {
