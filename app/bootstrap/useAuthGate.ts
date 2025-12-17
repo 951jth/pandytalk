@@ -51,7 +51,7 @@ export function useAuthGate() {
   }, [dispatch])
 
   const shouldShowSplash = initializing || (loading && !userInfo)
-  const canEnterApp = !user && userInfo?.accountStatus === 'confirm'
+  const canEnterApp = user && userInfo?.accountStatus === 'confirm'
 
   return {shouldShowSplash, canEnterApp}
 }

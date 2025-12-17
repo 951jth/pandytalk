@@ -109,7 +109,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
   const updateUserProfile = async () => {
     try {
-      const errs = formRef?.current?.onValidate()
+      const errs = formRef?.current?.validate()
       if (errs) return
 
       const formValues = formRef.current?.getValues() || {}

@@ -1,7 +1,7 @@
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import {Timestamp} from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
+import dayjs from '@shared/utils/dayjs'
 import React from 'react'
 import {
   Pressable,

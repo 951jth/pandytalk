@@ -1,14 +1,8 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
 import COLORS from '@app/shared/constants/color'
-import {cloneDeep, get} from 'lodash'
-import React, {
-  forwardRef,
-  Fragment,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
+import {useInputForm} from '@app/shared/ui/form/hooks/useInputForm'
+import {get} from 'lodash'
+import React, {forwardRef, Fragment, useImperativeHandle} from 'react'
 import {
   ScrollView,
   StyleProp,
@@ -19,11 +13,6 @@ import {
 } from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
 import {type FormItem} from '../../types/form'
-import {
-  hasAnyError,
-  validateAllFields,
-  validateField,
-} from '../../utils/validation'
 import {CustomButton} from '../button/CustomButton'
 
 interface Props {
@@ -47,6 +36,7 @@ interface Props {
   formData?: object | null
   onReset?: () => void
   btnDisable?: boolean
+  formKey?: any
 }
 
 // 🔗 외부에서 사용할 ref 타입
@@ -60,43 +50,45 @@ export interface InputFormRef {
   // formValues 폼데이터 입력값 초기화
   resetValues: () => void
   // 폼값 검증
-  onValidate: () => boolean
+  validate: () => boolean
 }
 
 const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   {
+    // 1. 폼 엔진 (필수)
     items = [],
-    initialValues = {},
+    formData = {},
+    formKey, //폼 값 갱신(초기화값까지 갱신)
+    // 2. 레이아웃 / 스타일 (선택)
     style = {},
     labelWidth = 80,
     fontSize = 16,
     rowsStyle = {},
     labelStyle = {},
     contentsStyle = {},
+    // 3. 액션 / 버튼 (선택)
     editable = false, //버튼 생성 유무
     buttonLabel = '', //컨펌 버튼 라벨
-    topElement,
-    bottomElement,
     loading = false, //컨펌 버튼 로딩
     onSubmit = values => {},
-    onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
-    formData,
     onReset,
     btnDisable = false,
+    // 4. 확장 포인트
+    topElement,
+    bottomElement,
+    onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
   }: Props,
   ref,
 ) {
-  const resetValues = useRef<object>({})
-  const [formValues, setFormValues] = useState<object | null>(initialValues)
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({}) // 에러메시지 표기
-
-  useEffect(() => {
-    if (formData) {
-      resetValues.current = cloneDeep(formData)
-      setFormValues(cloneDeep(formData))
-      setErrors({})
-    }
-  }, [formData])
+  const {
+    formValues,
+    setFormValues,
+    errors,
+    setErrors,
+    changeField,
+    resetValues,
+    validateAll,
+  } = useInputForm(formData, formKey)
 
   // ✅ 외부로 노출할 메서드들
   useImperativeHandle(
@@ -107,26 +99,18 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         return {...(formValues ?? {})} as Record<string, any>
       },
       setValues: next => {
-        setFormValues(next ?? {})
         // 값 전체 교체 시 에러도 초기화 (필요 시 주석 처리)
+        setFormValues(next ?? {})
         setErrors({})
       },
       updateValues: patch => {
         if (!patch || typeof patch !== 'object') return
         setFormValues(prev => ({...(prev ?? {}), ...patch}))
-        // 부분 갱신 시 유효성 체크가 필요하면 아래 로직 확장 가능
-        // Object.entries(patch).forEach(([k, v]) => { ...validateField... });
       },
-      onValidate: () => {
-        const errorsFields = validateAllFields(items, (formValues ?? {}) as any)
-        if (hasAnyError(errorsFields)) {
-          setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
-          return true
-        } else return false
-      },
-      resetValues: () => setFormValues(formData || null),
+      validate: () => validateAll(items),
+      resetValues,
     }),
-    [formValues],
+    [],
   )
 
   return (
@@ -168,18 +152,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
                       <Text style={styles.textContent}>{item?.contents}</Text>
                     ) : (
                       render?.(value as string, (val: any) => {
-                        setFormValues(old => {
-                          const next = {...(old ?? {}), [key]: val}
-                          // 실시간 단일 필드 검증
-                          const msg = validateField(item, val, formValues)
-                          setErrors(prev => {
-                            const copy = {...prev}
-                            if (msg) copy[key] = msg
-                            else delete copy[key]
-                            return copy
-                          })
-                          return next
-                        })
+                        changeField(key, val, item)
                         onFormChange(key, val, meta)
                       })
                     )}
@@ -199,11 +172,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             <CustomButton
               mode="contained"
               onTouchEnd={() => {
-                const errorsFields = validateAllFields(
-                  items,
-                  (formValues ?? {}) as any,
-                )
-                if (hasAnyError(errorsFields)) return setErrors(errorsFields) // 에러 있으면 저장/닫기 막기
+                validateAll(items)
                 onSubmit?.(formValues)
               }}
               loading={loading}
@@ -216,6 +185,39 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     </>
   )
 })
+// type inputRowType = {
+//   item: FormItem
+//   value: any
+// }
+
+// const InputRowRender = ({item, value, rowsStyle, labelWidth,fontSize. labelStyle, contentsStyle}: inputRowType) => {
+//   const {key, render, meta, rowStyle} = item
+
+//   return (
+//     <Fragment key={key}>
+//       <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
+//         <Text
+//           style={[styles.label, {minWidth: labelWidth, fontSize}, labelStyle]}>
+//           {item?.label}
+//           {item?.required && <Text style={styles.required}>*</Text>}
+//         </Text>
+
+//         <View style={[styles.contents, contentsStyle, {fontSize}]}>
+//           {item?.contents ? (
+//             <Text style={styles.textContent}>{item?.contents}</Text>
+//           ) : (
+//             render?.(value as string, (val: any) => {
+//               changeField(key, val, item)
+//               onFormChange(key, val, meta)
+//             })
+//           )}
+//         </View>
+//       </View>
+//       {/* 에러 메시지 */}
+//       {errors[key] ? <Text style={styles.errorText}>{errors[key]}</Text> : null}
+//     </Fragment>
+//   )
+// }
 
 export default InputForm
 
