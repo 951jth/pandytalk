@@ -1,8 +1,17 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
 import COLORS from '@app/shared/constants/color'
 import {useInputForm} from '@app/shared/ui/form/hooks/useInputForm'
+import InputRowRender from '@app/shared/ui/form/InputFormRow'
 import {get} from 'lodash'
-import React, {forwardRef, Fragment, useImperativeHandle} from 'react'
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react'
 import {
   ScrollView,
   StyleProp,
@@ -11,32 +20,37 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import {IconButton, Text} from 'react-native-paper'
+import {IconButton} from 'react-native-paper'
 import {type FormItem} from '../../types/form'
 import {CustomButton} from '../button/CustomButton'
 
-interface Props {
-  items: FormItem[]
-  initialValues?: object | null
+export type layoutType = {
   style?: StyleProp<ViewStyle>
   labelWidth?: number
   fontSize?: number
   rowsStyle?: StyleProp<ViewStyle>
   labelStyle?: StyleProp<TextStyle>
-  contentsStyle?: StyleProp<TextStyle>
+  contentsStyle?: StyleProp<ViewStyle>
+}
+
+interface Props {
+  // 1. 폼 엔진 (필수)
+  items: FormItem[]
+  formData?: object | null
+  formKey?: any
+  // 2. 레이아웃 / 스타일 (선택)
+  layout?: layoutType
+  // 3. 액션 / 버튼 (선택)
   editable?: boolean
   buttonLabel?: string
-  topElement?: React.JSX.Element
-  bottomElement?: React.JSX.Element
-  edit?: boolean
-  setEdit?: (value: boolean) => void
   loading?: boolean
   onSubmit?: (value: any) => void
-  onFormChange?: (key: string, value: string | number, meta: object) => any
-  formData?: object | null
   onReset?: () => void
   btnDisable?: boolean
-  formKey?: any
+  // 4. 확장 포인트
+  topElement?: React.JSX.Element
+  bottomElement?: React.JSX.Element
+  onFormChange?: (key: string, value: string | number, meta: object) => any
 }
 
 // 🔗 외부에서 사용할 ref 타입
@@ -53,6 +67,18 @@ export interface InputFormRef {
   validate: () => boolean
 }
 
+const DEFAULT_LAYOUT = {
+  style: {},
+  labelWidth: 80,
+  fontSize: 16,
+  rowsStyle: {},
+  labelStyle: {},
+  contentsStyle: {},
+} as const
+
+//row memoization
+const MemoizedFormRow = memo(InputRowRender)
+
 const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   {
     // 1. 폼 엔진 (필수)
@@ -60,12 +86,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     formData = {},
     formKey, //폼 값 갱신(초기화값까지 갱신)
     // 2. 레이아웃 / 스타일 (선택)
-    style = {},
-    labelWidth = 80,
-    fontSize = 16,
-    rowsStyle = {},
-    labelStyle = {},
-    contentsStyle = {},
+    layout = DEFAULT_LAYOUT,
     // 3. 액션 / 버튼 (선택)
     editable = false, //버튼 생성 유무
     buttonLabel = '', //컨펌 버튼 라벨
@@ -80,6 +101,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   }: Props,
   ref,
 ) {
+  const valuesRef = useRef<object>(formData)
   const {
     formValues,
     setFormValues,
@@ -89,27 +111,47 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     resetValues,
     validateAll,
   } = useInputForm(formData, formKey)
+  //부모에서 layout 참조를 고정시키지 않아도 자식에서 참조를 고정시키게
+  const memoizedLayout = useMemo(() => {
+    const l = layout ?? DEFAULT_LAYOUT
+    return {
+      ...DEFAULT_LAYOUT,
+      ...l,
+      style: [DEFAULT_LAYOUT.style, l.style].filter(Boolean),
+      rowsStyle: [DEFAULT_LAYOUT.rowsStyle, l.rowsStyle].filter(Boolean),
+      labelStyle: [DEFAULT_LAYOUT.labelStyle, l.labelStyle].filter(Boolean),
+      contentsStyle: [DEFAULT_LAYOUT.contentsStyle, l.contentsStyle].filter(
+        Boolean,
+      ),
+    }
+  }, [layout])
 
+  useEffect(() => {
+    valuesRef.current = formValues as object
+  }, [formValues])
+
+  const {style} = memoizedLayout
   // ✅ 외부로 노출할 메서드들
   useImperativeHandle(
     ref,
-    (): InputFormRef => ({
-      getValues: () => {
-        // 객체를 직접 반환하면 외부에서 mutate할 수 있으니 얕은 복사
-        return {...(formValues ?? {})} as Record<string, any>
-      },
+    () => ({
+      getValues: () => ({...valuesRef.current}),
       setValues: next => {
-        // 값 전체 교체 시 에러도 초기화 (필요 시 주석 처리)
         setFormValues(next ?? {})
         setErrors({})
       },
       updateValues: patch => {
-        if (!patch || typeof patch !== 'object') return
         setFormValues(prev => ({...(prev ?? {}), ...patch}))
       },
       validate: () => validateAll(items),
       resetValues,
     }),
+    [items, resetValues, validateAll],
+  )
+
+  const memoizedChangeField = useCallback(
+    (key: string, val: string | object | null, item: FormItem) =>
+      changeField(key, val, item),
     [],
   )
 
@@ -122,8 +164,8 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             size={20}
             style={styles.backBtn}
             onTouchEnd={() => {
-              // onEditChange(false)
-              onReset?.()
+              resetValues()
+              onReset()
             }}
           />
         )}
@@ -131,38 +173,19 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         <ScrollView contentContainerStyle={{flexGrow: 1}}>
           {topElement}
           {items?.map((item: FormItem) => {
-            const {key, render, meta, rowStyle} = item
+            const {key} = item
             const value = get(formValues ?? {}, key) // 기본값 '' 대신 값 그대로
-
+            const errMsg = errors?.[key]
             return (
-              <Fragment key={key}>
-                <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
-                  <Text
-                    style={[
-                      styles.label,
-                      {minWidth: labelWidth, fontSize},
-                      labelStyle,
-                    ]}>
-                    {item?.label}
-                    {item?.required && <Text style={styles.required}>*</Text>}
-                  </Text>
-
-                  <View style={[styles.contents, contentsStyle, {fontSize}]}>
-                    {item?.contents ? (
-                      <Text style={styles.textContent}>{item?.contents}</Text>
-                    ) : (
-                      render?.(value as string, (val: any) => {
-                        changeField(key, val, item)
-                        onFormChange(key, val, meta)
-                      })
-                    )}
-                  </View>
-                </View>
-                {/* 에러 메시지 */}
-                {errors[key] ? (
-                  <Text style={styles.errorText}>{errors[key]}</Text>
-                ) : null}
-              </Fragment>
+              <MemoizedFormRow
+                key={key}
+                item={item}
+                value={value}
+                layout={memoizedLayout}
+                changeField={memoizedChangeField}
+                onFormChange={onFormChange}
+                errMsg={errMsg}
+              />
             )
           })}
 
@@ -171,7 +194,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
           {editable && (
             <CustomButton
               mode="contained"
-              onTouchEnd={() => {
+              onPress={() => {
                 validateAll(items)
                 onSubmit?.(formValues)
               }}
@@ -185,39 +208,6 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     </>
   )
 })
-// type inputRowType = {
-//   item: FormItem
-//   value: any
-// }
-
-// const InputRowRender = ({item, value, rowsStyle, labelWidth,fontSize. labelStyle, contentsStyle}: inputRowType) => {
-//   const {key, render, meta, rowStyle} = item
-
-//   return (
-//     <Fragment key={key}>
-//       <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
-//         <Text
-//           style={[styles.label, {minWidth: labelWidth, fontSize}, labelStyle]}>
-//           {item?.label}
-//           {item?.required && <Text style={styles.required}>*</Text>}
-//         </Text>
-
-//         <View style={[styles.contents, contentsStyle, {fontSize}]}>
-//           {item?.contents ? (
-//             <Text style={styles.textContent}>{item?.contents}</Text>
-//           ) : (
-//             render?.(value as string, (val: any) => {
-//               changeField(key, val, item)
-//               onFormChange(key, val, meta)
-//             })
-//           )}
-//         </View>
-//       </View>
-//       {/* 에러 메시지 */}
-//       {errors[key] ? <Text style={styles.errorText}>{errors[key]}</Text> : null}
-//     </Fragment>
-//   )
-// }
 
 export default InputForm
 
