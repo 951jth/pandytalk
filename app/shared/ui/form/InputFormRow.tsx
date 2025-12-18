@@ -15,6 +15,9 @@ type inputRowType = {
   errMsg?: string
 }
 
+//1. 메모이제이션을 활용하기위한 컴포넌트화
+//2. 나중에 별도의 inputType을 추가해서 switch로 분기도 가능함.
+
 const InputRowRender = ({
   item,
   value,

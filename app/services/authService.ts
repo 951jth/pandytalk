@@ -1,3 +1,4 @@
+import {requestUser, User} from '@app/shared/types/auth'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -21,7 +22,6 @@ import {orderBy} from 'lodash'
 import {Alert} from 'react-native'
 import {auth, firestore} from '../shared/firebase/firestore'
 import store from '../store/store'
-import type {requestUser, User} from '../types/auth'
 import {fileUpload} from './fileService'
 
 export async function signInEmail(email: string, password: string) {
@@ -212,9 +212,9 @@ export const memberStatusUpdate = async (
       lastSeen: nowTime,
       note: (formValues.note ?? '').trim(),
       intro: (formValues.intro ?? '').trim(),
-      // 필요하면 여기서 추가 필드만 직접 나열
       displayName: formValues.displayName,
       groupId: formValues.groupId,
+      photoURL: formValues.photoURL,
     }
 
     if (status === 'confirm') {

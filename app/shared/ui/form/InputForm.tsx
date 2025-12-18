@@ -41,7 +41,7 @@ interface Props {
   // 2. 레이아웃 / 스타일 (선택)
   layout?: layoutType
   // 3. 액션 / 버튼 (선택)
-  editable?: boolean
+  useBotton?: boolean
   buttonLabel?: string
   loading?: boolean
   onSubmit?: (value: any) => void
@@ -88,8 +88,8 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     // 2. 레이아웃 / 스타일 (선택)
     layout = DEFAULT_LAYOUT,
     // 3. 액션 / 버튼 (선택)
-    editable = false, //버튼 생성 유무
-    buttonLabel = '', //컨펌 버튼 라벨
+    useBotton = false, //버튼 생성 유무
+    buttonLabel = '저장', //컨펌 버튼 라벨
     loading = false, //컨펌 버튼 로딩
     onSubmit = values => {},
     onReset,
@@ -130,7 +130,6 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     valuesRef.current = formValues as object
   }, [formValues])
 
-  const {style} = memoizedLayout
   // ✅ 외부로 노출할 메서드들
   useImperativeHandle(
     ref,
@@ -152,12 +151,12 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   const memoizedChangeField = useCallback(
     (key: string, val: string | object | null, item: FormItem) =>
       changeField(key, val, item),
-    [],
+    [changeField],
   )
 
   return (
     <>
-      <View style={[styles.container, style]}>
+      <View style={[styles.container, memoizedLayout.style]}>
         {onReset && (
           <IconButton
             icon="refresh"
@@ -191,7 +190,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
 
           <View style={{flexGrow: 1}}>{bottomElement}</View>
 
-          {editable && (
+          {useBotton && (
             <CustomButton
               mode="contained"
               onPress={() => {

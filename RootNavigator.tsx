@@ -17,7 +17,6 @@ const RootStack = createNativeStackNavigator<RootStackParamList>()
 
 export function RootNavigator() {
   const {shouldShowSplash, canEnterApp} = useRootAppSetup()
-  console.log('canEnterApp', canEnterApp)
   // 초기/프로필 로딩 중 스플래시
   if (shouldShowSplash) {
     return <PandySplashScreen />

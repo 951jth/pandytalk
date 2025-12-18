@@ -40,7 +40,6 @@ export default function ProfileScreen(): React.JSX.Element {
   const uid = authInstance.currentUser?.uid
   const profileRef = useRef<profileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
-  // const {resetAll} = useResetAllQueryCache()
   const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
 
   const formItems: FormItem[] = [
@@ -109,8 +108,8 @@ export default function ProfileScreen(): React.JSX.Element {
 
   const updateUserProfile = async () => {
     try {
-      const errs = formRef?.current?.validate()
-      if (errs) return
+      const ok = formRef?.current?.validate()
+      if (!ok) return
 
       const formValues = formRef.current?.getValues() || {}
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
@@ -176,9 +175,10 @@ export default function ProfileScreen(): React.JSX.Element {
         <InputForm
           items={formItems}
           formData={userInfo}
-          labelWidth={100}
-          initialValues={initialFormValues}
-          edit={true}
+          formKey={userInfo?.uid || ''}
+          layout={{
+            labelStyle: {width: 100},
+          }}
           ref={formRef}
           topElement={
             <View style={styles.profileWrap}>
@@ -191,7 +191,6 @@ export default function ProfileScreen(): React.JSX.Element {
           }
           bottomElement={
             <View style={styles.buttons}>
-              {/* <CustomButton onTouchEnd={forceCrash}>크래시 테스트</CustomButton> */}
               <CustomButton loading={submitting} onTouchEnd={updateUserProfile}>
                 프로필 저장
               </CustomButton>

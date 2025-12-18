@@ -193,7 +193,6 @@ export default function AddUserScreen() {
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <InputForm
             ref={formRef}
-            editable={true}
             items={items}
             buttonLabel="회원 가입"
             topElement={
@@ -209,8 +208,11 @@ export default function AddUserScreen() {
                 </Text>
               </View>
             }
-            style={styles.inputForm}
-            initialValues={initialData}
+            // style={styles.inputForm}
+            layout={{
+              style: styles.inputForm,
+            }}
+            formData={initialData}
             onSubmit={handleAddGuest}
             loading={loading}
             btnDisable={btnDisable}

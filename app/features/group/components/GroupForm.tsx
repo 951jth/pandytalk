@@ -150,10 +150,10 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
   return (
     <View style={styles.container}>
       <InputForm
-        editable={true}
         buttonLabel="저장"
         items={items}
-        initialValues={record || initialValues}
+        formData={record}
+        formKey={record?.uid}
         onSubmit={handleSubmit}
         topElement={
           <>
@@ -170,6 +170,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
           </>
         }
         loading={loading}
+        useBotton={true}
       />
     </View>
   )

@@ -72,7 +72,9 @@ const ButtonsByType = {
   ],
 }
 
-export default function RequestMemberDetailModal({
+type UserStatus = User['accountStatus'] & 'delete'
+
+export default function MemberDetailModal({
   open,
   setOpen = () => {},
   record,
@@ -87,7 +89,6 @@ export default function RequestMemberDetailModal({
     status: User['accountStatus'] & 'delete',
   ) => {
     try {
-      console.log('status', status)
       if (!status) return
       if (status == 'delete') {
         //TODO 삭제로직 구현중
@@ -96,6 +97,7 @@ export default function RequestMemberDetailModal({
         console.log(profileRef.current)
         const formValues = formRef.current.getValues() as User
         const photoURL = await profileRef.current.upload()
+        console.log('photoURL', photoURL)
         await memberStatusUpdate(status, {...formValues, photoURL})
         setOpen(false)
         Alert.alert('수정 완료', '유저 멤버 정보 수정 완료')
@@ -235,9 +237,9 @@ export default function RequestMemberDetailModal({
     <CustomModal visible={open} onClose={() => setOpen(false)}>
       <View style={styles.container}>
         <InputForm
-          edit={true}
-          editable={false}
           items={items}
+          formData={record}
+          formKey={record?.uid}
           buttonLabel="유저 신청"
           topElement={
             <View style={styles.profileWrap}>
@@ -250,38 +252,50 @@ export default function RequestMemberDetailModal({
               />
             </View>
           }
-          initialValues={record}
-          rowsStyle={{paddingVertical: 0}}
+          layout={{
+            rowsStyle: {paddingVertical: 0},
+          }}
           bottomElement={
-            record?.accountStatus && (
-              <View style={styles.buttons}>
-                {(ButtonsByType?.[record.accountStatus] || [])?.map(button => {
-                  return (
-                    <ColorButton
-                      key={button?.label}
-                      label={button?.label}
-                      bgColor={button?.bgColor}
-                      textColor={button?.textColor || '#FFF'}
-                      style={{
-                        paddingVertical: 16,
-                        flex: 1,
-                      }}
-                      onPress={() =>
-                        button?.status &&
-                        handleMemberStatusUpdate(
-                          button?.status as User['accountStatus'] & 'delete',
-                        )
-                      }
-                    />
-                  )
-                })}
-              </View>
-            )
+            <FormButtons
+              record={record}
+              onPress={status => handleMemberStatusUpdate(status)}
+            />
           }
           ref={formRef}
         />
       </View>
     </CustomModal>
+  )
+}
+
+const FormButtons = ({
+  onPress,
+  record,
+}: {
+  onPress: (status: UserStatus) => void
+  record?: User
+}) => {
+  if (!record?.accountStatus) return
+  return (
+    <View style={styles.buttons}>
+      {(ButtonsByType?.[record.accountStatus] || [])?.map(button => {
+        return (
+          <ColorButton
+            key={button?.label}
+            label={button?.label}
+            bgColor={button?.bgColor}
+            textColor={button?.textColor || '#FFF'}
+            style={{
+              paddingVertical: 16,
+              flex: 1,
+            }}
+            onPress={() =>
+              button?.status && onPress?.(button?.status as UserStatus)
+            }
+          />
+        )
+      })}
+    </View>
   )
 }
 
