@@ -28,4 +28,5 @@ export interface FormItem {
   contentStyle?: StyleProp<ViewStyle> // content 스타일
   bottomGap?: number | string // rowGap보다 먼저 적용되는 옵션
   [key: string]: any // ...others 처리 (FormItemRenderer로 props 전달)
+  type?: 'custom' //타입 추가예정
 }

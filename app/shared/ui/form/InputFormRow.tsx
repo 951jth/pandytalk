@@ -1,5 +1,4 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
-import COLORS from '@app/shared/constants/color'
 import {layoutType} from '@app/shared/ui/form/InputForm'
 import React, {Fragment} from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -26,31 +25,50 @@ const InputRowRender = ({
   onFormChange,
   errMsg,
 }: inputRowType) => {
-  const {key, render, meta, rowStyle} = item
+  const {key, render, type, meta, rowStyle} = item
   const {rowsStyle, labelWidth, fontSize, labelStyle, contentsStyle} = layout
+  let InnerContents = <></>
+
+  switch (type) {
+    case 'custom':
+      InnerContents = render?.(value as string, (val: any) => {
+        changeField(key, val, item)
+        onFormChange?.(key, val, meta)
+      })
+      break
+    default:
+      InnerContents = (
+        <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
+          <Text
+            style={[
+              styles.label,
+              {minWidth: labelWidth, fontSize},
+              labelStyle,
+            ]}>
+            {item?.label}
+            {item?.required && <Text style={styles.required}>*</Text>}
+          </Text>
+
+          <View style={[styles.contents, contentsStyle]}>
+            {item?.contents ? (
+              <Text style={[styles.textContent, {fontSize}]}>
+                {item?.contents}
+              </Text>
+            ) : (
+              render?.(value as string, (val: any) => {
+                changeField(key, val, item)
+                onFormChange?.(key, val, meta)
+              })
+            )}
+          </View>
+        </View>
+      )
+      break
+  }
 
   return (
     <Fragment key={key}>
-      <View style={[styles.row, rowStyle, rowsStyle].filter(Boolean)}>
-        <Text
-          style={[styles.label, {minWidth: labelWidth, fontSize}, labelStyle]}>
-          {item?.label}
-          {item?.required && <Text style={styles.required}>*</Text>}
-        </Text>
-
-        <View style={[styles.contents, contentsStyle]}>
-          {item?.contents ? (
-            <Text style={[styles.textContent, {fontSize}]}>
-              {item?.contents}
-            </Text>
-          ) : (
-            render?.(value as string, (val: any) => {
-              changeField(key, val, item)
-              onFormChange?.(key, val, meta)
-            })
-          )}
-        </View>
-      </View>
+      {InnerContents}
       {/* 에러 메시지 */}
       {errMsg ? <Text style={styles.errorText}>{errMsg}</Text> : null}
     </Fragment>
@@ -60,11 +78,6 @@ const InputRowRender = ({
 export default InputRowRender
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: COLORS.background,
-    position: 'relative',
-  },
   row: {
     borderColor: '#D9D9D9',
     borderBottomWidth: 1,
