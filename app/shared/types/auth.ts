@@ -29,7 +29,7 @@ export interface User {
   updatedAt?: FirebaseFirestore.Timestamp | Timestamp | FieldValue | null
 }
 
-export interface requestUser {
+export interface UserJoinRequest {
   email: string
   password: string
   displayName: string

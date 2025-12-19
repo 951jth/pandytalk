@@ -65,6 +65,7 @@ export default function AddUserScreen() {
                 onChange={setCheckedRecord}
               />
             }
+            useBotton={true}
           />
         </KeyboardUtilitiesWrapper>
       </View>

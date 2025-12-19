@@ -139,7 +139,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  requiredText: {fontSize: 12, fontFamily: 'BMDOHYEON', marginRight: 4},
+  requiredText: {
+    fontSize: 12,
+    fontFamily: 'BMDOHYEON',
+    marginRight: 4,
+    color: COLORS.deepGray,
+  },
   termTitle: {color: COLORS.text, fontFamily: 'BMDOHYEON', fontSize: 13},
   iconRIght: {position: 'absolute', right: 0},
 })

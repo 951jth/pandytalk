@@ -19,7 +19,7 @@ import {FormItem} from '@app/shared/types/form'
 import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import EditInput from '@app/shared/ui/input/EditInput'
 import EditTextArea from '@app/shared/ui/input/EditTextarea'
-import EditProfile, {profileInputRef} from '@app/shared/ui/upload/EditProfile'
+import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {initialUserInfo} from '../../../services/userService'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import InputForm, {InputFormRef} from '../../../shared/ui/form/InputForm'
@@ -38,7 +38,7 @@ export default function ProfileScreen(): React.JSX.Element {
   const dispatch = useDispatch<AppDispatch>()
   const queryClient = useQueryClient()
   const uid = authInstance.currentUser?.uid
-  const profileRef = useRef<profileInputRef | null>(null)
+  const profileRef = useRef<ProfileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
   const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
 
@@ -94,17 +94,6 @@ export default function ProfileScreen(): React.JSX.Element {
       contents: dayjs(Number(user?.lastSeen))?.format('YYYY-MM-DD hh:mm:ss'),
     },
   ]
-  const initialFormValues = {
-    // ...user,
-    uid,
-    authority: 'USER',
-    email: user?.email ?? '',
-    isGuest: true,
-    lastSeen: serverTimestamp(),
-    displayName: user?.email,
-    photoURL: '',
-    status: 'online',
-  } //초기값이 없는 경우 강제로넣어줌
 
   const updateUserProfile = async () => {
     try {
