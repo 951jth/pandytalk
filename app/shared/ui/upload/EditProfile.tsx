@@ -25,7 +25,7 @@ interface propTypes {
   iconSize?: number
 }
 
-export interface profileInputRef {
+export interface ProfileInputRef {
   upload: () => Promise<string | null>
   getImage: () => string | null | undefined
   setImage: (value: string) => void
@@ -42,7 +42,7 @@ export default forwardRef(function EditProfile(
     boxSize = 120,
     iconSize = 90,
   }: propTypes,
-  ref: ForwardedRef<profileInputRef>,
+  ref: ForwardedRef<ProfileInputRef>,
 ) {
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   // const [imageUri, setImageUri] = useState<string | null>(uri)

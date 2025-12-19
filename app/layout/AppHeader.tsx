@@ -1,3 +1,4 @@
+import {authService} from '@app/features/auth/service/authService'
 import {appRoutes, tabScreens} from '@app/navigation/useScreens'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
@@ -5,11 +6,9 @@ import React, {ReactNode} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
-import {updateUserOffline} from '../services/userService'
 import type {RootStackParamList} from '../shared/types/navigate'
-import {useAppSelector} from '../store/reduxHooks'
 import type {AppDispatch} from '../store/store'
-import {logout} from '../store/userSlice'
+import {clearUser} from '../store/userSlice'
 
 interface propTypes {
   title?: string
@@ -22,11 +21,9 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
   const canGoBack = navigation.canGoBack()
   const allRoutes =
     appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
-  const {data: user, loading, error} = useAppSelector(state => state.user)
-  // const tabs = useMemo(() => tabScreens(), [user?.authority ?? null]) // 동적일 수도 있음
-
   const tabs = tabScreens()
   const dispatch = useDispatch<AppDispatch>()
+
   const currentTitle = useNavigationState(state => {
     const current = state.routes[state.index]
     // 1. 현재 route가 'main'이면 (즉, 탭 화면의 title)
@@ -45,9 +42,8 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
 
   const handleLogout = async () => {
     try {
-      user?.uid && (await updateUserOffline(user.uid))
-      // navigation.navigate('auth', {screen: 'login'})
-      await logout(dispatch)
+      await authService.logout()
+      dispatch?.(clearUser())
       // 필요시 로그인 화면으로 리디렉션
     } catch (e) {
       console.log('로그아웃 실패:', e)

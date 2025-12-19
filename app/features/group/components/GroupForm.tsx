@@ -17,7 +17,7 @@ import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/shared/types/group'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import EditInput from '@app/shared/ui/input/EditInput'
-import EditProfile, {profileInputRef} from '@app/shared/ui/upload/EditProfile'
+import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {formatServerDate} from '../../../shared/utils/firebase'
 import UserSelect from '../../user/components/UserSelect'
 
@@ -41,7 +41,7 @@ type GroupCreateInput = {
 
 export default function GroupForm({record, onRefresh, onClose}: propTypes) {
   const [loading, setLoading] = useState(false)
-  const profileRef = useRef<profileInputRef | null>(null)
+  const profileRef = useRef<ProfileInputRef | null>(null)
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList>>()
   const queryClient = useQueryClient()

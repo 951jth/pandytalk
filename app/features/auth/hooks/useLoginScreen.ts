@@ -1,7 +1,6 @@
-import {auth} from '@app/shared/firebase/firestore'
+import {authService} from '@app/features/auth/service/authService'
 import {AuthStackParamList} from '@app/shared/types/navigate'
 import {validateField} from '@app/shared/utils/validation'
-import {signInWithEmailAndPassword} from '@react-native-firebase/auth'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useEffect, useState} from 'react'
@@ -36,34 +35,6 @@ const validationMap = {
   },
 }
 
-const handleFirebaseAuthError = (error: any) => {
-  let message = '알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
-  switch (error?.code) {
-    case 'auth/invalid-email':
-      message = '이메일 형식이 올바르지 않습니다.'
-      break
-    case 'auth/user-not-found':
-      message = '등록되지 않은 이메일입니다.'
-      break
-    case 'auth/wrong-password':
-      message = '비밀번호가 일치하지 않습니다.'
-      break
-    case 'auth/user-disabled':
-      message = '이 계정은 비활성화되어 있습니다.'
-      break
-    case 'auth/too-many-requests':
-      message = '잠시 후 다시 시도해주세요. 요청이 너무 많습니다.'
-      break
-    case 'auth/invalid-credential':
-      // 잘못된 이메일/비밀번호
-      message = `잘못된 이메일/비밀번호 입니다.`
-      break
-    // 필요시 추가
-  }
-  Alert.alert(message)
-  // setError(message)
-}
-
 export function useLoginScreen() {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
@@ -77,9 +48,9 @@ export function useLoginScreen() {
       setLoading(true)
       // const {email, password} = formValues
       if (!email || !password) return
-      await signInWithEmailAndPassword(auth, email, password)
+      await authService.login(email, password)
     } catch (error: any) {
-      handleFirebaseAuthError(error)
+      Alert.alert(error)
     } finally {
       setLoading(false)
     }
