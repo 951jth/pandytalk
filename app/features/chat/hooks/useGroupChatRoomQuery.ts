@@ -1,3 +1,5 @@
+import {ChatListItem} from '@app/shared/types/chat'
+import {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
   getDocs,
@@ -18,8 +20,6 @@ import {useEffect} from 'react'
 import {firestore} from '../../../shared/firebase/firestore'
 import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
 import {compareChat, getUnreadCount} from '../../../shared/utils/chat'
-import type {ChatListItem} from '../../../types/chat'
-import type {FsSnapshot} from '../../../types/firebase'
 
 interface pageType {
   chats: ChatListItem[]

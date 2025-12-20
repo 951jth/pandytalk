@@ -1,5 +1,6 @@
 import type {CheckedRecordType} from '@app/features/auth/components/TermAgreementList'
 import {authRemote} from '@app/features/auth/data/authRemote.firebase'
+import {authService} from '@app/features/auth/service/authService'
 import {userService} from '@app/features/user/service/userService'
 import {
   checkRequiredTerm,
@@ -10,6 +11,7 @@ import type {UserJoinRequest} from '@app/shared/types/auth'
 import {InputFormRef} from '@app/shared/ui/form/InputForm'
 import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {handleFirebaseJoinError} from '@app/shared/utils/logger'
+import {useNavigation} from '@react-navigation/native'
 import type {FirebaseError} from 'firebase-admin'
 import {useRef, useState} from 'react'
 import {Alert} from 'react-native'
@@ -23,6 +25,8 @@ export default function useAddUserScreen() {
     useState<CheckedRecordType>(defaultTermsRecord)
   const btnDisable = checkRequiredTerm(checkedRecord)
   const {logout} = useLogout() //로그아웃 공용 훅
+  const navigation = useNavigation()
+
   async function handleAddGuest(formValues: UserJoinRequest) {
     try {
       setLoading(true)
@@ -30,14 +34,16 @@ export default function useAddUserScreen() {
       //1. firebase auth 생성
       const cred = await authRemote.createUserAuth(email, password)
       if (cred) {
-        console.log('profileRef.current', profileRef.current)
         //2. 유저 프로필 생성
         const photoURL = await profileRef.current?.upload()
-        console.log('photoURL', photoURL)
         let payload = {...formValues, photoURL}
         await userService.setProfile(cred, payload)
-        await logout()
-        formRef?.current?.resetValues()
+        await authService.logout()
+        Alert.alert(
+          '승인 대기 중',
+          '관리자가 확인 후 승인이 완료되면 이용하실 수 있습니다.',
+        )
+        navigation.goBack()
       } else {
         Alert.alert(
           '실패',

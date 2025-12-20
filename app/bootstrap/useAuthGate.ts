@@ -1,5 +1,7 @@
-import {updateLastSeen} from '@app/services/userService'
+import {userService} from '@app/features/user/service/userService'
 import {auth} from '@app/shared/firebase/firestore'
+import {useLogout} from '@app/shared/hooks/useLogout'
+import {isNewUser} from '@app/shared/utils/firebase'
 import {useAppSelector} from '@app/store/reduxHooks'
 import type {AppDispatch} from '@app/store/store'
 import {fetchUserById} from '@app/store/userSlice'
@@ -16,19 +18,17 @@ export function useAuthGate() {
   const dispatch = useDispatch<AppDispatch>()
   const [initializing, setInitializing] = useState<boolean>(true) //앱의 자바스크립트가 붙어야함.
   const {data: userInfo, loading} = useAppSelector(state => state.user)
-
+  const {logout} = useLogout()
+  console.log('userInfo', userInfo)
   const fetchProfile = async (uid: string) => {
     try {
       //1. profile 조회
       const profile = await dispatch(fetchUserById(uid)).unwrap()
       //2. 유저 최근 접속 시간 체크
-      try {
-        await updateLastSeen(uid)
-      } catch (e) {
-        console.warn(e)
-      }
+      await userService.updateLastSeen(uid)
       //3. 미 인증 유저 얼럿
       if (profile?.accountStatus !== 'confirm') {
+        logout()
         return Alert.alert(
           '승인 대기 중',
           '회원님의 가입 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
@@ -42,7 +42,7 @@ export function useAuthGate() {
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, fbUser => {
       setUser(fbUser)
-      if (fbUser?.uid) {
+      if (fbUser?.uid && !isNewUser(fbUser)) {
         fetchProfile(fbUser.uid)
       }
       if (initializing) setInitializing(false)

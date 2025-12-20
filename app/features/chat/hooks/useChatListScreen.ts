@@ -1,5 +1,5 @@
 // features/chat/hooks/useChatListScreen.ts
-import {ChatItemWithMemberInfo} from '@app/shared/types/chat'
+import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'

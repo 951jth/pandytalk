@@ -1,5 +1,4 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
-import COLORS from '@app/shared/constants/color'
 import {useInputForm} from '@app/shared/ui/form/hooks/useInputForm'
 import InputRowRender from '@app/shared/ui/form/InputFormRow'
 import {get} from 'lodash'
@@ -12,14 +11,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react'
-import {
-  ScrollView,
-  StyleProp,
-  StyleSheet,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native'
+import {StyleProp, StyleSheet, TextStyle, View, ViewStyle} from 'react-native'
 import {IconButton} from 'react-native-paper'
 import {type FormItem} from '../../types/form'
 import {CustomButton} from '../button/CustomButton'
@@ -169,43 +161,42 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
           />
         )}
 
-        <ScrollView contentContainerStyle={{flexGrow: 1}}>
-          {topElement ? topElement : null}
-          {items?.map((item: FormItem) => {
-            const {key} = item
-            const value = get(formValues ?? {}, key) // 기본값 '' 대신 값 그대로
-            const errMsg = errors?.[key]
-            return (
-              <MemoizedFormRow
-                key={key}
-                item={item}
-                value={value}
-                layout={memoizedLayout}
-                changeField={memoizedChangeField}
-                onFormChange={onFormChange}
-                errMsg={errMsg}
-              />
-            )
-          })}
+        {topElement ? topElement : null}
 
-          <View style={{flexGrow: 1}}>
-            {bottomElement ? bottomElement : null}
-          </View>
+        {items?.map((item: FormItem) => {
+          const {key} = item
+          const value = get(formValues ?? {}, key) // 기본값 '' 대신 값 그대로
+          const errMsg = errors?.[key]
+          return (
+            <MemoizedFormRow
+              key={key}
+              item={item}
+              value={value}
+              layout={memoizedLayout}
+              changeField={memoizedChangeField}
+              onFormChange={onFormChange}
+              errMsg={errMsg}
+            />
+          )
+        })}
 
-          {useBotton && (
-            <CustomButton
-              mode="contained"
-              onPress={() => {
-                const isOk = validateAll(items)
-                if (!isOk) return
-                onSubmit?.(formValues)
-              }}
-              loading={loading}
-              disabled={btnDisable}>
-              {buttonLabel}
-            </CustomButton>
-          )}
-        </ScrollView>
+        <View style={{flexGrow: 1}}>
+          {bottomElement ? bottomElement : null}
+        </View>
+
+        {useBotton && (
+          <CustomButton
+            mode="contained"
+            onPress={() => {
+              const isOk = validateAll(items)
+              if (!isOk) return
+              onSubmit?.(formValues)
+            }}
+            loading={loading}
+            disabled={btnDisable}>
+            {buttonLabel}
+          </CustomButton>
+        )}
       </View>
     </>
   )
@@ -215,8 +206,9 @@ export default InputForm
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     flexGrow: 1,
-    backgroundColor: COLORS.background,
+    // backgroundColor: COLORS.background,
     position: 'relative',
   },
   row: {

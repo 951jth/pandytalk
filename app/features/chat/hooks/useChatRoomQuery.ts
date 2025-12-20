@@ -1,3 +1,5 @@
+import {ChatListItem, PushMessage} from '@app/shared/types/chat'
+import {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
   doc,
@@ -30,8 +32,6 @@ import {
   setDMChatCount,
   setGroupChatCount,
 } from '../../../store/unreadCountSlice'
-import type {ChatListItem, PushMessage} from '../../../types/chat'
-import type {FsSnapshot} from '../../../types/firebase'
 
 interface pageType {
   chats: ChatListItem[]

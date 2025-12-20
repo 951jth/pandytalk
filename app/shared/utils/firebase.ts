@@ -1,3 +1,4 @@
+import {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {
   FirebaseFirestoreTypes,
   Timestamp,
@@ -185,4 +186,12 @@ export const toRNFTimestamp = (
   }
 
   return null
+}
+// [유틸 함수] 신규 유저인지 판별 (시간 차이가 1~2초 이내면 신규로 간주)
+export const isNewUser = (user: FirebaseAuthTypes.User) => {
+  const {creationTime, lastSignInTime} = user.metadata
+  if (!creationTime || !lastSignInTime) return false
+
+  // 문자열 비교가 가장 간단하지만, 확실하게 하려면 Date 객체로 변환하여 차이 계산
+  return new Date(creationTime).getTime() === new Date(lastSignInTime).getTime()
 }

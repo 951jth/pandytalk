@@ -7,7 +7,7 @@ import EditProfile, {
   type ProfileInputRef,
 } from '@app/shared/ui/upload/EditProfile'
 import React, {type RefObject} from 'react'
-import {StyleSheet, View} from 'react-native'
+import {ScrollView, StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
@@ -56,8 +56,8 @@ export default function AddUserScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="회원 가입" />
-      <View style={styles.inner}>
-        <KeyboardUtilitiesWrapper useTouchable={false}>
+      <KeyboardUtilitiesWrapper useTouchable={false}>
+        <ScrollView contentContainerStyle={styles.inner}>
           <View style={styles.profileWrap}>
             <EditProfile
               edit={true}
@@ -90,7 +90,6 @@ export default function AddUserScreen() {
             //   </View>
             // }
             // style={styles.inputForm}
-            layout={{style: styles.inputForm}}
             formData={initialData}
             onSubmit={handleAddGuest}
             loading={loading}
@@ -103,8 +102,8 @@ export default function AddUserScreen() {
             }
             useBotton={true}
           />
-        </KeyboardUtilitiesWrapper>
-      </View>
+        </ScrollView>
+      </KeyboardUtilitiesWrapper>
     </SafeAreaView>
   )
 }
@@ -115,23 +114,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.outerColor,
   },
   inner: {
-    padding: 8,
-    flex: 1,
-    flexGrow: 1,
-  },
-  innerContents: {
-    flex: 1,
+    padding: 16,
     backgroundColor: COLORS.background,
-  },
-  inputForm: {
-    borderRadius: 16,
     // ✅ 그림자 효과 (iOS + Android 호환)
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3, // Android 전용 그림자
-    padding: 8,
+  },
+  innerContents: {
+    flex: 1,
+    backgroundColor: COLORS.background,
   },
   profileWrap: {
     flexDirection: 'column',

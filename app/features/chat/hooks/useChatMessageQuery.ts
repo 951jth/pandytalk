@@ -16,6 +16,7 @@ import {
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
 
+import {ChatMessage} from '@app/shared/types/chat'
 import {
   clearMessagesFromSQLite,
   getMessagesFromSQLiteByPaging,
@@ -26,7 +27,6 @@ import {
   toMillisFromServerTime,
   toRNFTimestamp,
 } from '../../../shared/utils/firebase'
-import type {ChatMessage} from '../../../types/chat'
 
 // ✅ 올바른 타입: Infinite Query용
 type MessagesPage = {

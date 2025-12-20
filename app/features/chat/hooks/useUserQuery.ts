@@ -1,3 +1,5 @@
+import {User} from '@app/shared/types/auth'
+import {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
   endAt,
@@ -13,8 +15,6 @@ import {
 } from '@react-native-firebase/firestore'
 import {useInfiniteQuery} from '@tanstack/react-query'
 import {useAppSelector} from '../../../store/reduxHooks'
-import type {User} from '../../../types/auth'
-import type {FsSnapshot} from '../../../types/firebase'
 
 const firestore = getFirestore()
 const PAGE_SIZE = 10

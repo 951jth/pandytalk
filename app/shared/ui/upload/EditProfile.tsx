@@ -119,7 +119,6 @@ const EditProfile = forwardRef(function EditProfile(
   }
 
   async function upload(): Promise<string | null> {
-    console.log('pre', previewUrl)
     try {
       // const fileName = `profile_${Date.now()}.jpg`
       // const uid = auth.currentUser?.uid

@@ -29,7 +29,7 @@ export function navigateToChat(
     } else {
       // 1뎁스
       navigationRef.navigate('app', {
-        screen: 'chatRoom',
+        screen: 'dm-chat',
         params: {roomId, title},
       })
     }

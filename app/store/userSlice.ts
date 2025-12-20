@@ -1,8 +1,7 @@
 // app/store/userSlice.ts
+import {userService} from '@app/features/user/service/userService'
 import type {User} from '@app/shared/types/auth'
-import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import {signOut} from '@react-native-firebase/auth'
-import {doc, getDoc, getFirestore} from '@react-native-firebase/firestore'
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {removeFCMTokenOnLogout} from '../services/userService'
 import {auth} from '../shared/firebase/firestore'
@@ -24,19 +23,8 @@ export const fetchUserById = createAsyncThunk(
   'user/fetchById',
   async (uid: string) => {
     if (!uid) throw new Error('Invalid UID')
-    const firestore = getFirestore()
-    const docRef = doc(firestore, 'users', uid)
-    const snapshot = await getDoc(docRef)
-    if (!snapshot.exists()) throw new Error('User not found')
-    const data = snapshot.data()
-    const timestampConverted = convertTimestampsToMillis(data)
-    return {
-      ...timestampConverted,
-    } as User
-    // return {
-    //   ...data,
-    //   lastSeen: data?.lastSeen,
-    // } as User
+    const user = await userService.getProfile(uid)
+    return user as User
   },
 )
 

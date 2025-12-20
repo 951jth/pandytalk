@@ -1,6 +1,7 @@
 import {userRemote} from '@app/features/user/data/userRemote.firebase'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import type {UpdateInput} from '@app/shared/types/firebase'
+import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import type {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {serverTimestamp} from '@react-native-firebase/firestore'
 
@@ -9,7 +10,6 @@ export const userService = {
     cred: FirebaseAuthTypes.UserCredential,
     {displayName, note, intro, photoURL}: UserJoinRequest,
   ) => {
-    console.log('cred', cred)
     //1. 프로필 이미지가 있으면 파일업로드
     // let newPhotoURL = null
     // if (photoURL) {
@@ -39,5 +39,18 @@ export const userService = {
   },
   fetchProfile: async (uid: string, payload: UpdateInput<User>) => {
     await userRemote.updateProfile(uid, payload)
+  },
+  updateLastSeen: async (uid: string) => {
+    const lastSeen = serverTimestamp()
+    await userRemote.updateProfile(uid, {lastSeen})
+  },
+  getProfile: async (uid: string) => {
+    const snapshot = await userRemote.getProfile(uid)
+    if (!snapshot.exists()) throw new Error('User not found')
+    const data = snapshot.data()
+    const timestampConverted = convertTimestampsToMillis(data) //timestamp를 클라이언트 포맷으로
+    return {
+      ...timestampConverted,
+    } as User
   },
 }

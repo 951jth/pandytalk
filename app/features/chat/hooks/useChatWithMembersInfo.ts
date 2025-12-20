@@ -1,7 +1,7 @@
+import {User} from '@app/shared/types/auth'
+import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {getUsersByIds} from '../../../services/userService'
-import type {User} from '../../../types/auth'
-import type {ChatItemWithMemberInfo, ChatListItem} from '../../../types/chat'
 
 //가지고 온 채팅에 멤버정보를 패칭함.
 export const useChatWithMembersInfo = (

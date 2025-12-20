@@ -1,3 +1,4 @@
+import {User} from '@app/shared/types/auth'
 import {getApp} from '@react-native-firebase/app'
 import {getAuth} from '@react-native-firebase/auth'
 import {
@@ -16,7 +17,6 @@ import {
 import {getMessaging} from '@react-native-firebase/messaging'
 import {AppDispatch} from '../store/store'
 import {setUser} from '../store/userSlice'
-import type {User} from '../types/auth'
 
 const app = getApp()
 const firestore = getFirestore(app)
@@ -31,19 +31,19 @@ export const fetchUserProfile = async (uid: string): Promise<User | null> => {
 }
 
 //최근 접속 시간 갱신함수
-export async function updateLastSeen(uid: string): Promise<void> {
-  if (!uid) return
-  const userRef = doc(firestore, 'users', uid)
-  try {
-    await updateDoc(userRef, {
-      lastSeen: serverTimestamp(),
+// export async function updateLastSeen(uid: string): Promise<void> {
+//   if (!uid) return
+//   const userRef = doc(firestore, 'users', uid)
+//   try {
+//     await updateDoc(userRef, {
+//       lastSeen: serverTimestamp(),
 
-      status: 'offline',
-    })
-  } catch (error) {
-    console.error('lastSeen 갱신 실패:', error)
-  }
-}
+//       status: 'offline',
+//     })
+//   } catch (error) {
+//     console.error('lastSeen 갱신 실패:', error)
+//   }
+// }
 
 // 사용자 오프라인 설정
 // 현재 online, offline status는 사용하지 않을 예정

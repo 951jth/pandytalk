@@ -1,11 +1,11 @@
 import {useAuthGate} from '@app/bootstrap/useAuthGate'
 import useEnsureChatMessagesSchema from '@app/bootstrap/useEnsureChatMessagesSchema'
-import {useFCMPushHandler} from '@app/message/hooks/useFCMPush'
-import {useFCMSetup} from '@app/message/hooks/useFCMSetup'
+import {useFCMPush} from '@app/features/notification/hooks/useFCMPush'
+import {useFCMSetup} from '@app/features/notification/hooks/useFCMSetup'
 
 export function useRootAppSetup() {
   useFCMSetup() //푸시알림 권한을 설정하고, 푸시토큰을 데이터셋업
-  useFCMPushHandler() //푸시알림 네비게이트
+  useFCMPush() //푸시알림 네비게이트
   useEnsureChatMessagesSchema() //채팅 메세지 테이블 초기설정/마이그레이션
   const {shouldShowSplash, canEnterApp} = useAuthGate() //유저정보 조회 후 권한확인
 
