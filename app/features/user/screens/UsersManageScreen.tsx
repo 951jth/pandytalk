@@ -1,4 +1,5 @@
-import MemberDetailModal from '@app/features/user/components/MemberDetailModal'
+import UserDetailModal from '@app/features/user/components/UserDetailModal'
+import UserListItem from '@app/features/user/components/UserListItem'
 import {User} from '@app/shared/types/auth'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
@@ -6,7 +7,6 @@ import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 import {usePendingUsersInfinity} from '../../chat/hooks/useUserQuery'
-import RequestMemberCard from '../components/MemberCard'
 
 type modalProps = {
   open: boolean | null | undefined
@@ -28,7 +28,7 @@ export default function UsersManageScreen() {
 
   const RenderItem = ({item}: {item: User}) => {
     return (
-      <RequestMemberCard
+      <UserListItem
         item={item}
         onPress={item => {
           setModalProps({open: true, record: item})
@@ -70,7 +70,7 @@ export default function UsersManageScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.friendsContainer}
       />
-      <MemberDetailModal
+      <UserDetailModal
         open={!!modalProps?.open}
         setOpen={boolean => setModalProps({open: boolean, record: null})}
         record={modalProps?.record as User}

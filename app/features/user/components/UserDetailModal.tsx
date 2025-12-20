@@ -2,9 +2,9 @@ import {useQueryClient} from '@tanstack/react-query'
 import React, {useRef} from 'react'
 import {Alert, Modal, StyleSheet, View} from 'react-native'
 
-import {memberStatusUpdate} from '../../../services/authService'
 import InputForm from '../../../shared/ui/form/InputForm'
 
+import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import {FormItem} from '@app/shared/types/form'
@@ -74,7 +74,7 @@ const ButtonsByType = {
 
 type UserStatus = User['accountStatus'] & 'delete'
 
-export default function MemberDetailModal({
+export default function UserDetailModal({
   open,
   setOpen = () => {},
   record,
@@ -91,23 +91,14 @@ export default function MemberDetailModal({
     try {
       if (!status) return
       if (status == 'delete') {
-        //TODO 삭제로직 구현중
         return
       } else {
-        console.log(profileRef.current)
         const formValues = formRef.current.getValues() as User
         const photoURL = await profileRef.current.upload()
-        console.log('photoURL', photoURL)
-        await memberStatusUpdate(status, {...formValues, photoURL})
+        await userService.updateUserStatus(status, {...formValues, photoURL})
         setOpen(false)
         Alert.alert('수정 완료', '유저 멤버 정보 수정 완료')
         onRefresh?.()
-        // memberStatusUpdate(status, {...formValues, photoURL})
-        //   .then(() => {
-        //     setOpen(false)
-        //     queryClient.invalidateQueries({queryKey: ['pending-users', 'users']})
-        //   })
-        //   .catch(e => console.log(e))
       }
     } catch (e) {
       console.log(e)

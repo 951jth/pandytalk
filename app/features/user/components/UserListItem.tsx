@@ -29,7 +29,7 @@ interface RequestMember {
 //   ],
 // }
 
-export default function MemberCard({
+export default function UserListItem({
   item,
   style,
   onPress = () => {},

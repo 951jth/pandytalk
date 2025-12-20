@@ -1,10 +1,10 @@
 import React, {useState} from 'react'
 import {StyleSheet} from 'react-native'
 
+import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
 import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
-import {deleteMyAccount} from '../../../services/authService'
 
 type propTypes = {
   label?: string
@@ -43,7 +43,7 @@ export default function WithdrawalButton({
         onConfirm={() => {
           // 탈퇴 로직
           setVisible(false)
-          deleteMyAccount()
+          userService.deleteMyAccount()
         }}
         onCancel={() => setVisible(false)}
       />
