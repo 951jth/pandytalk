@@ -1,5 +1,5 @@
+import {fileService} from '@app/features/media/service/fileService'
 import COLORS from '@app/shared/constants/color'
-import storage from '@react-native-firebase/storage'
 import React, {
   forwardRef,
   useEffect,
@@ -10,8 +10,6 @@ import React, {
 import {StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
-import {auth} from '../../firebase/firestore'
-import {isLocalFile} from '../../utils/file'
 import {requestPhotoPermission} from '../../utils/permission'
 import DefaultProfile from '../common/DefaultProfile'
 import ImageViewer from '../common/ImageViewer'
@@ -33,7 +31,7 @@ export interface ProfileInputRef {
 }
 
 //ref로 받도록 수정함
-export default forwardRef(function EditProfile(
+const EditProfile = forwardRef(function EditProfile(
   {
     // previewUrl,
     // setPreviewUrl = () => {},
@@ -47,13 +45,17 @@ export default forwardRef(function EditProfile(
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   // const [imageUri, setImageUri] = useState<string | null>(uri)
   const [loading, setLoading] = useState<boolean>(false)
-
-  useImperativeHandle(ref, () => ({
-    upload: () => uploadImage(),
-    getImage: () => previewUrl,
-    setImage: (url: string) => setPreviewUrl(url),
-    onReset: () => setPreviewUrl(defaultUrl),
-  }))
+  console.log('previewUrl', previewUrl)
+  useImperativeHandle(
+    ref,
+    () => ({
+      upload,
+      getImage: () => previewUrl,
+      setImage: (url: string) => setPreviewUrl(url),
+      onReset: () => setPreviewUrl(defaultUrl),
+    }),
+    [previewUrl, upload],
+  )
 
   useEffect(() => {
     ;(async () => {
@@ -116,18 +118,18 @@ export default forwardRef(function EditProfile(
     }
   }
 
-  const uploadImage = async (): Promise<string | null> => {
+  async function upload(): Promise<string | null> {
+    console.log('pre', previewUrl)
     try {
-      if (previewUrl && isLocalFile(previewUrl)) {
-        const fileName = `profile_${Date.now()}.jpg`
-        const uid = auth.currentUser?.uid
-        const ref = storage().ref(`profiles/${uid}/${fileName}`)
-        await ref.putFile(previewUrl)
-        const newPhotoURL = await ref.getDownloadURL()
-        return newPhotoURL
-      } else return previewUrl || null
+      // const fileName = `profile_${Date.now()}.jpg`
+      // const uid = auth.currentUser?.uid
+      // const ref = storage().ref(`profiles/${uid}/${fileName}`)
+      // await ref.putFile(previewUrl)
+      // const newPhotoURL = await ref.getDownloadURL()
+      if (!previewUrl) return null
+      const newPhotoURL = await fileService.uploadFile(previewUrl, 'profiles')
+      return newPhotoURL
     } catch (e) {
-      console.log(e)
       return null
     }
   }
@@ -175,6 +177,8 @@ export default forwardRef(function EditProfile(
     </View>
   )
 })
+
+export default EditProfile
 
 const styles = StyleSheet.create({
   profile: {

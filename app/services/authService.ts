@@ -1,4 +1,4 @@
-import {requestUser, User} from '@app/shared/types/auth'
+import {User, UserJoinRequest} from '@app/shared/types/auth'
 import {
   createUserWithEmailAndPassword,
   deleteUser,
@@ -51,7 +51,7 @@ export async function submitSignupRequest({
   note,
   intro,
   photoURL,
-}: requestUser) {
+}: UserJoinRequest) {
   try {
     // 1) Auth 계정 생성
     const cred = await createUserWithEmailAndPassword(auth, email, password)

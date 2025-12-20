@@ -2,7 +2,7 @@ import {updateLastSeen} from '@app/services/userService'
 import {auth} from '@app/shared/firebase/firestore'
 import {useAppSelector} from '@app/store/reduxHooks'
 import type {AppDispatch} from '@app/store/store'
-import {clearUser, fetchUserById} from '@app/store/userSlice'
+import {fetchUserById} from '@app/store/userSlice'
 import {
   onAuthStateChanged,
   type FirebaseAuthTypes,
@@ -19,18 +19,20 @@ export function useAuthGate() {
 
   const fetchProfile = async (uid: string) => {
     try {
+      //1. profile 조회
       const profile = await dispatch(fetchUserById(uid)).unwrap()
+      //2. 유저 최근 접속 시간 체크
+      try {
+        await updateLastSeen(uid)
+      } catch (e) {
+        console.warn(e)
+      }
+      //3. 미 인증 유저 얼럿
       if (profile?.accountStatus !== 'confirm') {
-        Alert.alert(
+        return Alert.alert(
           '승인 대기 중',
           '회원님의 가입 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
         )
-        // 승인된 경우도 실패흡수
-        try {
-          await updateLastSeen(uid)
-        } catch (e) {
-          console.warn(e)
-        }
       }
     } catch (err) {
       console.log('❌ 유저 정보 로딩 실패:', err)
@@ -42,11 +44,9 @@ export function useAuthGate() {
       setUser(fbUser)
       if (fbUser?.uid) {
         fetchProfile(fbUser.uid)
-      } else {
-        dispatch(clearUser()) // 로그아웃 or 비인증
       }
+      if (initializing) setInitializing(false)
     })
-    if (initializing) setInitializing(false)
     return subscriber
   }, [dispatch])
 

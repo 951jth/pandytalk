@@ -52,3 +52,35 @@ export const handleFirebaseAuthError = (error: any): string => {
   return message
   // setError(message)
 }
+
+export const handleFirebaseJoinError = (error: any): string => {
+  switch (error?.code) {
+    // 인증/권한 관련
+    case 'auth/email-already-in-use':
+      return '이미 사용 중인 이메일입니다.'
+    case 'auth/invalid-email':
+      return '이메일 형식이 올바르지 않습니다.'
+    case 'auth/weak-password':
+      return '비밀번호가 너무 약합니다. (6자 이상 권장)'
+    case 'auth/user-not-found':
+      return '해당 계정을 찾을 수 없습니다.'
+    case 'auth/wrong-password':
+      return '비밀번호가 올바르지 않습니다.'
+    case 'auth/too-many-requests':
+      return '잠시 후 다시 시도해주세요. (로그인 시도 과다)'
+    case 'permission-denied':
+      return '권한이 없습니다. 잠시 후 다시 시도해주세요.'
+
+    // Firestore / Storage 등 공통
+    case 'unavailable':
+      return '현재 서비스를 이용할 수 없습니다. 네트워크 상태를 확인해주세요.'
+    case 'deadline-exceeded':
+      return '요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.'
+    case 'resource-exhausted':
+      return '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.'
+
+    // 기본
+    default:
+      return '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.'
+  }
+}

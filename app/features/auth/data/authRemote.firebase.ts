@@ -1,9 +1,8 @@
-import {submitSignupRequest} from '@app/services/authService'
 import {removeFCMTokenOnLogout} from '@app/services/userService'
 import {auth} from '@app/shared/firebase/firestore'
-import {UserJoinRequest} from '@app/shared/types/auth'
 import {firebaseCall} from '@app/shared/utils/logger'
 import {
+  createUserWithEmailAndPassword,
   signInAnonymously,
   signInWithEmailAndPassword,
   signOut,
@@ -18,8 +17,10 @@ export const authRemote = {
   signOut: () => {
     return firebaseCall('autoRemote.signOut', () => signOut(auth))
   },
-  signUp: (payload: UserJoinRequest) => {
-    return firebaseCall('authRemote.signUp', () => submitSignupRequest(payload))
+  createUserAuth: (email: string, password: string) => {
+    return firebaseCall('authRemote.signUp', () =>
+      createUserWithEmailAndPassword(auth, email, password),
+    )
   },
   getAnonymouslyToken: () => {
     return firebaseCall('authRemote.Anonymously', () => signInAnonymously(auth))

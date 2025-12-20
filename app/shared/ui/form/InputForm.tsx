@@ -170,7 +170,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         )}
 
         <ScrollView contentContainerStyle={{flexGrow: 1}}>
-          {topElement}
+          {topElement ? topElement : null}
           {items?.map((item: FormItem) => {
             const {key} = item
             const value = get(formValues ?? {}, key) // 기본값 '' 대신 값 그대로
@@ -188,13 +188,16 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             )
           })}
 
-          <View style={{flexGrow: 1}}>{bottomElement}</View>
+          <View style={{flexGrow: 1}}>
+            {bottomElement ? bottomElement : null}
+          </View>
 
           {useBotton && (
             <CustomButton
               mode="contained"
               onPress={() => {
-                validateAll(items)
+                const isOk = validateAll(items)
+                if (!isOk) return
                 onSubmit?.(formValues)
               }}
               loading={loading}
