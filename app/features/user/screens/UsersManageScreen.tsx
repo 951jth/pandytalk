@@ -6,7 +6,7 @@ import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
-import {usePendingUsersInfinity} from '../../chat/hooks/useUserQuery'
+import {usePendingUsersInfinity} from '../hooks/useUserQuery'
 
 type modalProps = {
   open: boolean | null | undefined

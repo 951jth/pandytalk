@@ -1,3 +1,4 @@
+import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {useState} from 'react'
@@ -5,10 +6,9 @@ import {FlatList, StyleSheet, View} from 'react-native'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import {useAppSelector} from '../../../store/reduxHooks'
-import {AppRouteParamList} from '../../../types/navigate'
 import ChatMember from '../../chat/components/ChatMember'
-import {useUsersInfinite} from '../../chat/hooks/useUserQuery'
 import GroupMainThumnail from '../../group/components/GroupMainThumnail'
+import {useUsersInfinite} from '../hooks/useUserQuery'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 export default function UsersScreen(): React.JSX.Element {

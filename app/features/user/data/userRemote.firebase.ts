@@ -32,4 +32,5 @@ export const userRemote = {
       await deleteUser(user)
     })
   },
+  getUsers: () => {},
 }

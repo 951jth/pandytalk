@@ -24,16 +24,6 @@ export default function WithdrawalButton({
       <CustomButton colorType="danger" onTouchEnd={() => setVisible(true)}>
         {label}
       </CustomButton>
-      {/* <Modal visible={true}>
-        <View style={styles.confirmContainer}>
-          <Text>
-            {` 정말 탈퇴하시겠습니까?\n회원탈퇴를 진행하면 계정 정보 및 채팅 기록을
-            포함한 모든 데이터가 영구적으로 삭제되며, 삭제된 데이터는 복구할 수
-            없습니다. \n\n※ 탈퇴 시 즉시 로그아웃되며, 동일한 계정으로 다시 가입할
-            수 있습니다.`}
-          </Text>
-        </View>
-      </Modal> */}
       <ConfirmModal
         visible={visible}
         title="회원탈퇴"
