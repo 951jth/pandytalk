@@ -1,7 +1,9 @@
-import {firestore, messaging} from '@app/shared/firebase/firestore'
+import {messaging} from '@app/shared/firebase/firestore'
 import {firebaseCall} from '@app/shared/utils/logger'
-import {arrayUnion, doc, setDoc} from '@react-native-firebase/firestore'
-import {AuthorizationStatus} from '@react-native-firebase/messaging'
+import {
+  AuthorizationStatus,
+  type FirebaseMessagingTypes,
+} from '@react-native-firebase/messaging'
 import {PermissionsAndroid, Platform} from 'react-native'
 
 export const notificationRemote = {
@@ -34,19 +36,21 @@ export const notificationRemote = {
     }
   },
 
-  // 3. FCM 토큰 가져오기
-  async getFcmToken(): Promise<string | undefined> {
-    return await firebaseCall('notificationRemote.getFcmToken', () =>
-      messaging.getToken(),
+  async getInitialNotification(): Promise<FirebaseMessagingTypes.RemoteMessage | null> {
+    // 앱 실행 시 딱 한 번만 호출되므로 로그/에러 트래킹에 유용합니다.
+    return await firebaseCall('notificationRemote.getInitialNotification', () =>
+      messaging.getInitialNotification(),
     )
   },
 
-  // 4. 서버(DB)에 토큰 저장
-  async saveTokenToUser(uid: string, token: string): Promise<void> {
-    const userRef = doc(firestore, 'users', uid)
-
-    await firebaseCall('notificationRemote.saveTokenToUser', () =>
-      setDoc(userRef, {fcmTokens: arrayUnion(token)}, {merge: true}),
-    )
+  /**
+   * 앱이 백그라운드(Background) 상태일 때, 푸시 알림을 클릭한 이벤트를 구독합니다.
+   * @param callback 메시지 수신 시 실행할 함수
+   * @returns 이벤트 구독 해제 함수 (unsubscribe)
+   */
+  onNotificationOpenedApp(
+    callback: (message: FirebaseMessagingTypes.RemoteMessage) => void,
+  ): () => void {
+    return messaging.onNotificationOpenedApp(callback)
   },
 }

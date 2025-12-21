@@ -11,6 +11,7 @@ import {
   getDocs,
   limit,
   or,
+  orderBy,
   query,
   setDoc,
   startAfter,
@@ -18,7 +19,6 @@ import {
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
-import {orderBy} from 'lodash'
 
 // ✅ updateDoc 전용
 export type UserUpdate = UpdateInput<UserJoinRequest>
@@ -30,7 +30,7 @@ export type GetUsersParams = {
   searchText?: string
   pageSize?: number
   pageParam?: any // React Query의 pageParam (보통 DocumentSnapshot)
-  isConfirmed?: boolean
+  isConfirmed?: boolean | null
 }
 
 export const userRemote = {
@@ -61,16 +61,18 @@ export const userRemote = {
     groupId,
     authority,
     searchText = '',
-    pageSize = 20,
+    pageSize = 10,
     pageParam,
-    isConfirmed = true,
+    isConfirmed,
   }: GetUsersParams) => {
     return firebaseCall('userRemote.getUsersPage', async () => {
       // 1. 컬렉션 레퍼런스 생성
       const usersRef = collection(firestore, 'users')
-
+      let filters: any[] = []
       // 2. 필터 조건 구성 (Business Logic)
-      const filters: any[] = [where('isConfirmed', '==', isConfirmed)]
+      if (typeof isConfirmed == 'boolean') {
+        filters = [where('isConfirmed', '==', isConfirmed)]
+      }
 
       // 비관리자면: (내 그룹) OR (ADMIN) 만 조회
       if (authority !== 'ADMIN') {
@@ -84,9 +86,7 @@ export const userRemote = {
 
       // 3. 쿼리 객체 초기화 (Base Query)
       let q = query(usersRef, ...filters)
-
       // 4. 검색 및 정렬 조건 추가
-      // 주의: Firestore 복합 인덱스가 필요할 수 있습니다.
       if (searchText) {
         q = query(
           q,
@@ -102,7 +102,6 @@ export const userRemote = {
 
       // 5. 페이지네이션 (Limit & Cursor)
       q = query(q, limit(pageSize))
-
       if (pageParam) {
         q = query(q, startAfter(pageParam))
       }

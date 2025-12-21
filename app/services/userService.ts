@@ -2,7 +2,6 @@ import {User} from '@app/shared/types/auth'
 import {getApp} from '@react-native-firebase/app'
 import {getAuth} from '@react-native-firebase/auth'
 import {
-  arrayRemove,
   collection,
   doc,
   getDoc,
@@ -14,7 +13,6 @@ import {
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
-import {getMessaging} from '@react-native-firebase/messaging'
 import {AppDispatch} from '../store/store'
 import {setUser} from '../store/userSlice'
 
@@ -131,33 +129,4 @@ export const getUsersByIds = async (
   )
   // 🔹 결과 flatten
   return results.flat()
-}
-
-//로그아웃 후 토큰 제거
-export async function removeFCMTokenOnLogout() {
-  try {
-    const messaging = getMessaging(app)
-
-    const currentUser = authInstance.currentUser
-    if (!currentUser) {
-      console.warn('로그아웃 시도 중: 사용자 정보 없음')
-      return
-    }
-
-    const token = await messaging.getToken()
-    if (!token) {
-      console.warn('FCM 토큰 없음: 제거 생략')
-      return
-    }
-
-    await setDoc(
-      doc(firestore, 'users', currentUser.uid),
-      {fcmTokens: arrayRemove(token)},
-      {merge: true},
-    )
-
-    console.log('로그아웃 시 FCM 토큰 제거 완료:', token)
-  } catch (error) {
-    console.error('FCM 토큰 제거 중 오류 발생:', error)
-  }
 }

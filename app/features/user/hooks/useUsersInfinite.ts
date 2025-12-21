@@ -3,11 +3,13 @@ import type {FsSnapshot} from '@app/shared/types/firebase'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useInfiniteQuery} from '@tanstack/react-query'
 
-export function useUsersInfinite(searchText: string) {
+export function useUsersInfinite(
+  searchText: string,
+  isConfirmed?: boolean | null,
+) {
   const {data: userInfo} = useAppSelector(state => state.user)
   const groupId = userInfo?.groupId ?? null
   const authority = userInfo?.authority ?? 'USER'
-  const isConfirmed = true
   const pageSize = 20
   return useInfiniteQuery({
     queryKey: [

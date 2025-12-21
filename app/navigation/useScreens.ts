@@ -8,7 +8,6 @@ import GroupChatRoomScreen from '@app/features/chat/screens/GroupChatRoomScreen'
 import GroupManageScreen from '@app/features/group/screens/GroupManageScreen'
 import AddUserScreen from '@app/features/user/screens/AddUserScreen'
 import ProfileScreen from '@app/features/user/screens/ProfileScreen'
-import UserSelectScreen from '@app/features/user/screens/UserSelectScreen'
 import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
 import UsersScreen from '@app/features/user/screens/UsersScreen'
 import MainLayout from '@app/layout/MainLayout'
@@ -124,11 +123,6 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-manage',
           title: '그룹 관리',
           component: GroupManageScreen,
-        },
-        {
-          name: 'user-select',
-          title: '유저 선택',
-          component: UserSelectScreen,
         },
       ],
     },

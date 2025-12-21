@@ -1,10 +1,7 @@
 // app/store/userSlice.ts
 import {userService} from '@app/features/user/service/userService'
 import type {User} from '@app/shared/types/auth'
-import {signOut} from '@react-native-firebase/auth'
 import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
-import {removeFCMTokenOnLogout} from '../services/userService'
-import {auth} from '../shared/firebase/firestore'
 
 type UserState = {
   data: User | null
@@ -27,19 +24,6 @@ export const fetchUserById = createAsyncThunk(
     return user as User
   },
 )
-
-export async function logout(dispatch?: any) {
-  try {
-    // 1) 토큰 제거 (권한이 살아 있을 때)
-    await removeFCMTokenOnLogout()
-  } finally {
-    // 2) 앱 상태 정리 (스토어 초기화 등)
-    dispatch?.(clearUser())
-
-    // 3) 실제 로그아웃
-    await signOut(auth)
-  }
-}
 
 const userSlice = createSlice({
   name: 'user',

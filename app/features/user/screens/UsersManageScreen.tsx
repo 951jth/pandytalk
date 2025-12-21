@@ -1,12 +1,12 @@
 import UserDetailModal from '@app/features/user/components/UserDetailModal'
 import UserListItem from '@app/features/user/components/UserListItem'
+import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
 import {User} from '@app/shared/types/auth'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
-import {usePendingUsersInfinity} from '../hooks/useUserQuery'
 
 type modalProps = {
   open: boolean | null | undefined
@@ -24,7 +24,7 @@ export default function UsersManageScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = usePendingUsersInfinity(searchText)
+  } = useUsersInfinite(searchText)
 
   const RenderItem = ({item}: {item: User}) => {
     return (

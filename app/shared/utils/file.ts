@@ -52,7 +52,6 @@ export const filebaseFileDownload = async (uid: string, imageUrl: string) => {
     if (Platform.OS === 'android') {
       const ok = await ensureAndroidWritePermission()
       if (!ok) {
-        console.log('외부 저장소 권한 거부됨')
         return
       }
     }

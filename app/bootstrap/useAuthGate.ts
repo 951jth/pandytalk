@@ -19,7 +19,6 @@ export function useAuthGate() {
   const [initializing, setInitializing] = useState<boolean>(true) //앱의 자바스크립트가 붙어야함.
   const {data: userInfo, loading} = useAppSelector(state => state.user)
   const {logout} = useLogout()
-  console.log('userInfo', userInfo)
   const fetchProfile = async (uid: string) => {
     try {
       //1. profile 조회

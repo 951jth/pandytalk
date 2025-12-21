@@ -1,4 +1,3 @@
-import {removeFCMTokenOnLogout} from '@app/services/userService'
 import {auth} from '@app/shared/firebase/firestore'
 import {firebaseCall} from '@app/shared/utils/logger'
 import {
@@ -24,10 +23,5 @@ export const authRemote = {
   },
   getAnonymouslyToken: () => {
     return firebaseCall('authRemote.Anonymously', () => signInAnonymously(auth))
-  },
-  removeFCMToken: () => {
-    return firebaseCall('authRemote.removeFCMToken', () =>
-      removeFCMTokenOnLogout(),
-    )
   },
 }

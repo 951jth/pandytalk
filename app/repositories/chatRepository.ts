@@ -1,6 +1,6 @@
+import type {ChatListItem} from '@app/shared/types/chat'
 import {doc, updateDoc} from '@react-native-firebase/firestore'
 import {firestore} from '../shared/firebase/firestore'
-import type {ChatListItem} from '../types/chat'
 
 export default {
   updateChatRoom: async (
@@ -10,8 +10,6 @@ export default {
     try {
       const chatDocRef = doc(firestore, 'chats', roomId)
       await updateDoc(chatDocRef, roomData)
-    } catch (e) {
-      console.log(e)
-    }
+    } catch (e) {}
   },
 }

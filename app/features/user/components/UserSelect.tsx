@@ -1,20 +1,13 @@
+import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
 import {debounce} from 'lodash'
 import React, {useEffect, useMemo, useState} from 'react'
 import type {SelectProps} from '../../../shared/ui/select/Select'
 import Select from '../../../shared/ui/select/Select'
-import {useUsersInfinite} from '../hooks/useUserQuery'
 
 export default function UserSelect(props: Omit<SelectProps, 'options'>) {
   const [input, setInput] = useState<string>('')
-  const [searchText, setSearchText] = useState<string>('')
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-  } = useUsersInfinite(searchText)
+  const [searchText, setSearchText] = useState<string>('') //유저는 직접 검색해서 찾도록
+  const {data, refetch} = useUsersInfinite(searchText)
 
   const users = data?.pages.flatMap(page => page.users) ?? []
   const options = users?.map(user => ({
@@ -34,8 +27,6 @@ export default function UserSelect(props: Omit<SelectProps, 'options'>) {
     // cleanup 함수로 debounce 취소
     return () => debouncedSetSearchText.cancel()
   }, [input])
-
-  //   console.log('data', data)
 
   return (
     <Select

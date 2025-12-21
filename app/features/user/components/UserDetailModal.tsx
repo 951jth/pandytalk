@@ -1,4 +1,3 @@
-import {useQueryClient} from '@tanstack/react-query'
 import React, {useRef} from 'react'
 import {Alert, Modal, StyleSheet, View} from 'react-native'
 
@@ -6,6 +5,7 @@ import InputForm from '../../../shared/ui/form/InputForm'
 
 import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
+import {auth} from '@app/shared/firebase/firestore'
 import {User} from '@app/shared/types/auth'
 import {FormItem} from '@app/shared/types/form'
 import ColorButton from '@app/shared/ui/button/ColorButton'
@@ -24,6 +24,125 @@ type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   onComplete?: () => void
   onRefresh?: () => void
 }
+
+const items: FormItem[] = [
+  {
+    key: 'email',
+    label: '이메일',
+    required: true,
+    validation: {
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: '이메일 형식이 올바르지 않습니다.',
+      customFn: (v: string) => {
+        if (!v) return '이메일을 입력하세요.'
+        if (v !== v.trim()) return '앞뒤 공백을 제거해주세요.'
+        return true
+      },
+    },
+    render: (value, onChange) => (
+      <EditInput
+        value={value}
+        onChangeText={onChange}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+    ),
+  },
+  {
+    key: 'displayName',
+    label: '닉네임',
+    required: true,
+    validation: {
+      maxLength: 20,
+      pattern: /^[A-Za-z0-9가-힣 _-]{2,20}$/,
+      message: '닉네임은 2-20자, 한글/영문/숫자/공백/_/-만 허용됩니다.',
+      customFn: (v: string) => {
+        if (!v) return '닉네임을 입력하세요.'
+        if (v.trim().length < 2)
+          return '닉네임은 공백 제외 2자 이상이어야 합니다.'
+        if (/^\s|\s$/.test(v)) return '앞/뒤 공백은 제거해주세요.'
+        return true
+      },
+    },
+    render: (value, onChange) => (
+      <EditInput value={value} onChangeText={onChange} />
+    ),
+  },
+  {
+    key: 'note',
+    label: '신청메모',
+    required: true,
+    validation: {
+      maxLength: 200,
+      message: '신청메모는 1-200자 입력해주세요.',
+      customFn: (v: string) => {
+        if (!v || v.trim().length === 0) return '신청메모를 입력하세요.'
+        return true
+      },
+    },
+    render: (value, onChange) => (
+      <EditTextArea
+        value={value}
+        onChangeText={onChange}
+        minRows={1}
+        maxRows={6}
+        maxLength={200}
+      />
+    ),
+  },
+  {
+    key: 'authority',
+    label: '권한설정',
+    required: true,
+    render: (value, onChange) => (
+      <Select
+        options={[
+          {
+            label: '관리자',
+            value: 'ADMIN',
+          },
+          {
+            label: '운영자',
+            value: 'MANAGER',
+          },
+          {
+            label: '일반유저',
+            value: 'USER',
+          },
+        ]}
+        value={value}
+        onChange={onChange}
+      />
+    ),
+  },
+
+  {
+    key: 'groupId',
+    label: '그룹설정',
+    required: true,
+    render: (value, onChange) => (
+      // <Select options={groupOptions} value={value} onChange={onChange} />
+      <GroupSelect value={value} onChange={onChange} />
+    ),
+  },
+  {
+    key: 'intro',
+    label: '소개',
+    validation: {
+      maxLength: 200,
+      message: '소개는 최대 200자입니다.',
+    },
+    render: (value, onChange) => (
+      <EditTextArea
+        value={value}
+        onChangeText={onChange}
+        minRows={1}
+        maxRows={6}
+        maxLength={200}
+      />
+    ),
+  },
+]
 
 const ButtonsByType = {
   pending: [
@@ -82,8 +201,8 @@ export default function UserDetailModal({
   ...props
 }: propTypes) {
   const formRef = useRef<any | null>(null)
-  const queryClient = useQueryClient()
   const profileRef = useRef<any | null>(null)
+  const currentAdminUid = auth?.currentUser?.uid
 
   const handleMemberStatusUpdate = async (
     status: User['accountStatus'] & 'delete',
@@ -95,134 +214,17 @@ export default function UserDetailModal({
       } else {
         const formValues = formRef.current.getValues() as User
         const photoURL = await profileRef.current.upload()
-        await userService.updateUserStatus(status, {...formValues, photoURL})
+        if (currentAdminUid)
+          await userService.updateUserStatus(currentAdminUid, status, {
+            ...formValues,
+            photoURL,
+          })
         setOpen(false)
         Alert.alert('수정 완료', '유저 멤버 정보 수정 완료')
         onRefresh?.()
       }
-    } catch (e) {
-      console.log(e)
-    }
+    } catch (e) {}
   }
-
-  const items: FormItem[] = [
-    {
-      key: 'email',
-      label: '이메일',
-      required: true,
-      validation: {
-        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        message: '이메일 형식이 올바르지 않습니다.',
-        customFn: (v: string) => {
-          if (!v) return '이메일을 입력하세요.'
-          if (v !== v.trim()) return '앞뒤 공백을 제거해주세요.'
-          return true
-        },
-      },
-      render: (value, onChange) => (
-        <EditInput
-          value={value}
-          onChangeText={onChange}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-      ),
-    },
-    {
-      key: 'displayName',
-      label: '닉네임',
-      required: true,
-      validation: {
-        maxLength: 20,
-        pattern: /^[A-Za-z0-9가-힣 _-]{2,20}$/,
-        message: '닉네임은 2-20자, 한글/영문/숫자/공백/_/-만 허용됩니다.',
-        customFn: (v: string) => {
-          if (!v) return '닉네임을 입력하세요.'
-          if (v.trim().length < 2)
-            return '닉네임은 공백 제외 2자 이상이어야 합니다.'
-          if (/^\s|\s$/.test(v)) return '앞/뒤 공백은 제거해주세요.'
-          return true
-        },
-      },
-      render: (value, onChange) => (
-        <EditInput value={value} onChangeText={onChange} />
-      ),
-    },
-    {
-      key: 'note',
-      label: '신청메모',
-      required: true,
-      validation: {
-        maxLength: 200,
-        message: '신청메모는 1-200자 입력해주세요.',
-        customFn: (v: string) => {
-          if (!v || v.trim().length === 0) return '신청메모를 입력하세요.'
-          return true
-        },
-      },
-      render: (value, onChange) => (
-        <EditTextArea
-          value={value}
-          onChangeText={onChange}
-          minRows={1}
-          maxRows={6}
-          maxLength={200}
-        />
-      ),
-    },
-    {
-      key: 'authority',
-      label: '권한설정',
-      required: true,
-      render: (value, onChange) => (
-        <Select
-          options={[
-            {
-              label: '관리자',
-              value: 'ADMIN',
-            },
-            {
-              label: '운영자',
-              value: 'MANAGER',
-            },
-            {
-              label: '일반유저',
-              value: 'USER',
-            },
-          ]}
-          value={value}
-          onChange={onChange}
-        />
-      ),
-    },
-
-    {
-      key: 'groupId',
-      label: '그룹설정',
-      required: true,
-      render: (value, onChange) => (
-        // <Select options={groupOptions} value={value} onChange={onChange} />
-        <GroupSelect value={value} onChange={onChange} />
-      ),
-    },
-    {
-      key: 'intro',
-      label: '소개',
-      validation: {
-        maxLength: 200,
-        message: '소개는 최대 200자입니다.',
-      },
-      render: (value, onChange) => (
-        <EditTextArea
-          value={value}
-          onChangeText={onChange}
-          minRows={1}
-          maxRows={6}
-          maxLength={200}
-        />
-      ),
-    },
-  ]
 
   return (
     <CustomModal visible={open} onClose={() => setOpen(false)}>

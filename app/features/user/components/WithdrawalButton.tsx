@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {StyleSheet} from 'react-native'
+import {Alert, StyleSheet} from 'react-native'
 
 import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
@@ -19,6 +19,15 @@ export default function WithdrawalButton({
 }: propTypes) {
   const [visible, setVisible] = useState<boolean>(false)
 
+  const onDelete = async () => {
+    try {
+      // 탈퇴 로직
+      setVisible(false)
+      await userService.deleteMyAccount()
+      Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
+    } catch (e) {}
+  }
+
   return (
     <>
       <CustomButton colorType="danger" onTouchEnd={() => setVisible(true)}>
@@ -30,11 +39,7 @@ export default function WithdrawalButton({
         message="정말 탈퇴하시겠습니까? 탈퇴 후에는 데이터를 복구할 수 없습니다."
         confirmText="탈퇴"
         cancelText="취소"
-        onConfirm={() => {
-          // 탈퇴 로직
-          setVisible(false)
-          userService.deleteMyAccount()
-        }}
+        onConfirm={onDelete}
         onCancel={() => setVisible(false)}
       />
     </>

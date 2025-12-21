@@ -1,4 +1,5 @@
 import {authRemote} from '@app/features/auth/data/authRemote.firebase'
+import {fcmService} from '@app/features/notification/service/fcmService'
 import {handleFirebaseAuthError} from '@app/shared/utils/logger'
 
 export const authService = {
@@ -13,7 +14,7 @@ export const authService = {
 
   logout: async () => {
     try {
-      await authRemote.removeFCMToken()
+      await fcmService.removeFCMTokenOnLogout()
     } finally {
       await authRemote.signOut()
     }

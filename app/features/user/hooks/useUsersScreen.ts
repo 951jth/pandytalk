@@ -14,7 +14,7 @@ export function useUsersScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useUsersInfinite(searchText)
+  } = useUsersInfinite(searchText, true)
   const {data: userInfo, loading, error} = useAppSelector(state => state.user)
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()

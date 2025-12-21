@@ -6,10 +6,8 @@ import {auth} from '@app/shared/firebase/firestore'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import type {UpdateInput} from '@app/shared/types/firebase'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
-import store from '@app/store/store'
 import type {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {serverTimestamp} from '@react-native-firebase/firestore'
-import {Alert} from 'react-native'
 
 export const userService = {
   //프로필 생성
@@ -58,11 +56,12 @@ export const userService = {
     } as User
   },
   //유저 정보 수정(어드민)
-  updateUserStatus: async (status: User['accountStatus'], formValues: User) => {
+  updateUserStatus: async (
+    currentAdminUid: string,
+    status: User['accountStatus'],
+    formValues: User,
+  ) => {
     const nowTime = serverTimestamp()
-    const state = store.getState()
-    const currentAdminUid = state?.user?.data?.uid
-
     if (!formValues?.uid) return
     if (!currentAdminUid) return
 
@@ -93,7 +92,6 @@ export const userService = {
     try {
       if (!user) return
       await userRemote.deleteUser(user)
-      Alert.alert('탈퇴성공', '회원 탈퇴 되었습니다.')
       // 여기서부터는 계정이 Auth에서 삭제된 상태
       // 추가로 Firestore/Storage 데이터도 정리해주면 좋음
     } catch (err: any) {
@@ -109,10 +107,10 @@ export const userService = {
   getUsers: async ({
     groupId,
     authority = 'USER',
-    searchText,
+    searchText = '',
     pageSize = 20,
     pageParam,
-    isConfirmed = true,
+    isConfirmed,
   }: GetUsersParams) => {
     const docs = await userRemote.getUsersPage({
       groupId,
@@ -122,7 +120,6 @@ export const userService = {
       pageParam,
       isConfirmed,
     })
-
     const users = docs?.map(doc => ({uid: doc.id, ...doc.data()}) as User) ?? []
 
     return {

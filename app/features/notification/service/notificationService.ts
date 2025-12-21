@@ -1,3 +1,4 @@
+import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
 
 export const notificationService = {
@@ -14,12 +15,11 @@ export const notificationService = {
       await notificationRemote.registerAPNs()
 
       // 3. 토큰 발급
-      const token = await notificationRemote.getFcmToken()
+      const token = await fcmRemote.getFcmToken()
 
       // 4. DB 저장
       if (token) {
-        console.log('✅ FCM Token:', token)
-        await notificationRemote.saveTokenToUser(uid, token)
+        await fcmRemote.saveTokenToUser(uid, token)
       }
     } catch (error) {
       console.error('🚨 디바이스 등록 실패:', error)
