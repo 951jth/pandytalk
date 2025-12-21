@@ -1,4 +1,7 @@
-import {userRemote} from '@app/features/user/data/userRemote.firebase'
+import {
+  userRemote,
+  type GetUsersParams,
+} from '@app/features/user/data/userRemote.firebase'
 import {auth} from '@app/shared/firebase/firestore'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import type {UpdateInput} from '@app/shared/types/firebase'
@@ -100,6 +103,32 @@ export const userService = {
       } else {
         console.error(err)
       }
+    }
+  },
+
+  getUsers: async ({
+    groupId,
+    authority = 'USER',
+    searchText,
+    pageSize = 20,
+    pageParam,
+    isConfirmed = true,
+  }: GetUsersParams) => {
+    const docs = await userRemote.getUsersPage({
+      groupId,
+      authority,
+      searchText,
+      pageSize,
+      pageParam,
+      isConfirmed,
+    })
+
+    const users = docs?.map(doc => ({uid: doc.id, ...doc.data()}) as User) ?? []
+
+    return {
+      users,
+      lastVisible: docs[docs.length - 1] ?? null,
+      isLastPage: docs.length < pageSize,
     }
   },
 }

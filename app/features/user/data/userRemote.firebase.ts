@@ -3,34 +3,112 @@ import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import {UpdateInput} from '@app/shared/types/firebase'
 import {firebaseCall} from '@app/shared/utils/logger'
 import {deleteUser, FirebaseAuthTypes} from '@react-native-firebase/auth'
-import {doc, getDoc, setDoc, updateDoc} from '@react-native-firebase/firestore'
+import {
+  collection,
+  doc,
+  endAt,
+  getDoc,
+  getDocs,
+  limit,
+  or,
+  query,
+  setDoc,
+  startAfter,
+  startAt,
+  updateDoc,
+  where,
+} from '@react-native-firebase/firestore'
+import {orderBy} from 'lodash'
 
 // ✅ updateDoc 전용
 export type UserUpdate = UpdateInput<UserJoinRequest>
 
+// 유저 목록 조회 함수 인자 타입 정의
+export type GetUsersParams = {
+  groupId?: string | null
+  authority?: User['authority']
+  searchText?: string
+  pageSize?: number
+  pageParam?: any // React Query의 pageParam (보통 DocumentSnapshot)
+  isConfirmed?: boolean
+}
+
 export const userRemote = {
   setProfile: (uid: string, payload: User) => {
-    return firebaseCall('authRemote.setProfile', async () => {
+    return firebaseCall('userRemote.setProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
       await setDoc(userRef, payload as any, {merge: true})
     })
   },
   updateProfile: (uid: string, payload: Record<string, any>) => {
-    return firebaseCall('authRemote.updateProfile', async () => {
+    return firebaseCall('userRemote.updateProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
       await updateDoc(userRef, payload as any)
     })
   },
   getProfile: (uid: string) => {
-    return firebaseCall('authRemote.getProfile', async () => {
+    return firebaseCall('userRemote.getProfile', async () => {
       const docRef = doc(firestore, 'users', uid)
       return await getDoc(docRef)
     })
   },
   deleteUser: (user: FirebaseAuthTypes.User) => {
-    return firebaseCall('authRemote.deleteUser', async () => {
+    return firebaseCall('userRemote.deleteUser', async () => {
       await deleteUser(user)
     })
   },
-  getUsers: () => {},
+  getUsersPage: async ({
+    groupId,
+    authority,
+    searchText = '',
+    pageSize = 20,
+    pageParam,
+    isConfirmed = true,
+  }: GetUsersParams) => {
+    return firebaseCall('userRemote.getUsersPage', async () => {
+      // 1. 컬렉션 레퍼런스 생성
+      const usersRef = collection(firestore, 'users')
+
+      // 2. 필터 조건 구성 (Business Logic)
+      const filters: any[] = [where('isConfirmed', '==', isConfirmed)]
+
+      // 비관리자면: (내 그룹) OR (ADMIN) 만 조회
+      if (authority !== 'ADMIN') {
+        filters.push(
+          or(
+            where('authority', '==', 'ADMIN'),
+            where('groupId', '==', groupId ?? '__NONE__'),
+          ),
+        )
+      }
+
+      // 3. 쿼리 객체 초기화 (Base Query)
+      let q = query(usersRef, ...filters)
+
+      // 4. 검색 및 정렬 조건 추가
+      // 주의: Firestore 복합 인덱스가 필요할 수 있습니다.
+      if (searchText) {
+        q = query(
+          q,
+          orderBy('displayName', 'asc'),
+          orderBy('status', 'desc'),
+          orderBy('lastSeen', 'desc'),
+          startAt(searchText),
+          endAt(searchText + '\uf8ff'),
+        )
+      } else {
+        q = query(q, orderBy('status', 'desc'), orderBy('lastSeen', 'desc'))
+      }
+
+      // 5. 페이지네이션 (Limit & Cursor)
+      q = query(q, limit(pageSize))
+
+      if (pageParam) {
+        q = query(q, startAfter(pageParam))
+      }
+
+      const snap = await getDocs(q)
+      return snap.docs
+    })
+  },
 }

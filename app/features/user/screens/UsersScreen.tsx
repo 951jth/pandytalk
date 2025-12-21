@@ -1,56 +1,21 @@
-import {AppRouteParamList} from '@app/shared/types/navigate'
-import {useNavigation} from '@react-navigation/native'
-import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import React, {useState} from 'react'
+import {useUsersScreen} from '@app/features/user/hooks/useUsersScreen'
+import React from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
-import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import EmptyData from '../../../shared/ui/common/EmptyData'
-import {useAppSelector} from '../../../store/reduxHooks'
 import ChatMember from '../../chat/components/ChatMember'
 import GroupMainThumnail from '../../group/components/GroupMainThumnail'
-import {useUsersInfinite} from '../hooks/useUserQuery'
 
 // 채팅방 네비게이션 타입 정의 (필요 시 수정)
 export default function UsersScreen(): React.JSX.Element {
-  // const [input, setInput] = useState<string>('')
-  const [searchText, setSearchText] = useState<string>('')
   const {
-    data,
+    users,
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useUsersInfinite(searchText)
-
-  const {data: user, loading, error} = useAppSelector(state => state.user)
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
-  const users = data?.pages.flatMap(page => page.users) ?? []
-  const {isKeyboardVisible, dismissKeyboard} = useKeyboardFocus()
-
-  // const debouncedSetSearchText = useMemo(
-  //   () =>
-  //     debounce((text: string) => {
-  //       setSearchText(text.toString())
-  //     }, 300),
-  //   [],
-  // )
-
-  const moveToChatRoom = (targetId: string, title: string) => {
-    if (!user) return
-    navigation.navigate('dm-chat', {
-      myId: user.uid,
-      targetId,
-      title,
-    })
-  }
-
-  // useEffect(() => {
-  //   debouncedSetSearchText(input)
-  //   // cleanup 함수로 debounce 취소
-  //   return () => debouncedSetSearchText.cancel()
-  // }, [input])
+    moveToChatRoom,
+  } = useUsersScreen()
 
   return (
     <View style={styles.container}>
@@ -60,7 +25,7 @@ export default function UsersScreen(): React.JSX.Element {
         onChangeText={setInput}
       /> */}
       <FlatList
-        data={users?.filter(({uid}) => uid != user?.uid)}
+        data={users}
         ListHeaderComponent={<GroupMainThumnail style={{paddingBottom: 12}} />}
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
@@ -68,9 +33,9 @@ export default function UsersScreen(): React.JSX.Element {
             <ChatMember
               item={item}
               onPress={() => {
-                dismissKeyboard()
-                if (!isKeyboardVisible)
-                  moveToChatRoom(item.uid, item?.displayName)
+                // dismissKeyboard()
+                // if (!isKeyboardVisible)
+                moveToChatRoom(item.uid, item?.displayName)
               }}
               style={{marginHorizontal: 12}}
             />
