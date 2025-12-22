@@ -4,6 +4,7 @@ import type {FsSnapshot} from '@app/shared/types/firebase'
 import {firebaseCall} from '@app/shared/utils/logger'
 import {
   collection,
+  FirebaseFirestoreTypes,
   getDocs,
   limit,
   onSnapshot,
@@ -17,6 +18,12 @@ export type GetMyChatsParams = {
   userId: string
   type: ChatListItem['type']
   pageParam?: FsSnapshot
+  pageSize?: number
+}
+
+export type SubscribeMyChatsParams = {
+  uid: string
+  type: ChatListItem['type']
   pageSize?: number
 }
 
@@ -44,37 +51,29 @@ export const chatRemote = {
       return snapshot?.docs ?? []
     })
   },
-  //채팅방 구독
+  //채팅방 구독 (첫 페이지만)
   subscribeMyChats: (
-    uid: string,
-    type: ChatListItem['type'],
-    pageSize: number,
+    {uid, type, pageSize}: SubscribeMyChatsParams,
+    callback: (changes: FirebaseFirestoreTypes.DocumentChange[]) => void,
   ) => {
-    return firebaseCall('chatRemote.subscribeMyChats', async () => {
-      const chatsRef = collection(firestore, 'chats')
-      const q = query(
-        chatsRef,
-        where('type', '==', type),
-        where('members', 'array-contains', uid),
-        orderBy('lastMessageAt', 'desc'),
-        limit(pageSize ?? 20),
-      )
-      let isInitial = true
-      const unsub = onSnapshot(
-        q,
-        snap => {
-          if (isInitial) {
-            isInitial = false
-            return // 초기 발행은 refetch 생략
-          }
-          const changes = snap.docChanges()
-          return changes
-        },
-        error => {
-          console.error('[chat head snapshot] error:', error)
-        },
-      )
-      return unsub
-    })
+    const chatsRef = collection(firestore, 'chats')
+    const q = query(
+      chatsRef,
+      where('type', '==', type),
+      where('members', 'array-contains', uid),
+      orderBy('lastMessageAt', 'desc'),
+      limit(pageSize ?? 20),
+    )
+    const unsub = onSnapshot(
+      q,
+      snap => {
+        const changes = snap.docChanges()
+        callback(changes)
+      },
+      error => {
+        console.error('[chat head snapshot] error:', error)
+      },
+    )
+    return unsub
   },
 }

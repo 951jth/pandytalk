@@ -1,6 +1,5 @@
 import type {CheckedRecordType} from '@app/features/auth/components/TermAgreementList'
 import {authRemote} from '@app/features/auth/data/authRemote.firebase'
-import {authService} from '@app/features/auth/service/authService'
 import {userService} from '@app/features/user/service/userService'
 import {
   checkRequiredTerm,
@@ -38,7 +37,7 @@ export default function useAddUserScreen() {
         const photoURL = await profileRef.current?.upload()
         let payload = {...formValues, photoURL}
         await userService.setProfile(cred, payload)
-        await authService.logout()
+        await authRemote.signOut() //토큰은 남겨두고 로그아웃시킴
         Alert.alert(
           '승인 대기 중',
           '관리자가 확인 후 승인이 완료되면 이용하실 수 있습니다.',

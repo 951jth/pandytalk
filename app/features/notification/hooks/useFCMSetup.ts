@@ -1,26 +1,10 @@
 import {notificationService} from '@app/features/notification/service/notificationService'
 import {auth} from '@app/shared/firebase/firestore'
-import {isNewUser} from '@app/shared/utils/firebase'
 import {
   onAuthStateChanged,
   type FirebaseAuthTypes,
 } from '@react-native-firebase/auth'
 import {useEffect, useState} from 'react'
-
-// iOS 권한 : alert, badge, sound, provisional 선택 가능
-const iosPermOptions = {
-  alert: true,
-  badge: true,
-  sound: true,
-  provisional: false,
-}
-
-const AuthorizationStatus = {
-  NOT_DETERMINED: 1,
-  DENIED: 2,
-  AUTHORIZED: 3,
-  PROVISIONAL: 4,
-}
 
 export function useFCMSetup() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(
@@ -41,8 +25,8 @@ export function useFCMSetup() {
   useEffect(() => {
     ;(async () => {
       try {
-        if (user?.uid && !isNewUser(user))
-          notificationService.registerDevice(user?.uid)
+        //추후 관리자 승인시 푸쉬알림 처리를 할 것 떄문이기에 계정에 등록해둠
+        if (user?.uid) notificationService.registerDevice(user?.uid)
       } catch (e) {
         console.error('useFCMSetup', e)
       }

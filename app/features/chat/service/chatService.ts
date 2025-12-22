@@ -1,9 +1,11 @@
 import {
   chatRemote,
+  SubscribeMyChatsParams,
   type GetMyChatsParams,
 } from '@app/features/chat/data/chatRemote.firebase'
 import type {ChatListItem} from '@app/shared/types/chat'
 import {getUnreadCount} from '@app/shared/utils/chat'
+import {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 
 export const chatService = {
   getMyChats: async ({userId, type, pageParam, pageSize}: GetMyChatsParams) => {
@@ -35,5 +37,19 @@ export const chatService = {
       lastVisible: chatDocs[chatDocs?.length - 1] ?? null,
       isLastPage: chatDocs.length < (pageSize ?? 20),
     }
+  },
+  subscribeMyChats: (
+    {uid, type, pageSize}: SubscribeMyChatsParams,
+    callback: (changes: FirebaseFirestoreTypes.DocumentChange[]) => void,
+  ) => {
+    if (__DEV__) {
+      console.group(`🔥 [SERVICE] chatRemote.subscribeMyChats`)
+      console.log({uid, type, pageSize})
+      console.groupEnd()
+    }
+
+    const unsub = chatRemote.subscribeMyChats({uid, type, pageSize}, callback)
+    //구독해체 함수 리턴
+    return unsub
   },
 }

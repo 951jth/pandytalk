@@ -3,10 +3,8 @@ import {addUserItems} from '@app/features/user/screens/addUser.form'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import InputForm from '@app/shared/ui/form/InputForm'
-import EditProfile, {
-  type ProfileInputRef,
-} from '@app/shared/ui/upload/EditProfile'
-import React, {type RefObject} from 'react'
+import EditProfile from '@app/shared/ui/upload/EditProfile'
+import React from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
@@ -19,27 +17,6 @@ const initialData = {
   displayName: '',
   note: '',
   intro: '',
-}
-
-const ProfileHeader = ({
-  profileRef,
-}: {
-  profileRef: RefObject<ProfileInputRef>
-}) => {
-  return (
-    <View style={styles.profileWrap}>
-      <EditProfile
-        edit={true}
-        defaultUrl={null}
-        boxSize={100}
-        iconSize={75}
-        ref={profileRef}
-      />
-      <Text style={styles.notiText}>
-        {`관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.`}
-      </Text>
-    </View>
-  )
 }
 
 export default function AddUserScreen() {

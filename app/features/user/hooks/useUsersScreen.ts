@@ -20,6 +20,7 @@ export function useUsersScreen() {
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
 
   const users = data?.pages.flatMap(page => page.users) ?? []
+  const others = users?.filter(e => e?.uid !== userInfo?.uid)
 
   const moveToChatRoom = (targetId: string, title: string) => {
     if (!userInfo) return
@@ -47,7 +48,7 @@ export function useUsersScreen() {
   return {
     searchText,
     setSearchText,
-    users,
+    users: others,
     isLoading,
     fetchNextPage,
     hasNextPage,
