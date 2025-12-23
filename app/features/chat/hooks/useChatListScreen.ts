@@ -1,5 +1,6 @@
 // features/chat/hooks/useChatListScreen.ts
 import {useMyChatsInfinite} from '@app/features/chat/hooks/useMyChatsInfinite'
+import {useSubscribeChatList} from '@app/features/chat/hooks/useSubscribeChatList'
 import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
@@ -7,7 +8,6 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {debounce} from 'lodash'
 import {useEffect, useMemo, useState} from 'react'
 import {useAppSelector} from '../../../store/reduxHooks'
-import {useSubscribeChatList} from './useChatRoomQuery' // 기존 구독 훅 그대로 사용
 import {useChatWithMembersInfo} from './useChatWithMembersInfo'
 
 type Navigation = NativeStackNavigationProp<
@@ -32,6 +32,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     refetch,
   } = useMyChatsInfinite(user?.uid, type)
   // 실시간 구독
+  // useSubscribeChatList(user?.uid, type)
   useSubscribeChatList(user?.uid, type)
 
   const rawChats: ChatListItem[] =
