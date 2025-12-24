@@ -10,19 +10,26 @@ import {toMillisFromServerTime} from '../../../shared/utils/firebase'
 
 type propTypes = {
   item: ChatItemWithMemberInfo
-  onPress?: (item: ChatItemWithMemberInfo) => void
+  moveToChatRoom?: (
+    targetId?: string | undefined,
+    roomId?: string | undefined,
+  ) => void
 }
 
-export default function ChatListItemCard({item, onPress}: propTypes) {
+export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
   const findMember = item?.findMember
   const nameMaps = {
     dm: {name: findMember?.displayName, image: findMember?.photoURL},
     group: {name: item?.name, image: item?.image},
   }
   const viewItem = nameMaps?.[item?.type]
+  const targetId = item?.findMember?.id ?? null
+  const roomId = item?.id ?? null
 
   return (
-    <PressableWrapper onPress={() => onPress?.(item)} style={styles.chatRoom}>
+    <PressableWrapper
+      onPress={() => moveToChatRoom?.(targetId, roomId)}
+      style={styles.chatRoom}>
       <View style={styles.frame}>
         {viewItem?.image ? (
           <FastImage

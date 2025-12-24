@@ -7,7 +7,7 @@ import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {debounce} from 'lodash'
-import {useEffect, useMemo, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import {useAppSelector} from '../../../store/reduxHooks'
 
 type Navigation = NativeStackNavigationProp<
@@ -39,7 +39,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     [data],
   )
   const chats = useChatWithMembersInfo(rawChats, type, user?.uid)
-  console.log('chats', chats)
+
   const debouncedSetSearchText = useMemo(
     () =>
       debounce((text: string) => {
@@ -53,15 +53,21 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     return () => debouncedSetSearchText.cancel()
   }, [input, debouncedSetSearchText])
 
-  const filteredChat = chats?.filter(chat => chat?.name?.includes(searchText))
+  const filteredChat = useMemo(
+    () => chats?.filter(chat => chat?.name?.includes(searchText)),
+    [chats, searchText],
+  )
 
-  const moveToChatRoom = (targetId?: string | null, roomId?: string) => {
-    if (type === 'dm' && user?.uid && targetId) {
-      navigation.navigate('dm-chat', {myId: user.uid, targetId})
-    } else if (type === 'group' && roomId) {
-      navigation.navigate('group-chat', {roomId})
-    }
-  }
+  const moveToChatRoom = useCallback(
+    (targetId?: string | undefined, roomId?: string | undefined) => {
+      if (type === 'dm' && user?.uid && targetId) {
+        navigation.navigate('dm-chat', {myId: user.uid, targetId})
+      } else if (type === 'group' && roomId) {
+        navigation.navigate('group-chat', {roomId})
+      }
+    },
+    [navigation, user?.uid],
+  )
 
   return {
     input,

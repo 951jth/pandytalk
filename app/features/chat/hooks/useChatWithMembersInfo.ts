@@ -117,7 +117,7 @@ export const useChatWithMembersInfo = (
       .flatMap(c => c.members ?? [])
       .filter((id): id is string => !!id && id !== uid)
 
-    return Array.from(new Set(ids))
+    return [...new Set(ids)]
   }, [rawChats, uid, enabled])
 
   const fetchMemberInfos = useCallback(async (newIds: string[]) => {
@@ -145,6 +145,14 @@ export const useChatWithMembersInfo = (
     const newIds = userIds.filter(id => !fetchedUids.current.has(id))
     fetchMemberInfos(newIds)
   }, [enabled, userIds, fetchMemberInfos])
+
+  useEffect(() => {
+    if (!enabled) {
+      //유저, 타입 변경시 초기화 (로그아웃 하는 케이스)
+      setUserInfosById({})
+      fetchedUids.current = new Set()
+    }
+  }, [enabled, uid, type])
 
   const chatsWithMemberInfos = useMemo(() => {
     if (!enabled) return rawChats as ChatItemWithMemberInfo[]

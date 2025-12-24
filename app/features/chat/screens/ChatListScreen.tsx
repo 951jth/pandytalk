@@ -3,13 +3,15 @@ import type {AppRouteParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
 import {useRoute, type RouteProp} from '@react-navigation/native'
-import React from 'react'
+import React, {memo} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import ChatListItemCard from '../components/ChatListItemCard'
 import {useChatListScreen} from '../hooks/useChatListScreen'
 
 type ChatRouteParams = RouteProp<AppRouteParamList, 'chats'>
+
+const MemoizedChatListItem = memo(ChatListItemCard)
 
 //1:1 (DM), 그룹채팅(group) 모두 사용중인 화면.
 export default function ChatListScreen() {
@@ -32,15 +34,8 @@ export default function ChatListScreen() {
         data={chats}
         keyExtractor={e => e?.id}
         renderItem={({item}) => {
-          const targetId = item?.findMember?.id
           return (
-            <ChatListItemCard
-              item={item}
-              onPress={() => {
-                if (!targetId) return
-                moveToChatRoom(targetId, item.id)
-              }}
-            />
+            <MemoizedChatListItem item={item} moveToChatRoom={moveToChatRoom} />
           )
         }}
         onEndReached={() => {
