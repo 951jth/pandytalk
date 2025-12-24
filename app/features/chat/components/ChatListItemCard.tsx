@@ -23,8 +23,8 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
     group: {name: item?.name, image: item?.image},
   }
   const viewItem = nameMaps?.[item?.type]
-  const targetId = item?.findMember?.id ?? null
-  const roomId = item?.id ?? null
+  const targetId = item?.findMember?.id
+  const roomId = item?.id
 
   return (
     <PressableWrapper
