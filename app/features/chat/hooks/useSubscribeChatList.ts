@@ -61,7 +61,6 @@ export function useSubscribeChatList(
             if (upsertChanges.length > 0) {
               const items = getChatDataWithCount(uid, upsertChanges)
 
-              // id -> index
               const indexById = new Map<string, number>()
               flat.forEach((chat, idx) => indexById.set(chat.id, idx))
 

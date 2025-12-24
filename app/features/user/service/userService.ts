@@ -128,4 +128,16 @@ export const userService = {
       isLastPage: docs.length < pageSize,
     }
   },
+
+  getUsersByIds: async (uids: string[]) => {
+    const chunkSize = 10
+    const chunks: string[][] = []
+    //페이지 사이즈는 10까지 가능
+    for (let i = 0; i < uids?.length; i += chunkSize) {
+      chunks.push(uids.slice(i, i + chunkSize))
+    }
+    const promises = chunks?.map(chunk => userRemote.getUsersByIds(chunk))
+    const results = await Promise.all(promises)
+    return results?.flat().map(doc => ({id: doc?.id, ...doc.data()}) as User)
+  },
 }

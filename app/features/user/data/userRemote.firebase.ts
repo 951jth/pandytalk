@@ -57,7 +57,7 @@ export const userRemote = {
       await deleteUser(user)
     })
   },
-  getUsersPage: async ({
+  getUsersPage: ({
     groupId,
     authority,
     searchText = '',
@@ -106,6 +106,19 @@ export const userRemote = {
         q = query(q, startAfter(pageParam))
       }
 
+      const snap = await getDocs(q)
+      return snap.docs
+    })
+  },
+  getUsersByIds: (uids: string[]) => {
+    if (!uids.length) return Promise.resolve([])
+
+    return firebaseCall('userRemote.getUsersByUidChunk', async () => {
+      const q = query(
+        collection(firestore, 'users'),
+        where('uid', 'in', uids),
+        where('accountStatus', '==', 'confirm'),
+      )
       const snap = await getDocs(q)
       return snap.docs
     })

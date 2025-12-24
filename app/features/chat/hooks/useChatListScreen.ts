@@ -1,4 +1,5 @@
 // features/chat/hooks/useChatListScreen.ts
+import {useChatWithMembersInfo} from '@app/features/chat/hooks/useChatWithMembersInfo'
 import {useMyChatsInfinite} from '@app/features/chat/hooks/useMyChatsInfinite'
 import {useSubscribeChatList} from '@app/features/chat/hooks/useSubscribeChatList'
 import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
@@ -8,7 +9,6 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {debounce} from 'lodash'
 import {useEffect, useMemo, useState} from 'react'
 import {useAppSelector} from '../../../store/reduxHooks'
-import {useChatWithMembersInfo} from './useChatWithMembersInfo'
 
 type Navigation = NativeStackNavigationProp<
   AppRouteParamList,
@@ -32,13 +32,14 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     refetch,
   } = useMyChatsInfinite(user?.uid, type)
   // 실시간 구독
-  // useSubscribeChatList(user?.uid, type)
   useSubscribeChatList(user?.uid, type)
 
-  const rawChats: ChatListItem[] =
-    data?.pages.flatMap(page => page?.chats ?? []) ?? []
-  const chats = useChatWithMembersInfo(rawChats, user, type)
-
+  const rawChats: ChatListItem[] = useMemo(
+    () => data?.pages.flatMap(page => page?.chats ?? []) ?? [],
+    [data],
+  )
+  const chats = useChatWithMembersInfo(rawChats, type, user?.uid)
+  console.log('chats', chats)
   const debouncedSetSearchText = useMemo(
     () =>
       debounce((text: string) => {

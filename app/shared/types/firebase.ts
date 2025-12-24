@@ -7,3 +7,6 @@ export type FsSnapshot =
 export type UpdateInput<T extends object> = {
   [K in keyof T]?: T[K] | FieldValue | string
 }
+
+export type DocChange =
+  FirebaseFirestoreTypes.DocumentChange<FirebaseFirestoreTypes.DocumentData>
