@@ -38,7 +38,7 @@ type MessagesPage = {
 type MessagesInfiniteData = InfiniteData<MessagesPage>
 
 const firestore = getFirestore(getApp())
-const PAGE_SIZE = 15
+const PAGE_SIZE = 20
 
 export const useChatMessagesPaging = (roomId: string | null) => {
   const queryClient = useQueryClient()

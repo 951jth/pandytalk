@@ -4,11 +4,11 @@ import {
   collection,
   getDocs,
   limit,
+  orderBy,
   query,
-  where,
+  startAfter,
   type FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore'
-import {orderBy} from 'lodash'
 
 export const messageRemote = {
   getChatMessages: (
@@ -19,8 +19,16 @@ export const messageRemote = {
     return firebaseCall('messageRemote.getChatMessages', async () => {
       const PAGE_SIZE = pageSize ?? 20
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-      let q = query(messagesRef, orderBy('createdAt', 'desc'), limit(PAGE_SIZE))
-      if (ts) q = query(q, where('createdAt', '<', ts))
+
+      // 1. 기본 조건들을 배열에 담기
+      const constraints = [orderBy('createdAt', 'desc'), limit(PAGE_SIZE)]
+      // 2. ts가 있을 때만 조건 추가 (배열에 push)
+      if (ts) {
+        constraints.push(startAfter(ts))
+      }
+      // 3. query 함수 한번만 호출해서 완성 (...spread 연산자 사용)
+      const q = query(messagesRef, ...constraints)
+      console.log('q', q)
       const snapshot = await getDocs(q)
       return snapshot.docs
     })

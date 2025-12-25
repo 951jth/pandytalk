@@ -25,9 +25,11 @@ export default function DmChatRoomScreen() {
   )
   const {data: roomInfo} = useChatRoomInfo(currentRoomId)
   const headerTitle = useMemo(() => {
+    console.log(roomInfo?.memberInfos)
     const findMember = roomInfo?.memberInfos?.find(
       member => member?.id !== myId,
     )
+    console.log('findMember:', findMember)
     return `${
       title || roomInfo?.name || findMember?.displayName || '채팅방'
     } ${roomInfo?.type == 'group' ? '(그룹)' : ''}`

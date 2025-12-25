@@ -62,6 +62,7 @@ export const chatService = {
     ms?: number, //sqlite가 읽어야하기 떄문에 클라이언트에선 ms로 관리.
     pageSize?: number,
   ) => {
+    console.log(roomId, ms, pageSize)
     const ts = toRNFTimestamp(ms) //milisecond -> firestore timestamp
     const docs = await messageRemote.getChatMessages(roomId, ts, pageSize ?? 20)
     const messages = docs?.map(doc => {
