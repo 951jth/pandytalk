@@ -1,18 +1,24 @@
+import ChatMessageItem from '@app/features/chat/components/ChatMessageItem'
+import { readStatusRemote } from '@app/features/chat/data/readStatusRemote.firebase'
 import COLORS from '@app/shared/constants/color'
-import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
-import {useFocusEffect} from '@react-navigation/native'
-import React, {useCallback, useEffect, useRef, useState} from 'react'
-import {FlatList, StyleSheet, View} from 'react-native'
-import {Icon, Text} from 'react-native-paper'
-import {getLatestMessageCreatedAtFromSQLite} from '../../../db/sqlite'
-import {updateLastRead} from '../../../services/chatService'
-import ImageViewer from '../../../shared/ui/common/ImageViewer'
+import type { User } from '@app/shared/types/auth'
+import { ChatListItem, ChatMessage } from '@app/shared/types/chat'
+import { useFocusEffect } from '@react-navigation/native'
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { FlatList, StyleSheet } from 'react-native'
+import { getLatestMessageCreatedAtFromSQLite } from '../../../db/sqlite'
 import {
   isSameDate,
   isSameMinute,
   isSameSender,
 } from '../../../shared/utils/chat'
-import {formatChatTime, formatServerDate} from '../../../shared/utils/firebase'
 import {
   useChatMessagesPaging,
   useSubscriptionMessage,
@@ -25,6 +31,7 @@ interface Props {
   inputComponent?: React.ComponentType<any> | React.ReactElement | null
   chatType?: ChatListItem['type']
 }
+const MemoizedChatMessage = memo(ChatMessageItem)
 
 export default function ChatMessageList({
   roomId,
@@ -32,7 +39,6 @@ export default function ChatMessageList({
   roomInfo,
   chatType = 'dm',
 }: Props) {
-  const members = roomInfo?.memberInfos ?? []
   const {
     data,
     isLoading,
@@ -48,6 +54,16 @@ export default function ChatMessageList({
   const roomInfoRef = useRef(roomInfo)
   const messagesRef = useRef(messages)
 
+  //unreadCount, lastReadSeqs 같은 필드가 업데이트 될떄 멤버정보의 참조가 바뀔 수 있음
+  //find는 매 채팅 로우마다 순회해서, map으로 고정시키는것이 비용적으로 유리
+  const membersMap = useMemo(() => {
+    let map = new Map<string, User>()
+    for (const member of roomInfo?.memberInfos ?? []) {
+      map.set(member.uid, member)
+    }
+    return map
+  }, [roomInfo?.memberInfos])
+
   // 최신값 유지
   useEffect(() => {
     roomInfoRef.current = roomInfo
@@ -56,117 +72,48 @@ export default function ChatMessageList({
     messagesRef.current = messages
   }, [messages])
 
-  const renderMessage = ({item, index}: {item: ChatMessage; index: number}) => {
-    const isMine = item?.senderId === userId
-    const nextItem = messages?.[index + 1] ?? null
-    const prevItem = messages?.[index - 1] ?? null
-    const hideProfile = isSameSender(item, nextItem)
-    const hideMinute = isSameMinute(item, nextItem)
-    const hideDate = isSameDate(item, nextItem)
-    const member = members?.find(mem => mem?.id === item?.senderId)
-    return (
-      <>
-        <View
-          style={[
-            styles.chatRow,
-            {justifyContent: isMine ? 'flex-end' : 'flex-start'},
-          ]}>
-          {isMine ? (
-            <View style={styles.myChat}>
-              {/* 내 채팅 */}
-              <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
-              {item?.type == 'image' && item?.imageUrl && (
-                <View>
-                  <ImageViewer
-                    images={[{uri: item?.imageUrl}]}
-                    imageProps={{
-                      resizeMode: 'cover',
-                      style: styles.chatImage,
-                    }}
-                  />
-                </View>
-              )}
-              {!hideMinute && item?.createdAt && (
-                <Text style={[styles.chatTime, {left: -60}]}>
-                  {formatChatTime(item?.createdAt)}
-                </Text>
-              )}
-            </View>
-          ) : (
-            <>
-              {/* 상대 체팅 */}
-              {!hideProfile && (
-                //프로필
-                <View style={styles.frame}>
-                  {member?.photoURL ? (
-                    <ImageViewer
-                      images={[{uri: member?.photoURL}]}
-                      imageProps={{
-                        resizeMode: 'cover',
-                        style: styles.profile,
-                      }}
-                    />
-                  ) : (
-                    <Icon source="account" size={35} color={COLORS.primary} />
-                  )}
-                </View>
-              )}
-              <View style={{marginLeft: hideProfile ? 55 : 0}}>
-                {/* 닉네임 */}
-                {!hideProfile && (
-                  <Text style={styles.nickname}>
-                    {member?.displayName ?? '알수없음'}
-                  </Text>
-                )}
-                <View style={styles.otherChat}>
-                  {/* 상대 채팅 */}
-                  <Text style={{color: COLORS.text}}>{item.text}</Text>
-                  {item?.type == 'image' && item?.imageUrl && (
-                    <ImageViewer
-                      images={[{uri: item?.imageUrl}]}
-                      imageProps={{
-                        resizeMode: 'cover',
-                        style: styles.chatImage,
-                      }}
-                    />
-                  )}
-                  {!hideMinute && (
-                    <Text style={[styles.chatTime, {right: -65}]}>
-                      {formatChatTime(item.createdAt)}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </>
-          )}
-        </View>
-        {/* 날짜 표기 */}
-        {!hideDate && (
-          <View style={styles.chatDateWrap}>
-            <Text style={styles.chatDateText}>
-              {formatServerDate(item?.createdAt, 'YYYY년 MM월 DD일 dddd')}
-            </Text>
-          </View>
-        )}
-      </>
-    )
-  }
+  const renderMessage = useCallback(
+    ({item, index}: {item: ChatMessage; index: number}) => {
+      const isMine = item?.senderId === userId
+      const nextItem = messages?.[index + 1] ?? null
+      const hideProfile = isSameSender(item, nextItem)
+      const hideMinute = isSameMinute(item, nextItem)
+      const hideDate = isSameDate(item, nextItem)
+      const member = membersMap.get(item.senderId)
 
+      return (
+        <MemoizedChatMessage
+          item={item}
+          isMine={isMine}
+          hideProfile={hideProfile}
+          hideMinute={hideMinute}
+          hideDate={hideDate}
+          member={member}
+        />
+      )
+    },
+    [membersMap, messages],
+  )
   useFocusEffect(
     useCallback(() => {
       return () => {
-        if (userId && roomInfoRef?.current) {
-          const room = roomInfoRef?.current
-          const crntReadSeq = room?.lastReadSeqs?.[userId]
-          const msgs = messagesRef?.current
-          const lastSeq = msgs?.length
-            ? Math.max(...msgs.map(m => m.seq ?? 0))
+        const room = roomInfoRef.current
+        if (!userId || !room?.id) return
+
+        const currentReadSeq = room.lastReadSeqs?.[userId] ?? 0
+        const msgs = messagesRef.current ?? []
+
+        //해당 유저 마지막 읽음 처리
+        const lastSeq =
+          msgs.length > 0
+            ? msgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
             : 0
-          const forceUpdate = crntReadSeq != lastSeq
-          if (forceUpdate) updateLastRead(room?.id, userId, lastSeq) // ✅ 화면 벗어날 때 실행됨
+
+        if (currentReadSeq !== lastSeq) {
+          readStatusRemote.updateChatLastReadByUser(room.id, userId, lastSeq)
         }
       }
-    }, [updateLastRead]),
+    }, [userId]),
   )
 
   useEffect(() => {
@@ -184,7 +131,7 @@ export default function ChatMessageList({
     <FlatList
       style={styles.flex}
       data={messages || []}
-      keyExtractor={(item, index) => `${item.id}-${item.createdAt}-${index}`}
+      keyExtractor={item => item.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
       inverted={true}

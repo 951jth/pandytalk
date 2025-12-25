@@ -1,7 +1,7 @@
+import {firebaseCall} from '@app/shared/firebase/firebaseCall'
 import {firestore} from '@app/shared/firebase/firestore'
 import type {ChatListItem} from '@app/shared/types/chat'
 import type {FsSnapshot} from '@app/shared/types/firebase'
-import {firebaseCall} from '@app/shared/utils/logger'
 import {
   collection,
   FirebaseFirestoreTypes,

@@ -1,5 +1,5 @@
+import {firebaseCall} from '@app/shared/firebase/firebaseCall'
 import {firestore, messaging} from '@app/shared/firebase/firestore'
-import {firebaseCall} from '@app/shared/utils/logger'
 import {
   arrayRemove,
   arrayUnion,

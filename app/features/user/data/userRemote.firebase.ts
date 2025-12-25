@@ -1,7 +1,7 @@
+import {firebaseCall} from '@app/shared/firebase/firebaseCall'
 import {firestore} from '@app/shared/firebase/firestore'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import {UpdateInput} from '@app/shared/types/firebase'
-import {firebaseCall} from '@app/shared/utils/logger'
 import {deleteUser, FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {
   collection,

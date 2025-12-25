@@ -1,7 +1,6 @@
 import {getApp} from '@react-native-firebase/app'
 import {
   collection,
-  getDocs,
   getFirestore,
   limit,
   onSnapshot,
@@ -16,6 +15,7 @@ import {
 } from '@tanstack/react-query'
 import {useEffect} from 'react'
 
+import {chatService} from '@app/features/chat/service/chatService'
 import {ChatMessage} from '@app/shared/types/chat'
 import {
   clearMessagesFromSQLite,
@@ -63,31 +63,13 @@ export const useChatMessagesPaging = (roomId: string | null) => {
           PAGE_SIZE,
         )) as ChatMessage[]
         if (localMessages?.length || 0 < PAGE_SIZE) {
-          const ts = toRNFTimestamp(pageParam)
           // CASE 1. 로컬에 없으면 Firestore에서 가져오기
-          const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-          let q = query(
-            messagesRef,
-            orderBy('createdAt', 'desc'),
-            limit(PAGE_SIZE),
+          const serverMessages = await chatService.getChatMessages(
+            roomId,
+            pageParam,
+            PAGE_SIZE,
           )
-          if (ts) q = query(q, where('createdAt', '<', ts))
 
-          const snapshot = await getDocs(q)
-          const result = snapshot.docs.map(
-            doc =>
-              ({
-                id: doc.id,
-                ...doc.data(),
-              }) as ChatMessage,
-          )
-          //데이터를 조회할떄는, createdAt은 number로 조회함
-          const serverMessages = result?.map(e => ({
-            ...e,
-            createdAt: e?.createdAt
-              ? toMillisFromServerTime(e?.createdAt)
-              : Date.now(),
-          })) as ChatMessage[]
           if (serverMessages.length > 0) {
             //서버데이터가 있으면 그대로 sqlite에 push
             await saveMessagesToSQLite(roomId, serverMessages)

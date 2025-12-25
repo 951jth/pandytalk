@@ -1,5 +1,5 @@
+import {firebaseCall} from '@app/shared/firebase/firebaseCall'
 import {auth} from '@app/shared/firebase/firestore'
-import {firebaseCall} from '@app/shared/utils/logger'
 import {
   createUserWithEmailAndPassword,
   signInAnonymously,

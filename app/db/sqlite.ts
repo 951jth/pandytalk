@@ -1,9 +1,9 @@
 // import {FieldValue} from 'firebase-admin/firestore'
+import type {ChatMessage} from '@app/shared/types/chat'
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from '../shared/sqlite/sqlite'
 import {exec} from '../shared/utils/data'
 import {toMillisFromServerTime} from '../shared/utils/firebase'
-import type {ChatMessage} from '../types/chat'
 
 export const saveMessagesToSQLite = async (
   roomId: string,

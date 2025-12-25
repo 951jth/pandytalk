@@ -79,6 +79,7 @@ export function useSubscribeChatList(
 
             // 4) badge sum (remove만 와도 업데이트 되게 여기서 한번만)
             // 고민 포인트: dispatch를 외부로 뺄까?
+            // hook으로 뺴서 사용할 지 고민중
             const sum = flat.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0)
             if (type === 'dm') dispatch(setDMChatCount(sum))
             else dispatch(setGroupChatCount(sum))

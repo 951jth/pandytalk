@@ -269,7 +269,7 @@ export function useChatRoomInfo(roomId: string | null) {
     queryFn: async () => {
       try {
         if (!roomId) return null
-        const roomInfo = await getChatRoomInfoWithMembers(roomId)
+        const roomInfo: ChatListItem = await getChatRoomInfoWithMembers(roomId)
         return roomInfo ?? null
       } catch (e) {
         console.log(e)
