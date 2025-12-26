@@ -10,9 +10,10 @@ import dayjs from 'dayjs'
 import {cloneDeep} from 'lodash'
 import React, {useMemo, useRef, useState} from 'react'
 import {Alert, StyleSheet, View} from 'react-native'
-import {IconButton} from 'react-native-paper'
+import {Button, IconButton} from 'react-native-paper'
 import {useDispatch} from 'react-redux'
 
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import COLORS from '@app/shared/constants/color'
 import {authority} from '@app/shared/constants/korean'
 import {FormItem} from '@app/shared/types/form'
@@ -151,6 +152,10 @@ export default function ProfileScreen(): React.JSX.Element {
     }
   }
 
+  const onClean = async () => {
+    await messageLocal.clearAllMessages()
+    messageLocal.initMessageTable()
+  }
   // 테스트용: 버튼 클릭 시 강제 크래시
   // const forceCrash = () => {
   //   crashlytics().log('Test crash button clicked')
@@ -159,9 +164,9 @@ export default function ProfileScreen(): React.JSX.Element {
 
   return (
     <View style={[styles.container, {paddingBottom: keyboardHeight}]}>
-      {/* <Button icon="close" onTouchEnd={resetAll} style={styles.cleanButton}>
+      <Button icon="close" onPress={onClean} style={styles.cleanButton}>
         캐시 초기화
-      </Button> */}
+      </Button>
       <IconButton
         icon="refresh"
         size={20}

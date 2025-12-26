@@ -45,7 +45,6 @@ const EditProfile = forwardRef(function EditProfile(
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   // const [imageUri, setImageUri] = useState<string | null>(uri)
   const [loading, setLoading] = useState<boolean>(false)
-  console.log('previewUrl', previewUrl)
   useImperativeHandle(
     ref,
     () => ({

@@ -18,8 +18,20 @@ const MESSAGE_COLUMNS = [
 
 const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS.map(() => '?').join(', ')
 const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS.join(', ')
+const CREATE_MESSAGE_TABLE_SQL = `
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  roomId TEXT NOT NULL,
+  text TEXT,
+  senderId TEXT NOT NULL,
+  createdAt INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  imageUrl TEXT,
+  seq INTEGER NOT NULL
+);
+`
 
-export const messageRemote = {
+export const messageLocal = {
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
     // 1. 디버깅 및 성능 측정을 위해 sqliteCall 래퍼 사용
     return sqliteCall('messageLocal.saveMessagesToSQLite', () => {
@@ -51,6 +63,79 @@ export const messageRemote = {
           },
           reject, // ✅ 트랜잭션 전체 실패
           resolve, // ✅ 트랜잭션 전체 성공
+        )
+      })
+    })
+  },
+  getChatMessagesBySQLite: (
+    roomId: string,
+    cursorCreatedAt?: number | null,
+    pageSize: number = 20,
+  ) => {
+    return sqliteCall('messageLocal.getChatMessagesBySQLite', () => {
+      return new Promise<ChatMessage[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          const query = cursorCreatedAt
+            ? `SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?`
+            : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
+          const params = cursorCreatedAt
+            ? [roomId, cursorCreatedAt, pageSize]
+            : [roomId, pageSize]
+
+          tx.executeSql(
+            query,
+            params,
+            (_, result) => {
+              const messages: ChatMessage[] = []
+              for (let i = 0; i < result.rows.length; i++) {
+                messages.push(result.rows.item(i))
+              }
+              // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
+              resolve(messages)
+            },
+            reject,
+          )
+        })
+      })
+    })
+  },
+  initMessageTable: () => {
+    return sqliteCall('messageLocal.initMessageTable', async () => {
+      await new Promise<void>((resolve, reject) => {
+        db.transaction(
+          (tx: Transaction) => {
+            tx.executeSql(
+              CREATE_MESSAGE_TABLE_SQL,
+              [],
+              () => {
+                if (__DEV__) console.log('✅ messages table ready')
+              },
+              (_tx, error) => {
+                if (__DEV__)
+                  console.error('❌ Failed to create messages table', error)
+                // executeSql 에러를 트랜잭션 실패로 전파
+                reject(error)
+                return true
+              },
+            )
+          },
+          // ✅ 트랜잭션 레벨 에러도 잡아서 reject
+          error => reject(error),
+          // ✅ 트랜잭션 완료 보장
+          () => resolve(),
+        )
+      })
+    })
+  },
+  clearAllMessages: () => {
+    return sqliteCall('messageLocal.clearAllMessages', async () => {
+      return new Promise<void>((resolve, reject) => {
+        db.transaction(
+          (tx: Transaction) => {
+            tx.executeSql(`DELETE FROM ${MESSAGE_TABLE}`)
+          },
+          reject,
+          resolve,
         )
       })
     })

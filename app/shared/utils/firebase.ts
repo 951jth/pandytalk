@@ -187,7 +187,7 @@ export const toRNFTimestamp = (
 
   return null
 }
-// [유틸 함수] 신규 유저인지 판별 (시간 차이가 1~2초 이내면 신규로 간주)
+// 신규 유저인지 판별 (시간 차이가 1~2초 이내면 신규로 간주)
 export const isNewUser = (user: FirebaseAuthTypes.User) => {
   const {creationTime, lastSignInTime} = user.metadata
   if (!creationTime || !lastSignInTime) return false

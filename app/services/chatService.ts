@@ -11,20 +11,17 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
-  startAfter,
   updateDoc,
   where,
 } from '@react-native-firebase/firestore'
 // import {FieldValue} from 'firebase-admin/firestore'
-import {toRNFTimestamp} from '../shared/utils/firebase'
-import {removeEmpty} from '../shared/utils/format'
-import type {User} from '../types/auth'
 import type {
   ChatItemWithMemberInfo,
   ChatListItem,
   ChatMessage,
-  ServerTime,
-} from '../types/chat'
+} from '@shared/types/chat'
+import {removeEmpty} from '../shared/utils/format'
+import type {User} from '../types/auth'
 
 const firestore = getFirestore(getApp())
 
@@ -63,31 +60,6 @@ const setChatMembersInfo = async (roomInfo: ChatListItem) => {
   try {
     //현재는 그룹의 멤버가 변경되면 클라우드펑션에서 자동으로 채팅멤버 세팅해줘서 사용 switch 문 사용하지않음
     let uids = roomInfo?.members ?? []
-    // //1. 멤버 아이디들 세팅
-    // switch (roomInfo.type) {
-    //   //CASE 1. DM 채팅 (1:1, or 1:N) uids
-    //   case 'dm':
-    //     uids = roomInfo?.members ?? []
-    //     break
-    //   //CASE 2. GROUP 채팅 uids
-    //   case 'group':
-    //     const gid = roomInfo?.groupId as string
-    //     if (!gid) return roomInfo
-    //     const groupMemsRef = collection(firestore, 'groups', gid, 'members')
-    //     const gq = query(groupMemsRef)
-    //     const gSnapshot = await getDocs(gq)
-    //     const gMembers =
-    //       gSnapshot?.docs?.map(
-    //         doc =>
-    //           ({
-    //             id: doc.id,
-    //             ...doc.data(),
-    //           }) as User,
-    //       ) || []
-    //     uids = gMembers?.map(e => e.id as string) ?? []
-
-    //     break
-    // }
     //2. id를 기반으로 현재 멤버들의 정보 세팅
     if (uids) {
       // users 컬렉션에서 해당 uid들의 유저 정보 가져오기
@@ -307,46 +279,4 @@ export const updateChatRoom = async (
     console.error('채팅방 정보 업데이트 실패:', error)
     throw error
   }
-}
-
-export async function updateLastRead(
-  roomId: string,
-  userId: string,
-  seenSeq: number, // 마지막으로 보인 메시지의 seq (모르면 생략)
-) {
-  try {
-    if (!(roomId && userId && seenSeq)) return
-    const chatRef = doc(firestore, 'chats', roomId)
-    //현재 채팅방에서 가장 높은 시퀀스 계산하기.
-    await runTransaction(firestore, async tx => {
-      tx.update(chatRef, {
-        [`lastReadSeqs.${userId}`]: seenSeq,
-        [`lastReadTimestamps.${userId}`]: serverTimestamp(),
-      })
-    })
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-//마지막 데이터 날짜 이후로 데이터 존재여부 확인
-export const getMessagesFromLatestRead = async (
-  roomId: string,
-  latestCreated: number | ServerTime | null,
-) => {
-  if (!latestCreated) return []
-  const cursor = toRNFTimestamp(latestCreated)
-  const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-  const q = query(
-    messagesRef,
-    orderBy('createdAt', 'desc'),
-    startAfter(cursor),
-    // where('createdAt', '>', Timestamp.fromMillis(latestCreated)),
-  )
-  const snapshot = await getDocs(q)
-  const messages = snapshot?.docs?.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as ChatMessage[]
-  return messages ?? []
 }

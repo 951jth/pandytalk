@@ -3,13 +3,8 @@ import {
   SubscribeMyChatsParams,
   type GetMyChatsParams,
 } from '@app/features/chat/data/chatRemote.firebase'
-import {messageRemote} from '@app/features/chat/data/messageRemote.firebase'
-import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import type {ChatListItem} from '@app/shared/types/chat'
 import {getUnreadCount} from '@app/shared/utils/chat'
-import {
-  toMillisFromServerTime,
-  toRNFTimestamp,
-} from '@app/shared/utils/firebase'
 import {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 
 export const chatService = {
@@ -56,23 +51,5 @@ export const chatService = {
     const unsub = chatRemote.subscribeMyChats({uid, type, pageSize}, callback)
     //구독해체 함수 리턴
     return unsub
-  },
-  getChatMessages: async (
-    roomId: string,
-    ms?: number, //sqlite가 읽어야하기 떄문에 클라이언트에선 ms로 관리.
-    pageSize?: number,
-  ) => {
-    console.log(roomId, ms, pageSize)
-    const ts = toRNFTimestamp(ms) //milisecond -> firestore timestamp
-    const docs = await messageRemote.getChatMessages(roomId, ts, pageSize ?? 20)
-    const messages = docs?.map(doc => {
-      const data = {id: doc.id, ...doc.data()} as ChatMessage
-      const reformedData: ChatMessage = {
-        ...data,
-        createdAt: toMillisFromServerTime(data?.createdAt) ?? Date.now(),
-      } //클라이언트(sqlite)에서 보여질 데이터로 가공
-      return reformedData
-    })
-    return messages
   },
 }

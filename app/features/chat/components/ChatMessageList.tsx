@@ -1,28 +1,14 @@
 import ChatMessageItem from '@app/features/chat/components/ChatMessageItem'
-import { readStatusRemote } from '@app/features/chat/data/readStatusRemote.firebase'
+import {useChatMessageList} from '@app/features/chat/hooks/useChatMessageList'
 import COLORS from '@app/shared/constants/color'
-import type { User } from '@app/shared/types/auth'
-import { ChatListItem, ChatMessage } from '@app/shared/types/chat'
-import { useFocusEffect } from '@react-navigation/native'
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
-import { FlatList, StyleSheet } from 'react-native'
-import { getLatestMessageCreatedAtFromSQLite } from '../../../db/sqlite'
+import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import React, {memo, useCallback} from 'react'
+import {FlatList, StyleSheet} from 'react-native'
 import {
   isSameDate,
   isSameMinute,
   isSameSender,
 } from '../../../shared/utils/chat'
-import {
-  useChatMessagesPaging,
-  useSubscriptionMessage,
-} from '../hooks/useChatMessageQuery'
 
 interface Props {
   roomId: string | null
@@ -40,37 +26,13 @@ export default function ChatMessageList({
   chatType = 'dm',
 }: Props) {
   const {
-    data,
+    messages,
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    resetChatMessages,
-  } = useChatMessagesPaging(roomId)
-  const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null) //마지막으로 읽은 날짜.
-  const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
-  useSubscriptionMessage(roomId, lastCreatedAt) //채팅방 구독설정
-  // 포커스 이벤트용 참조값.
-  const roomInfoRef = useRef(roomInfo)
-  const messagesRef = useRef(messages)
-
-  //unreadCount, lastReadSeqs 같은 필드가 업데이트 될떄 멤버정보의 참조가 바뀔 수 있음
-  //find는 매 채팅 로우마다 순회해서, map으로 고정시키는것이 비용적으로 유리
-  const membersMap = useMemo(() => {
-    let map = new Map<string, User>()
-    for (const member of roomInfo?.memberInfos ?? []) {
-      map.set(member.uid, member)
-    }
-    return map
-  }, [roomInfo?.memberInfos])
-
-  // 최신값 유지
-  useEffect(() => {
-    roomInfoRef.current = roomInfo
-  }, [roomInfo])
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
+    membersMap,
+  } = useChatMessageList({roomId, userId, roomInfo, chatType})
 
   const renderMessage = useCallback(
     ({item, index}: {item: ChatMessage; index: number}) => {
@@ -94,38 +56,6 @@ export default function ChatMessageList({
     },
     [membersMap, messages],
   )
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        const room = roomInfoRef.current
-        if (!userId || !room?.id) return
-
-        const currentReadSeq = room.lastReadSeqs?.[userId] ?? 0
-        const msgs = messagesRef.current ?? []
-
-        //해당 유저 마지막 읽음 처리
-        const lastSeq =
-          msgs.length > 0
-            ? msgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
-            : 0
-
-        if (currentReadSeq !== lastSeq) {
-          readStatusRemote.updateChatLastReadByUser(room.id, userId, lastSeq)
-        }
-      }
-    }, [userId]),
-  )
-
-  useEffect(() => {
-    //가장 마지막 채팅의 최근 날짜로 subscription
-    if (!roomId) return
-    // getMessagesFromSQLite(roomId).then(res => {
-    //   console.log('all messages', res)
-    // })
-    getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
-      setLastCreatedAt(res)
-    })
-  }, [data, roomId])
 
   return (
     <FlatList
