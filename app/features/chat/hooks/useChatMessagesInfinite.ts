@@ -1,26 +1,9 @@
-import {getApp} from '@react-native-firebase/app'
-import {getFirestore} from '@react-native-firebase/firestore'
-import {
-  useInfiniteQuery,
-  useQueryClient,
-  type InfiniteData,
-} from '@tanstack/react-query'
-
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
 import {ChatMessage} from '@app/shared/types/chat'
+import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
 import {toMillisFromServerTime} from '../../../shared/utils/firebase'
 
-// ✅ 올바른 타입: Infinite Query용
-type MessagesPage = {
-  data: ChatMessage[]
-  lastVisible: number | null // 다음 커서(ms). ServerTime 금지
-  isLastPage: boolean
-}
-
-type MessagesInfiniteData = InfiniteData<MessagesPage>
-
-const firestore = getFirestore(getApp())
 const PAGE_SIZE = 20
 
 const initChatPage = {
@@ -29,7 +12,7 @@ const initChatPage = {
   isLastPage: true,
 }
 
-export const useChatMessagesPaging = (roomId: string | null) => {
+export const useChatMessagesInfinite = (roomId: string | null) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
   const queryResult = useInfiniteQuery({
@@ -41,12 +24,11 @@ export const useChatMessagesPaging = (roomId: string | null) => {
         if (!roomId) return initChatPage
         const ms = toMillisFromServerTime(pageParam)
 
-        const localMessages = (await messageLocal.getChatMessagesBySQLite(
+        const localMessages = (await messageLocal.getChatMessagesByCreated(
           roomId,
           ms, //pageParam은 여기서 마지막 읽은 날짜임
           PAGE_SIZE,
         )) as ChatMessage[]
-        const isInitialLoad = !pageParam //페이지파라미터가 없는경우 최신데이터를 요청해야하는 상황
         //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
         const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
 
@@ -67,7 +49,7 @@ export const useChatMessagesPaging = (roomId: string | null) => {
             // 1. 데이터 소스 일관성 유지
             // 2. SQLite 저장이 100% 성공했다는 보장 강화
             // 3. 중복/정렬 문제 예방 : serverMessages가 중복되있으면 오류발생
-            const updatedMessages = await messageLocal.getChatMessagesBySQLite(
+            const updatedMessages = await messageLocal.getChatMessagesByCreated(
               roomId,
               ms,
             )

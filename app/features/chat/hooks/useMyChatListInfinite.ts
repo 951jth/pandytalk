@@ -3,7 +3,7 @@ import type {ChatListItem} from '@app/shared/types/chat'
 import type {FsSnapshot} from '@app/shared/types/firebase'
 import {useInfiniteQuery} from '@tanstack/react-query'
 
-export function useMyChatsInfinite(
+export function useMyChatListInfinite(
   userId: string | null | undefined,
   type: ChatListItem['type'] = 'dm',
 ) {

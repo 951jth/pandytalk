@@ -6,7 +6,6 @@ import {
   getDoc,
   getDocs,
   getFirestore,
-  orderBy,
   query,
   runTransaction,
   serverTimestamp,
@@ -15,44 +14,15 @@ import {
   where,
 } from '@react-native-firebase/firestore'
 // import {FieldValue} from 'firebase-admin/firestore'
+import {User} from '@app/shared/types/auth'
 import type {
   ChatItemWithMemberInfo,
   ChatListItem,
   ChatMessage,
 } from '@shared/types/chat'
 import {removeEmpty} from '../shared/utils/format'
-import type {User} from '../types/auth'
 
 const firestore = getFirestore(getApp())
-
-//채팅방이 이미 있는지 조회하고 없으면 새로 만들어서 RETURN;
-export const getExistChatRoom = async (
-  myUid: string,
-  targetUid: string,
-): Promise<string | null> => {
-  try {
-    const chatsRef = collection(firestore, 'chats')
-    const q = query(
-      chatsRef,
-      where('type', '==', 'dm'),
-      where('members', 'array-contains', myUid),
-    )
-
-    const snapshot = await getDocs(q)
-    // const docData = snapshot.
-    const foundDoc = snapshot.docs.find(doc => {
-      const members = doc.data().members
-      return members?.length == 2 && members.includes(targetUid)
-    })
-    // return foundDoc
-    //   ? ({id: foundDoc.id, ...foundDoc.data()} as ChatListItem)
-    //   : null
-    return foundDoc?.id || null
-  } catch (e) {
-    console.log(e)
-    return null
-  }
-}
 
 //타입별 멤버 조회 호출 함수,(dm, group) : 과거
 //멤버 정보가 바뀌게 될 수 있어서, id로 별도로 조회해야함.
@@ -104,27 +74,6 @@ export const getChatRoomInfoWithMembers = async (
     return roomInfoWithMembers || null
   } catch (e) {
     return null
-  }
-}
-
-//채팅창 메세지 가져오기
-export const getChatMessages = async (roomId: string) => {
-  try {
-    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-    const q = query(messagesRef, orderBy('createdAt', 'desc'))
-    const snapshot = await getDocs(q)
-
-    const messages = snapshot.docs.map(
-      doc =>
-        ({
-          id: doc.id,
-          ...doc?.data(),
-        }) as ChatMessage,
-    )
-    return messages ?? null
-  } catch (e) {
-    console.log('get chat messages error', e)
-    return []
   }
 }
 

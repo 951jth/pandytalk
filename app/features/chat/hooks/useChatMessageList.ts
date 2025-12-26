@@ -1,11 +1,11 @@
-import {getLatestMessageCreatedAtFromSQLite} from '@app/db/sqlite'
-import {readStatusRemote} from '@app/features/chat/data/readStatusRemote.firebase'
-import {useChatMessagesPaging} from '@app/features/chat/hooks/useChatMessages'
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
 import {useSubscriptionMessages} from '@app/features/chat/hooks/useSubscirbeMessages'
+import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
+import {messageService} from '@app/features/chat/service/messageService'
 import type {User} from '@app/shared/types/auth'
 import type {ChatListItem} from '@app/shared/types/chat'
-import {useFocusEffect} from '@react-navigation/native'
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 
 type Props = {
   roomId: string | null
@@ -22,6 +22,7 @@ export const useChatMessageList = ({
   chatType = 'dm',
 }: Props) => {
   const [lastCreatedAt, setLastCreatedAt] = useState<number | null>(null) //마지막으로 읽은 날짜.
+  const lastCreatedAtRef = useRef<number | null>(null)
 
   const {
     data,
@@ -30,61 +31,49 @@ export const useChatMessageList = ({
     hasNextPage,
     isFetchingNextPage,
     resetChatMessages,
-  } = useChatMessagesPaging(roomId)
-
+  } = useChatMessagesInfinite(roomId)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
-  const roomInfoRef = useRef(roomInfo) // 포커스 이벤트용 참조값.
-  const messagesRef = useRef(messages) // 포커스 이벤트용 참조값.
+
   // 멤버들 정보 map
   const membersMap = useMemo(() => {
-    let map = new Map<string, User>()
-    for (const member of roomInfo?.memberInfos ?? []) {
-      map.set(member.uid, member)
-    }
-    return map
+    const init = new Map<string, User>()
+    const map = roomInfo?.memberInfos?.reduce((acc, obj) => {
+      return acc.set(obj.uid, obj)
+    }, init)
+    return map ?? init
   }, [roomInfo?.memberInfos])
 
+  //마지막 읽은 시간,SEQ 처리
+  useUpdateLastReadOnBlur(userId, roomInfo, messages)
   //채팅 목록 구독
-  useSubscriptionMessages(roomId, lastCreatedAt) //채팅방 구독설정
-  // 최신값 유지
-  useEffect(() => {
-    roomInfoRef.current = roomInfo
-  }, [roomInfo])
-  useEffect(() => {
-    messagesRef.current = messages
-  }, [messages])
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        const room = roomInfoRef.current
-        if (!userId || !room?.id) return
+  useSubscriptionMessages(roomId, lastCreatedAtRef.current) //채팅방 구독설정
 
-        const currentReadSeq = room.lastReadSeqs?.[userId] ?? 0
-        const msgs = messagesRef.current ?? []
-
-        //해당 유저 마지막 읽음 처리
-        const lastSeq =
-          msgs.length > 0
-            ? msgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
-            : 0
-
-        if (currentReadSeq !== lastSeq) {
-          //채팅방 벗어나면 seq, read time 설정
-          readStatusRemote.updateChatLastReadByUser(room.id, userId, lastSeq)
-        }
-      }
-    }, [userId]),
-  )
-  useEffect(() => {
-    //가장 마지막 채팅의 최근 날짜로 subscription
+  //최신 메세지 동기화 -> 구독설정
+  const getSyncMessage = async () => {
     if (!roomId) return
-    // getMessagesFromSQLite(roomId).then(res => {
-    //   console.log('all messages', res)
+    try {
+      const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
+      const newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
+      const lastSeq =
+        newMsgs.length > 0
+          ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
+          : 0
+      lastCreatedAtRef.current = lastSeq
+    } catch (e) {
+      console.error('getSyncMessage error:', e)
+    }
+  }
+
+  //가장 마지막 채팅의 최근 날짜로 subscription
+  useEffect(() => {
+    let mounted = true
+    if (!roomId) return
+    // getSyncMessage()
+    // getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
+    //   if (!mounted) return
+    //   lastCreatedAtRef.current = res
     // })
-    getLatestMessageCreatedAtFromSQLite(roomId).then(res => {
-      setLastCreatedAt(res)
-    })
-  }, [data, roomId])
+  }, [roomId])
 
   return {
     messages,

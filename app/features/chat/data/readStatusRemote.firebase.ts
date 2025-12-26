@@ -1,4 +1,4 @@
-import {firebaseCall} from '@app/shared/firebase/firebaseCall'
+import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {doc, serverTimestamp, updateDoc} from '@react-native-firebase/firestore'
 

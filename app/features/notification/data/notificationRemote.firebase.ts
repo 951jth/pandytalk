@@ -1,4 +1,4 @@
-import {firebaseCall} from '@app/shared/firebase/firebaseCall'
+import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {messaging} from '@app/shared/firebase/firestore'
 import {
   AuthorizationStatus,

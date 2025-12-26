@@ -73,13 +73,6 @@ export default function ChatMessageList({
         }
       }}
       // onRefresh={resetChatMessages}
-      // onScroll={({nativeEvent}) => {
-      //   if (nativeEvent.contentOffset.y <= 0) {
-      //     console.log('next page')
-      //     // 🔁 페이징 or 이전 메시지 불러오기
-      //     if (hasNextPage) fetchNextPage()
-      //   }
-      // }}
       // refreshing={isLoading}
     />
   )

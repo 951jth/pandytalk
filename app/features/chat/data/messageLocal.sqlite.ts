@@ -67,12 +67,12 @@ export const messageLocal = {
       })
     })
   },
-  getChatMessagesBySQLite: (
+  getChatMessagesByCreated: (
     roomId: string,
     cursorCreatedAt?: number | null,
     pageSize: number = 20,
   ) => {
-    return sqliteCall('messageLocal.getChatMessagesBySQLite', () => {
+    return sqliteCall('messageLocal.getChatMessagesByCreated', () => {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           const query = cursorCreatedAt
@@ -80,6 +80,38 @@ export const messageLocal = {
             : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
           const params = cursorCreatedAt
             ? [roomId, cursorCreatedAt, pageSize]
+            : [roomId, pageSize]
+
+          tx.executeSql(
+            query,
+            params,
+            (_, result) => {
+              const messages: ChatMessage[] = []
+              for (let i = 0; i < result.rows.length; i++) {
+                messages.push(result.rows.item(i))
+              }
+              // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
+              resolve(messages)
+            },
+            reject,
+          )
+        })
+      })
+    })
+  },
+  getChatMessageBySeq: (
+    roomId: string,
+    cursorSeq?: number | null,
+    pageSize: number = 20,
+  ) => {
+    return sqliteCall('messageLocal.getChatMessageBySeq', async () => {
+      return new Promise<ChatMessage[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          const query = cursorSeq
+            ? `SELECT * FROM messages WHERE roomId = ? AND seq < ? ORDER BY createdAt DESC LIMIT ?`
+            : `SELECT * FROM messages WHERE roomId = ? ORDER BY seq DESC LIMIT ?`
+          const params = cursorSeq
+            ? [roomId, cursorSeq, pageSize]
             : [roomId, pageSize]
 
           tx.executeSql(
@@ -137,6 +169,27 @@ export const messageLocal = {
           reject,
           resolve,
         )
+      })
+    })
+  },
+  getMaxLocalSeq: (roomId: string) => {
+    return sqliteCall('messageLocal.getMaxLocalSeq', async () => {
+      return new Promise<number>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          const query = `SELECT COUNT(*) FROM messages WHERE roomId = ?`
+          tx.executeSql(
+            query,
+            [roomId],
+            (_, result) => {
+              const count = result.rows.item(0)['COUNT(*)']
+              resolve(count)
+            },
+            (_, error) => {
+              reject(error)
+              return true // SQLite 트랜잭션 중단 + rollback
+            },
+          )
+        })
       })
     })
   },
