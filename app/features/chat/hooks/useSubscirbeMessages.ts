@@ -19,12 +19,7 @@ const init: MessagesInfiniteData = {
   pageParams: [undefined],
 }
 
-export const useSubscriptionMessages = (
-  roomId: string | null | undefined,
-  lastCreatedAt: number | null | undefined, //생성시간 기준
-) => {
-  const lastSeqRef = useRef<number | null>(null)
-  // console.log('lastCreatedAt', lastCreatedAt)
+export const useSubscriptionMessages = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const unsubRef = useRef<(() => void) | null>(null)
   // let unsubscribe = () => {}
@@ -86,5 +81,5 @@ export const useSubscriptionMessages = (
         unsubRef.current = null
       }
     }
-  }, [roomId, lastCreatedAt])
+  }, [roomId])
 }
