@@ -1,9 +1,11 @@
+const BE_QUITE = false
+
 export async function sqliteCall<T>(
   label: string,
   fn: () => Promise<T>,
 ): Promise<T> {
   // 배포 환경에서는 바로 실행
-  if (!__DEV__) return await fn()
+  if (!__DEV__ || BE_QUITE) return await fn()
 
   // 1. [변경] group -> groupCollapsed (기본적으로 접힘)
   console.groupCollapsed(`🧱 [SQLITE] ${label}`)

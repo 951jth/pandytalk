@@ -1,18 +1,14 @@
+import {isExpectedError} from '@app/shared/utils/logger'
 import {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 
-const isExpectedError = (error: any) => {
-  return (
-    error.code === 'firestore/permission-denied' ||
-    error.message.includes('permission-denied')
-  )
-}
+const BE_QUITE = false
 
 //파이어베이스 네트워크 요청 로깅용 함수.
 export const firebaseCall = async <T>(
   logName: string,
   fn: () => Promise<T>,
 ): Promise<T> => {
-  if (!__DEV__) return await fn()
+  if (!__DEV__ || BE_QUITE) return await fn()
   const startTime = Date.now()
 
   try {
@@ -58,7 +54,7 @@ export const firebaseObserver = (
   onNext: (snapshot: FirebaseFirestoreTypes.QuerySnapshot) => void,
   onError?: (error: Error) => void,
 ): (() => void) => {
-  if (!__DEV__) {
+  if (!__DEV__ || BE_QUITE) {
     return q.onSnapshot(
       {includeMetadataChanges: true},
       onNext,

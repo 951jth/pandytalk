@@ -47,9 +47,7 @@ export const userService = {
   },
   //프로필 가져오기
   getProfile: async (uid: string) => {
-    const snapshot = await userRemote.getProfile(uid)
-    if (!snapshot.exists()) throw new Error('User not found')
-    const data = snapshot.data()
+    const data = await userRemote.getProfile(uid)
     const timestampConverted = convertTimestampsToMillis(data) //timestamp를 클라이언트 포맷으로
     return {
       ...timestampConverted,
@@ -112,7 +110,7 @@ export const userService = {
     pageParam,
     isConfirmed,
   }: GetUsersParams) => {
-    const docs = await userRemote.getUsersPage({
+    const {items, nextPageParam, hasNext} = await userRemote.getUsersPage({
       groupId,
       authority,
       searchText,
@@ -120,12 +118,12 @@ export const userService = {
       pageParam,
       isConfirmed,
     })
-    const users = docs?.map(doc => ({uid: doc.id, ...doc.data()}) as User) ?? []
+    // const users = docs?.map(doc => ({uid: doc.id, ...doc.data()}) as User) ?? []
 
     return {
-      users,
-      lastVisible: docs[docs.length - 1] ?? null,
-      isLastPage: docs.length < pageSize,
+      users: items,
+      lastVisible: nextPageParam,
+      isLastPage: !hasNext,
     }
   },
 
@@ -138,6 +136,6 @@ export const userService = {
     }
     const promises = chunks?.map(chunk => userRemote.getUsersByIds(chunk))
     const results = await Promise.all(promises)
-    return results?.flat().map(doc => ({id: doc?.id, ...doc.data()}) as User)
+    return results?.flat()
   },
 }

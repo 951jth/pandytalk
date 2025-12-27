@@ -1,13 +1,10 @@
+import {useChatInputBox} from '@app/features/chat/hooks/useChatInputBox'
 import COLORS from '@app/shared/constants/color'
-import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
-import React, {useState} from 'react'
-import {Alert, Keyboard, StyleSheet, View} from 'react-native'
-import {ImagePickerResponse} from 'react-native-image-picker'
+import {ChatListItem} from '@app/shared/types/chat'
+import React from 'react'
+import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
-import {createChatRoom, sendMessage} from '../../../services/chatService'
-import {auth} from '../../../shared/firebase/firestore'
 import UploadButton from '../../../shared/ui/upload/UploadButton'
-import {firebaseImageUpload} from '../../../shared/utils/file'
 
 interface propTypes {
   roomInfo?: ChatListItem | null
@@ -21,68 +18,11 @@ export default function ChatInputBox({
   targetIds,
   setCurrentRoomId,
 }: propTypes) {
-  const [text, setText] = useState<string>('')
-  const user = auth.currentUser
-  const [loading, setLoading] = useState<boolean>(false)
-
-  const onSendMessage = async (
-    type?: ChatMessage['type'],
-    result?: ImagePickerResponse,
-  ) => {
-    const myId = user?.uid
-    if (!myId) return
-    try {
-      let rid = roomInfo?.id || null
-      setLoading(true)
-      if (!roomInfo && targetIds) {
-        rid = await createChatRoom({
-          myId,
-          targetIds,
-        })
-      }
-      if (!rid) return
-      setCurrentRoomId?.(rid)
-
-      let message = {
-        senderPicURL: user?.photoURL,
-        senderName: user?.displayName,
-        senderId: user?.uid,
-        text: text,
-        type: type || 'text',
-        imageUrl: '',
-      }
-      // 🔑 공백만 있는지 체크 (텍스트 메시지일 때만)
-      const trimmedText = text?.trim()
-
-      // 이미지가 아닌 일반 텍스트 메시지인데, 공백만 있으면 전송 안 함
-      if ((type === undefined || type === 'text') && !trimmedText) {
-        return
-      }
-      if (type == 'image') {
-        const image = result?.assets?.[0]
-        if (image?.uri && result) {
-          const filePath = `chat_images/${rid}/${image.fileName}`
-          const uploadProm = await firebaseImageUpload(result, filePath)
-          if (uploadProm) {
-            message.imageUrl = uploadProm?.downloadUrl
-            message.text = uploadProm.fileName
-          }
-        } else {
-          return // 이미지 없으면 중단
-        }
-      }
-      if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
-
-      if (rid) await sendMessage(rid, message as ChatMessage)
-    } catch (e) {
-      Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')
-      console.log('error', e)
-    } finally {
-      setLoading(false)
-      setText('')
-      Keyboard.dismiss()
-    }
-  }
+  const {text, setText, onSendMessage, loading} = useChatInputBox({
+    roomInfo,
+    targetIds,
+    setCurrentRoomId,
+  })
 
   return (
     <View style={[styles.inputContents]}>
@@ -93,15 +33,8 @@ export default function ChatInputBox({
       <TextInput
         style={styles.chatTextInput}
         mode="outlined"
-        contentStyle={{
-          paddingVertical: 0,
-          paddingHorizontal: 12,
-          textAlignVertical: 'center',
-        }}
-        outlineStyle={{
-          borderRadius: 50,
-          borderWidth: 1,
-        }}
+        contentStyle={styles.chatTextContent}
+        outlineStyle={styles.chatTextOutlined}
         value={text}
         onChangeText={setText}
       />
@@ -141,6 +74,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 0,
     textAlignVertical: 'center',
+  },
+  chatTextContent: {
+    paddingVertical: 0,
+    paddingHorizontal: 12,
+    textAlignVertical: 'center',
+  },
+  chatTextOutlined: {
+    borderRadius: 50,
+    borderWidth: 1,
   },
   sendButton: {
     padding: 0,

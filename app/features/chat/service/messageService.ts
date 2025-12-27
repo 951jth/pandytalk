@@ -14,16 +14,16 @@ export const messageService = {
     pageSize?: number,
   ) => {
     const ts = toRNFTimestamp(ms) //milisecond -> firestore timestamp
-    const docs = await messageRemote.getChatMessages(roomId, ts, pageSize ?? 20)
-    const messages = docs?.map(doc => {
-      const data = {id: doc.id, ...doc.data()} as ChatMessage
-      const reformedData: ChatMessage = {
-        ...data,
-        createdAt: toMillisFromServerTime(data?.createdAt) ?? Date.now(),
-      } //클라이언트(sqlite)에서 보여질 데이터로 가공
-      return reformedData
-    })
-    return messages
+    const {items, nextPageParam, hasNext} = await messageRemote.getChatMessages(
+      roomId,
+      ts,
+      pageSize ?? 20,
+    )
+    const reformed = items?.map(item => ({
+      ...item,
+      createdAt: toMillisFromServerTime(item?.createdAt) ?? Date.now(),
+    }))
+    return {items: reformed, nextPageParam, hasNext}
   },
   //채팅방 메세지 구독
   subscribeChatMessages: async (

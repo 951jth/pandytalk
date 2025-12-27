@@ -3,6 +3,8 @@ import {
   firebaseObserver,
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
+import {toPageResult} from '@app/shared/firebase/pagination'
+import type {ChatMessage} from '@app/shared/types/chat'
 import {
   collection,
   getDocs,
@@ -33,7 +35,11 @@ export const messageRemote = {
       // 3. query 함수 한번만 호출해서 완성
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
-      return snapshot.docs
+      const result = toPageResult<ChatMessage>(snapshot.docs, PAGE_SIZE, d => ({
+        id: d.id,
+        ...d.data(),
+      }))
+      return result
     })
   },
   getChatMessageBySeq: async (

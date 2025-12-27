@@ -1,5 +1,6 @@
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
+import {toPageResult} from '@app/shared/firebase/pagination'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import {UpdateInput} from '@app/shared/types/firebase'
 import {deleteUser, FirebaseAuthTypes} from '@react-native-firebase/auth'
@@ -49,7 +50,10 @@ export const userRemote = {
   getProfile: (uid: string) => {
     return firebaseCall('userRemote.getProfile', async () => {
       const docRef = doc(firestore, 'users', uid)
-      return await getDoc(docRef)
+      const snapshot = await getDoc(docRef)
+      if (!snapshot.exists()) throw new Error('User not found')
+      const data = snapshot.data()
+      return data
     })
   },
   deleteUser: (user: FirebaseAuthTypes.User) => {
@@ -107,7 +111,12 @@ export const userRemote = {
       }
 
       const snap = await getDocs(q)
-      return snap.docs
+      const result = toPageResult(
+        snap.docs,
+        pageSize,
+        d => ({id: d.id, ...d.data()}) as User,
+      )
+      return result
     })
   },
   getUsersByIds: (uids: string[]) => {
@@ -116,7 +125,7 @@ export const userRemote = {
     return firebaseCall('userRemote.getUsersByUidChunk', async () => {
       const q = query(collection(firestore, 'users'), where('uid', 'in', uids))
       const snap = await getDocs(q)
-      return snap.docs
+      return snap.docs?.map(doc => ({id: doc.id, ...doc.data()}) as User)
     })
   },
 }

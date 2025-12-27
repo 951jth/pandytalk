@@ -1,37 +1,24 @@
+import ChatInputBox from '@app/features/chat/components/ChatInputBox'
+import ChatMessageList from '@app/features/chat/components/ChatMessageList'
+import {useDmChatRoomScreen} from '@app/features/chat/hooks/useDmChatRoomScreen'
+import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
-import {AppRouteParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
-import {useRoute, type RouteProp} from '@react-navigation/native'
-import React, {useMemo, useState} from 'react'
+import KeyboardUtilitiesWrapper from '@app/shared/ui/container/KeyboardUtilitiesWrapper'
+import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import AppHeader from '../../../layout/AppHeader'
-import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
-import {getDMChatId} from '../../../shared/utils/chat'
-import {useAppSelector} from '../../../store/reduxHooks'
-import ChatInputBox from '../components/ChatInputBox'
-import ChatMessageList from '../components/ChatMessageList'
-import {useChatRoomInfo} from '../hooks/useChatRoomQuery'
-
-type DmChatRouteProp = RouteProp<AppRouteParamList, 'dm-chat'>
 
 export default function DmChatRoomScreen() {
-  const route = useRoute<DmChatRouteProp>()
-  const {data: user, loading, error} = useAppSelector(state => state.user)
-  const {myId, targetId, title} = route.params //DM 채팅은 내아이디와 상대방 아이디 필수
-  const roomId = getDMChatId(myId, targetId)
-  const [currentRoomId, setCurrentRoomId] = useState<string | null>(
-    roomId || null,
-  )
-  const {data: roomInfo} = useChatRoomInfo(currentRoomId)
-  const headerTitle = useMemo(() => {
-    const findMember = roomInfo?.memberInfos?.find(
-      member => member?.id !== myId,
-    )
-    return `${
-      title || roomInfo?.name || findMember?.displayName || '채팅방'
-    } ${roomInfo?.type == 'group' ? '(그룹)' : ''}`
-  }, [title, roomInfo])
+  const {
+    user,
+    loading,
+    targetId,
+    currentRoomId,
+    setCurrentRoomId,
+    roomInfo,
+    headerTitle,
+  } = useDmChatRoomScreen()
 
   if (loading || !user)
     return <EmptyData text={`페이지를 로딩 중입니다.\n잠시만 기다려주세요.`} />

@@ -35,11 +35,8 @@ export const useChatMessagesInfinite = (roomId: string | null) => {
         if (shouldFetchFromServer) {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기
-            const serverMessages = await messageService.getChatMessages(
-              roomId,
-              pageParam,
-              PAGE_SIZE,
-            )
+            const {items: serverMessages} =
+              await messageService.getChatMessages(roomId, pageParam, PAGE_SIZE)
 
             //서버데이터가 있으면 그대로 sqlite에 push
             if (serverMessages.length > 0) {

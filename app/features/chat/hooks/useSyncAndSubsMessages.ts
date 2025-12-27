@@ -19,7 +19,7 @@ const init: MessagesInfiniteData = {
   pageParams: [undefined],
 }
 
-export const useSubscriptionMessages = (roomId: string | null | undefined) => {
+export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const unsubRef = useRef<(() => void) | null>(null)
   // let unsubscribe = () => {}
@@ -40,14 +40,17 @@ export const useSubscriptionMessages = (roomId: string | null | undefined) => {
   const setupSusscribeChatMessages = async () => {
     try {
       if (!roomId) return
+      //1. 현재 시점으로 메세지 동기화
       const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
       const newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
       setMessageQueryData(newMsgs)
+
       const lastSeq =
         newMsgs.length > 0
           ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
           : 0
 
+      //2. 마지막 시퀀스를 기준으로 구독 시작
       unsubRef.current = await messageService.subscribeChatMessages(
         roomId,
         lastSeq,

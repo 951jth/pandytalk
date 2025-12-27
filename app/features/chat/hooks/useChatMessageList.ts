@@ -1,5 +1,5 @@
 import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
-import {useSubscriptionMessages} from '@app/features/chat/hooks/useSubscirbeMessages'
+import {useSyncAndSubsMessages} from '@app/features/chat/hooks/useSyncAndSubsMessages'
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
 import type {ChatListItem} from '@app/shared/types/chat'
@@ -41,7 +41,7 @@ export const useChatMessageList = ({
   //마지막 읽은 시간,SEQ 처리
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
   //채팅 목록 구독
-  useSubscriptionMessages(roomId) //채팅방 구독설정
+  useSyncAndSubsMessages(roomId) //채팅방 구독설정
 
   //가장 마지막 채팅의 최근 날짜로 subscription
   useEffect(() => {

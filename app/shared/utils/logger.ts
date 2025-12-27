@@ -57,3 +57,10 @@ export const handleFirebaseJoinError = (error: any): string => {
       return '요청이 실패하였습니다. 잠시 후 다시 시도해주세요.'
   }
 }
+
+export const isExpectedError = (error: any) => {
+  return (
+    error.code === 'firestore/permission-denied' ||
+    error.message.includes('permission-denied')
+  )
+}

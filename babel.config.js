@@ -14,7 +14,7 @@ module.exports = {
           '@navigation': './app/navigation',
           '@layout': './app/layout',
           '@providers': './app/providers',
-          '@constants': './app/constants',
+          '@constants': './app/shared/constants',
           '@assets': './app/shared/assets',
           '@db': './app/db',
         },
