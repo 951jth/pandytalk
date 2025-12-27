@@ -118,7 +118,6 @@ export const userService = {
       pageParam,
       isConfirmed,
     })
-    // const users = docs?.map(doc => ({uid: doc.id, ...doc.data()}) as User) ?? []
 
     return {
       users: items,

@@ -41,22 +41,15 @@ export const messageService = {
     const unsub = messageRemote.subscribeChatMessages(
       roomId,
       lastSeq,
-      async docs => {
-        // 데이터 매핑
-        const newMessages = docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as ChatMessage[]
-
+      async newMessages => {
         if (newMessages.length === 0) return
-
         try {
           //SQLite 저장 시도
           await messageLocal.saveMessagesToSQLite(roomId, newMessages)
           //정합성을 위해 sqlite에 등록이 되었을 경우 callback 호출,
           callback(newMessages)
         } catch (error) {
-          console.error('❌ Failed to save messages to SQLite:', error)
+          console.error('subscribeChatMessages_error:', error)
         }
       },
     )
@@ -69,16 +62,15 @@ export const messageService = {
     seq: number,
     pageSize?: number,
   ): Promise<ChatMessage[]> => {
-    const docs = await messageRemote.getChatMessageBySeq(roomId, seq, pageSize)
-    const newMessages = docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ChatMessage[]
+    const newMessages = await messageRemote.getChatMessageBySeq(
+      roomId,
+      seq,
+      pageSize,
+    )
 
     if (newMessages.length === 0) return []
-    //SQLite 저장 시도
     await messageLocal.saveMessagesToSQLite(roomId, newMessages)
     return newMessages
-    //정합성을 위해 sqlite에 등록이 되었을 경우 callback 호출,
   },
+  sendMessage: async (roomId: string, message: ChatMessage) => {},
 }

@@ -7,10 +7,13 @@ import {toPageResult} from '@app/shared/firebase/pagination'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {
   collection,
+  doc,
   getDocs,
   limit,
   orderBy,
   query,
+  runTransaction,
+  serverTimestamp,
   startAfter,
   where,
   type FirebaseFirestoreTypes,
@@ -26,13 +29,10 @@ export const messageRemote = {
       const PAGE_SIZE = pageSize ?? 20
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
 
-      // 1. 기본 조건들을 배열에 담기
       const constraints = [orderBy('createdAt', 'desc'), limit(PAGE_SIZE)]
-      // 2. ts가 있을 때만 조건 추가 (배열에 push)
       if (ts) {
         constraints.push(startAfter(ts))
       }
-      // 3. query 함수 한번만 호출해서 완성
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
       const result = toPageResult<ChatMessage>(snapshot.docs, PAGE_SIZE, d => ({
@@ -49,49 +49,87 @@ export const messageRemote = {
   ) => {
     return firebaseCall('messageRemote.getChatMessageBySeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-      // 1. 기본 조건들을 배열에 담기
       const constraints = [where('seq', '>', seq), orderBy('seq', 'asc')]
-      // 2. 페이징처리(조건부)
       if (pageSize) {
         constraints.push(limit(pageSize))
       }
-      // 3. query 함수 한번만 호출해서 완성
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
-      return snapshot.docs
+      const newMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as ChatMessage[]
+      return newMessages
     })
   },
   subscribeChatMessages: (
     roomId: string,
     lastSeq: number | null | undefined,
-    // lastCreatedAt: number | null | undefined
-    callback: (docs: FirebaseFirestoreTypes.DocumentData[]) => void,
+    callback: (docs: ChatMessage[]) => void,
   ) => {
-    // / 1. 방어 코드: roomId가 없으면 아무것도 하지 않는 '해지 함수'를 반환
     if (!roomId) return () => {}
 
     // const ts = toRNFTimestamp(lastCreatedAt)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
 
-    // 2. 쿼리 빌딩: 가독성을 위해 단계별 구성
     let messageQuery = query(messagesRef, orderBy('seq', 'desc'), limit(50))
 
-    // lastCreatedAt이 유효할 때만 where 절 추가 (복합 인덱스 필요 가능성 있음)
     if (lastSeq) messageQuery = query(messageQuery, where('seq', '>', lastSeq))
 
-    // 3. 리스너 연결
     return firebaseObserver(
-      `messageRemote.subscribeChatMessages_${roomId}`, // 1. 로그용 Key (자동 생성)
-      messageQuery, // 2. 완성된 쿼리
+      `messageRemote.subscribeChatMessages_${roomId}`,
+      messageQuery,
       snapshot => {
-        // 3. 성공 콜백 (OnNext)
-        // Service/ViewModel이 원하는 형태(docs)로 변환해서 전달
-        callback(snapshot.docs)
+        const newMessages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as ChatMessage[]
+
+        callback(newMessages)
       },
       error => {
-        // 4. 에러 콜백 (선택)
-        console.warn(`[Remote] 구독 에러 발생: ${roomId}`, error)
+        console.warn(`subscribeChatMessages_error: ${roomId}`, error)
       },
     )
+  },
+  sendChatMessage: (roomId: string, message: ChatMessage) => {
+    return firebaseCall('messageRemote.sendChatMessage', async () => {
+      const chatRef = doc(firestore, 'chats', roomId)
+      const msgRef = doc(collection(firestore, `chats/${roomId}/messages`))
+      //runTransaction : 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
+      //여러 명이 동시에 채팅을 칠 때 단순히 addDoc으로 넣으면 네트워크 속도에 따라 메시지 순서가 뒤죽박죽됨
+      await runTransaction(firestore, async tx => {
+        // 1) 현재 채팅방 lastSeq가져오기
+        const chatSnap = await tx.get(chatRef)
+        const prev = (chatSnap.get('lastSeq') as number) ?? 0
+        const next = prev + 1
+        const now = serverTimestamp()
+        // 2) 메시지 문서 작성
+        const newMessage = {
+          seq: next,
+          senderId: message.senderId,
+          text: message.text ?? '',
+          type: message.type,
+          imageUrl: message.imageUrl ?? '',
+          createdAt: now,
+          senderPicURL: message?.senderPicURL ?? null,
+          senderName: message?.senderName ?? null,
+        }
+        tx.set(msgRef, newMessage)
+        // 3) 채팅방 갱신
+        tx.update(chatRef, {
+          lastSeq: next,
+          lastMessageAt: now,
+          lastMessage: {
+            seq: next,
+            text: newMessage.text,
+            senderId: newMessage.senderId,
+            createdAt: now,
+            type: newMessage.type,
+            imageUrl: newMessage.imageUrl,
+          },
+        })
+      })
+    })
   },
 }

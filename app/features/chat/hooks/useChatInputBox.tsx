@@ -1,7 +1,8 @@
-import {createChatRoom, sendMessage} from '@app/services/chatService'
+import {chatService} from '@app/features/chat/service/chatService'
+import {fileService} from '@app/features/media/service/fileService'
+import {sendMessage} from '@app/services/chatService'
 import {auth} from '@app/shared/firebase/firestore'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
-import {firebaseImageUpload} from '@app/shared/utils/file'
 import {useState} from 'react'
 import {Alert, Keyboard} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
@@ -29,17 +30,21 @@ export const useChatInputBox = ({
     const myId = user?.uid
     if (!myId) return
     try {
+      //step 1. 채팅방 생성(없으면)
       let rid = roomInfo?.id || null
       setLoading(true)
       if (!roomInfo && targetIds) {
-        rid = await createChatRoom({
+        const result = await chatService.createChatRoom({
           myId,
           targetIds,
+          type: 'dm', // 명시 안 하면 members 길이로 dm/group
         })
+        rid = result.id
       }
       if (!rid) return
       setCurrentRoomId?.(rid)
 
+      //step 2. 메세지 페이로드 생성
       let message = {
         senderPicURL: user?.photoURL,
         senderName: user?.displayName,
@@ -53,13 +58,18 @@ export const useChatInputBox = ({
 
       // 이미지가 아닌 일반 텍스트 메시지인데, 공백만 있으면 전송 안 함
       if ((type === undefined || type === 'text') && !trimmedText) {
-        return
+        return setLoading(false)
       }
+
+      //step 3. 이미지 타입이면 업로드
       if (type == 'image') {
         const image = result?.assets?.[0]
         if (image?.uri && result) {
-          const filePath = `chat_images/${rid}/${image.fileName}`
-          const uploadProm = await firebaseImageUpload(result, filePath)
+          const uploadProm = await fileService.uploadImageFromPicker(result, {
+            rootName: 'chat_images',
+            ext: 'jpg',
+          })
+          if (!uploadProm?.downloadUrl) return // ✅ 업로드 실패면 전송 중단
           if (uploadProm) {
             message.imageUrl = uploadProm?.downloadUrl
             message.text = uploadProm.fileName
@@ -70,6 +80,7 @@ export const useChatInputBox = ({
       }
       if (!message.text) return //text가 없는 경우는 존재하지 않아야 함.
 
+      //step 4. 메세지 전송
       if (rid) await sendMessage(rid, message as ChatMessage)
     } catch (e) {
       Alert.alert('메시지 전송 실패', '네트워크 상태를 확인해주세요')

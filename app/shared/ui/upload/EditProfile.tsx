@@ -125,7 +125,10 @@ const EditProfile = forwardRef(function EditProfile(
       // await ref.putFile(previewUrl)
       // const newPhotoURL = await ref.getDownloadURL()
       if (!previewUrl) return null
-      const newPhotoURL = await fileService.uploadFile(previewUrl, 'profiles')
+      const newPhotoURL = await fileService.uploadFile({
+        localUri: previewUrl,
+        rootName: 'profiles',
+      })
       return newPhotoURL
     } catch (e) {
       return null

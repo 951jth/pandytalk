@@ -10,7 +10,6 @@ export interface ChatMessage {
   type: 'text' | 'image' | 'file'
   imageUrl?: string
   createdAt: number //sqlite에 저장하기 위해 number 타입으로 변환함
-  // createdAt: ServerTime | number
   senderPicURL?: string
   senderName?: string
   seq?: number

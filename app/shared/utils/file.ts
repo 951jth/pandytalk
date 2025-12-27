@@ -1,4 +1,4 @@
-import storage from '@react-native-firebase/storage'
+import {fileService} from '@app/features/media/service/fileService'
 import dayjs from 'dayjs'
 import {Platform} from 'react-native'
 import ReactNativeBlobUtil from 'react-native-blob-util'
@@ -16,24 +16,28 @@ interface UploadResult {
   fileName: string
 }
 
+export function normalizeLocalUri(uri: string) {
+  // putFile은 Android에서 보통 file:// 제거가 안정적
+  // iOS도 제거해도 대체로 문제 없음
+  return uri.startsWith('file://') ? uri.replace('file://', '') : uri
+}
+
+export function pickFirstAsset(result: ImagePickerResponse) {
+  return result?.assets?.[0]
+}
+
 export const firebaseImageUpload = async (
   result: ImagePickerResponse,
-  filePath: string,
+  rootName?: string,
 ): Promise<UploadResult | null> => {
   const image = result?.assets?.[0]
   if (!image?.uri || !image.fileName) return null
   try {
-    const storageRef = storage().ref(filePath)
-
-    // Android: file:// 제거, iOS는 자동 처리 가능
-    const cleanedUri = image.uri.replace('file://', '')
-    await storageRef.putFile(cleanedUri)
-    const downloadUrl = await storageRef.getDownloadURL()
-
-    return {
-      downloadUrl,
-      fileName: image.fileName,
-    }
+    const uploadRes = await fileService.uploadImageFromPicker(result, {
+      rootName: rootName ?? 'common',
+      ext: 'jpg',
+    })
+    return uploadRes
   } catch (error) {
     console.error('[firebaseImageUpload] 업로드 실패:', error)
     return null

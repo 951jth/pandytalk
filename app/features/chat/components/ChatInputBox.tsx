@@ -6,7 +6,7 @@ import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import UploadButton from '../../../shared/ui/upload/UploadButton'
 
-interface propTypes {
+type propTypes = {
   roomInfo?: ChatListItem | null
   targetIds?: string[]
   getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
