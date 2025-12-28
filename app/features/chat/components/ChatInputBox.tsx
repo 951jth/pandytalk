@@ -8,9 +8,9 @@ import UploadButton from '../../../shared/ui/upload/UploadButton'
 
 type propTypes = {
   roomInfo?: ChatListItem | null
-  targetIds?: string[]
-  getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
+  targetIds: string[]
   setCurrentRoomId?: (id: string) => void
+  // getRoomInfo?: () => void //채팅방 생성후 채팅방 정보 조회하기
 }
 
 export default function ChatInputBox({
@@ -27,7 +27,7 @@ export default function ChatInputBox({
   return (
     <View style={[styles.inputContents]}>
       <UploadButton
-        onChange={res => onSendMessage('image', res)}
+        onChange={res => onSendMessage('image', 'dm', res)}
         options={{quality: 0.5}}
       />
       <TextInput
@@ -43,7 +43,7 @@ export default function ChatInputBox({
         size={25}
         style={styles.sendButton}
         iconColor={COLORS.onPrimary}
-        onPress={() => onSendMessage()}
+        onPress={() => onSendMessage('text', 'dm')}
         loading={loading}
       />
     </View>

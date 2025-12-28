@@ -98,7 +98,7 @@ export const chatRemote = {
       return {
         id: roomDocRef.id,
         ...payload,
-      }
+      } as ChatListItem
     })
   },
   //현재 채팅방이 있는지 id를 통해 조회 (채팅방 정보를 조회하는게 아님.)
@@ -115,9 +115,9 @@ export const chatRemote = {
     return firebaseCall('chatRemote.getChatRoomById', async () => {
       const chatDocRef = doc(firestore, 'chats', roomId)
       const chatSnap = await getDoc(chatDocRef)
-      if (!chatSnap.exists()) {
-        throw new Error('채팅방이 존재하지 않습니다.')
-      }
+      // if (!chatSnap.exists()) {
+      //   throw new Error('채팅방이 존재하지 않습니다.')
+      // }
       return {
         id: chatDocRef.id,
         ...(chatSnap.data() as Omit<ChatListItem, 'id'>),

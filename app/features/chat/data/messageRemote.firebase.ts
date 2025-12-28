@@ -92,10 +92,17 @@ export const messageRemote = {
       },
     )
   },
-  sendChatMessage: (roomId: string, message: ChatMessage) => {
+  sendChatMessage: (
+    roomId: string,
+    message: Omit<ChatMessage, 'id' | 'createdAt'>,
+  ) => {
     return firebaseCall('messageRemote.sendChatMessage', async () => {
+      console.log(roomId)
+      console.log(message)
       const chatRef = doc(firestore, 'chats', roomId)
       const msgRef = doc(collection(firestore, `chats/${roomId}/messages`))
+      console.log(chatRef)
+      console.log(msgRef)
       //runTransaction : 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
       //여러 명이 동시에 채팅을 칠 때 단순히 addDoc으로 넣으면 네트워크 속도에 따라 메시지 순서가 뒤죽박죽됨
       await runTransaction(firestore, async tx => {

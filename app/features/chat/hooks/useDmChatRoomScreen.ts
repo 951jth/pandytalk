@@ -1,4 +1,4 @@
-import {useChatRoomInfo} from '@app/features/chat/hooks/useChatRoomQuery'
+import {useChatRoomInfo} from '@app/features/chat/hooks/useChatRoomInfo'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {getDMChatId} from '@app/shared/utils/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
