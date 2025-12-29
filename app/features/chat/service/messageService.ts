@@ -1,7 +1,6 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase'
-import {chatService} from '@app/features/chat/service/chatService'
-import {auth} from '@app/shared/firebase/firestore'
+import {User} from '@app/shared/types/auth'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import {
   toMillisFromServerTime,
@@ -15,10 +14,11 @@ export type InputMessageParams = {
 }
 
 export type SendMessageParams = {
-  roomId?: string
+  roomInfo?: ChatListItem | null
   targetIds: string[]
   chatType: ChatListItem['type']
   message: InputMessageParams
+  user: User | null
 }
 
 export const messageService = {
@@ -89,16 +89,15 @@ export const messageService = {
   },
   //메세지 전송 (신규채팅생성)
   sendChatMessage: async ({
-    roomId,
+    roomInfo,
     targetIds,
     chatType,
     message,
+    user,
   }: SendMessageParams) => {
-    let fetchedRoomId = roomId ?? null
-    const user = auth.currentUser
+    let fetchedRoomId = roomInfo?.id ?? null //roomInfo의 id값 존재여부를 통해 실제 채팅방이 존재하는지 확인함.
+    // const user = auth.currentUser
     const trimmed = message.text?.trim() ?? '' // 공백 메시지 방지용
-
-    // ✅ 기본 클라이언트 검증
     if (!user?.uid) throw new Error('로그인 정보가 유효하지 않습니다.')
     if (message.type === 'text' && !trimmed)
       throw new Error('메시지를 입력해주세요.')
@@ -106,20 +105,19 @@ export const messageService = {
       throw new Error('이미지 업로드에 실패했습니다.')
 
     try {
-      // ✅ 1) 채팅방 확보 (없으면 생성)
-      if (!fetchedRoomId) {
-        if (!targetIds?.length) throw new Error('대화 상대 정보가 없습니다.')
-        const result = await chatService.createChatRoom({
-          myId: user.uid,
-          targetIds,
-          type: chatType,
-        })
-        fetchedRoomId = result?.id ?? null
-      }
+      // 1) 채팅방 신규 생성(없으면)
+      // if (!fetchedRoomId) {
+      //   if (!targetIds?.length) throw new Error('대화 상대 정보가 없습니다.')
+      //   const result = await chatService.createChatRoom({
+      //     myId: user.uid,
+      //     targetIds,
+      //     type: chatType,
+      //   })
+      //   fetchedRoomId = result?.id ?? null
+      // }
 
-      if (!fetchedRoomId) throw new Error('채팅방 생성에 실패하였습니다.')
+      if (!fetchedRoomId) return new Error('채팅방 정보가 없습니다.')
 
-      // ✅ 2) 메시지 payload 정규화 + sender 스냅샷 추가
       const reformedMsg: Omit<ChatMessage, 'id' | 'createdAt'> = {
         ...message,
         text: message.type === 'text' ? trimmed : message.text,
@@ -128,12 +126,11 @@ export const messageService = {
         senderPicURL: user.photoURL ?? '',
       }
 
-      // ✅ 3) 전송
+      // 2) 전송
       await messageRemote.sendChatMessage(fetchedRoomId, reformedMsg)
       return fetchedRoomId
     } catch (e: any) {
       console.log(e)
-      // ✅ 서버(Firebase) 에러 메시지 변환
       if (e?.code === 'permission-denied') {
         throw new Error('메시지를 보낼 권한이 없습니다.')
       }

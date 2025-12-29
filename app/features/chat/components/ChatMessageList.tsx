@@ -13,17 +13,11 @@ interface Props {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: ChatListItem | null | undefined
-  inputComponent?: React.ComponentType<any> | React.ReactElement | null
   chatType?: ChatListItem['type']
 }
 const MemoizedChatMessage = memo(ChatMessageItem)
 
-export default function ChatMessageList({
-  roomId,
-  userId,
-  roomInfo,
-  chatType = 'dm',
-}: Props) {
+export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
     messages,
     isLoading,
@@ -31,7 +25,7 @@ export default function ChatMessageList({
     hasNextPage,
     isFetchingNextPage,
     membersMap,
-  } = useChatMessageList({roomId, userId, roomInfo, chatType})
+  } = useChatMessageList({userId, roomId, roomInfo})
 
   const renderMessage = useCallback(
     ({item, index}: {item: ChatMessage; index: number}) => {

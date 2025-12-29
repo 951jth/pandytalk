@@ -22,6 +22,7 @@ const init: MessagesInfiniteData = {
 export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const unsubRef = useRef<(() => void) | null>(null)
+  const lastSeqRef = useRef<number | null>(null)
   // let unsubscribe = () => {}
 
   const setMessageQueryData = (newMessages: ChatMessage[]) => {
@@ -37,48 +38,63 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
       },
     )
   }
-  const setupSusscribeChatMessages = async () => {
-    try {
-      if (!roomId) return
-      //1. 현재 시점으로 메세지 동기화
-      const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
-      const newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
-      setMessageQueryData(newMsgs)
-
-      const lastSeq =
-        newMsgs.length > 0
-          ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
-          : 0
-
-      //2. 마지막 시퀀스를 기준으로 구독 시작
-      unsubRef.current = await messageService.subscribeChatMessages(
-        roomId,
-        lastSeq,
-        (newMessages: ChatMessage[]) => {
-          queryClient.setQueryData(
-            ['chatMessages', roomId],
-            (old: MessagesInfiniteData | undefined) => {
-              const cur = old ?? init
-              const merged = mergeMessages(
-                cur.pages[0]?.data || [],
-                newMessages,
-              )
-              return {
-                ...(old ?? init), //초기값이 없는 경우가 있음.
-                pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
-              }
-            },
-          )
-        },
-      )
-    } catch (e) {
-      return () => {}
-    }
-  }
 
   useEffect(() => {
+    let isCancelled = false // 클린업 플래그 (중요!)
+    // 만약 동기화(syncNewMessages)나 구독(subscribeChatMessages)이
+    // 완료되기 전에 **사용자가 페이지를 이탈(Unmount)**하면
+    // 클린업 함수가 실행된 이후에 이전에 실행된 구독로직이 트리거 되고, 메모리에 남아있음
+    const setupSusscribeChatMessages = async () => {
+      try {
+        if (!roomId) return
+        //1. 현재 시점으로 메세지 동기화
+        const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
+        lastSeqRef.current = localMaxSeq
+        // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
+        if (isCancelled) return
+        const newMsgs = await messageService.syncNewMessages(
+          roomId,
+          localMaxSeq,
+        )
+        setMessageQueryData(newMsgs)
+
+        const lastSeq =
+          newMsgs.length > 0
+            ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
+            : 0
+        //2. 마지막 시퀀스를 기준으로 구독 시작
+        unsubRef.current = await messageService.subscribeChatMessages(
+          roomId,
+          lastSeq || localMaxSeq,
+          (newMessages: ChatMessage[]) => {
+            console.log('newMessages', newMessages)
+            queryClient.setQueryData(
+              ['chatMessages', roomId],
+              (old: MessagesInfiniteData | undefined) => {
+                const cur = old ?? init
+                const merged = mergeMessages(
+                  cur.pages[0]?.data || [],
+                  newMessages,
+                )
+                return {
+                  ...(old ?? init), //초기값이 없는 경우가 있음.
+                  pages: [
+                    {...cur.pages[0], data: merged},
+                    ...cur.pages.slice(1),
+                  ],
+                }
+              },
+            )
+          },
+        )
+      } catch (e) {
+        return () => {}
+      }
+    }
     setupSusscribeChatMessages()
+    console.log('unsubRef', unsubRef.current)
     return () => {
+      isCancelled = true // 비동기 작업 취소 플래그 설정
       if (unsubRef.current) {
         unsubRef.current() // 소켓/리스너 해제
         unsubRef.current = null

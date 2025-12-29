@@ -10,15 +10,8 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 
 export default function DmChatRoomScreen() {
-  const {
-    user,
-    loading,
-    targetId,
-    currentRoomId,
-    setCurrentRoomId,
-    roomInfo,
-    headerTitle,
-  } = useDmChatRoomScreen()
+  const {user, loading, targetId, roomId, roomInfo, headerTitle} =
+    useDmChatRoomScreen()
 
   if (loading || !user)
     return <EmptyData text={`페이지를 로딩 중입니다.\n잠시만 기다려주세요.`} />
@@ -31,14 +24,14 @@ export default function DmChatRoomScreen() {
             <AppHeader title={headerTitle} />
             {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
             <ChatMessageList
-              roomId={currentRoomId}
               userId={user?.uid}
+              roomId={roomId}
               roomInfo={roomInfo}
             />
             <ChatInputBox
               roomInfo={roomInfo}
               targetIds={[targetId]}
-              setCurrentRoomId={setCurrentRoomId}
+              chatType="dm"
             />
           </View>
         </KeyboardUtilitiesWrapper>

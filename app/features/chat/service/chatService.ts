@@ -19,6 +19,11 @@ export type CreateChatRoomOptions = {
   type?: ChatListItem['type'] // 명시 안 하면 members 길이로 dm/group 자동 판별
 }
 
+export type ensureChatRoomParams = {
+  roomId: string
+  payload: Omit<ChatListItem, 'id'>
+}
+
 export const chatService = {
   getMyChats: async ({userId, type, pageParam, pageSize}: GetMyChatsParams) => {
     const {items, nextPageParam, hasNext} = await chatRemote.getMyChats({
@@ -78,9 +83,21 @@ export const chatService = {
   getChatRoomWithMemberInfo: async (roomId: string) => {
     let chatRoom = await chatRemote.getChatRoomById(roomId)
     const uids = chatRoom?.members ?? []
-    if (uids?.[0]) {
+    if (chatRoom && uids?.length > 0) {
       chatRoom.memberInfos = (await userService.getUsersByIds(uids)) ?? []
     }
     return chatRoom
+  },
+  //채팅방 생성을 보증하는 함수임.
+  ensureChatRoom: async ({roomId, payload}: ensureChatRoomParams) => {
+    if (!roomId) throw new Error('roomId가 유효하지 않습니다.')
+
+    // 1) 존재 확인
+    const existId = await chatRemote.checkChatRoomExist(roomId)
+    if (existId) return existId
+
+    // 2) 없으면 생성 (고정 roomId로)
+    const created = await chatRemote.createChatRoom(payload, roomId)
+    return created.id // === roomId
   },
 }

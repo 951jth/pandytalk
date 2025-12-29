@@ -7,15 +7,10 @@ export const useChatRoomInfo = (roomId?: string | null) => {
     queryKey: ['chatRoom', roomId],
     enabled: !!roomId,
     queryFn: async () => {
-      try {
-        if (!roomId) return null
-        const roomInfo: ChatListItem =
-          await chatService.getChatRoomWithMemberInfo(roomId)
-        return roomInfo ?? null
-      } catch (e) {
-        console.log(e)
-        return null
-      }
+      if (!roomId) return null
+      const roomInfo: ChatListItem | null =
+        await chatService.getChatRoomWithMemberInfo(roomId)
+      return roomInfo
     },
   })
 }

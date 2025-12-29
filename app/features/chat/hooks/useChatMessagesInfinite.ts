@@ -12,7 +12,7 @@ const initChatPage = {
   isLastPage: true,
 }
 
-export const useChatMessagesInfinite = (roomId: string | null) => {
+export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
   const queryResult = useInfiniteQuery({

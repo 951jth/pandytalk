@@ -31,7 +31,7 @@ export const firebaseCall = async <T>(
     // 에러는 펼쳐서 강조 (groupCollapsed 대신 group 사용)
     console.group(`🔥 [Firestore/Call] ❌ ${logName} (${duration}ms)`)
     if (expected) {
-      console.log('Reason: Room might not exist yet or permission denied.')
+      console.log('Reason: Data might not exist yet or permission denied.')
       console.log('Original Error:', error.message)
     } else {
       console.error('Error Details:', error)
