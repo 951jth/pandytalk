@@ -22,8 +22,6 @@ const init: MessagesInfiniteData = {
 export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const unsubRef = useRef<(() => void) | null>(null)
-  const lastSeqRef = useRef<number | null>(null)
-  // let unsubscribe = () => {}
 
   const setMessageQueryData = (newMessages: ChatMessage[]) => {
     queryClient.setQueryData(
@@ -47,25 +45,27 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
     const setupSusscribeChatMessages = async () => {
       try {
         if (!roomId) return
+        let newMsgs: ChatMessage[] = []
         //1. 현재 시점으로 메세지 동기화
         const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
-        lastSeqRef.current = localMaxSeq
         // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
         if (isCancelled) return
-        const newMsgs = await messageService.syncNewMessages(
-          roomId,
-          localMaxSeq,
-        )
-        setMessageQueryData(newMsgs)
+        //채팅방이 없는경우도 존재함
+        try {
+          //e데이터가 없어도 흡수
+          newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
+          setMessageQueryData(newMsgs)
+        } catch (e) {}
 
         const lastSeq =
           newMsgs.length > 0
-            ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
-            : 0
+            ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
+            : localMaxSeq
+        console.log('lastSeq', lastSeq)
         //2. 마지막 시퀀스를 기준으로 구독 시작
         unsubRef.current = await messageService.subscribeChatMessages(
           roomId,
-          lastSeq || localMaxSeq,
+          lastSeq,
           (newMessages: ChatMessage[]) => {
             console.log('newMessages', newMessages)
             queryClient.setQueryData(
@@ -92,7 +92,6 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
       }
     }
     setupSusscribeChatMessages()
-    console.log('unsubRef', unsubRef.current)
     return () => {
       isCancelled = true // 비동기 작업 취소 플래그 설정
       if (unsubRef.current) {
