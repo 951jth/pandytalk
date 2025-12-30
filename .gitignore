@@ -117,3 +117,7 @@ keystore.properties
 # android keystore
 android/keystore.properties
 android/app/my-release-key.keystore
+
+# Firebase config (DO NOT COMMIT)
+**/google-services.json
+**/GoogleService-Info.plist
