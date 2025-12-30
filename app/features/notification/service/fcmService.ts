@@ -31,7 +31,7 @@ export const fcmService = {
 
   // 앱 실행 시 푸시 알림 리스너들을 초기화
   initNotificationListeners(): () => void {
-    // 1. 앱 종료 상태(Quit)에서 열렸을 때 처리
+    // 1. 앱 종료 상태에서 열렸을 때 처리
     notificationRemote.getInitialNotification().then(msg => {
       if (msg) {
         console.log('📌 [FCM] 앱 종료 상태에서 실행됨')
@@ -39,7 +39,7 @@ export const fcmService = {
       }
     })
 
-    // 2. 백그라운드(Background) 상태에서 열렸을 때 처리
+    // 2. 백그라운드 상태에서 열렸을 때 처리
     const unsubscribe = notificationRemote.onNotificationOpenedApp(msg => {
       console.log('📌 [FCM] 백그라운드 상태에서 열림')
       this.handleMessageNavigation(msg)

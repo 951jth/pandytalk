@@ -39,7 +39,7 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
   }
 
   useEffect(() => {
-    let isCancelled = false // 클린업 플래그 (중요!)
+    let isCancelled = false
     // 만약 동기화(syncNewMessages)나 구독(subscribeChatMessages)이
     // 완료되기 전에 **사용자가 페이지를 이탈(Unmount)**하면
     // 클린업 함수가 실행된 이후에 이전에 실행된 구독로직이 트리거 되고, 메모리에 남아있음
@@ -50,7 +50,6 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         //1. 현재 시점으로 메세지 동기화
         const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
         // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
-        console.log('isCancelled', isCancelled)
         if (isCancelled) return
         //채팅방이 없는경우도 존재함
         try {

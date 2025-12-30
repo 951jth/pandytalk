@@ -42,10 +42,8 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
             if (serverMessages.length > 0) {
               await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
             }
-            // ✅ 왜 서버에서 가져온 데이터를 그대로 리턴하지않고 sqlite에서 다시 조회하고 리턴하는가?
-            // 1. 데이터 소스 일관성 유지
-            // 2. SQLite 저장이 100% 성공했다는 보장 강화
-            // 3. 중복/정렬 문제 예방 : serverMessages가 중복되있으면 오류발생
+            //1. 데이터가 중복으로 들어오는경우가 있음, 다시조회하는 로직에서 REPLACE 및 정렬됨
+            //2. 데이터를 일관되게 SQLITE를 바라보게해서, 유지보수성 증가
             const updatedMessages = await messageLocal.getChatMessagesByCreated(
               roomId,
               ms,
@@ -65,7 +63,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
             }
           }
         }
-        // CASE 2. 로컬데이터가 충분히 있는 경우
+        // CASE 2. 서버에러는 있지만 로컬데이터가 충분히 있는 경우
         return {
           data: localMessages,
           lastVisible:
@@ -74,7 +72,6 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
         }
       } catch (e) {
         //로컬데이터 조차 가져오지 못하는 경우.
-        //에러처리, 동일한 리턴값을 유지해야함
         return initChatPage
       }
     },

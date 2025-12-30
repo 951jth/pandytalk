@@ -22,7 +22,6 @@ export default function DmChatRoomScreen() {
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <View style={styles.inner}>
             <AppHeader title={headerTitle} />
-            {/* ✅채팅은 성능최적화 및 유지 보수성을 위해서 컴포넌트 분리가 강력히 권장됨 */}
             <ChatMessageList
               userId={user?.uid}
               roomId={roomId}
