@@ -50,7 +50,6 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
               roomId,
               ms,
             )
-
             return {
               data: updatedMessages,
               lastVisible:
@@ -74,6 +73,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
           isLastPage: localMessages.length < PAGE_SIZE,
         }
       } catch (e) {
+        console.log('initChatPage', initChatPage)
         //로컬데이터 조차 가져오지 못하는 경우.
         //에러처리, 동일한 리턴값을 유지해야함
         return initChatPage
@@ -83,8 +83,8 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       return lastPage?.isLastPage ? undefined : lastPage?.lastVisible
     },
     initialPageParam: undefined,
-    staleTime: 5000,
-    refetchOnMount: false,
+    staleTime: 1,
+    refetchOnMount: true,
   })
 
   const resetChatMessages = async () => {
@@ -101,7 +101,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       await messageLocal.clearAllMessages()
       // 3. React Query 캐시 제거
       await queryClient.invalidateQueries({
-        queryKey,
+        queryKey: ['chatMessages'],
         refetchType: 'active',
       })
     } catch (e) {

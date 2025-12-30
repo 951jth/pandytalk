@@ -43,69 +43,72 @@ export default function ProfileScreen(): React.JSX.Element {
   const formRef = useRef<InputFormRef>(null)
   const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
 
-  const formItems: FormItem[] = [
-    {
-      label: '닉네임',
-      key: 'displayName',
-      render: (value, onChange, edit) => (
-        <EditInput value={value} onChangeText={onChange} />
-      ),
-      validation: {
-        // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
-        maxLength: 20,
-        pattern: /^[A-Za-z0-9가-힣 _-]{2,20}$/,
-        message:
-          '닉네임은 2-20자, 한글/영문/숫자/공백/언더스코어/하이픈만 가능합니다.',
-        customFn: (v: string) => {
-          if (!v) return '닉네임을 입력하세요.'
-          if (v.trim().length < 2)
-            return '닉네임은 공백 제외 2자 이상이어야 합니다.'
-          if (/^\s|\s$/.test(v)) return '앞/뒤 공백은 제거해주세요.'
-          return true // 통과
+  const formItems: FormItem[] = useMemo(
+    () => [
+      {
+        label: '닉네임',
+        key: 'displayName',
+        render: (value, onChange, edit) => (
+          <EditInput value={value} onChangeText={onChange} />
+        ),
+        validation: {
+          // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
+          maxLength: 20,
+          pattern: /^[A-Za-z0-9가-힣 _-]{2,20}$/,
+          message:
+            '닉네임은 2-20자, 한글/영문/숫자/공백/언더스코어/하이픈만 가능합니다.',
+          customFn: (v: string) => {
+            if (!v) return '닉네임을 입력하세요.'
+            if (v.trim().length < 2)
+              return '닉네임은 공백 제외 2자 이상이어야 합니다.'
+            if (/^\s|\s$/.test(v)) return '앞/뒤 공백은 제거해주세요.'
+            return true // 통과
+          },
         },
       },
-    },
-    {label: '이메일', key: 'email', contents: user?.email},
-    // {label: '그룹', key: 'groupName', contents: user?.groupName},
-    {
-      label: '권한',
-      key: 'authority',
-      contents: user?.authority ? authority?.[user?.authority] : '-',
-    },
-    {
-      key: 'intro',
-      label: '소개',
-      validation: {
-        maxLength: 200,
-        message: '소개는 최대 200자입니다.',
+      {label: '이메일', key: 'email', contents: user?.email},
+      // {label: '그룹', key: 'groupName', contents: user?.groupName},
+      {
+        label: '권한',
+        key: 'authority',
+        contents: user?.authority ? authority?.[user?.authority] : '-',
       },
-      render: (value, onChange) => (
-        <EditTextArea
-          value={value}
-          onChangeText={onChange}
-          minRows={1}
-          maxRows={6}
-          maxLength={200}
-        />
-      ),
-    },
-    {
-      label: '최근 접속일',
-      key: 'lastSeen',
-      contents: dayjs(Number(user?.lastSeen))?.format('YYYY-MM-DD hh:mm:ss'),
-    },
-  ]
-  const initialFormValues = {
-    // ...user,
-    uid,
-    authority: 'USER',
-    email: user?.email ?? '',
-    isGuest: true,
-    lastSeen: serverTimestamp(),
-    displayName: user?.email,
-    photoURL: '',
-    status: 'online',
-  } //초기값이 없는 경우 강제로넣어줌
+      {
+        key: 'intro',
+        label: '소개',
+        validation: {
+          maxLength: 200,
+          message: '소개는 최대 200자입니다.',
+        },
+        render: (value, onChange) => (
+          <EditTextArea
+            value={value}
+            onChangeText={onChange}
+            minRows={1}
+            maxRows={6}
+            maxLength={200}
+          />
+        ),
+      },
+      {
+        label: '최근 접속일',
+        key: 'lastSeen',
+        contents: dayjs(Number(user?.lastSeen))?.format('YYYY-MM-DD hh:mm:ss'),
+      },
+    ],
+    [user?.authority],
+  )
+  // const initialFormValues = {
+  //   // ...user,
+  //   uid,
+  //   authority: 'USER',
+  //   email: user?.email ?? '',
+  //   isGuest: true,
+  //   lastSeen: serverTimestamp(),
+  //   displayName: user?.email,
+  //   photoURL: '',
+  //   status: 'online',
+  // } //초기값이 없는 경우 강제로넣어줌
 
   const updateUserProfile = async () => {
     try {
@@ -121,21 +124,15 @@ export default function ProfileScreen(): React.JSX.Element {
       const userRef = doc(firestore, 'users', uid)
       const newPhotoURL = await profileRef?.current?.upload()
 
-      // 수정 가능한 값만 추출
       const payload: any = {
-        // 닉네임
         displayName: formValues.displayName
           ? String(formValues.displayName).trim()
           : (user?.displayName ?? ''),
-        // 자기소개
         intro: formValues.intro
           ? String(formValues.intro).trim()
           : (user?.intro ?? ''),
-        // 프로필 사진
         photoURL: newPhotoURL ?? user?.photoURL ?? null,
-        // 이 화면에서 lastSeen까지 같이 변경하고 싶으면:
         updatedAt: serverTimestamp(),
-        // lastSeen도 여기서 바꾸고 싶으면 아래 주석 풀기
         lastSeen: serverTimestamp(),
       }
 
@@ -143,6 +140,7 @@ export default function ProfileScreen(): React.JSX.Element {
 
       const profile = await dispatch(fetchUserById(uid))
       queryClient.invalidateQueries({queryKey: ['users']})
+      firestore.clearPersistence()
       Alert.alert('성공', '프로필 정보가 저장되었습니다.')
     } catch (err) {
       console.error('프로필 업데이트 실패:', err)
@@ -153,8 +151,15 @@ export default function ProfileScreen(): React.JSX.Element {
   }
 
   const onClean = async () => {
-    await messageLocal.clearAllMessages()
-    messageLocal.initMessageTable()
+    try {
+      await messageLocal.clearAllMessages()
+      messageLocal.initMessageTable()
+      queryClient.clear()
+      const allMessages = await messageLocal.getAllMessages()
+      console.log('all messages: ', allMessages)
+    } catch (e: any) {
+      Alert.alert(e?.message ?? '초기화 실패!')
+    }
   }
   // 테스트용: 버튼 클릭 시 강제 크래시
   // const forceCrash = () => {

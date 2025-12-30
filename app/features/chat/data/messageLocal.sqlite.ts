@@ -193,4 +193,30 @@ export const messageLocal = {
       })
     })
   },
+  getAllMessages: () => {
+    return sqliteCall('messageLocal.getAllMessages', async () => {
+      return new Promise<ChatMessage[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          // ✅ 오타 수정 + 정렬(필요한 컬럼명으로 바꿔)
+          const query = `SELECT * FROM messages ORDER BY createdAt ASC`
+
+          tx.executeSql(
+            query,
+            [],
+            (_, result) => {
+              const messages: ChatMessage[] = []
+              for (let i = 0; i < result.rows.length; i++) {
+                messages.push(result.rows.item(i) as ChatMessage)
+              }
+              resolve(messages)
+            },
+            (_, error) => {
+              reject(error)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
 }

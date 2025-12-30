@@ -57,7 +57,7 @@ export const messageService = {
       roomId,
       lastSeq,
       async newMessages => {
-        if (newMessages.length === 0) return
+        if (newMessages.length === 0) return []
         try {
           //SQLite 저장 시도
           await messageLocal.saveMessagesToSQLite(roomId, newMessages)

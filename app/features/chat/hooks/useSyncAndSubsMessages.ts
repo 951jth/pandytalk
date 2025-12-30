@@ -27,6 +27,7 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
     queryClient.setQueryData(
       ['chatMessages', roomId],
       (old: MessagesInfiniteData | undefined) => {
+        console.log('old', old)
         const cur = old ?? init
         const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
         return {
@@ -49,11 +50,13 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         //1. 현재 시점으로 메세지 동기화
         const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
         // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
+        console.log('isCancelled', isCancelled)
         if (isCancelled) return
         //채팅방이 없는경우도 존재함
         try {
           //e데이터가 없어도 흡수
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
+          console.log('newMsgs', newMsgs)
           setMessageQueryData(newMsgs)
         } catch (e) {}
 
@@ -67,7 +70,6 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
           roomId,
           lastSeq,
           (newMessages: ChatMessage[]) => {
-            console.log('newMessages', newMessages)
             queryClient.setQueryData(
               ['chatMessages', roomId],
               (old: MessagesInfiniteData | undefined) => {
