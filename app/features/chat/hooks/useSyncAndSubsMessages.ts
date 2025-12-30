@@ -56,7 +56,6 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         try {
           //e데이터가 없어도 흡수
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
-          console.log('newMsgs', newMsgs)
           setMessageQueryData(newMsgs)
         } catch (e) {}
 
@@ -64,7 +63,6 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
           newMsgs.length > 0
             ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
             : localMaxSeq
-        console.log('lastSeq', lastSeq)
         //2. 마지막 시퀀스를 기준으로 구독 시작
         unsubRef.current = await messageService.subscribeChatMessages(
           roomId,
@@ -90,6 +88,7 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
           },
         )
       } catch (e) {
+        console.log(e)
         return () => {}
       }
     }
