@@ -81,6 +81,10 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
     initialPageParam: undefined,
     staleTime: 5000,
     refetchOnMount: false,
+    select: data => {
+      console.log(data)
+      return data
+    },
   })
 
   const resetChatMessages = async () => {

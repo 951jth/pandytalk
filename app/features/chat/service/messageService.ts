@@ -15,8 +15,6 @@ export type InputMessageParams = {
 
 export type SendMessageParams = {
   roomInfo?: ChatListItem | null
-  targetIds: string[]
-  chatType: ChatListItem['type']
   message: InputMessageParams
   user: User | null
 }
@@ -88,13 +86,7 @@ export const messageService = {
     return newMessages
   },
   //메세지 전송 (신규채팅생성)
-  sendChatMessage: async ({
-    roomInfo,
-    targetIds,
-    chatType,
-    message,
-    user,
-  }: SendMessageParams) => {
+  sendChatMessage: async ({roomInfo, message, user}: SendMessageParams) => {
     let fetchedRoomId = roomInfo?.id ?? null //roomInfo의 id값 존재여부를 통해 실제 채팅방이 존재하는지 확인함.
     // const user = auth.currentUser
     const trimmed = message.text?.trim() ?? '' // 공백 메시지 방지용
@@ -105,17 +97,6 @@ export const messageService = {
       throw new Error('이미지 업로드에 실패했습니다.')
 
     try {
-      // 1) 채팅방 신규 생성(없으면)
-      // if (!fetchedRoomId) {
-      //   if (!targetIds?.length) throw new Error('대화 상대 정보가 없습니다.')
-      //   const result = await chatService.createChatRoom({
-      //     myId: user.uid,
-      //     targetIds,
-      //     type: chatType,
-      //   })
-      //   fetchedRoomId = result?.id ?? null
-      // }
-
       if (!fetchedRoomId) return new Error('채팅방 정보가 없습니다.')
 
       const reformedMsg: Omit<ChatMessage, 'id' | 'createdAt'> = {

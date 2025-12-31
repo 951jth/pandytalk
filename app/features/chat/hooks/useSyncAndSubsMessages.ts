@@ -1,6 +1,6 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
-import type {ChatMessage} from '@app/shared/types/chat'
+import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
 import {mergeMessages} from '@app/shared/utils/chat'
 import {useQueryClient, type InfiniteData} from '@tanstack/react-query'
@@ -19,9 +19,10 @@ const init: MessagesInfiniteData = {
   pageParams: [undefined],
 }
 
-export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
+export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
   const queryClient = useQueryClient()
   const unsubRef = useRef<(() => void) | null>(null)
+  const roomId = roomInfo?.id
 
   const setMessageQueryData = (newMessages: ChatMessage[]) => {
     queryClient.setQueryData(
@@ -99,5 +100,5 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         unsubRef.current = null
       }
     }
-  }, [roomId])
+  }, [roomId, roomInfo])
 }

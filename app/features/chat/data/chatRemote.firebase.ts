@@ -117,7 +117,6 @@ export const chatRemote = {
       const chatSnap = await getDoc(chatDocRef)
       //채팅방이없으면 오류 없이 null값만 보냄(있는지 조회만 함)
       if (!chatSnap.exists()) return null
-
       return {
         id: chatDocRef.id,
         ...(chatSnap.data() as Omit<ChatListItem, 'id'>),

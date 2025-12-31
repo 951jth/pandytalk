@@ -1,9 +1,10 @@
 import COLORS from '@app/shared/constants/color'
+import type {ChatItemWithMemberInfo} from '@app/shared/types/chat'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
 import {useRoute, type RouteProp} from '@react-navigation/native'
-import React, {memo} from 'react'
+import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
 import ChatListItemCard from '../components/ChatListItemCard'
@@ -28,16 +29,22 @@ export default function ChatListScreen() {
     refetch,
     moveToChatRoom,
   } = useChatListScreen(type)
+
+  const renderItem = useCallback(
+    ({item}: {item: ChatItemWithMemberInfo}) => {
+      return (
+        <MemoizedChatListItem item={item} moveToChatRoom={moveToChatRoom} />
+      )
+    },
+    [moveToChatRoom],
+  )
+
   return (
     <View style={styles.container}>
       <FlatList
         data={chats}
         keyExtractor={e => e?.id}
-        renderItem={({item}) => {
-          return (
-            <MemoizedChatListItem item={item} moveToChatRoom={moveToChatRoom} />
-          )
-        }}
+        renderItem={renderItem}
         onEndReached={() => {
           if (hasNextPage) fetchNextPage()
         }}

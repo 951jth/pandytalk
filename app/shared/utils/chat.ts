@@ -63,7 +63,7 @@ export function mergeMessages(
       (toMillisFromServerTime(a.createdAt) || 0),
   ) // 최신순 정렬
 }
-
+//체팅 날짜순 정렬
 export const compareChat = (a: ChatListItem, b: ChatListItem) => {
   const aLast = toMillisFromServerTime(a.lastMessage?.createdAt) ?? 0
   const bLast = toMillisFromServerTime(b.lastMessage?.createdAt) ?? 0

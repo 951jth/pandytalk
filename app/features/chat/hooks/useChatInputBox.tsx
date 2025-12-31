@@ -11,30 +11,27 @@ import {useState} from 'react'
 import {Alert, Keyboard} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
 
-type propTypes = {
+export type ChatInputPropTypes = {
+  chatType: ChatListItem['type']
+  targetIds?: string[]
   roomInfo?: ChatListItem | null
-  targetIds: string[]
-  chatType?: ChatListItem['type']
 }
 
 export const useChatInputBox = ({
   roomInfo,
   targetIds,
-  chatType = 'dm',
-}: propTypes) => {
+  chatType,
+}: ChatInputPropTypes) => {
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const queryClient = useQueryClient()
 
-  async function fetchChatRoom() {}
-
   const onSendMessage = async (
-    type: ChatMessage['type'],
+    type: ChatMessage['type'], //메세지 타입임
     result?: ImagePickerResponse,
   ) => {
     try {
-      let fetchedRoomId = roomInfo?.id
       if (!user?.uid) throw new Error('유저정보 조회 실패')
       setLoading(true)
       //step 1. 메세지 페이로드 생성
@@ -68,19 +65,17 @@ export const useChatInputBox = ({
           targetIds,
           type: chatType,
         })
-        await queryClient.refetchQueries({
-          queryKey: ['chatRoom', fetchedRoomId],
-          exact: true,
-        })
         if (!fetchedRoomInfo?.id)
           throw new Error('채팅방 생성에 실패하였습니다.')
+        await queryClient.refetchQueries({
+          queryKey: ['chatRoom', fetchedRoomInfo?.id],
+          exact: true,
+        })
       }
 
       //step 4. 메세지 전송
       await messageService.sendChatMessage({
         roomInfo: fetchedRoomInfo,
-        targetIds,
-        chatType,
         message,
         user,
       })

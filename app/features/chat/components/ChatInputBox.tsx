@@ -1,22 +1,18 @@
-import {useChatInputBox} from '@app/features/chat/hooks/useChatInputBox'
+import {
+  useChatInputBox,
+  type ChatInputPropTypes,
+} from '@app/features/chat/hooks/useChatInputBox'
 import COLORS from '@app/shared/constants/color'
-import {ChatListItem} from '@app/shared/types/chat'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import UploadButton from '../../../shared/ui/upload/UploadButton'
 
-type propTypes = {
-  roomInfo?: ChatListItem | null
-  targetIds: string[]
-  chatType: ChatListItem['type']
-}
-
 export default function ChatInputBox({
   roomInfo,
   targetIds,
-  chatType,
-}: propTypes) {
+  chatType = 'group',
+}: ChatInputPropTypes) {
   const {text, setText, onSendMessage, loading} = useChatInputBox({
     roomInfo,
     targetIds,

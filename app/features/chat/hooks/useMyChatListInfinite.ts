@@ -7,7 +7,6 @@ export function useMyChatListInfinite(
   userId: string | null | undefined,
   type: ChatListItem['type'] = 'dm',
 ) {
-  // const chats = chatService.getMyChats(userId, t)
   return useInfiniteQuery({
     queryKey: ['chats', type, userId],
     enabled: !!userId,
@@ -20,6 +19,7 @@ export function useMyChatListInfinite(
         pageParam,
         pageSize: 20,
       })
+
       return {
         chats,
         lastVisible,
@@ -30,5 +30,20 @@ export function useMyChatListInfinite(
       lastPage?.isLastPage
         ? undefined
         : (lastPage?.lastVisible as FsSnapshot | undefined),
+    //탭 언리드 카운트 계산용
+    select: data => {
+      const chats = data.pages.flatMap(p => p.chats ?? [])
+      const totalUnreadCount = chats?.reduce(
+        (acc: number, chat: ChatListItem) => {
+          return (acc += chat?.unreadCount ?? 0)
+        },
+        0,
+      )
+
+      return {
+        ...data,
+        meta: {totalUnreadCount},
+      }
+    },
   })
 }
