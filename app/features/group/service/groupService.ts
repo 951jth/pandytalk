@@ -1,4 +1,5 @@
 import {groupRemote} from '@app/features/group/data/groupRemote.firebase'
+import {getGroupInfo} from '@app/services/groupService'
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 
 export const groupService = {
@@ -31,6 +32,12 @@ export const groupService = {
         lastVisible: nextPageParam,
         isLastPage: !hasNext,
       }
+    })
+  },
+  getGroupInfo: async (groupId: string) => {
+    return firebaseCall('groupService.getGroupInfo', async () => {
+      const data = await getGroupInfo(groupId)
+      return data
     })
   },
 }
