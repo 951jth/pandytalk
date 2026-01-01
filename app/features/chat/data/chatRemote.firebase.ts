@@ -1,6 +1,7 @@
 import {
   firebaseCall,
   firebaseObserver,
+  firebaseRefObserver,
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
@@ -122,5 +123,22 @@ export const chatRemote = {
         ...(chatSnap.data() as Omit<ChatListItem, 'id'>),
       }
     })
+  },
+  subscribeChatRoom: (
+    roomId: string,
+    callback: (chatRoom: ChatListItem) => void,
+  ) => {
+    const chatRef = doc(firestore, 'chats', roomId)
+    return firebaseRefObserver(
+      'chatRemote.subscribeChatRoom',
+      chatRef,
+      snap => {
+        const chatRoomData = snap.data() as ChatListItem
+        callback(chatRoomData)
+      },
+      error => {
+        console.error('[chat head snapshot] error:', error)
+      },
+    )
   },
 }

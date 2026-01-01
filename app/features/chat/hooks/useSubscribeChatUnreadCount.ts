@@ -1,7 +1,5 @@
-import {ChatListItem} from '@app/shared/types/chat'
-import {doc, onSnapshot} from '@react-native-firebase/firestore'
+import {chatService} from '@app/features/chat/service/chatService'
 import {useEffect, useState} from 'react'
-import {firestore} from '../../../shared/firebase/firestore'
 
 //채팅방 미읽음 카운트 구독 함수, 채팅방 단건 조회임.
 export const useSubscribeChatUnreadCount = (
@@ -9,27 +7,17 @@ export const useSubscribeChatUnreadCount = (
   userId?: string,
 ) => {
   const [unreadCnt, setUnreadCnt] = useState(0)
+
   useEffect(() => {
     if (!roomId || !userId) return
-    const chatRoomRef = doc(firestore, 'chats', roomId)
-
-    const unsub = onSnapshot(
-      chatRoomRef,
-      snap => {
-        if (!snap.exists()) return
-        const chatRoomData = snap.data() as ChatListItem
-        const {lastReadSeqs, lastSeq} = chatRoomData
-        const userReadSeq = lastReadSeqs?.[userId] ?? 0
-        const userUnreadSeq = (lastSeq || 0) - userReadSeq
-        setUnreadCnt(userUnreadSeq > 0 ? userUnreadSeq : 0)
-      },
-      error => {
-        console.error('[chat head snapshot] error:', error)
-        // 필요 시: invalidate({ type: 'full' })
-      },
-    )
-
+    const unsub = chatService.subscribeChatRoom(roomId, roomInfo => {
+      const {lastReadSeqs, lastSeq} = roomInfo
+      const userReadSeq = lastReadSeqs?.[userId] ?? 0
+      const userUnreadSeq = (lastSeq || 0) - userReadSeq
+      setUnreadCnt(userUnreadSeq > 0 ? userUnreadSeq : 0)
+    })
     return () => unsub()
   }, [roomId, userId])
+
   return {unreadCnt}
 }

@@ -67,8 +67,6 @@ export const messageRemote = {
     lastSeq: number | null | undefined,
     callback: (docs: ChatMessage[]) => void,
   ) => {
-    console.log('subscribeChatMessages roomId:', roomId)
-    console.log('subscribeChatMessages lastSeq', lastSeq)
     if (!roomId) return () => {}
 
     // const ts = toRNFTimestamp(lastCreatedAt)

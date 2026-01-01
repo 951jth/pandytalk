@@ -28,7 +28,6 @@ export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
     queryClient.setQueryData(
       ['chatMessages', roomId],
       (old: MessagesInfiniteData | undefined) => {
-        console.log('old', old)
         const cur = old ?? init
         const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
         return {
