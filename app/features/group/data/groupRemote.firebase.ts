@@ -4,6 +4,8 @@ import {toPageResult} from '@app/shared/firebase/pagination'
 import type {Group} from '@app/shared/types/group'
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -38,6 +40,15 @@ export const groupRemote = {
           ...doc.data(),
         }),
       )
+    })
+  },
+  getGroupInfo: async (groupId: string) => {
+    return firebaseCall('groupRemote.getGroupInfo', async () => {
+      const groupRef = doc(firestore, 'groups', groupId)
+      const snap = await getDoc(groupRef)
+      return snap?.data()
+      // const data = await getGroupInfo(groupId)
+      // return data
     })
   },
 }
