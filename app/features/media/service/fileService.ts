@@ -42,6 +42,12 @@ export const fileService = {
     fileName?: string
     ext?: 'jpg' | 'png' | 'webp'
   }) => {
+    // ✅ 2. 예외 처리: 이미 원격(Remote) URL인 경우 업로드 불필요
+    // (프로필 수정 화면에서 기존 이미지를 그대로 둔 경우 등)
+    if (localUri.startsWith('http')) {
+      return localUri
+    }
+
     const currentUid = auth.currentUser?.uid
     const safeName = fileName ?? `${Date.now()}.${ext}`
     const path = `${rootName}/${uid ?? currentUid}/${safeName}`

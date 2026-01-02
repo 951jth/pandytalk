@@ -1,4 +1,5 @@
 export interface Group {
+  id: string
   uid: string
   name: string
   createdAt: FirebaseFirestore.Timestamp

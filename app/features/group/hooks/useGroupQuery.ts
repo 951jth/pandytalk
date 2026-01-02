@@ -1,7 +1,6 @@
 import {groupService} from '@app/features/group/service/groupService'
 import type {Group} from '@app/shared/types/group'
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query'
-import {getGroupInfo} from '../../../services/groupService'
 
 const DEFAULT_PAGE_SIZE = 20
 const DEFAULT_BATCH_SIZE = 200
@@ -11,17 +10,10 @@ export const useGroup = (groupId?: string | null) => {
     queryKey: ['group', groupId],
     enabled: !!groupId,
     queryFn: async () => {
-      try {
-        const data = groupId ? await getGroupInfo(groupId) : {}
-        return data || {}
-      } catch (e) {
-        console.log(e)
-        return {name: null, memo: null}
-      }
+      if (!groupId) return null
+      const data = await groupService.getGroupInfo(groupId)
+      return data
     },
-
-    // staleTime: 60_000,                       // 1분 동안 fresh
-    // gcTime: 5 * 60_000,                      // v5: 캐시 정리 시간(기존 cacheTime)
   })
 }
 
