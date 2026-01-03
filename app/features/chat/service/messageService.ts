@@ -96,7 +96,9 @@ export const messageService = {
     try {
       if (!fetchedRoomId) return new Error('채팅방 정보가 없습니다.')
       // 1) SQLite에 대기상태로 저장
-      await messageLocal.saveMessagesToSQLite(fetchedRoomId, [message])
+      await messageLocal.saveMessagesToSQLite(fetchedRoomId, [
+        {...message, status: 'pending'},
+      ])
       //의도적으로 지연시켜 네트워크 상태 변화 테스트
       setTimeout(async () => {
         // 2) firestore에 전송
@@ -107,7 +109,7 @@ export const messageService = {
           message.id,
           'success',
         )
-      }, 500)
+      }, 5000)
       return fetchedRoomId
     } catch (e: any) {
       console.log(e)

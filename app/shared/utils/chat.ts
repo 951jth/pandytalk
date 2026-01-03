@@ -53,8 +53,6 @@ export function mergeMessages(
   existing: ChatMessage[],
   incoming: ChatMessage[],
 ): ChatMessage[] {
-  // console.log('existing', existing)
-  // console.log('incoming', incoming)
   const map = new Map<string, ChatMessage>()
   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
   return Array.from(map.values()).sort(

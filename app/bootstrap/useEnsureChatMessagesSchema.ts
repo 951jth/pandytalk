@@ -10,6 +10,7 @@ export default function useEnsureChatMessagesSchema() {
       //sqlite table 생성유무 체크
       const exists = await messageLocal.isMessagesTableExists()
       if (!exists) {
+        messageLocal.initMessageTable()
       } else await messageMigrate.migrateDatabaseIfNeeded()
     })
   }, [])

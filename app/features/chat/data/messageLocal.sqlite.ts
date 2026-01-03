@@ -44,6 +44,7 @@ export const messageLocal = {
             // 2. 상수를 사용하여 쿼리 문자열 조합
             const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
             messages.forEach(msg => {
+              console.log('Inserting message into SQLite:', msg)
               // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
               const values = [
                 msg.id,
@@ -167,12 +168,27 @@ export const messageLocal = {
               CREATE_MESSAGE_TABLE_SQL,
               [],
               () => {
-                if (__DEV__) console.log('✅ messages table ready')
+                // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
+                tx.executeSql(
+                  `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                  [],
+                  () => {
+                    if (__DEV__)
+                      console.log(
+                        `✅ messages table ready (v${LATEST_DB_VERSION})`,
+                      )
+                  },
+                  (_tx, error) => {
+                    if (__DEV__)
+                      console.error('❌ Failed to set user_version', error)
+                    reject(error)
+                    return true
+                  },
+                )
               },
               (_tx, error) => {
                 if (__DEV__)
                   console.error('❌ Failed to create messages table', error)
-                // executeSql 에러를 트랜잭션 실패로 전파
                 reject(error)
                 return true
               },
@@ -254,7 +270,6 @@ export const messageLocal = {
             `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
             [],
             (_, result) => {
-              console.log(result)
               const exists = result.rows.length > 0
               resolve(exists)
             },

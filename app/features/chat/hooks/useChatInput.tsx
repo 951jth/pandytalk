@@ -75,6 +75,7 @@ export const useChatInput = ({
         message,
         user,
       })
+      console.log('reformedMsg', reformedMsg)
       if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
       sendChatAndCache(reformedMsg)
       setText('')

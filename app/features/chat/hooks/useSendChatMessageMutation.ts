@@ -2,6 +2,7 @@ import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
 import {mergeMessages} from '@app/shared/utils/chat'
+import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import {
   useMutation,
   useQueryClient,
@@ -34,7 +35,7 @@ export const useSendChatMessageMutation = (
   const roomId = roomInfo?.id
   const queryKey = ['chatMessages', roomId]
 
-  // 1️⃣ 메시지 추가 (Optimistic UI, 새 메시지 수신 등)
+  // 메시지 추가 (Optimistic UI, 새 메시지 수신 등)
   const addMessages = (newMessages: ChatMessage[]) => {
     if (!roomId) return
     queryClient.setQueryData(
@@ -42,6 +43,7 @@ export const useSendChatMessageMutation = (
       (old: MessagesInfiniteData | undefined) => {
         const cur = old ?? init
         const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
+        console.log('merged messages:', merged)
         return {
           ...(old ?? init), //초기값이 없는 경우가 있음.
           pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
@@ -50,7 +52,7 @@ export const useSendChatMessageMutation = (
     )
   }
 
-  // 2️⃣ 메시지 상태 업데이트 (pending -> success / fail)
+  // 메시지 상태 업데이트 (pending -> success / fail)
   const updateMessageStatus = (
     messageId: string,
     status: ChatMessage['status'],
@@ -83,10 +85,13 @@ export const useSendChatMessageMutation = (
       if (!roomId) return
       // 1) 진행 중인 refetch 있으면 취소 (경합 줄임)
       await queryClient.cancelQueries({queryKey})
-      // 2) 이전 스냅샷 저장 (롤백용)
+      // 2) 이전 스냅샷 저장
       const prev = queryClient.getQueryData<MessagesInfiniteData>(queryKey)
-      // 3) optimistic 추가 + status=pending 보장
-      addMessages([{...message, status: 'pending'}])
+      const msgs = [
+        {...convertTimestampsToMillis(message), status: 'pending'},
+      ] as ChatMessage[]
+      console.log('msgs onMutate:', msgs)
+      addMessages(msgs)
       return {prev, optimisticId: message.id}
     },
 

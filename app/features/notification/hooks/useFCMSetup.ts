@@ -26,7 +26,7 @@ export function useFCMSetup() {
     ;(async () => {
       try {
         //추후 관리자 승인시 푸쉬알림 처리를 할 것 떄문이기에 계정에 등록해둠
-        if (user?.uid) notificationService.registerDevice(user?.uid)
+        notificationService.registerDevice(user?.uid)
       } catch (e) {
         console.error('useFCMSetup', e)
       }

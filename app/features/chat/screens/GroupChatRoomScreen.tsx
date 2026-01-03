@@ -1,7 +1,5 @@
 import {useGroupChatRoomScreen} from '@app/features/chat/hooks/useGroupChatRoomScreen'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
-import {type RouteProp} from '@react-navigation/native'
 import React from 'react'
 import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
@@ -10,17 +8,7 @@ import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtili
 import ChatInputBox from '../components/ChatInput'
 import ChatMessageList from '../components/ChatMessageList'
 
-type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
-
 export default function GroupChatRoomScreen() {
-  // const route = useRoute<GroupChatRoute>()
-  // const {data: user, loading} = useAppSelector(data => data?.user)
-  // const [currentRoomId, setCurrentRoomId] = useState<string | null>(
-  //   route?.params?.roomId || user?.groupId || null,
-  // )
-  // //chatId는 groupId와 동일
-  // const {data: group, isLoading, error} = useGroup(currentRoomId)
-  // const {data: roomInfo} = useChatRoomInfo(currentRoomId)
   const {user, loading, roomId, roomInfo, headerTitle} =
     useGroupChatRoomScreen()
 

@@ -2,7 +2,7 @@ import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
 
 export const notificationService = {
-  async registerDevice(uid: string): Promise<void> {
+  async registerDevice(uid?: string): Promise<void> {
     try {
       // 1. 권한 확인
       const hasPermission = await notificationRemote.requestPermission()
@@ -10,7 +10,7 @@ export const notificationService = {
         console.warn('⚠️ 알림 권한이 거부되었습니다.')
         return
       }
-
+      if (!uid) return
       // 2. iOS APNs 등록 (Data Layer에서 OS 체크를 하므로 여기선 그냥 호출)
       await notificationRemote.registerAPNs()
 

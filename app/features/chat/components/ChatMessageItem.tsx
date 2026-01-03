@@ -7,12 +7,21 @@ import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Icon, IconButton, Text} from 'react-native-paper'
 
+export type ChatMessageItemProps = {
+  item: ChatMessage
+  hideProfile: boolean
+  hideMinute: boolean
+  hideDate: boolean
+  isMine: boolean
+  member?: User
+}
+
 const getStatusIcon = (status?: 'pending' | 'success' | 'failed') => {
   switch (status) {
     case 'pending':
       return {name: 'clock-outline', color: '#B0B0B0'} // 전송중
-    case 'success':
-      return {name: 'check', color: '#B0B0B0'} // 전송완료
+    // case 'success':
+    //   return {name: 'check', color: '#B0B0B0'} // 전송완료
     case 'failed':
       return {name: 'alert-circle-outline', color: '#FF5A5A'} // 실패
     default:
@@ -27,14 +36,10 @@ export default function ChatMessageItem({
   hideMinute,
   hideDate,
   member,
-}: {
-  item: ChatMessage
-  hideProfile: boolean
-  hideMinute: boolean
-  hideDate: boolean
-  isMine: boolean
-  member?: User
-}) {
+}: ChatMessageItemProps) {
+  console.log('Rendering ChatMessageItem:', item)
+  const icon = getStatusIcon(item.status)
+
   return (
     <>
       <View
@@ -42,10 +47,36 @@ export default function ChatMessageItem({
           styles.chatRow,
           {justifyContent: isMine ? 'flex-end' : 'flex-start'},
         ]}>
+        {/* 내 채팅 */}
         {isMine ? (
           <>
-            <View style={styles.myChat}>
-              {/* 내 채팅 */}
+            <View
+              style={[
+                styles.chatOptionsWrap,
+                {
+                  justifyContent: 'flex-end', // ✅ 오른쪽 정렬
+                },
+              ]}>
+              {/* 재전송, 삭세 아이콘 */}
+              {!!item?.status && icon && (
+                <IconButton
+                  icon={icon.name as any}
+                  iconColor={icon.color}
+                  size={14}
+                  style={styles.statusIcon}
+                  onPress={() => {}}
+                  contentStyle={{padding: 0}} // ✅ 버튼 내부 패딩 제거
+                />
+              )}
+              {/* 시간 */}
+              {!hideMinute && item?.createdAt && (
+                <Text style={[styles.chatTime, {textAlign: 'right'}]}>
+                  {formatChatTime(item?.createdAt)}
+                </Text>
+              )}
+            </View>
+            {/* 채팅내용 */}
+            <View style={styles.myChatBubble}>
               <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
               {item?.type == 'image' && item?.imageUrl && (
                 <View>
@@ -56,35 +87,6 @@ export default function ChatMessageItem({
                       style: styles.chatImage,
                     }}
                   />
-                </View>
-              )}
-              {!hideMinute && item?.createdAt && (
-                <View
-                  style={[
-                    styles.chatOptions,
-                    {
-                      right: '100%',
-                      marginRight: 24,
-                    },
-                  ]}>
-                  {!!item?.status &&
-                    (() => {
-                      const icon = getStatusIcon(item.status)
-                      if (!icon) return null
-                      return (
-                        <IconButton
-                          icon={icon.name as any}
-                          iconColor={icon.color}
-                          size={14}
-                          style={styles.statusIcon}
-                          // 버튼이 아니라 표시용이면 onPress 안 줘도 됨 (Paper가 요구하면 noop)
-                          onPress={() => {}}
-                        />
-                      )
-                    })()}
-                  <Text style={styles.chatTime}>
-                    {formatChatTime(item?.createdAt)}
-                  </Text>
                 </View>
               )}
             </View>
@@ -108,15 +110,18 @@ export default function ChatMessageItem({
                 )}
               </View>
             )}
-            <View style={{marginLeft: hideProfile ? 55 : 0}}>
+            <View
+              style={{
+                marginLeft: hideProfile ? 55 : 0,
+              }}>
               {/* 닉네임 */}
               {!hideProfile && (
                 <Text style={styles.nickname}>
                   {member?.displayName ?? '알수없음'}
                 </Text>
               )}
-              <View style={styles.otherChat}>
-                {/* 상대 채팅 */}
+              {/* 말풍선 */}
+              <View style={styles.otherChatBubble}>
                 <Text style={{color: COLORS.text}}>{item.text}</Text>
                 {item?.type == 'image' && item?.imageUrl && (
                   <ImageViewer
@@ -127,19 +132,16 @@ export default function ChatMessageItem({
                     }}
                   />
                 )}
-                {!hideMinute && (
-                  <View
-                    style={[
-                      styles.chatOptions,
-                      {left: '100%', marginLeft: 24},
-                    ]}>
-                    <Text style={styles.chatTime}>
-                      {formatChatTime(item.createdAt)}
-                    </Text>
-                  </View>
-                )}
               </View>
             </View>
+            {/* 시간 */}
+            {!hideMinute && (
+              <View style={[styles.chatOptionsWrap]}>
+                <Text style={styles.chatTime}>
+                  {formatChatTime(item.createdAt)}
+                </Text>
+              </View>
+            )}
           </>
         )}
       </View>
@@ -168,8 +170,9 @@ const styles = StyleSheet.create({
   chatRow: {
     flexDirection: 'row',
     marginBottom: 12,
+    gap: 8,
   },
-  myChat: {
+  myChatBubble: {
     padding: 10,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -178,9 +181,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     position: 'relative',
     maxWidth: 250,
-    flexDirection: `row-reverse`,
   },
-  otherChat: {
+  otherChatBubble: {
     padding: 10,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -203,25 +205,24 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontWeight: '400',
   },
-  chatOptions: {
-    position: 'absolute',
-    minWidth: 0,
-    bottom: 0,
+  chatOptionsWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2, // RN 0.71+ 가능 (구버전이면 marginRight)
-    paddingHorizontal: 4,
-    height: 16, // 👈 한 줄 고정 핵심
-    backgroundColor: 'skyblue',
+    zIndex: 13,
+    alignSelf: 'flex-end',
   },
   chatTime: {
-    color: '#333',
     fontSize: 12,
-    width: 60,
+    lineHeight: 14,
+    alignSelf: 'flex-start', // make width fit content
+    minWidth: 0,
+    paddingHorizontal: 4,
   },
   statusIcon: {
     margin: 0,
     padding: 0,
+    width: 18,
+    height: 18,
   },
   frame: {
     width: 45,
