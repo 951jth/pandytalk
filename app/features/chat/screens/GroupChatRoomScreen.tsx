@@ -7,7 +7,7 @@ import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import AppHeader from '../../../layout/AppHeader'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
-import ChatInputBox from '../components/ChatInputBox'
+import ChatInputBox from '../components/ChatInput'
 import ChatMessageList from '../components/ChatMessageList'
 
 type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>

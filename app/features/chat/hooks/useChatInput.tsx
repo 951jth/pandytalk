@@ -1,8 +1,7 @@
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useSendChatMessageMutation'
 import {chatService} from '@app/features/chat/service/chatService'
-import {
-  messageService,
-  type InputMessageParams,
-} from '@app/features/chat/service/messageService'
+import {type InputMessageParams} from '@app/features/chat/service/messageService'
+import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
@@ -17,7 +16,7 @@ export type ChatInputPropTypes = {
   roomInfo?: ChatListItem | null
 }
 
-export const useChatInputBox = ({
+export const useChatInput = ({
   roomInfo,
   targetIds,
   chatType,
@@ -26,7 +25,8 @@ export const useChatInputBox = ({
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const queryClient = useQueryClient()
-
+  const {mutate: sendChatAndCache, isPending} =
+    useSendChatMessageMutation(roomInfo)
   const onSendMessage = async (
     type: ChatMessage['type'], //메세지 타입임
     result?: ImagePickerResponse,
@@ -57,6 +57,7 @@ export const useChatInputBox = ({
         }
       }
       let fetchedRoomInfo = roomInfo
+
       // step 3. 채팅방 신규 생성(없으면)
       if (!roomInfo?.id) {
         if (!targetIds?.length) throw new Error('대화 상대 정보가 없습니다.')
@@ -65,20 +66,17 @@ export const useChatInputBox = ({
           targetIds,
           type: chatType,
         })
-        if (!fetchedRoomInfo?.id)
-          throw new Error('채팅방 생성에 실패하였습니다.')
-        await queryClient.refetchQueries({
-          queryKey: ['chatRoom', fetchedRoomInfo?.id],
-          exact: true,
-        })
       }
+      if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
 
-      //step 4. 메세지 전송
-      await messageService.sendChatMessage({
-        roomInfo: fetchedRoomInfo,
+      //step 4. 메세지 전송 및 캐시 반영
+      const reformedMsg = setChatMessagePayload({
+        roomId: fetchedRoomInfo.id,
         message,
         user,
       })
+      if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
+      sendChatAndCache(reformedMsg)
       setText('')
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)

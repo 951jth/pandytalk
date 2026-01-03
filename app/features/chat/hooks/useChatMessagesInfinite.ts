@@ -93,7 +93,6 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
         return
       }
       // 2. SQLite 메시지 삭제
-      // await clearMessagesFromSQLite(roomId)
       await messageLocal.clearAllMessages()
       // 3. React Query 캐시 제거
       await queryClient.invalidateQueries({

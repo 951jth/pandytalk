@@ -13,6 +13,7 @@ export interface ChatMessage {
   senderPicURL?: string
   senderName?: string
   seq?: number
+  status?: 'pending' | 'success' | 'failed'
 }
 
 export interface ChatMemberDoc {

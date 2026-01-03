@@ -70,10 +70,8 @@ export const userRemote = {
     isConfirmed,
   }: GetUsersParams) => {
     return firebaseCall('userRemote.getUsersPage', async () => {
-      // 1. 컬렉션 레퍼런스 생성
       const usersRef = collection(firestore, 'users')
       let filters: any[] = []
-      // 2. 필터 조건 구성 (Business Logic)
       if (typeof isConfirmed == 'boolean') {
         filters = [where('isConfirmed', '==', isConfirmed)]
       }
@@ -88,9 +86,7 @@ export const userRemote = {
         )
       }
 
-      // 3. 쿼리 객체 초기화 (Base Query)
       let q = query(usersRef, ...filters)
-      // 4. 검색 및 정렬 조건 추가
       if (searchText) {
         q = query(
           q,
@@ -104,7 +100,7 @@ export const userRemote = {
         q = query(q, orderBy('status', 'desc'), orderBy('lastSeen', 'desc'))
       }
 
-      // 5. 페이지네이션 (Limit & Cursor)
+      // 페이지네이션
       q = query(q, limit(pageSize))
       if (pageParam) {
         q = query(q, startAfter(pageParam))

@@ -60,7 +60,6 @@ const ButtonsByType = {
 
 type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   open: boolean | any
-  setOpen: (next: boolean) => void
   children?: React.ReactNode
   record?: User
   onComplete?: () => void
@@ -134,9 +133,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFF',
     height: 470,
-    // flex: 1,
-    // minHeight: 600,
-    // maxHeight: 600,
   },
   profileWrap: {
     flexDirection: 'column',

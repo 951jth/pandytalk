@@ -12,7 +12,7 @@ export const sendNewMessageNotification = onDocumentCreated(
   async event => {
     try {
       const message = event.data?.data()
-      console.log('message', message)
+      logger.info('새 메시지 도착 트리거 실행', message)
       const chatId = event.params.chatId as string
       if (!message || !chatId) {
         logger.info('⚠️ message or chatId 누락')
@@ -34,20 +34,21 @@ export const sendNewMessageNotification = onDocumentCreated(
       const receiverIds = members.filter(uid => uid !== senderId)
 
       // 2) 수신자들의 fcmToken 조회  (※ 기존 코드의 덮어쓰기 버그 수정: push/concat)
+      const userReads = receiverIds.map(uid => db.doc(`users/${uid}`).get())
+      const userSnaps = await Promise.all(userReads) // 여기서 한방에 다 가져옴
       const targetUsers: {uid: string; fcmToken: string}[] = []
-      for (const uid of receiverIds) {
-        const userSnap = await db.doc(`users/${uid}`).get()
+
+      for (const userSnap of userSnaps) {
         const userData = userSnap.data()
         if (!userData) continue
+
         const fcmTokens = userData.fcmTokens as string[] | undefined
         if (Array.isArray(fcmTokens)) {
-          for (const token of fcmTokens)
-            targetUsers.push({uid, fcmToken: token})
+          // 수신자의 ID와 토큰 매핑
+          for (const token of fcmTokens) {
+            targetUsers.push({uid: userSnap.id, fcmToken: token})
+          }
         }
-      }
-      if (targetUsers.length === 0) {
-        logger.info('❌ 전송할 토큰 없음')
-        return
       }
 
       // 3) 멀티캐스트 메시지
@@ -57,20 +58,26 @@ export const sendNewMessageNotification = onDocumentCreated(
           title: message?.senderName ?? '새 메시지 도착!',
           body: text ?? '내용이 없습니다',
         },
+        //안드로이드 전용 설정
         android: {
+          //"알림 묶기(스택)" 또는 "덮어쓰기" 기능
           notification: {tag: `chat_${chatId}`},
+          //안드로이드의 **Doze 모드(배터리 절약 모드)**를 뚫고 알림을 즉시 띄우겠다는 뜻
           priority: 'high',
         },
+        //iOS 전용 설정 - Apple Push Notification Service
         apns: {
+          // 즉시 전송하라는 명령 ( = priority: 'high')
           headers: {'apns-priority': '10'},
           payload: {
             aps: {
-              alert: {title: message?.senderName || '새 메시지', body: text},
-              sound: 'default',
-              'thread-id': `chat_${chatId}`,
+              alert: {title: message?.senderName || '새 메시지', body: text}, //iOS 알림 센터에 표시될 제목과 본문.
+              sound: 'default', // 알림음
+              'thread-id': `chat_${chatId}`, // 안드로이드의 tag랑 비슷
             },
           },
         },
+        //커스텀 데이터 페이로드, String으로 넣어줘야함.
         data: {
           chatId: String(chatId),
           text: message.text ?? '',

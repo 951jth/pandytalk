@@ -2,10 +2,12 @@ import UserDetailModal from '@app/features/user/components/UserDetailModal'
 import UserListItem from '@app/features/user/components/UserListItem'
 import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
 import {User} from '@app/shared/types/auth'
-import React from 'react'
+import React, {useCallback} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
+
+const MemoizedUserListItem = React.memo(UserListItem)
 
 export default function UsersManageScreen() {
   const {
@@ -20,16 +22,19 @@ export default function UsersManageScreen() {
     setModalProps,
   } = useUsersManageScreen()
 
-  const RenderItem = ({item}: {item: User}) => {
-    return (
-      <UserListItem
-        item={item}
-        onPress={item => {
-          setModalProps({open: true, record: item})
-        }}
-      />
-    )
-  }
+  const RenderItem = useCallback(
+    ({item}: {item: User}) => {
+      return (
+        <MemoizedUserListItem
+          item={item}
+          onPress={item => {
+            setModalProps({open: true, record: item})
+          }}
+        />
+      )
+    },
+    [setModalProps],
+  )
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
@@ -51,7 +56,6 @@ export default function UsersManageScreen() {
       />
       <UserDetailModal
         open={!!modalProps?.open}
-        setOpen={boolean => setModalProps({open: boolean, record: null})}
         record={modalProps?.record as User}
         onComplete={() => setModalProps({open: false, record: null})}
         onClose={() => setModalProps({open: false, record: null})}

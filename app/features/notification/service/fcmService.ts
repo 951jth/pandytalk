@@ -3,7 +3,10 @@ import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
 import {auth} from '@app/shared/firebase/firestore'
 import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
-import {navigateToChat} from '../../../navigation/RootNavigation'
+import {
+  navigateByPush,
+  navigateToChat,
+} from '../../../navigation/RootNavigation'
 
 export const fcmService = {
   /**
@@ -15,17 +18,21 @@ export const fcmService = {
 
     const data = remoteMessage.data
 
-    // 유효성 검사 (데이터가 있고, 채팅 타입인 경우)
-    if (data?.pushType === 'chat' && data?.chatId) {
-      console.log('🚀 [FCM] 채팅 화면으로 이동:', data)
-
-      navigateToChat(
-        data.chatId as string,
-        data.senderName as string,
-        (data.chatType as string) || 'dm',
-      )
-    } else {
-      // 채팅 외에 다른 푸시 타입(예: 공지사항)이 있다면 여기서 분기 처리
+    switch (data?.pushType) {
+      case 'chat':
+        console.log('🚀 [FCM] 채팅 화면으로 이동:', data)
+        navigateToChat(
+          data.chatId as string,
+          data.senderName as string,
+          (data.chatType as string) || 'dm',
+        )
+        break
+      case 'join-approve':
+        console.log('🚀 [FCM] 가입 승인 알림 수신:', data)
+        navigateByPush('users') //가입 승인 알림은 홈 화면으로 이동
+        break
+      default:
+        navigateByPush('users') //가입 승인 알림은 홈 화면으로 이동
     }
   },
 

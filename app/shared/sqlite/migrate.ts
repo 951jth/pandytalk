@@ -1,7 +1,7 @@
 import type {Transaction} from 'react-native-sqlite-storage'
 import {db} from './sqlite'
 // 최신 버전: 예) v2까지 존재한다면 2
-const LATEST_DB_VERSION = 2
+const LATEST_DB_VERSION = 3
 
 type Migration = (tx: Transaction) => void
 
@@ -34,6 +34,13 @@ const migrations: Record<number, Migration> = {
       `CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);`,
     )
   },
+  //v2 -> v3 : status 컬럼 추가
+  3: tx => {
+    // 뒤에 DEFAULT 'success' 추가!
+    tx.executeSql(
+      `ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'success';`,
+    )
+  },
 }
 
 /**
@@ -47,20 +54,25 @@ export async function migrateDatabaseIfNeeded(): Promise<void> {
           const currentVersion = rows.item(0).user_version ?? 0
           console.log('📘 Current DB version:', currentVersion)
 
-          let version = currentVersion
-          while (version < LATEST_DB_VERSION) {
-            const migrate = migrations[version]
+          let nextVersion = currentVersion + 1 // 🔥 여기서 +1부터 시작
+
+          while (nextVersion <= LATEST_DB_VERSION) {
+            // 🔥 조건 수정
+            const migrate = migrations[nextVersion] // 다음 버전을 가져옴
+
             if (migrate) {
+              console.log(`🚀 Migrating to version ${nextVersion}...`)
               migrate(tx)
-              version++
             } else {
-              // 혹시 누락된 버전이 있으면 스킵
-              console.warn(`⚠️ No migration found for v${version}`)
-              version++
+              console.warn(`⚠️ No migration found for v${nextVersion}`)
             }
+
+            nextVersion++
           }
 
-          if (version > currentVersion) {
+          // 최종 버전 업데이트
+          if (nextVersion > currentVersion + 1) {
+            // 마지막에 한 번만 실행해도 됨
             tx.executeSql(`PRAGMA user_version = ${LATEST_DB_VERSION};`)
             console.log(`✅ DB updated to version ${LATEST_DB_VERSION}`)
           } else {

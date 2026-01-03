@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin'
+import {FieldValue} from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions'
 import {db} from '../../core/firebase'
 
@@ -26,12 +27,20 @@ async function deleteUserFromAllGroups(uid: string) {
   let opCount = 0
 
   groupsSnap.forEach(groupDoc => {
+    // 1. 멤버 하위 컬렉션에서 유저 삭제
     const memberRef = groupDoc.ref.collection('members').doc(uid)
     batch.delete(memberRef)
-    opCount++
 
-    // Firestore batch는 500 writes 제한
-    if (opCount === 450) {
+    // 2. 그룹 문서의 memberCount -1 감소 (Atomically)
+    batch.update(groupDoc.ref, {
+      memberCount: FieldValue.increment(-1),
+    })
+
+    // ⭐ 중요: 작업이 2개 추가됐으니 카운트도 2 증가!
+    opCount += 2
+
+    // Firestore batch는 500 writes 제한 (여유 있게 450쯤에서 끊기)
+    if (opCount >= 450) {
       batches.push(batch)
       batch = db.batch()
       opCount = 0

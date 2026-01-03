@@ -92,14 +92,27 @@ export const messageRemote = {
       },
     )
   },
+  // 1ID 생성만 해주는 헬퍼 함수 (서비스 레이어는 얘만 부르면 됨)
+  generateMessageId: (roomId: string): string => {
+    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+    return doc(messagesRef).id // 깔끔하게 ID 문자열만 리턴!
+  },
   sendChatMessage: (
     roomId: string,
-    message: Omit<ChatMessage, 'id' | 'createdAt'>,
+    message: Omit<ChatMessage, 'createdAt'>,
   ) => {
     return firebaseCall('messageRemote.sendChatMessage', async () => {
       const chatRef = doc(firestore, 'chats', roomId)
-      const msgRef = doc(collection(firestore, `chats/${roomId}/messages`))
       //runTransaction : 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
+      const messageId = message.id
+      let msgRef = null
+      // 변경 후: 받아온 ID로 참조 생성 (이 시점엔 문서는 없고 주소만 찍은 상태)
+      if (messageId) {
+        msgRef = doc(firestore, 'chats', roomId, 'messages', messageId)
+      } else {
+        msgRef = doc(collection(firestore, 'chats', roomId, 'messages'))
+      }
+
       //여러 명이 동시에 채팅을 칠 때 단순히 addDoc으로 넣으면 네트워크 속도에 따라 메시지 순서가 뒤죽박죽됨
       await runTransaction(firestore, async tx => {
         // 1) 현재 채팅방 lastSeq가져오기
