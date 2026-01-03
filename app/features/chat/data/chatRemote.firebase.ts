@@ -1,6 +1,7 @@
 import {
   firebaseCall,
   firebaseObserver,
+  firebaseRefObserver,
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
@@ -117,11 +118,27 @@ export const chatRemote = {
       const chatSnap = await getDoc(chatDocRef)
       //채팅방이없으면 오류 없이 null값만 보냄(있는지 조회만 함)
       if (!chatSnap.exists()) return null
-
       return {
         id: chatDocRef.id,
         ...(chatSnap.data() as Omit<ChatListItem, 'id'>),
       }
     })
+  },
+  subscribeChatRoom: (
+    roomId: string,
+    callback: (chatRoom: ChatListItem) => void,
+  ) => {
+    const chatRef = doc(firestore, 'chats', roomId)
+    return firebaseRefObserver(
+      'chatRemote.subscribeChatRoom',
+      chatRef,
+      snap => {
+        const chatRoomData = snap.data() as ChatListItem
+        callback(chatRoomData)
+      },
+      error => {
+        console.error('[chat head snapshot] error:', error)
+      },
+    )
   },
 }

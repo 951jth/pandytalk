@@ -141,3 +141,77 @@ export const firebaseObserver = (
     unsubscribe()
   }
 }
+
+export const firebaseRefObserver = (
+  logName: string, // 원본 풀네임 (식별용)
+  ref: FirebaseFirestoreTypes.DocumentReference,
+  onNext: (snapshot: FirebaseFirestoreTypes.DocumentSnapshot) => void,
+  onError?: (error: Error) => void,
+): (() => void) => {
+  if (!__DEV__ || BE_QUITE) {
+    return ref.onSnapshot({includeMetadataChanges: true}, onNext, onError)
+  }
+
+  const startTime = Date.now()
+  const displayName = shortenString(logName, 40)
+
+  // 1. [Start]
+  console.log(
+    `%c🔥 [Firestore/Sub] 🟢 START: ${displayName}`,
+    'font-weight: bold;',
+  )
+
+  const unsubscribe = ref.onSnapshot(
+    {includeMetadataChanges: true},
+    snapshot => {
+      const source = snapshot.metadata.fromCache ? '(Cache)' : '(Server)'
+      const exists = snapshot.exists
+
+      // 2. [Update]
+      console.groupCollapsed(
+        `%c🔥 [Firestore/Sub] 📡 UPDATE: ${displayName} ${source} | Exists: ${exists}`,
+        'font-weight: bold;',
+      )
+
+      console.log(`🆔 Full ID: ${logName}`)
+      console.log(`📄 Path: ${ref.path}`)
+      console.log(`⏱ Time: ${new Date().toLocaleTimeString()}`)
+      console.log(`✅ Exists: ${exists}`)
+
+      console.groupEnd()
+
+      onNext(snapshot)
+    },
+    (error: any) => {
+      const isExpected = isExpectedError(error)
+
+      if (isExpected) {
+        console.groupCollapsed(
+          `🔥 [Firestore/Sub] ⚠️ EMPTY/RESTRICTED: ${displayName}`,
+        )
+        console.log('Reason: Doc might not exist yet or permission denied.')
+        console.log('Original Error:', error.message)
+        console.groupEnd()
+        // 필요하면 여기서 onError 호출 여부 선택
+        // onError?.(error)
+      } else {
+        console.group(`🔥 [Firestore/Sub] ❌ FAIL: ${displayName}`)
+        console.error('Error Details:', error)
+        console.log(`Target: ${logName}`)
+        console.log(`Path: ${ref.path}`)
+        console.groupEnd()
+
+        onError?.(error)
+      }
+    },
+  )
+
+  return () => {
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1)
+    console.log(
+      `%c🔥 [Firestore/Sub] 🛑 STOP: ${displayName} | Active: ${duration}s`,
+      'font-weight: bold;',
+    )
+    unsubscribe()
+  }
+}

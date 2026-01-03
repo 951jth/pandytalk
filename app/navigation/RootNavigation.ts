@@ -43,3 +43,14 @@ export function navigateToChat(
   }
   task()
 }
+
+export function navigateByPush(routeName: string, params?: object) {
+  const task = () => {
+    navigationRef.navigate(routeName, params)
+  }
+  if (!navigationRef.isReady() || !ready) {
+    queue.push(task)
+    return
+  }
+  task()
+}

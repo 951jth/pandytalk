@@ -5,7 +5,7 @@ import {
 import {chatService} from '@app/features/chat/service/chatService'
 import {ChatListItem} from '@app/shared/types/chat'
 import {AppDispatch} from '@app/store/store'
-import {setDMChatCount, setGroupChatCount} from '@app/store/unreadCountSlice'
+import {setGroupChatCount} from '@app/store/unreadCountSlice'
 import {InfiniteData, useQueryClient} from '@tanstack/react-query'
 import {useEffect} from 'react'
 import {useDispatch} from 'react-redux'
@@ -51,7 +51,7 @@ export function useSubscribeChatList(
             // 1) flat
             let flat: ChatListItem[] = old.pages.flatMap(p => p.chats ?? [])
 
-            // 2) remove 먼저 (정합성/중복 방지에 유리)
+            // 2) remove
             if (removedChanges.length > 0) {
               const removeIds = new Set(removedChanges.map(c => c.doc.id))
               flat = flat.filter(chat => !removeIds.has(chat.id))
@@ -77,12 +77,10 @@ export function useSubscribeChatList(
               }
             }
 
-            // 4) badge sum (remove만 와도 업데이트 되게 여기서 한번만)
-            // 고민 포인트: dispatch를 외부로 뺄까?
-            // hook으로 뺴서 사용할 지 고민중
+            // 고민 포인트: 그룹채팅 badge를 subscribe 방식으로 바꿀지 여기서 계속 사용할 지
             const sum = flat.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0)
-            if (type === 'dm') dispatch(setDMChatCount(sum))
-            else dispatch(setGroupChatCount(sum))
+            // if (type === 'dm') dispatch(setDMChatCount(sum))
+            if (type === 'group') dispatch(setGroupChatCount(sum))
 
             // 5) pages 재구성
             return rebuildPages(flat, old, PAGE_SIZE)

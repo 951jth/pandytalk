@@ -34,7 +34,7 @@ export default function GroupManageScreen() {
         </TouchableOpacity>
         <FlatList
           data={groups}
-          keyExtractor={item => item.uid}
+          keyExtractor={item => item.id}
           style={{flexGrow: 1}}
           renderItem={({item}) => (
             <GuestGroup
@@ -44,9 +44,6 @@ export default function GroupManageScreen() {
               }}
             />
           )}
-          // onEndReached={() => {
-          //   if (hasNextPage) fetchNextPage()
-          // }}
           ListEmptyComponent={
             <View
               style={{

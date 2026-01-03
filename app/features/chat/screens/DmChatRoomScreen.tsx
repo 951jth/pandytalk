@@ -1,4 +1,4 @@
-import ChatInputBox from '@app/features/chat/components/ChatInputBox'
+import ChatInputBox from '@app/features/chat/components/ChatInput'
 import ChatMessageList from '@app/features/chat/components/ChatMessageList'
 import {useDmChatRoomScreen} from '@app/features/chat/hooks/useDmChatRoomScreen'
 import AppHeader from '@app/layout/AppHeader'

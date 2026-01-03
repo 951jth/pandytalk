@@ -25,3 +25,10 @@ export function toPageResult<T>(
 
   return {items, nextPageParam, hasNext}
 }
+
+export function toInfiniteQueryData<T>(pages: PageResult<T>[]) {
+  const data = pages.flatMap(page => page.items)
+  const lastPage = pages[pages.length - 1]
+  const nextPageParam = lastPage.hasNext ? lastPage.nextPageParam : undefined
+  return {data, lastPage, nextPageParam}
+}

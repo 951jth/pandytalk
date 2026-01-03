@@ -100,4 +100,12 @@ export const chatService = {
     const created = await chatRemote.createChatRoom(payload, roomId)
     return created.id // === roomId
   },
+  subscribeChatRoom: (
+    roomId: string,
+    callback: (chatRoom: ChatListItem) => void,
+  ) => {
+    if (!roomId) return () => {}
+    const unsub = chatRemote.subscribeChatRoom(roomId, callback)
+    return unsub
+  },
 }

@@ -1,56 +1,40 @@
 import UserDetailModal from '@app/features/user/components/UserDetailModal'
 import UserListItem from '@app/features/user/components/UserListItem'
-import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
+import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
 import {User} from '@app/shared/types/auth'
-import {debounce} from 'lodash'
-import React, {useEffect, useMemo, useState} from 'react'
+import React, {useCallback} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 
-type modalProps = {
-  open: boolean | null | undefined
-  record?: User | object | null
-}
+const MemoizedUserListItem = React.memo(UserListItem)
 
 export default function UsersManageScreen() {
-  const [input, setInput] = useState<string>('')
-  const [searchText, setSearchText] = useState<string>('')
-  const [modalProps, setModalProps] = useState<modalProps>({open: false})
   const {
-    data,
+    input,
+    setInput,
+    users,
     isLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
     refetch,
-  } = useUsersInfinite(searchText)
+    modalProps,
+    setModalProps,
+  } = useUsersManageScreen()
 
-  const RenderItem = ({item}: {item: User}) => {
-    return (
-      <UserListItem
-        item={item}
-        onPress={item => {
-          setModalProps({open: true, record: item})
-        }}
-      />
-    )
-  }
-
-  const users = (data?.pages.flatMap(page => page.users) as User[]) ?? []
-  const debouncedSetSearchText = useMemo(
-    () =>
-      debounce((text: string) => {
-        setSearchText(text.toString())
-      }, 300),
-    [],
+  const RenderItem = useCallback(
+    ({item}: {item: User}) => {
+      return (
+        <MemoizedUserListItem
+          item={item}
+          onPress={item => {
+            setModalProps({open: true, record: item})
+          }}
+        />
+      )
+    },
+    [setModalProps],
   )
-
-  useEffect(() => {
-    debouncedSetSearchText(input)
-    // cleanup 함수로 debounce 취소
-    return () => debouncedSetSearchText.cancel()
-  }, [input])
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
@@ -72,9 +56,9 @@ export default function UsersManageScreen() {
       />
       <UserDetailModal
         open={!!modalProps?.open}
-        setOpen={boolean => setModalProps({open: boolean, record: null})}
         record={modalProps?.record as User}
-        onRefresh={refetch}
+        onComplete={() => setModalProps({open: false, record: null})}
+        onClose={() => setModalProps({open: false, record: null})}
       />
     </SafeAreaView>
   )

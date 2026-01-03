@@ -1,9 +1,9 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {useChatCache} from '@app/features/chat/hooks/useChatCache'
 import {messageService} from '@app/features/chat/service/messageService'
-import type {ChatMessage} from '@app/shared/types/chat'
+import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
-import {mergeMessages} from '@app/shared/utils/chat'
-import {useQueryClient, type InfiniteData} from '@tanstack/react-query'
+import {type InfiniteData} from '@tanstack/react-query'
 import {useEffect, useRef} from 'react'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
@@ -19,25 +19,14 @@ const init: MessagesInfiniteData = {
   pageParams: [undefined],
 }
 
-export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
-  const queryClient = useQueryClient()
+export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
+  const roomId = roomInfo?.id
+  const {addMessages} = useChatCache(roomId)
 
-  const setMessageQueryData = (newMessages: ChatMessage[]) => {
-    queryClient.setQueryData(
-      ['chatMessages', roomId],
-      (old: MessagesInfiniteData | undefined) => {
-        console.log('old', old)
-        const cur = old ?? init
-        const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
-        return {
-          ...(old ?? init), //초기값이 없는 경우가 있음.
-          pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
-        }
-      },
-    )
-  }
-
+  useEffect(() => {
+    messageLocal.getAllMessages().then(res => console.log('allMessages', res))
+  }, [])
   useEffect(() => {
     let isCancelled = false
     // 만약 동기화(syncNewMessages)나 구독(subscribeChatMessages)이
@@ -55,7 +44,7 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         try {
           //e데이터가 없어도 흡수
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
-          setMessageQueryData(newMsgs)
+          addMessages(newMsgs)
         } catch (e) {}
 
         const lastSeq =
@@ -67,23 +56,7 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
           roomId,
           lastSeq,
           (newMessages: ChatMessage[]) => {
-            queryClient.setQueryData(
-              ['chatMessages', roomId],
-              (old: MessagesInfiniteData | undefined) => {
-                const cur = old ?? init
-                const merged = mergeMessages(
-                  cur.pages[0]?.data || [],
-                  newMessages,
-                )
-                return {
-                  ...(old ?? init), //초기값이 없는 경우가 있음.
-                  pages: [
-                    {...cur.pages[0], data: merged},
-                    ...cur.pages.slice(1),
-                  ],
-                }
-              },
-            )
+            addMessages(newMessages)
           },
         )
       } catch (e) {
@@ -99,5 +72,5 @@ export const useSyncAndSubsMessages = (roomId: string | null | undefined) => {
         unsubRef.current = null
       }
     }
-  }, [roomId])
+  }, [roomId, roomInfo])
 }

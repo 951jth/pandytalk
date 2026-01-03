@@ -26,7 +26,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     isFetchingNextPage,
     membersMap,
   } = useChatMessageList({userId, roomId, roomInfo})
-
+  console.log('messages', messages)
   const renderMessage = useCallback(
     ({item, index}: {item: ChatMessage; index: number}) => {
       const isMine = item?.senderId === userId

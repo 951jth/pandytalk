@@ -1,8 +1,7 @@
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useSendChatMessageMutation'
 import {chatService} from '@app/features/chat/service/chatService'
-import {
-  messageService,
-  type InputMessageParams,
-} from '@app/features/chat/service/messageService'
+import {type InputMessageParams} from '@app/features/chat/service/messageService'
+import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
@@ -11,30 +10,28 @@ import {useState} from 'react'
 import {Alert, Keyboard} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
 
-type propTypes = {
+export type ChatInputPropTypes = {
+  chatType: ChatListItem['type']
+  targetIds?: string[]
   roomInfo?: ChatListItem | null
-  targetIds: string[]
-  chatType?: ChatListItem['type']
 }
 
-export const useChatInputBox = ({
+export const useChatInput = ({
   roomInfo,
   targetIds,
-  chatType = 'dm',
-}: propTypes) => {
+  chatType,
+}: ChatInputPropTypes) => {
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const queryClient = useQueryClient()
-
-  async function fetchChatRoom() {}
-
+  const {mutate: sendChatAndCache, isPending} =
+    useSendChatMessageMutation(roomInfo)
   const onSendMessage = async (
-    type: ChatMessage['type'],
+    type: ChatMessage['type'], //메세지 타입임
     result?: ImagePickerResponse,
   ) => {
     try {
-      let fetchedRoomId = roomInfo?.id
       if (!user?.uid) throw new Error('유저정보 조회 실패')
       setLoading(true)
       //step 1. 메세지 페이로드 생성
@@ -60,6 +57,7 @@ export const useChatInputBox = ({
         }
       }
       let fetchedRoomInfo = roomInfo
+
       // step 3. 채팅방 신규 생성(없으면)
       if (!roomInfo?.id) {
         if (!targetIds?.length) throw new Error('대화 상대 정보가 없습니다.')
@@ -68,22 +66,17 @@ export const useChatInputBox = ({
           targetIds,
           type: chatType,
         })
-        await queryClient.refetchQueries({
-          queryKey: ['chatRoom', fetchedRoomId],
-          exact: true,
-        })
-        if (!fetchedRoomInfo?.id)
-          throw new Error('채팅방 생성에 실패하였습니다.')
       }
+      if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
 
-      //step 4. 메세지 전송
-      await messageService.sendChatMessage({
-        roomInfo: fetchedRoomInfo,
-        targetIds,
-        chatType,
+      //step 4. 메세지 전송 및 캐시 반영
+      const reformedMsg = setChatMessagePayload({
+        roomId: fetchedRoomInfo.id,
         message,
         user,
       })
+      if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
+      sendChatAndCache(reformedMsg)
       setText('')
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e)

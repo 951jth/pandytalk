@@ -14,6 +14,7 @@ const MESSAGE_COLUMNS = [
   'type',
   'imageUrl',
   'seq',
+  'status',
 ] as const
 
 const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS.map(() => '?').join(', ')
@@ -27,9 +28,11 @@ CREATE TABLE IF NOT EXISTS messages (
   createdAt INTEGER NOT NULL,
   type TEXT NOT NULL,
   imageUrl TEXT,
-  seq INTEGER NOT NULL
+  seq INTEGER NOT NULL,
+  status TEXT
 );
 `
+const LATEST_DB_VERSION = 3
 
 export const messageLocal = {
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
@@ -40,7 +43,6 @@ export const messageLocal = {
           (tx: Transaction) => {
             // 2. 상수를 사용하여 쿼리 문자열 조합
             const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
-
             messages.forEach(msg => {
               // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
               const values = [
@@ -52,9 +54,11 @@ export const messageLocal = {
                 msg.type,
                 msg.imageUrl ?? '',
                 msg.seq ?? 1,
+                msg?.status ?? 'success',
               ]
-
+              console.log('values', values)
               tx.executeSql(query, values, undefined, (_, error) => {
+                console.log(_)
                 console.error('SQLite 쿼리 오류:', error)
                 reject(error)
                 return true
@@ -64,6 +68,29 @@ export const messageLocal = {
           reject, // ✅ 트랜잭션 전체 실패
           resolve, // ✅ 트랜잭션 전체 성공
         )
+      })
+    })
+  },
+  updateMessageStatus: (
+    roomId: string,
+    messageId: string,
+    status: ChatMessage['status'],
+  ) => {
+    return sqliteCall('messageLocal.updateMessageStatus', () => {
+      return new Promise<void>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          const query = `UPDATE ${MESSAGE_TABLE} SET status = ? WHERE roomId = ? AND id = ?`
+          tx.executeSql(
+            query,
+            [status, roomId, messageId],
+            () => resolve(),
+            (_, error) => {
+              console.error('SQLite 쿼리 오류:', error)
+              reject(error)
+              return true
+            },
+          )
+        })
       })
     })
   },
@@ -211,6 +238,28 @@ export const messageLocal = {
               resolve(messages)
             },
             (_, error) => {
+              reject(error)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+  isMessagesTableExists: () => {
+    return sqliteCall('messageLocal.isMessagesTableExists', async () => {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
+            [],
+            (_, result) => {
+              console.log(result)
+              const exists = result.rows.length > 0
+              resolve(exists)
+            },
+            (_, error) => {
+              console.log('error', error)
               reject(error)
               return true
             },
