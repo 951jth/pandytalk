@@ -48,6 +48,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
               roomId,
               ms,
             )
+            console.log('shoulde updated message: ', updatedMessages)
             return {
               data: updatedMessages,
               lastVisible:
@@ -63,7 +64,9 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
             }
           }
         }
+
         // CASE 2. 서버에러는 있지만 로컬데이터가 충분히 있는 경우
+        console.log('Using local messages only:', localMessages)
         return {
           data: localMessages,
           lastVisible:

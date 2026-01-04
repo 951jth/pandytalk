@@ -37,7 +37,6 @@ export default function ChatMessageItem({
   hideDate,
   member,
 }: ChatMessageItemProps) {
-  console.log('Rendering ChatMessageItem:', item)
   const icon = getStatusIcon(item.status)
 
   return (

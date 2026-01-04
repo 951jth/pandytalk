@@ -43,8 +43,9 @@ export const messageLocal = {
           (tx: Transaction) => {
             // 2. 상수를 사용하여 쿼리 문자열 조합
             const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
+            console.log('query', query)
             messages.forEach(msg => {
-              console.log('Inserting message into SQLite:', msg)
+              console.log('Inserting message into SQLite:', msg?.status)
               // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
               const values = [
                 msg.id,
@@ -55,7 +56,7 @@ export const messageLocal = {
                 msg.type,
                 msg.imageUrl ?? '',
                 msg.seq ?? 1,
-                msg?.status ?? 'success',
+                msg.status ?? 'success',
               ]
               console.log('values', values)
               tx.executeSql(query, values, undefined, (_, error) => {
@@ -67,7 +68,7 @@ export const messageLocal = {
             })
           },
           reject, // ✅ 트랜잭션 전체 실패
-          resolve, // ✅ 트랜잭션 전체 성공
+          resolve,
         )
       })
     })

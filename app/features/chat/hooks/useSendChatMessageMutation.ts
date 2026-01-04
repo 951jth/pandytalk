@@ -68,6 +68,7 @@ export const useSendChatMessageMutation = (
             msg.id === messageId ? {...msg, status} : msg,
           ),
         }))
+        console.log('newPages', newPages)
         return {
           ...old,
           pages: newPages,
@@ -75,8 +76,7 @@ export const useSendChatMessageMutation = (
       },
     )
   }
-
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async (message: ChatMessage) => {
       await messageService.sendChatMessage({roomInfo, message})
       return true
@@ -97,7 +97,7 @@ export const useSendChatMessageMutation = (
 
     onSuccess: (_res, _message, ctx) => {
       if (!roomId || !ctx?.optimisticId) return
-      updateMessageStatus(ctx.optimisticId, 'success')
+      updateMessageStatus(ctx.optimisticId, 'pending')
     },
 
     onError: (err, _message, ctx) => {
@@ -106,4 +106,6 @@ export const useSendChatMessageMutation = (
       if (ctx?.optimisticId) updateMessageStatus(ctx.optimisticId, 'failed')
     },
   })
+
+  return {...mutation, addMessages, updateMessageStatus}
 }

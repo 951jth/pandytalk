@@ -1,29 +1,19 @@
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase' // 경로 맞춰
+import type {InputMessageParams} from '@app/features/chat/hooks/useChatInput'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
 // 또는 messageRemote가 이미 import 가능한 위치면 그걸 사용
-
-type InputMessageParams = {
-  text: string
-  type: ChatMessage['type']
-  imageUrl?: string
-}
 
 type SetChatMessagePayload = {
   roomId: string
   message: InputMessageParams
   user: User
-  // ✅ 재전송/멱등 위해 외부에서 id를 넣고 싶으면 옵션으로 받기
-  messageId?: string
-  createdAt?: number
 }
-
+//채팅방의 메세지 페이로드 생성 유틸
 export const setChatMessagePayload = ({
   roomId,
-  message,
   user,
-  messageId,
-  createdAt,
+  message,
 }: SetChatMessagePayload): ChatMessage | null => {
   if (!roomId || !user?.uid || !message) return null
 
@@ -32,7 +22,7 @@ export const setChatMessagePayload = ({
   if (message.type === 'text' && !trimmed) return null
   if (message.type === 'image' && !message.imageUrl) return null
 
-  const id = messageId ?? messageRemote.generateMessageId(roomId)
+  const id = messageRemote.generateMessageId(roomId)
 
   return {
     ...message,
@@ -41,6 +31,7 @@ export const setChatMessagePayload = ({
     senderId: user.uid,
     senderName: user.displayName ?? '',
     senderPicURL: user.photoURL ?? '',
-    createdAt: createdAt ?? Date.now(),
+    seq: message.seq,
+    createdAt: Date.now(),
   }
 }

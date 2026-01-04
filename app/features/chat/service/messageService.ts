@@ -6,12 +6,6 @@ import {
   toRNFTimestamp,
 } from '@app/shared/utils/firebase'
 
-export type InputMessageParams = {
-  text: string
-  type: ChatMessage['type']
-  imageUrl?: string
-}
-
 export type SendMessageParams = {
   roomInfo?: ChatListItem | null
   message: ChatMessage
@@ -86,13 +80,12 @@ export const messageService = {
   //메세지 전송 (신규채팅생성)
   sendChatMessage: async ({roomInfo, message}: SendMessageParams) => {
     let fetchedRoomId: string = roomInfo?.id ?? '' //roomInfo의 id값 존재여부를 통해 실제 채팅방이 존재하는지 확인함.
-    let newMessageId: string = ''
+    let newMessageId: string = message?.id ?? ''
     const trimmed = message.text?.trim() ?? '' // 공백 메시지 방지용
     if (message.type === 'text' && !trimmed)
       throw new Error('메시지를 입력해주세요.')
     if (message.type === 'image' && !message.imageUrl)
       throw new Error('이미지 업로드에 실패했습니다.')
-
     try {
       if (!fetchedRoomId) return new Error('채팅방 정보가 없습니다.')
       // 1) SQLite에 대기상태로 저장
@@ -100,19 +93,28 @@ export const messageService = {
         {...message, status: 'pending'},
       ])
       //의도적으로 지연시켜 네트워크 상태 변화 테스트
-      setTimeout(async () => {
+      try {
         // 2) firestore에 전송
         await messageRemote.sendChatMessage(fetchedRoomId, message)
         // 3) 전송 성공시 SQLite 상태 갱신
         await messageLocal.updateMessageStatus(
           fetchedRoomId,
-          message.id,
+          newMessageId,
           'success',
         )
-      }, 5000)
+      } catch (e) {
+        console.log('send err: ', e)
+        console.log(fetchedRoomId, newMessageId)
+        if (fetchedRoomId && newMessageId) {
+          messageLocal.updateMessageStatus(
+            fetchedRoomId,
+            newMessageId,
+            'failed',
+          )
+        }
+      }
       return fetchedRoomId
     } catch (e: any) {
-      console.log(e)
       //SQLite에 실패상태로 저장
       if (fetchedRoomId && newMessageId) {
         messageLocal.updateMessageStatus(fetchedRoomId, newMessageId, 'failed')

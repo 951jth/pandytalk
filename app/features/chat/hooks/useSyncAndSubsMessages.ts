@@ -1,5 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {useChatCache} from '@app/features/chat/hooks/useChatCache'
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useSendChatMessageMutation'
 import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
@@ -8,21 +8,11 @@ import {useEffect, useRef} from 'react'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
-const init: MessagesInfiniteData = {
-  pages: [
-    {
-      data: [] as ChatMessage[],
-      lastVisible: null, // 쓰지 않으면 null
-      isLastPage: true, // 초기엔 true로 둬도 무방
-    },
-  ],
-  pageParams: [undefined],
-}
-
 export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const roomId = roomInfo?.id
-  const {addMessages} = useChatCache(roomId)
+  const {addMessages, updateMessageStatus} =
+    useSendChatMessageMutation(roomInfo)
 
   useEffect(() => {
     messageLocal.getAllMessages().then(res => console.log('allMessages', res))
@@ -42,7 +32,7 @@ export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
         if (isCancelled) return
         //채팅방이 없는경우도 존재함
         try {
-          //e데이터가 없어도 흡수
+          //데이터가 없어도 흡수
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
           addMessages(newMsgs)
         } catch (e) {}
