@@ -81,6 +81,7 @@ export const messageLocal = {
     return sqliteCall('messageLocal.updateMessageStatus', () => {
       return new Promise<void>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
+          console.log('updateMessageStatus: ', roomId, messageId, status)
           const query = `UPDATE ${MESSAGE_TABLE} SET status = ? WHERE roomId = ? AND id = ?`
           tx.executeSql(
             query,
@@ -276,6 +277,27 @@ export const messageLocal = {
             },
             (_, error) => {
               console.log('error', error)
+              reject(error)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+  deleteMessageById: (roomId: string, messageId: string) => {
+    return sqliteCall('messageLocal.deleteChatMessage', async () => {
+      return new Promise<boolean>((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `DELETE FROM ${MESSAGE_TABLE} WHERE roomId = ? AND id = ?`,
+            [roomId, messageId],
+            (_tx, result) => {
+              // ✅ DELETE 결과는 rowsAffected로 판단
+              resolve(result.rowsAffected > 0)
+            },
+            (_tx, error) => {
+              console.log('deleteChatMessage error', error)
               reject(error)
               return true
             },

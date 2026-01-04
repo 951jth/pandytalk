@@ -76,6 +76,26 @@ export const useSendChatMessageMutation = (
       },
     )
   }
+
+  // 메시지 삭제
+  const deleteMessage = (messageId: string) => {
+    if (!roomId) return
+    queryClient.setQueryData(
+      queryKey,
+      (old: MessagesInfiniteData | undefined) => {
+        if (!old) return old
+        const newPages = old.pages.map(page => ({
+          ...page,
+          data: page.data.filter(msg => msg.id !== messageId),
+        }))
+        return {
+          ...old,
+          pages: newPages,
+        }
+      },
+    )
+  }
+
   const mutation = useMutation({
     mutationFn: async (message: ChatMessage) => {
       await messageService.sendChatMessage({roomInfo, message})
@@ -107,5 +127,5 @@ export const useSendChatMessageMutation = (
     },
   })
 
-  return {...mutation, addMessages, updateMessageStatus}
+  return {...mutation, addMessages, updateMessageStatus, deleteMessage}
 }

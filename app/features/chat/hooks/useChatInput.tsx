@@ -86,6 +86,7 @@ export const useChatInput = ({
       sendChatAndCache(reformedMsg)
       setText('')
     } catch (e) {
+      console.log(e!)
       const message = e instanceof Error ? e.message : String(e)
       Alert.alert('전송 오류', message)
     } finally {

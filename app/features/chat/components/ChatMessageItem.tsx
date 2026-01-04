@@ -1,3 +1,4 @@
+import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
 import COLORS from '@app/shared/constants/color'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
@@ -5,7 +6,7 @@ import ImageViewer from '@app/shared/ui/common/ImageViewer'
 import {formatChatTime, formatServerDate} from '@app/shared/utils/firebase'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import {Icon, IconButton, Text} from 'react-native-paper'
+import {Icon, Text} from 'react-native-paper'
 
 export type ChatMessageItemProps = {
   item: ChatMessage
@@ -20,8 +21,6 @@ const getStatusIcon = (status?: 'pending' | 'success' | 'failed') => {
   switch (status) {
     case 'pending':
       return {name: 'clock-outline', color: '#B0B0B0'} // 전송중
-    // case 'success':
-    //   return {name: 'check', color: '#B0B0B0'} // 전송완료
     case 'failed':
       return {name: 'alert-circle-outline', color: '#FF5A5A'} // 실패
     default:
@@ -37,7 +36,7 @@ export default function ChatMessageItem({
   hideDate,
   member,
 }: ChatMessageItemProps) {
-  const icon = getStatusIcon(item.status)
+  // const icon = getStatusIcon(item.status)
 
   return (
     <>
@@ -50,23 +49,9 @@ export default function ChatMessageItem({
         {isMine ? (
           <>
             <View
-              style={[
-                styles.chatOptionsWrap,
-                {
-                  justifyContent: 'flex-end', // ✅ 오른쪽 정렬
-                },
-              ]}>
+              style={[styles.chatOptionsWrap, {justifyContent: 'flex-end'}]}>
               {/* 재전송, 삭세 아이콘 */}
-              {!!item?.status && icon && (
-                <IconButton
-                  icon={icon.name as any}
-                  iconColor={icon.color}
-                  size={14}
-                  style={styles.statusIcon}
-                  onPress={() => {}}
-                  contentStyle={{padding: 0}} // ✅ 버튼 내부 패딩 제거
-                />
-              )}
+              {!!item?.status && <ChatMessageStatusIcons item={item} />}
               {/* 시간 */}
               {!hideMinute && item?.createdAt && (
                 <Text style={[styles.chatTime, {textAlign: 'right'}]}>
@@ -206,15 +191,15 @@ const styles = StyleSheet.create({
   },
   chatOptionsWrap: {
     flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 13,
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
     alignSelf: 'flex-end',
+    height: 14,
   },
   chatTime: {
     fontSize: 12,
     lineHeight: 14,
     alignSelf: 'flex-start', // make width fit content
-    minWidth: 0,
     paddingHorizontal: 4,
   },
   statusIcon: {

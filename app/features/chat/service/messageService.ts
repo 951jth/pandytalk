@@ -87,32 +87,21 @@ export const messageService = {
     if (message.type === 'image' && !message.imageUrl)
       throw new Error('이미지 업로드에 실패했습니다.')
     try {
-      if (!fetchedRoomId) return new Error('채팅방 정보가 없습니다.')
+      if (!fetchedRoomId) throw new Error('채팅방 정보가 없습니다.')
       // 1) SQLite에 대기상태로 저장
       await messageLocal.saveMessagesToSQLite(fetchedRoomId, [
         {...message, status: 'pending'},
       ])
       //의도적으로 지연시켜 네트워크 상태 변화 테스트
-      try {
-        // 2) firestore에 전송
-        await messageRemote.sendChatMessage(fetchedRoomId, message)
-        // 3) 전송 성공시 SQLite 상태 갱신
-        await messageLocal.updateMessageStatus(
-          fetchedRoomId,
-          newMessageId,
-          'success',
-        )
-      } catch (e) {
-        console.log('send err: ', e)
-        console.log(fetchedRoomId, newMessageId)
-        if (fetchedRoomId && newMessageId) {
-          messageLocal.updateMessageStatus(
-            fetchedRoomId,
-            newMessageId,
-            'failed',
-          )
-        }
-      }
+      // 2) firestore에 전송
+      await messageRemote.sendChatMessage(fetchedRoomId, message)
+      // 3) 전송 성공시 SQLite 상태 갱신
+      await messageLocal.updateMessageStatus(
+        fetchedRoomId,
+        newMessageId,
+        'success',
+      )
+
       return fetchedRoomId
     } catch (e: any) {
       //SQLite에 실패상태로 저장
