@@ -104,7 +104,6 @@ export const messageRemote = {
     message: Omit<ChatMessage, 'createdAt'>,
   ) => {
     return firebaseCall('messageRemote.sendChatMessage', async () => {
-      if (debug) throw new Error('test error')
       const chatRef = doc(firestore, 'chats', roomId)
       //runTransaction : 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
       const messageId = message.id

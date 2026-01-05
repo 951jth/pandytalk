@@ -1,5 +1,5 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
-import type {ChatListItem} from './chat'
+import type {ChatRoom} from './chat'
 
 //값을 지정하는 경우 해당 key의 조건을 따지고, 아닌경우 기본값 지정
 type ParamListOf<
@@ -9,7 +9,7 @@ type ParamListOf<
 
 export type TabParamList = {
   'group-chat': {groupId: string} | undefined
-  'group-chat-list': {type: ChatListItem['type']}
+  'group-chat-list': {type: ChatRoom['type']}
   [key: string]: Record<string, unknown> | undefined
 }
 
@@ -21,11 +21,11 @@ export type AuthStackParamList = {
 export type AppRouteParamList = {
   // Auth
   'dm-chat': {myId: string; targetId: string; title?: string}
-  'group-chat': {roomId: string; type?: ChatListItem['type']} | undefined
+  'group-chat': {roomId: string; type?: ChatRoom['type']} | undefined
   'guest-manage': undefined
   'group-manage': undefined
   'user-select': undefined
-  chats: {type?: ChatListItem['type']}
+  chats: {type?: ChatRoom['type']}
 }
 
 export type RootStackParamList = {

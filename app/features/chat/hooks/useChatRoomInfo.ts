@@ -1,5 +1,5 @@
 import {chatService} from '@app/features/chat/service/chatService'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import {useQuery} from '@tanstack/react-query'
 
 export const useChatRoomInfo = (roomId?: string | null) => {
@@ -8,7 +8,7 @@ export const useChatRoomInfo = (roomId?: string | null) => {
     enabled: !!roomId,
     queryFn: async () => {
       if (!roomId) return null
-      const roomInfo: ChatListItem | null =
+      const roomInfo: ChatRoom | null =
         await chatService.getChatRoomWithMemberInfo(roomId)
       return roomInfo
     },

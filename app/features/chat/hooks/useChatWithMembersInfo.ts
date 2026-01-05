@@ -1,13 +1,13 @@
 import {userService} from '@app/features/user/service/userService'
 import {User} from '@app/shared/types/auth'
-import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
+import {ChatItemWithMemberInfo, ChatRoom} from '@app/shared/types/chat'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
 type UserInfosById = Record<string, User>
 
 export const useChatWithMembersInfo = (
-  rawChats: ChatListItem[],
-  type: ChatListItem['type'],
+  rawChats: ChatRoom[],
+  type: ChatRoom['type'],
   uid?: string,
 ) => {
   const [userInfosById, setUserInfosById] = useState<UserInfosById>({})

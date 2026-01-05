@@ -1,16 +1,16 @@
-import {ChatListItem} from '@app/shared/types/chat'
+import {ChatRoom} from '@app/shared/types/chat'
 import {DocChange} from '@app/shared/types/firebase'
 import {compareChat, getUnreadCount} from '@app/shared/utils/chat'
 import {InfiniteData} from '@tanstack/react-query'
 
 type pageType = {
-  chats: ChatListItem[]
+  chats: ChatRoom[]
   lastVisible: unknown | null
   isLastPage: boolean
 }
 
-export const rebuildPages = (
-  flat: ChatListItem[],
+export const rebuildChatPages = (
+  flat: ChatRoom[],
   old: InfiniteData<pageType>,
   pageSize?: number,
 ): InfiniteData<pageType> => {
@@ -32,8 +32,8 @@ export const rebuildPages = (
 
 export const getChatDataWithCount = (uid: string, docs: DocChange[]) => {
   return docs.map(change => {
-    const data = change.doc.data() as Omit<ChatListItem, 'id'>
-    const chat: ChatListItem = {
+    const data = change.doc.data() as Omit<ChatRoom, 'id'>
+    const chat: ChatRoom = {
       ...data,
       id: change.doc.id,
     }

@@ -2,7 +2,7 @@
 import {useChatWithMembersInfo} from '@app/features/chat/hooks/useChatWithMembersInfo'
 import {useMyChatListInfinite} from '@app/features/chat/hooks/useMyChatListInfinite'
 import {useSubscribeChatList} from '@app/features/chat/hooks/useSubscribeChatList'
-import {ChatItemWithMemberInfo, ChatListItem} from '@app/shared/types/chat'
+import {ChatItemWithMemberInfo, ChatRoom} from '@app/shared/types/chat'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
@@ -34,7 +34,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
   // 실시간 구독
   useSubscribeChatList(user?.uid, type)
 
-  const rawChats: ChatListItem[] = useMemo(
+  const rawChats: ChatRoom[] = useMemo(
     () => data?.pages.flatMap(page => page?.chats ?? []) ?? [],
     [data],
   )

@@ -1,4 +1,6 @@
 import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
+import {useChatMessageDeleteMutation} from '@app/features/chat/hooks/useChatMessageDeleteMutation'
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
 import COLORS from '@app/shared/constants/color'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
@@ -14,18 +16,8 @@ export type ChatMessageItemProps = {
   hideMinute: boolean
   hideDate: boolean
   isMine: boolean
+  roomId?: string | null
   member?: User
-}
-
-const getStatusIcon = (status?: 'pending' | 'success' | 'failed') => {
-  switch (status) {
-    case 'pending':
-      return {name: 'clock-outline', color: '#B0B0B0'} // 전송중
-    case 'failed':
-      return {name: 'alert-circle-outline', color: '#FF5A5A'} // 실패
-    default:
-      return null
-  }
 }
 
 export default function ChatMessageItem({
@@ -34,10 +26,11 @@ export default function ChatMessageItem({
   hideProfile,
   hideMinute,
   hideDate,
+  roomId,
   member,
 }: ChatMessageItemProps) {
-  // const icon = getStatusIcon(item.status)
-
+  const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
+  const {mutate: retrySendMessage} = useSendChatMessageMutation(roomId)
   return (
     <>
       <View
@@ -51,7 +44,13 @@ export default function ChatMessageItem({
             <View
               style={[styles.chatOptionsWrap, {justifyContent: 'flex-end'}]}>
               {/* 재전송, 삭세 아이콘 */}
-              {!!item?.status && <ChatMessageStatusIcons item={item} />}
+              {!!item?.status && (
+                <ChatMessageStatusIcons
+                  item={item}
+                  onDelete={deleteMessage}
+                  onRetry={retrySendMessage}
+                />
+              )}
               {/* 시간 */}
               {!hideMinute && item?.createdAt && (
                 <Text style={[styles.chatTime, {textAlign: 'right'}]}>

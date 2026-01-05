@@ -1,10 +1,9 @@
-import {useSendChatMessageMutation} from '@app/features/chat/hooks/useSendChatMessageMutation'
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
 import {chatService} from '@app/features/chat/service/chatService'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
-import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useQueryClient} from '@tanstack/react-query'
 import {useState} from 'react'
 import {Alert, Keyboard} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
@@ -18,9 +17,9 @@ export type InputMessageParams = {
 }
 
 export type ChatInputPropTypes = {
-  chatType: ChatListItem['type']
+  chatType: ChatRoom['type']
   targetIds?: string[]
-  roomInfo?: ChatListItem | null
+  roomInfo?: ChatRoom | null
 }
 
 export const useChatInput = ({
@@ -31,9 +30,9 @@ export const useChatInput = ({
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
-  const queryClient = useQueryClient()
-  const {mutate: sendChatAndCache, isPending} =
-    useSendChatMessageMutation(roomInfo)
+  const {mutate: sendChatAndCache, isPending} = useSendChatMessageMutation(
+    roomInfo?.id,
+  )
 
   const onSendMessage = async (
     type: ChatMessage['type'], //메세지 타입임
@@ -48,7 +47,6 @@ export const useChatInput = ({
         text: text,
         type,
         imageUrl: '',
-        seq: (fetchedRoomInfo?.lastSeq ?? 0) + 1 || 1,
       }
       // step 2. 이미지 타입이면 업로드 Url 생성
       if (type == 'image') {
@@ -86,7 +84,7 @@ export const useChatInput = ({
       sendChatAndCache(reformedMsg)
       setText('')
     } catch (e) {
-      console.log(e!)
+      console.log(e)
       const message = e instanceof Error ? e.message : String(e)
       Alert.alert('전송 오류', message)
     } finally {

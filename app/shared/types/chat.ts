@@ -30,10 +30,9 @@ export interface PushMessage extends ChatMessage {
   pushType: string
 }
 
-export interface ChatListItem {
+export interface ChatRoom {
   id: string
   type: 'dm' | 'group'
-  // createdAt?: number
   createdAt: ServerTime
   members?: string[]
   name?: string // 그룹일 경우만
@@ -49,4 +48,4 @@ export interface ChatListItem {
   lastSeq?: number
 }
 
-export type ChatItemWithMemberInfo = ChatListItem & {findMember: User}
+export type ChatItemWithMemberInfo = ChatRoom & {findMember: User}

@@ -2,13 +2,13 @@ import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesI
 import {useSyncAndSubsMessages} from '@app/features/chat/hooks/useSyncAndSubsMessages'
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import {useMemo} from 'react'
 
 type Props = {
   roomId: string | null
   userId: string | null | undefined
-  roomInfo: ChatListItem | null | undefined
+  roomInfo: ChatRoom | null | undefined
   inputComponent?: React.ComponentType<any> | React.ReactElement | null
 }
 

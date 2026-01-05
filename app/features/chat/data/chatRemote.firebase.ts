@@ -5,7 +5,7 @@ import {
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import type {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
@@ -23,14 +23,14 @@ import {
 
 export type GetMyChatsParams = {
   userId: string
-  type: ChatListItem['type']
+  type: ChatRoom['type']
   pageParam?: FsSnapshot
   pageSize?: number
 }
 
 export type SubscribeMyChatsParams = {
   uid: string
-  type: ChatListItem['type']
+  type: ChatRoom['type']
   pageSize?: number
 }
 
@@ -59,7 +59,7 @@ export const chatRemote = {
       const page = toPageResult(
         docs,
         PAGE_SIZE,
-        d => ({id: d.id, ...d.data()}) as ChatListItem,
+        d => ({id: d.id, ...d.data()}) as ChatRoom,
       )
       return page
     })
@@ -90,7 +90,7 @@ export const chatRemote = {
     )
   },
   //채팅방 생성
-  createChatRoom: (payload: Omit<ChatListItem, 'id'>, roomId?: string) => {
+  createChatRoom: (payload: Omit<ChatRoom, 'id'>, roomId?: string) => {
     return firebaseCall('chatRemote.createChatRoom', async () => {
       const chatRef = collection(firestore, 'chats')
       // roomId가 유효하면 해당 ID로, 없으면(falsy) Auto ID로 참조 생성
@@ -99,7 +99,7 @@ export const chatRemote = {
       return {
         id: roomDocRef.id,
         ...payload,
-      } as ChatListItem
+      } as ChatRoom
     })
   },
   //현재 채팅방이 있는지 id를 통해 조회 (채팅방 정보를 조회하는게 아님.)
@@ -120,20 +120,20 @@ export const chatRemote = {
       if (!chatSnap.exists()) return null
       return {
         id: chatDocRef.id,
-        ...(chatSnap.data() as Omit<ChatListItem, 'id'>),
+        ...(chatSnap.data() as Omit<ChatRoom, 'id'>),
       }
     })
   },
   subscribeChatRoom: (
     roomId: string,
-    callback: (chatRoom: ChatListItem) => void,
+    callback: (chatRoom: ChatRoom) => void,
   ) => {
     const chatRef = doc(firestore, 'chats', roomId)
     return firebaseRefObserver(
       'chatRemote.subscribeChatRoom',
       chatRef,
       snap => {
-        const chatRoomData = snap.data() as ChatListItem
+        const chatRoomData = snap.data() as ChatRoom
         callback(chatRoomData)
       },
       error => {

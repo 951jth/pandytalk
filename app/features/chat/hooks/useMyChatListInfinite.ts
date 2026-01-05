@@ -1,11 +1,11 @@
 import {chatService} from '@app/features/chat/service/chatService'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import type {FsSnapshot} from '@app/shared/types/firebase'
 import {useInfiniteQuery} from '@tanstack/react-query'
 
 export function useMyChatListInfinite(
   userId: string | null | undefined,
-  type: ChatListItem['type'] = 'dm',
+  type: ChatRoom['type'] = 'dm',
 ) {
   return useInfiniteQuery({
     queryKey: ['chats', type, userId],
@@ -33,12 +33,9 @@ export function useMyChatListInfinite(
     //탭 언리드 카운트 계산용
     select: data => {
       const chats = data.pages.flatMap(p => p.chats ?? [])
-      const totalUnreadCount = chats?.reduce(
-        (acc: number, chat: ChatListItem) => {
-          return (acc += chat?.unreadCount ?? 0)
-        },
-        0,
-      )
+      const totalUnreadCount = chats?.reduce((acc: number, chat: ChatRoom) => {
+        return (acc += chat?.unreadCount ?? 0)
+      }, 0)
 
       return {
         ...data,

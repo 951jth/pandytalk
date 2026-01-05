@@ -1,13 +1,13 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase'
-import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import type {ChatMessage} from '@app/shared/types/chat'
 import {
   toMillisFromServerTime,
   toRNFTimestamp,
 } from '@app/shared/utils/firebase'
 
 export type SendMessageParams = {
-  roomInfo?: ChatListItem | null
+  roomId?: string
   message: ChatMessage
 }
 
@@ -51,7 +51,6 @@ export const messageService = {
         try {
           //SQLite 저장 시도
           await messageLocal.saveMessagesToSQLite(roomId, newMessages)
-          //정합성을 위해 sqlite에 등록이 되었을 경우 callback 호출,
           callback(newMessages)
         } catch (error) {
           console.error('subscribeChatMessages_error:', error)
@@ -75,27 +74,29 @@ export const messageService = {
 
     if (newMessages.length === 0) return []
     await messageLocal.saveMessagesToSQLite(roomId, newMessages)
-    return newMessages
+    //데이터 정합성을 위해 save이후에 sqlite를 바라보고 데이터를 가져옴
+    const messages = await messageLocal.getChatMessageBySeq(
+      roomId,
+      seq,
+      pageSize,
+    )
+    return messages
   },
   //메세지 전송 (신규채팅생성)
-  sendChatMessage: async ({roomInfo, message}: SendMessageParams) => {
-    let fetchedRoomId: string = roomInfo?.id ?? '' //roomInfo의 id값 존재여부를 통해 실제 채팅방이 존재하는지 확인함.
+  sendChatMessage: async ({roomId, message}: SendMessageParams) => {
+    let fetchedRoomId: string = roomId ?? ''
     let newMessageId: string = message?.id ?? ''
-    const trimmed = message.text?.trim() ?? '' // 공백 메시지 방지용
+    const trimmed = message.text?.trim() ?? ''
     if (message.type === 'text' && !trimmed)
       throw new Error('메시지를 입력해주세요.')
     if (message.type === 'image' && !message.imageUrl)
       throw new Error('이미지 업로드에 실패했습니다.')
     try {
       if (!fetchedRoomId) throw new Error('채팅방 정보가 없습니다.')
-      // 1) SQLite에 대기상태로 저장
       await messageLocal.saveMessagesToSQLite(fetchedRoomId, [
         {...message, status: 'pending'},
       ])
-      //의도적으로 지연시켜 네트워크 상태 변화 테스트
-      // 2) firestore에 전송
       await messageRemote.sendChatMessage(fetchedRoomId, message)
-      // 3) 전송 성공시 SQLite 상태 갱신
       await messageLocal.updateMessageStatus(
         fetchedRoomId,
         newMessageId,

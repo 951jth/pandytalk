@@ -1,11 +1,11 @@
 import {useMyChatListInfinite} from '@app/features/chat/hooks/useMyChatListInfinite'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import React from 'react'
 import PandyBadge from '../../../shared/ui/badge/PandyBadge'
 import {useAppSelector} from '../../../store/reduxHooks'
 
 type propTypes = {
-  type: ChatListItem['type']
+  type: ChatRoom['type']
 }
 
 export default function ChatUnreadCount({type = 'dm'}: propTypes) {

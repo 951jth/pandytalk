@@ -1,11 +1,11 @@
 import {readStatusRemote} from '@app/features/chat/data/readStatusRemote.firebase'
-import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useFocusEffect} from '@react-navigation/native'
 import {useCallback, useEffect, useRef} from 'react'
 
 export const useUpdateLastReadOnBlur = (
   userId?: string | null,
-  roomInfo?: ChatListItem | null,
+  roomInfo?: ChatRoom | null,
   messages?: ChatMessage[],
 ) => {
   const roomInfoRef = useRef(roomInfo) // 포커스 이벤트용 참조값.

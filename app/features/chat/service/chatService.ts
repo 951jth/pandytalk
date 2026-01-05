@@ -4,7 +4,7 @@ import {
   type GetMyChatsParams,
 } from '@app/features/chat/data/chatRemote.firebase'
 import {userService} from '@app/features/user/service/userService'
-import type {ChatListItem} from '@app/shared/types/chat'
+import type {ChatRoom} from '@app/shared/types/chat'
 import {getUnreadCount} from '@app/shared/utils/chat'
 import {
   FirebaseFirestoreTypes,
@@ -16,12 +16,12 @@ export type CreateChatRoomOptions = {
   targetIds: string[] // DM이면 1명, 그룹이면 N명
   name?: string
   image?: string
-  type?: ChatListItem['type'] // 명시 안 하면 members 길이로 dm/group 자동 판별
+  type?: ChatRoom['type'] // 명시 안 하면 members 길이로 dm/group 자동 판별
 }
 
 export type ensureChatRoomParams = {
   roomId: string
-  payload: Omit<ChatListItem, 'id'>
+  payload: Omit<ChatRoom, 'id'>
 }
 
 export const chatService = {
@@ -59,10 +59,10 @@ export const chatService = {
     const dmRoomId = `${sortedIds[0]}_${sortedIds[1]}`
 
     // ✅ 타입 자동 판별 (명시된 type이 있으면 우선)
-    const type: ChatListItem['type'] =
+    const type: ChatRoom['type'] =
       options.type ?? (sortedIds.length > 2 ? 'group' : 'dm')
 
-    const baseRoom: Omit<ChatListItem, 'id'> = {
+    const baseRoom: Omit<ChatRoom, 'id'> = {
       type,
       createdAt: serverTimestamp(),
       members: sortedIds,
@@ -102,7 +102,7 @@ export const chatService = {
   },
   subscribeChatRoom: (
     roomId: string,
-    callback: (chatRoom: ChatListItem) => void,
+    callback: (chatRoom: ChatRoom) => void,
   ) => {
     if (!roomId) return () => {}
     const unsub = chatRemote.subscribeChatRoom(roomId, callback)

@@ -1,22 +1,18 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {useSendChatMessageMutation} from '@app/features/chat/hooks/useSendChatMessageMutation'
+import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
 import {messageService} from '@app/features/chat/service/messageService'
-import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
 import {type InfiniteData} from '@tanstack/react-query'
 import {useEffect, useRef} from 'react'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
-export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
+export const useSyncAndSubsMessages = (roomInfo?: ChatRoom | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const roomId = roomInfo?.id
-  const {addMessages, updateMessageStatus} =
-    useSendChatMessageMutation(roomInfo)
+  const {addMessages} = useSendChatMessageMutation(roomId)
 
-  useEffect(() => {
-    messageLocal.getAllMessages().then(res => console.log('allMessages', res))
-  }, [])
   useEffect(() => {
     let isCancelled = false
     // 만약 동기화(syncNewMessages)나 구독(subscribeChatMessages)이
@@ -32,7 +28,9 @@ export const useSyncAndSubsMessages = (roomInfo?: ChatListItem | null) => {
         if (isCancelled) return
         //채팅방이 없는경우도 존재함
         try {
-          //데이터가 없어도 흡수
+          //채팅방이 아직 생성안된경우에도 구독로직은 타야함.
+          //네트워크를 다시켜고 동기화 할떄는 sqlite에서 맞춰와서 동기화한다.
+
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
           addMessages(newMsgs)
         } catch (e) {}

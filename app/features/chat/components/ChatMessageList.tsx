@@ -1,6 +1,6 @@
 import ChatMessageItem from '@app/features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@app/features/chat/hooks/useChatMessageList'
-import {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
 import {
@@ -12,8 +12,8 @@ import {
 interface Props {
   roomId: string | null
   userId: string | null | undefined
-  roomInfo: ChatListItem | null | undefined
-  chatType?: ChatListItem['type']
+  roomInfo: ChatRoom | null | undefined
+  chatType?: ChatRoom['type']
 }
 const MemoizedChatMessage = memo(ChatMessageItem)
 
@@ -26,7 +26,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     isFetchingNextPage,
     membersMap,
   } = useChatMessageList({userId, roomId, roomInfo})
-  console.log('messages', messages)
   const renderMessage = useCallback(
     ({item, index}: {item: ChatMessage; index: number}) => {
       const isMine = item?.senderId === userId
@@ -43,6 +42,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
           hideProfile={hideProfile}
           hideMinute={hideMinute}
           hideDate={hideDate}
+          roomId={roomId ?? null}
           member={member}
         />
       )

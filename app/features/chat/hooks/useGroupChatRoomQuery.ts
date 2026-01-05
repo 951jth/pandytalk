@@ -1,4 +1,4 @@
-import {ChatListItem} from '@app/shared/types/chat'
+import {ChatRoom} from '@app/shared/types/chat'
 import {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
@@ -22,7 +22,7 @@ import {useDebouncedCallback} from '../../../shared/hooks/useDebounceCallback'
 import {compareChat, getUnreadCount} from '../../../shared/utils/chat'
 
 interface pageType {
-  chats: ChatListItem[]
+  chats: ChatRoom[]
   lastVisible: unknown | null
   isLastPage: boolean
 }
@@ -38,7 +38,7 @@ export const useGroupChatsInfinite = (userId: string | null | undefined) => {
     queryFn: async ({pageParam}) => {
       if (!userId) {
         return {
-          chats: [] as ChatListItem[],
+          chats: [] as ChatRoom[],
           lastVisible: null,
           isLastPage: true,
         }
@@ -61,7 +61,7 @@ export const useGroupChatsInfinite = (userId: string | null | undefined) => {
 
       const snapshot = await getDocs(q)
 
-      const chats: ChatListItem[] = snapshot.docs.map(d => {
+      const chats: ChatRoom[] = snapshot.docs.map(d => {
         const data = d.data() as any
         const unreadCount = getUnreadCount(data, userId)
 
@@ -103,7 +103,7 @@ export function useSubscribeGroupChatList(uid?: string | null) {
 
   // 공통: 평탄화 → 정렬 → 페이지 재쪼개기
   const rebuildPages = (
-    flat: ChatListItem[],
+    flat: ChatRoom[],
     old: InfiniteData<pageType>,
   ): InfiniteData<pageType> => {
     flat.sort(compareChat)
@@ -157,7 +157,7 @@ export function useSubscribeGroupChatList(uid?: string | null) {
       // React Query 캐시(무한쿼리)를 “즉시 수정”하기 위한 공용 래퍼
       const patchCache = (
         mutator: (
-          flat: ChatListItem[],
+          flat: ChatRoom[],
           old: InfiniteData<pageType>,
         ) => InfiniteData<pageType>,
       ) => {
@@ -168,7 +168,7 @@ export function useSubscribeGroupChatList(uid?: string | null) {
           {queryKey: ['chats', 'dm', uid], exact: false},
           old => {
             if (!old) return old
-            const flat: ChatListItem[] = old.pages.flatMap(p => p.chats)
+            const flat: ChatRoom[] = old.pages.flatMap(p => p.chats)
             return mutator(flat, old)
           },
         )
@@ -181,7 +181,7 @@ export function useSubscribeGroupChatList(uid?: string | null) {
           for (const ch of modified) {
             const id = ch.doc.id
             const idx = flat.findIndex(x => x.id === id)
-            const data = ch.doc.data() as ChatListItem
+            const data = ch.doc.data() as ChatRoom
             const fetchData = {
               ...data,
               unreadCount: getUnreadCount(data, uid),
@@ -200,7 +200,7 @@ export function useSubscribeGroupChatList(uid?: string | null) {
           for (const ch of action.docs) {
             const id = ch.doc.id
             if (flat.some(x => x.id === id)) continue
-            const data = ch.doc.data() as ChatListItem
+            const data = ch.doc.data() as ChatRoom
             const fetchData = {
               ...data,
               unrunreadCount: getUnreadCount(data, uid),

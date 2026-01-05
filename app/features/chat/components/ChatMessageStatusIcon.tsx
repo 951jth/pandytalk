@@ -4,23 +4,31 @@ import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {ActivityIndicator, IconButton} from 'react-native-paper'
 
-export default function ChatMessageStatusIcons({item}: {item: ChatMessage}) {
-  const onCancel = () => {}
-  const onRetry = () => {}
+type ChatMessageStatusIconsProps = {
+  item: ChatMessage
+  onDelete: (messageId: string) => void
+  onRetry: (message: ChatMessage) => void
+}
+
+export default function ChatMessageStatusIcons({
+  item,
+  onDelete,
+  onRetry,
+}: ChatMessageStatusIconsProps) {
   return (
     <>
       {item?.status == 'failed' && (
         <View style={styles.icons}>
           <IconButton
             icon="reload"
-            onPress={onRetry}
+            onPress={() => onRetry(item)}
             style={[styles.iconButton, styles.reload]}
             size={12}
             iconColor={COLORS.onPrimary}
           />
           <IconButton
             icon="close"
-            onPress={onCancel}
+            onPress={() => onDelete(item.id)}
             style={[styles.iconButton, styles.cancel]}
             size={12}
             iconColor={COLORS.onPrimary}

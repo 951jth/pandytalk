@@ -2,7 +2,7 @@ import {
   formatServerDate,
   toMillisFromServerTime,
 } from '@app/shared/utils/firebase'
-import type {ChatListItem, ChatMessage} from '../types/chat'
+import type {ChatMessage, ChatRoom} from '../types/chat'
 
 export const isSameSender = (
   prev: ChatMessage | null,
@@ -62,7 +62,7 @@ export function mergeMessages(
   ) // 최신순 정렬
 }
 //체팅 날짜순 정렬
-export const compareChat = (a: ChatListItem, b: ChatListItem) => {
+export const compareChat = (a: ChatRoom, b: ChatRoom) => {
   const aLast = toMillisFromServerTime(a.lastMessage?.createdAt) ?? 0
   const bLast = toMillisFromServerTime(b.lastMessage?.createdAt) ?? 0
   if (aLast !== bLast) return bLast - aLast // desc
@@ -71,7 +71,7 @@ export const compareChat = (a: ChatListItem, b: ChatListItem) => {
   return bCreated - aCreated // desc
 }
 
-export const getUnreadCount = (data: ChatListItem, userId: string) => {
+export const getUnreadCount = (data: ChatRoom, userId: string) => {
   const lastSeq: number = data?.lastSeq ?? 0
   const myReadSeq: number = data?.lastReadSeqs?.[userId] ?? 0
   const unreadCount = Math.max(0, lastSeq - myReadSeq)

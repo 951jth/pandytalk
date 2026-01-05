@@ -1,5 +1,7 @@
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
-import type {ChatListItem, ChatMessage} from '@app/shared/types/chat'
+import {rebuildMessagePages} from '@app/features/chat/utils/message'
+import type {ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
 import {mergeMessages} from '@app/shared/utils/chat'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
@@ -8,6 +10,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query'
+import {Alert} from 'react-native'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
@@ -29,21 +32,20 @@ export type InputMessageParams = {
 }
 
 export const useSendChatMessageMutation = (
-  roomInfo: ChatListItem | null | undefined,
+  roomId: string | null | undefined,
 ) => {
   const queryClient = useQueryClient()
-  const roomId = roomInfo?.id
   const queryKey = ['chatMessages', roomId]
 
-  // 메시지 추가 (Optimistic UI, 새 메시지 수신 등)
+  // 메시지 추가
   const addMessages = (newMessages: ChatMessage[]) => {
     if (!roomId) return
     queryClient.setQueryData(
       ['chatMessages', roomId],
       (old: MessagesInfiniteData | undefined) => {
         const cur = old ?? init
+        //등록하는과정에서 id를 기준으로 replace됨
         const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
-        console.log('merged messages:', merged)
         return {
           ...(old ?? init), //초기값이 없는 경우가 있음.
           pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
@@ -68,7 +70,6 @@ export const useSendChatMessageMutation = (
             msg.id === messageId ? {...msg, status} : msg,
           ),
         }))
-        console.log('newPages', newPages)
         return {
           ...old,
           pages: newPages,
@@ -78,27 +79,27 @@ export const useSendChatMessageMutation = (
   }
 
   // 메시지 삭제
-  const deleteMessage = (messageId: string) => {
+  const deleteMessage = async (messageId: string) => {
     if (!roomId) return
     queryClient.setQueryData(
       queryKey,
-      (old: MessagesInfiniteData | undefined) => {
+      async (old: MessagesInfiniteData | undefined) => {
         if (!old) return old
-        const newPages = old.pages.map(page => ({
-          ...page,
-          data: page.data.filter(msg => msg.id !== messageId),
-        }))
-        return {
-          ...old,
-          pages: newPages,
-        }
+        const flat = old?.pages.flatMap(page => page?.data ?? []) ?? []
+        await messageLocal.deleteMessageById(roomId, messageId)
+        return rebuildMessagePages(
+          flat.filter(e => e.id !== messageId),
+          old,
+          20,
+        )
       },
     )
   }
 
   const mutation = useMutation({
     mutationFn: async (message: ChatMessage) => {
-      await messageService.sendChatMessage({roomInfo, message})
+      if (!roomId) return
+      await messageService.sendChatMessage({roomId, message})
       return true
     },
     onMutate: async message => {
@@ -110,19 +111,19 @@ export const useSendChatMessageMutation = (
       const msgs = [
         {...convertTimestampsToMillis(message), status: 'pending'},
       ] as ChatMessage[]
-      console.log('msgs onMutate:', msgs)
+
       addMessages(msgs)
       return {prev, optimisticId: message.id}
     },
 
     onSuccess: (_res, _message, ctx) => {
       if (!roomId || !ctx?.optimisticId) return
-      updateMessageStatus(ctx.optimisticId, 'pending')
+      updateMessageStatus(ctx.optimisticId, 'success')
     },
 
     onError: (err, _message, ctx) => {
-      console.error('sendChatMessage_error:', err)
       if (!roomId) return
+      Alert.alert('전송 오류', err?.message)
       if (ctx?.optimisticId) updateMessageStatus(ctx.optimisticId, 'failed')
     },
   })

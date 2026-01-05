@@ -4,7 +4,7 @@ import {
   Timestamp,
 } from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
-import type {ChatListItem, ServerTime} from '../types/chat'
+import type {ChatRoom, ServerTime} from '../types/chat'
 
 // Timestamp/number → ms number 로 통일
 export const toMillis = (
@@ -125,7 +125,7 @@ export const formatChatTime = (
   return `${period} ${hhmm}`
 }
 
-export function sortKey(item: ChatListItem): number {
+export function sortKey(item: ChatRoom): number {
   // lastMessageAt을 쓰는 경우(권장) 여기에 넣어두면 됨.
   const lmAt = (item as any).lastMessageAt // 선택 필드라 any로 접근
   return toMillis(lmAt ?? item.lastMessage?.createdAt ?? item.createdAt)
