@@ -3,7 +3,7 @@ import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import {useState} from 'react'
+import {useCallback, useMemo, useState} from 'react'
 
 export function useUsersScreen() {
   const [searchText, setSearchText] = useState<string>('')
@@ -19,17 +19,22 @@ export function useUsersScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
 
-  const users = data?.pages.flatMap(page => page.users) ?? []
-  const others = users?.filter(e => e?.uid !== userInfo?.uid)
+  const others = useMemo(() => {
+    const users = data?.pages.flatMap(page => page.users) ?? []
+    return users?.filter(e => e?.uid !== userInfo?.uid)
+  }, [data])
 
-  const moveToChatRoom = (targetId: string, title: string) => {
-    if (!userInfo) return
-    navigation.navigate('dm-chat', {
-      myId: userInfo.uid,
-      targetId,
-      title,
-    })
-  }
+  const moveToChatRoom = useCallback(
+    (targetId: string, title: string) => {
+      if (!userInfo) return
+      navigation.navigate('dm-chat', {
+        myId: userInfo.uid,
+        targetId,
+        title,
+      })
+    },
+    [navigation, userInfo?.uid],
+  )
   // TODO 필터링 기능 필요하면 사용.
   // const debouncedSetSearchText = useMemo(
   //   () =>

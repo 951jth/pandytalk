@@ -57,7 +57,6 @@ export const messageService = {
         }
       },
     )
-
     return unsub
   },
   //최신 채팅과 동기화

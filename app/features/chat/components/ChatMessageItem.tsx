@@ -31,6 +31,7 @@ export default function ChatMessageItem({
 }: ChatMessageItemProps) {
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useSendChatMessageMutation(roomId)
+  // console.log('rendered message item: ', item.id)
   return (
     <>
       <View
