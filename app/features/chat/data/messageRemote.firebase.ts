@@ -76,9 +76,9 @@ export const messageRemote = {
 
     let messageQuery = query(messagesRef, orderBy('seq', 'desc'), limit(50))
 
-    if (lastSeq !== null && lastSeq !== undefined) {
-      messageQuery = query(messageQuery, where('seq', '>', lastSeq))
-    }
+    if (lastSeq) messageQuery = query(messageQuery, where('seq', '>', lastSeq))
+
+    console.log('lastSeq', lastSeq)
     return firebaseObserver(
       `messageRemote.subscribeChatMessages_${roomId}`,
       messageQuery,
@@ -88,7 +88,6 @@ export const messageRemote = {
           id: doc.id,
           ...doc.data(),
         })) as ChatMessage[]
-
         callback(newMessages)
       },
       error => {

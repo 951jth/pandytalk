@@ -57,7 +57,7 @@ export default function ChatMember({
           ) : (
             <Icon source="account" size={40} color={COLORS.primary} />
           )}
-          {item?.status == 'online' && <View style={styles.point} />}
+          {/* {item?.status == 'online' && <View style={styles.point} />} */}
         </View>
         <View style={styles.contents}>
           <View style={styles.contentsRow}>
@@ -101,17 +101,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     position: 'relative',
   },
-  point: {
-    backgroundColor: '#2CC069',
-    width: 14,
-    height: 14,
-    borderRadius: 100,
-    borderColor: '#FFF',
-    borderWidth: 2,
-    position: 'absolute',
-    right: -6,
-    top: -6,
-  },
+  // point: {
+  //   backgroundColor: '#2CC069',
+  //   width: 14,
+  //   height: 14,
+  //   borderRadius: 100,
+  //   borderColor: '#FFF',
+  //   borderWidth: 2,
+  //   position: 'absolute',
+  //   right: -6,
+  //   top: -6,
+  // },
   contents: {
     flex: 1,
     gap: 4,

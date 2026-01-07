@@ -16,6 +16,12 @@ export interface ChatMessage {
   status?: 'pending' | 'success' | 'failed'
 }
 
+export type ChatMessagesWithUiType = ChatMessage & {
+  hideProfile?: boolean
+  hideMinute?: boolean
+  hideDate?: boolean
+}
+
 export interface ChatMemberDoc {
   uid: string // 문서 ID와 동일하게 두되, 필드에도 보관(쿼리용)
   role?: 'ADMIN' | 'MEMBER'

@@ -42,7 +42,7 @@ export const firebaseCall = async <T>(
   }
 }
 
-const shortenString = (str: string, maxLength: number = 30) => {
+const shortenString = (str: string, maxLength: number = 60) => {
   if (str.length <= maxLength) return str
   const part = Math.floor(maxLength / 2) - 2
   return `${str.substring(0, part)}...${str.substring(str.length - part)}`
@@ -64,7 +64,7 @@ export const firebaseObserver = (
   const startTime = Date.now()
 
   // ✅ [핵심] 보여주기용 짧은 이름 생성
-  const displayName = shortenString(logName, 60)
+  const displayName = shortenString(logName)
 
   // 1. [Start]
   console.log(
@@ -81,7 +81,7 @@ export const firebaseObserver = (
 
       // 2. [Update] 제목에는 '짧은 이름'을 사용해서 한 줄 유지
       console.groupCollapsed(
-        `%c🔥 [Firestore/Sub] 📡 UPDATE: ${displayName} (${source}) | Count: ${count}`,
+        `%c🔥 [Firestore/Sub] 📡 UPDATE: ${logName} (${source}) | Count: ${count}`,
         'font-weight: bold;',
       )
 
@@ -153,7 +153,7 @@ export const firebaseRefObserver = (
   }
 
   const startTime = Date.now()
-  const displayName = shortenString(logName, 60)
+  const displayName = shortenString(logName)
 
   // 1. [Start]
   console.log(

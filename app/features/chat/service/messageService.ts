@@ -49,16 +49,11 @@ export const messageService = {
       async newMessages => {
         console.log('remote.subscribeChatMessages', newMessages)
         if (newMessages.length === 0) return []
-        try {
-          //SQLite 저장 시도
-          await messageLocal.saveMessagesToSQLite(roomId, newMessages)
-          callback(newMessages)
-        } catch (error) {
-          console.error('subscribeChatMessages_error:', error)
-        }
+        //SQLite 저장 시도
+        await messageLocal.saveMessagesToSQLite(roomId, newMessages)
+        callback(newMessages)
       },
     )
-
     return unsub
   },
   //최신 채팅과 동기화

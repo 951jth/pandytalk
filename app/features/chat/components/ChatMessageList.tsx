@@ -1,13 +1,11 @@
-import ChatMessageItem from '@app/features/chat/components/ChatMessageItem'
+import ChatMessageItem, {
+  type ChatMessageItemProps,
+} from '@app/features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@app/features/chat/hooks/useChatMessageList'
 import {ChatMessage, ChatRoom} from '@app/shared/types/chat'
-import React, {memo, useCallback} from 'react'
+import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
+import React, {memo, useCallback, useMemo} from 'react'
 import {FlatList, StyleSheet} from 'react-native'
-import {
-  isSameDate,
-  isSameMinute,
-  isSameSender,
-} from '../../../shared/utils/chat'
 
 interface Props {
   roomId: string | null
@@ -15,7 +13,44 @@ interface Props {
   roomInfo: ChatRoom | null | undefined
   chatType?: ChatRoom['type']
 }
-const MemoizedChatMessage = memo(ChatMessageItem)
+
+type ChatMessagesWithUiType = ChatMessage & {
+  hideProfile?: boolean
+  hideMinute?: boolean
+  hideDate?: boolean
+}
+
+// ChatMessageItem에 props를 전달시 ChatMessagesWithUi의
+// ...msg 떄문에 참조가 꺠져서 메모효과가 없어짐. 그래서 areEqual옵션을 활용함
+const arePropsEqual = (
+  prev: ChatMessageItemProps,
+  next: ChatMessageItemProps,
+) => {
+  // UI 표시 관련 플래그 비교 (가장 자주 바뀌는 것들)
+  const isFlagsSame =
+    prev.hideProfile === next.hideProfile &&
+    prev.hideMinute === next.hideMinute &&
+    prev.hideDate === next.hideDate &&
+    prev.isMine === next.isMine &&
+    prev.roomId === next.roomId
+
+  if (!isFlagsSame) return false
+  if (prev.member !== next.member) return false
+  const p = prev.item
+  const n = next.item
+  const isItemSame =
+    p.id === n.id &&
+    p.status === n.status && // 'pending' -> 'success' 상태 변화 감지 (중요)
+    p.text === n.text && // 메시지 수정 감지
+    p.imageUrl === n.imageUrl && // 이미지 URL 변경 감지
+    p.createdAt === n.createdAt && // 생성 시간
+    p.senderPicURL === n.senderPicURL && // 보낸 사람 프사 변경 (스냅샷)
+    p.senderName === n.senderName && // 보낸 사람 이름 변경 (스냅샷)
+    p.type === n.type // 메시지 타입
+
+  return isItemSame
+}
+const MemoizedChatMessage = memo(ChatMessageItem, arePropsEqual)
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
@@ -26,34 +61,47 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     isFetchingNextPage,
     membersMap,
   } = useChatMessageList({userId, roomId, roomInfo})
+
+  const ChatMessagesWithUi = useMemo(() => {
+    return messages?.map((msg, idx) => {
+      const nextItem = messages?.[idx + 1] ?? null
+      const hideProfile = isSameSender(msg, nextItem)
+      const hideMinute = isSameMinute(msg, nextItem)
+      const hideDate = isSameDate(msg, nextItem)
+      return {
+        ...msg,
+        hideProfile,
+        hideMinute,
+        hideDate,
+      }
+    })
+  }, [messages])
+
   const renderMessage = useCallback(
-    ({item, index}: {item: ChatMessage; index: number}) => {
+    ({item, index}: {item: ChatMessagesWithUiType; index: number}) => {
       const isMine = item?.senderId === userId
-      const nextItem = messages?.[index + 1] ?? null
-      const hideProfile = isSameSender(item, nextItem)
-      const hideMinute = isSameMinute(item, nextItem)
-      const hideDate = isSameDate(item, nextItem)
+      const {hideProfile, hideMinute, hideDate} = item
       const member = membersMap.get(item.senderId)
 
       return (
         <MemoizedChatMessage
           item={item}
           isMine={isMine}
-          hideProfile={hideProfile}
-          hideMinute={hideMinute}
-          hideDate={hideDate}
+          hideProfile={!!hideProfile}
+          hideMinute={!!hideMinute}
+          hideDate={!!hideDate}
           roomId={roomId ?? null}
           member={member}
         />
       )
     },
-    [membersMap, messages],
+    [membersMap, userId, roomId],
   )
 
   return (
     <FlatList
       style={styles.flex}
-      data={messages || []}
+      data={ChatMessagesWithUi || []}
       keyExtractor={item => item.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}

@@ -38,7 +38,7 @@ export const useChatMessageList = ({
   //마지막 읽은 시간,SEQ 처리
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
   //채팅 목록 구독
-  useSyncAndSubsMessages(roomInfo) //채팅방 구독설정
+  useSyncAndSubsMessages(roomId) //채팅방 구독설정
 
   return {
     messages,
