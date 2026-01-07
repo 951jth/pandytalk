@@ -47,6 +47,7 @@ export const messageService = {
       roomId,
       lastSeq,
       async newMessages => {
+        console.log('remote.subscribeChatMessages', newMessages)
         if (newMessages.length === 0) return []
         try {
           //SQLite 저장 시도

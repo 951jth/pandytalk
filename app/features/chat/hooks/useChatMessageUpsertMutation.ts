@@ -31,17 +31,23 @@ export type InputMessageParams = {
   imageUrl?: string
 }
 
-export const useSendChatMessageMutation = (
+type SendChatParams = {
+  message: ChatMessage
+  createdRoomId?: string | null
+}
+
+export const useChatMessageUpsertMutation = (
   roomId: string | null | undefined,
 ) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
 
   // 메시지 추가
-  const addMessages = (newMessages: ChatMessage[]) => {
-    if (!roomId) return
+  const addMessages = (newMessages: ChatMessage[], createdRoomId?: string) => {
+    const rid = createdRoomId ?? roomId
+    if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
     queryClient.setQueryData(
-      ['chatMessages', roomId],
+      ['chatMessages', rid],
       (old: MessagesInfiniteData | undefined) => {
         const cur = old ?? init
         //등록하는과정에서 id를 기준으로 replace됨
@@ -56,36 +62,34 @@ export const useSendChatMessageMutation = (
 
   // 메시지 상태 업데이트 (pending -> success / fail)
   const updateMessageStatus = (
+    key: readonly unknown[],
     messageId: string,
     status: ChatMessage['status'],
   ) => {
-    if (!roomId) return
-    queryClient.setQueryData(
-      queryKey,
-      (old: MessagesInfiniteData | undefined) => {
-        if (!old) return old
-        const newPages = old.pages.map(page => ({
-          ...page,
-          data: page.data.map(msg =>
-            msg.id === messageId ? {...msg, status} : msg,
-          ),
-        }))
-        return {
-          ...old,
-          pages: newPages,
-        }
-      },
-    )
-  }
+    queryClient.setQueryData<MessagesInfiniteData>(key, old => {
+      const base = old ?? init
+      const newPages = base.pages.map(page => ({
+        ...page,
+        data: page.data.map(msg =>
+          msg.id === messageId ? {...msg, status} : msg,
+        ),
+      }))
 
+      return {
+        ...base,
+        pages: newPages,
+      }
+    })
+  }
   // 메시지 삭제
   const deleteMessage = async (messageId: string) => {
-    if (!roomId) return
+    if (!roomId) throw new Error('채팅방이 존재하지 않습니다.')
     queryClient.setQueryData(
       queryKey,
       async (old: MessagesInfiniteData | undefined) => {
         if (!old) return old
-        const flat = old?.pages.flatMap(page => page?.data ?? []) ?? []
+        const flat =
+          (old ?? init)?.pages.flatMap(page => page?.data ?? []) ?? []
         await messageLocal.deleteMessageById(roomId, messageId)
         return rebuildMessagePages(
           flat.filter(e => e.id !== messageId),
@@ -97,34 +101,38 @@ export const useSendChatMessageMutation = (
   }
 
   const mutation = useMutation({
-    mutationFn: async (message: ChatMessage) => {
-      if (!roomId) return
-      await messageService.sendChatMessage({roomId, message})
+    mutationFn: async ({message, createdRoomId}: SendChatParams) => {
+      const rid = createdRoomId ?? roomId
+      if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
+      await messageService.sendChatMessage({roomId: rid, message})
       return true
     },
-    onMutate: async message => {
-      if (!roomId) return
-      // 1) 진행 중인 refetch 있으면 취소 (경합 줄임)
-      await queryClient.cancelQueries({queryKey})
-      // 2) 이전 스냅샷 저장
-      const prev = queryClient.getQueryData<MessagesInfiniteData>(queryKey)
+
+    onMutate: async ({message, createdRoomId}: SendChatParams) => {
+      const rid = createdRoomId ?? roomId
+      if (!rid) return
+
+      const key = ['chatMessages', rid] // ✅ roomId 바뀔 수 있으니 key도 rid 기준
+      await queryClient.cancelQueries({queryKey: key})
+
+      const prev = queryClient.getQueryData<MessagesInfiniteData>(key)
       const msgs = [
         {...convertTimestampsToMillis(message), status: 'pending'},
       ] as ChatMessage[]
-
-      addMessages(msgs)
-      return {prev, optimisticId: message.id}
+      addMessages(msgs, rid)
+      //방이 없음 -> 생성되는 경우 key값이 바뀌므로 전달해줘야함
+      return {prev, optimisticId: message.id, createdRoomId: rid, key}
     },
 
-    onSuccess: (_res, _message, ctx) => {
-      if (!roomId || !ctx?.optimisticId) return
-      updateMessageStatus(ctx.optimisticId, 'success')
+    onSuccess: (data, message, ctx) => {
+      if (!ctx?.optimisticId) return
+      updateMessageStatus(ctx.key, ctx.optimisticId, 'success')
     },
 
-    onError: (err, _message, ctx) => {
-      if (!roomId) return
+    onError: (err, message, ctx) => {
       Alert.alert('전송 오류', err?.message)
-      if (ctx?.optimisticId) updateMessageStatus(ctx.optimisticId, 'failed')
+      if (ctx?.optimisticId)
+        updateMessageStatus(ctx.key, ctx.optimisticId, 'failed')
     },
   })
 

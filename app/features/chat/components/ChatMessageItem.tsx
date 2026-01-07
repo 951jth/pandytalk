@@ -1,6 +1,6 @@
 import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
 import {useChatMessageDeleteMutation} from '@app/features/chat/hooks/useChatMessageDeleteMutation'
-import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
+import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import COLORS from '@app/shared/constants/color'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
@@ -30,7 +30,7 @@ export default function ChatMessageItem({
   member,
 }: ChatMessageItemProps) {
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
-  const {mutate: retrySendMessage} = useSendChatMessageMutation(roomId)
+  const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   return (
     <>
       <View
@@ -48,7 +48,7 @@ export default function ChatMessageItem({
                 <ChatMessageStatusIcons
                   item={item}
                   onDelete={deleteMessage}
-                  onRetry={retrySendMessage}
+                  onRetry={item => retrySendMessage({message: item})}
                 />
               )}
               {/* 시간 */}

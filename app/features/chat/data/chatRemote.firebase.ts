@@ -95,9 +95,10 @@ export const chatRemote = {
       const chatRef = collection(firestore, 'chats')
       // roomId가 유효하면 해당 ID로, 없으면(falsy) Auto ID로 참조 생성
       const roomDocRef = roomId ? doc(chatRef, roomId) : doc(chatRef)
-      await setDoc(roomDocRef, payload)
+      await setDoc(roomDocRef, payload, {merge: true})
       return {
         id: roomDocRef.id,
+        lastSeq: 0,
         ...payload,
       } as ChatRoom
     })

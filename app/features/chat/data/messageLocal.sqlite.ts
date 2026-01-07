@@ -45,7 +45,7 @@ export const messageLocal = {
             const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
             console.log('query', query)
             messages.forEach(msg => {
-              console.log('Inserting message into SQLite:', msg?.status)
+              console.log('Inserting message into SQLite:', msg)
               // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
               const values = [
                 msg.id,

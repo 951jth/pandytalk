@@ -64,7 +64,7 @@ export const firebaseObserver = (
   const startTime = Date.now()
 
   // ✅ [핵심] 보여주기용 짧은 이름 생성
-  const displayName = shortenString(logName, 40)
+  const displayName = shortenString(logName, 60)
 
   // 1. [Start]
   console.log(
@@ -153,7 +153,7 @@ export const firebaseRefObserver = (
   }
 
   const startTime = Date.now()
-  const displayName = shortenString(logName, 40)
+  const displayName = shortenString(logName, 60)
 
   // 1. [Start]
   console.log(

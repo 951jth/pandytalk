@@ -1,4 +1,4 @@
-import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
+import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import {chatService} from '@app/features/chat/service/chatService'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
@@ -30,7 +30,7 @@ export const useChatInput = ({
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
-  const {mutate: sendChatAndCache, isPending} = useSendChatMessageMutation(
+  const {mutate: sendChatAndCache, isPending} = useChatMessageUpsertMutation(
     roomInfo?.id,
   )
 
@@ -73,6 +73,7 @@ export const useChatInput = ({
           type: chatType,
         })
       }
+      console.log('fetchedRoomInfo', fetchedRoomInfo)
       if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
       //step 4. 메세지 전송 및 캐시 반영
       const reformedMsg = setChatMessagePayload({
@@ -81,7 +82,10 @@ export const useChatInput = ({
         user,
       })
       if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
-      sendChatAndCache(reformedMsg)
+      sendChatAndCache({
+        message: reformedMsg,
+        createdRoomId: fetchedRoomInfo.id,
+      })
       setText('')
     } catch (e) {
       console.log(e)

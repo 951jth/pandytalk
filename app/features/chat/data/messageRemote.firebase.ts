@@ -76,12 +76,14 @@ export const messageRemote = {
 
     let messageQuery = query(messagesRef, orderBy('seq', 'desc'), limit(50))
 
-    if (lastSeq) messageQuery = query(messageQuery, where('seq', '>', lastSeq))
-
+    if (lastSeq !== null && lastSeq !== undefined) {
+      messageQuery = query(messageQuery, where('seq', '>', lastSeq))
+    }
     return firebaseObserver(
       `messageRemote.subscribeChatMessages_${roomId}`,
       messageQuery,
       snapshot => {
+        console.log(snapshot)
         const newMessages = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -105,6 +107,7 @@ export const messageRemote = {
   ) => {
     return firebaseCall('messageRemote.sendChatMessage', async () => {
       const chatRef = doc(firestore, 'chats', roomId)
+      console.log('roomId', roomId)
       //runTransaction : 읽기→계산→쓰기 작업을 한 덩어리로 처리하는 API
       const messageId = message.id
       let msgRef = null
@@ -119,7 +122,12 @@ export const messageRemote = {
       await runTransaction(firestore, async tx => {
         // 1) 현재 채팅방 lastSeq가져오기
         const chatSnap = await tx.get(chatRef)
-        const prev = (chatSnap.get('lastSeq') as number) ?? 0
+        console.log('projectId', firestore.app.options.projectId)
+        console.log('[TX] chatRef.path', chatRef.path)
+        console.log('[TX] exists', chatSnap.exists())
+        console.log('[TX] data', chatSnap.data())
+        const prev = Number(chatSnap.get('lastSeq') ?? 0)
+        console.log(prev)
         const next = prev + 1
         const now = serverTimestamp()
         // 2) 메시지 문서 작성

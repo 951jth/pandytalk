@@ -1,5 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {useSendChatMessageMutation} from '@app/features/chat/hooks/useChatMessageUpsertMution'
+import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
@@ -11,7 +11,11 @@ type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 export const useSyncAndSubsMessages = (roomInfo?: ChatRoom | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const roomId = roomInfo?.id
-  const {addMessages} = useSendChatMessageMutation(roomId)
+  const {addMessages} = useChatMessageUpsertMutation(roomId)
+
+  // useEffect(() => {
+  //   messageLocal.getAllMessages(res => console.log(res))
+  // }, [])
 
   useEffect(() => {
     let isCancelled = false
@@ -44,11 +48,12 @@ export const useSyncAndSubsMessages = (roomInfo?: ChatRoom | null) => {
           roomId,
           lastSeq,
           (newMessages: ChatMessage[]) => {
+            console.log('newMessages!', newMessages)
             addMessages(newMessages)
           },
         )
       } catch (e) {
-        console.log(e)
+        console.log('subscribeChatMessages', e)
         return () => {}
       }
     }
@@ -60,5 +65,5 @@ export const useSyncAndSubsMessages = (roomInfo?: ChatRoom | null) => {
         unsubRef.current = null
       }
     }
-  }, [roomId, roomInfo])
+  }, [roomInfo])
 }
