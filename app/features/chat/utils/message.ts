@@ -1,5 +1,5 @@
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase' // 경로 맞춰
-import type {InputMessageParams} from '@app/features/chat/hooks/useChatInput'
+import type {InputMessageParams} from '@app/features/chat/hooks/useChatMessageInput'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {InfiniteData} from '@tanstack/react-query'

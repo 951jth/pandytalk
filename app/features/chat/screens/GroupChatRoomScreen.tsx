@@ -5,7 +5,7 @@ import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import AppHeader from '../../../layout/AppHeader'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
-import ChatInputBox from '../components/ChatInput'
+import ChatInputBox from '../components/ChatMessageInput'
 import ChatMessageList from '../components/ChatMessageList'
 
 export default function GroupChatRoomScreen() {

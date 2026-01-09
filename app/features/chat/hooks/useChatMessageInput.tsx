@@ -22,7 +22,7 @@ export type ChatInputPropTypes = {
   roomInfo?: ChatRoom | null
 }
 
-export const useChatInput = ({
+export const useChatMessageInput = ({
   roomInfo,
   targetIds,
   chatType,

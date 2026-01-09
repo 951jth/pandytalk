@@ -1,19 +1,19 @@
 import {
-  useChatInput,
+  useChatMessageInput,
   type ChatInputPropTypes,
-} from '@app/features/chat/hooks/useChatInput'
+} from '@app/features/chat/hooks/useChatMessageInput'
 import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import UploadButton from '../../../shared/ui/upload/UploadButton'
 
-export default function ChatInput({
+export default function ChatMessageInput({
   roomInfo,
   targetIds,
   chatType = 'group',
 }: ChatInputPropTypes) {
-  const {text, setText, onSendMessage, loading} = useChatInput({
+  const {text, setText, onSendMessage, loading} = useChatMessageInput({
     roomInfo,
     targetIds,
     chatType,
@@ -32,6 +32,7 @@ export default function ChatInput({
         outlineStyle={styles.chatTextOutlined}
         value={text}
         onChangeText={setText}
+        onSubmitEditing={() => onSendMessage('text')}
       />
       <IconButton
         icon="send"
