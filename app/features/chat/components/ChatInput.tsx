@@ -78,6 +78,7 @@ const styles = StyleSheet.create({
   chatTextOutlined: {
     borderRadius: 50,
     borderWidth: 1,
+    borderColor: COLORS.primary,
   },
   sendButton: {
     padding: 0,

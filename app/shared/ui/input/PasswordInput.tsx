@@ -18,7 +18,7 @@ export default function PasswordInput({
 
   return (
     <EditInput
-      style={[style]}
+      style={[style, styles.input]}
       // EditInput과 동일한 룩앤필
       type={type}
       // password 동작

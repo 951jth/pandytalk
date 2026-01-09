@@ -28,11 +28,15 @@ export default function TabScreenNavigator(): React.JSX.Element {
             />
           ),
           tabBarActiveTintColor: COLORS.primary,
-          tabBarInactiveTintColor: '#000000',
+          tabBarInactiveTintColor: COLORS.text,
           tabBarLabelStyle: {
             fontFamily: 'BMDOHYEON', // 👈 로컬 폰트 이름
             fontSize: 10,
           },
+          tabBarStyle: {
+            backgroundColor: COLORS.white,
+          },
+          // tabBarBackground: COLORS.gray,
         }
       }}>
       {tabs.map(route => (

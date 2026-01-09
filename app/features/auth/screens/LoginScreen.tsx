@@ -2,10 +2,9 @@ import {useLoginScreen} from '@app/features/auth/hooks/useLoginScreen'
 import COLORS from '@app/shared/constants/color'
 import EditInput from '@app/shared/ui/input/EditInput'
 import PasswordInput from '@app/shared/ui/input/PasswordInput'
-import pandy from '@shared/assets/images/pandy_visible.png'
+import pandy from '@shared/assets/images/hello_Pandy.png'
 import React from 'react'
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native'
-import LinearGradient from 'react-native-linear-gradient'
 import {Button, Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import KeyboardViewWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
@@ -25,13 +24,15 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={{flex: 1}}>
       <KeyboardViewWrapper useTouchable={true}>
-        <LinearGradient
-          colors={['#A1C4FD', '#C2E9FB']}
-          style={styles.container}>
+        {/* <LinearGradient
+          colors={['#E27D60', '#FDFCF0']}
+          style={styles.container}> */}
+        <View style={[styles.container, {backgroundColor: COLORS.background}]}>
           <Image source={pandy} style={styles.image} resizeMode="none" />
           {/* <Text style={styles.title}>어서오세요!</Text> */}
           <View style={styles.card}>
             <EditInput
+              leftIcon="email-outline"
               type="outlined"
               value={email}
               onChangeText={setEmail}
@@ -39,6 +40,7 @@ export default function LoginScreen() {
               keyboardType="email-address"
             />
             <PasswordInput
+              leftIcon="lock-outline"
               type="outlined"
               value={password}
               onChangeText={setPassword}
@@ -61,7 +63,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
             <View style={styles.line}></View>
           </View>
-        </LinearGradient>
+        </View>
+        {/* </LinearGradient> */}
       </KeyboardViewWrapper>
     </SafeAreaView>
   )
@@ -83,15 +86,18 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: COLORS.onPrimary,
+    // backgroundColor: '#FFF',
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1.5},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    // shadowColor: '#000',
+    // shadowOffset: {width: 0, height: 1.5},
+    // shadowOpacity: 0.1,
+    // shadowRadius: 3,
+    // elevation: 3,
+    backgroundColor: COLORS.background,
     borderRadius: 16,
     gap: 8,
+    borderColor: `${COLORS.primary}`,
+    borderWidth: 2,
   },
   title: {
     fontSize: 20,
@@ -104,8 +110,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   image: {
-    width: 200,
-    height: 200,
+    width: 360,
+    height: 230,
+    // width: '100%',
+    // width: 200,
+    // height: 200,
   },
   errorText: {
     color: 'red',
@@ -125,7 +134,8 @@ const styles = StyleSheet.create({
     margin: -8,
   },
   line: {
-    backgroundColor: '#FFF',
+    // backgroundColor: '#FFF',
+    backgroundColor: COLORS.primary,
     // position: 'absolute',
     // left: 0,
     // top: 5,
@@ -133,5 +143,5 @@ const styles = StyleSheet.create({
     height: 2,
     flex: 1,
   },
-  addGuestText: {fontFamily: 'BMDOHYEON', color: '#FFF', zIndex: 1},
+  addGuestText: {fontFamily: 'BMDOHYEON', color: COLORS.primary, zIndex: 1},
 })

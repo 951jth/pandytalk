@@ -55,9 +55,9 @@
 	<string>사진 저장을 위해 사진 앨범 접근이 필요합니다.</string>
 	<key>UIAppFonts</key>
 	<array>
-		<string>Mulish-Bold.ttf</string>
-		<string>Mulish-Regular.ttf</string>
-		<string>Mulish-SemiBold.ttf</string>
+		<string>Pretendard-Medium.otf</string>
+		<string>Pretendard-Regular.otf</string>
+		<string>Pretendard-SemiBold.otf</string>
 		<string>BMDOHYEON.ttf</string>
 	</array>
 </dict>

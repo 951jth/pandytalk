@@ -1,5 +1,6 @@
 import {authService} from '@app/features/auth/service/authService'
 import {appRoutes, tabScreens} from '@app/navigation/useScreens'
+import COLORS from '@app/shared/constants/color'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {ReactNode} from 'react'
@@ -77,18 +78,24 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
 const styles = StyleSheet.create({
   header: {
     borderBottomWidth: 1,
-    borderBottomColor: '#d9d9d9',
+    borderBottomColor: COLORS.gray,
     height: 50,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3, // Android 그림자
-    backgroundColor: '#FFF',
+    backgroundColor: COLORS.deepGray,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
   },
-  title: {fontSize: 18, fontFamily: 'BMDOHYEON', flex: 1, padding: 8},
+  title: {
+    fontSize: 17,
+    fontFamily: 'BMDOHYEON',
+    flex: 1,
+    padding: 8,
+    color: COLORS.text,
+  },
   rightActions: {},
 })

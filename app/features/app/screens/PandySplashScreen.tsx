@@ -1,5 +1,5 @@
 import COLORS from '@app/shared/constants/color'
-import splash from '@shared/assets/images/pandy_splash.png'
+import splash from '@shared/assets/images/pandy_colorfull_visible.png'
 import React from 'react'
 import {Image, StyleSheet, View} from 'react-native'
 
@@ -16,10 +16,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.background,
   },
   image: {
-    maxWidth: 300,
-    maxHeight: 300,
+    // maxWidth: 300,
+    width: 191,
+    height: 340,
   },
 })

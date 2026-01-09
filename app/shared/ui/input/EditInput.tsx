@@ -1,5 +1,6 @@
 // components/inputs/EditInput.tsx
 import COLORS from '@app/shared/constants/color'
+import {FONTS} from '@app/shared/constants/font'
 import React, {useMemo, useRef, useState, type ReactNode} from 'react'
 import {
   Pressable,
@@ -12,7 +13,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native'
-import {Icon} from 'react-native-paper' // ✅ paper 없이 아이콘
+import {Icon} from 'react-native-paper'
 
 export type EditInputProps = Omit<RNTextInputProps, 'value' | 'style'> & {
   edit?: boolean
@@ -22,7 +23,14 @@ export type EditInputProps = Omit<RNTextInputProps, 'value' | 'style'> & {
   style?: StyleProp<TextStyle>
   /** secureTextEntry가 있을 때 토글 아이콘 표시 여부 */
   showPasswordToggle?: boolean
+  /** 오른쪽 커스텀 엘리먼트 */
   rightElement?: ReactNode
+  /** 왼쪽 아이콘 (react-native-paper Icon source) */
+  leftIcon?: string
+  /** 왼쪽 아이콘 전체 커스텀 엘리먼트 (아이콘 대신 뱃지 등 넣고 싶을 때) */
+  leftElement?: ReactNode
+  leftIconColor?: string
+  leftIconSize?: number
 }
 
 export default function EditInput({
@@ -35,6 +43,10 @@ export default function EditInput({
   onBlur,
   showPasswordToggle = true,
   rightElement,
+  leftIcon,
+  leftElement,
+  leftIconColor = '#9E9E9E',
+  leftIconSize = 20,
   ...rest
 }: EditInputProps) {
   const [focused, setFocused] = useState(false)
@@ -79,6 +91,8 @@ export default function EditInput({
     return 36 // 아이콘 + 여백
   }, [isPasswordField, showPasswordToggle])
 
+  const hasLeftAddon = !!leftElement || !!leftIcon
+
   return (
     <View
       style={[
@@ -93,6 +107,21 @@ export default function EditInput({
             : styles.boxBorderlessBlurred,
         containerStyle,
       ]}>
+      {/* 왼쪽 아이콘 / 엘리먼트 영역 */}
+      {hasLeftAddon && (
+        <View style={styles.leftAddon}>
+          {leftElement ? (
+            leftElement
+          ) : (
+            <Icon
+              source={leftIcon!}
+              size={leftIconSize}
+              color={leftIconColor}
+            />
+          )}
+        </View>
+      )}
+
       <RNTextInput
         ref={inputRef}
         {...inputProps}
@@ -103,6 +132,7 @@ export default function EditInput({
           styles.inputBase,
           isOutlined ? styles.inputOutlined : styles.inputBorderless,
           {paddingRight: inputPaddingRight},
+          hasLeftAddon && styles.inputWithLeftAddon,
           style,
         ]}
         underlineColorAndroid="transparent"
@@ -141,7 +171,12 @@ export default function EditInput({
 }
 
 const styles = StyleSheet.create({
-  boxBase: {width: '100%', overflow: 'hidden'},
+  boxBase: {
+    width: '100%',
+    overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   boxBorderless: {borderRadius: 0},
   boxBorderlessBlurred: {borderBottomWidth: 0},
   boxBorderlessFocused: {
@@ -149,16 +184,33 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     marginBottom: 4,
   },
-  boxOutlined: {borderRadius: 16, borderWidth: 1, backgroundColor: '#FFF'},
-  boxOutlinedBlurred: {borderColor: '#DFDFDF'},
+  boxOutlined: {
+    borderRadius: 16,
+    backgroundColor: '#FFF',
+    borderWidth: 0,
+  },
+  boxOutlinedBlurred: {borderColor: COLORS.gray},
   boxOutlinedFocused: {borderColor: COLORS.primary, borderWidth: 2},
 
+  leftAddon: {
+    paddingLeft: 8,
+    paddingRight: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   inputBase: {
+    flex: 1,
     height: 60,
     paddingHorizontal: 8,
     fontSize: 14,
     color: '#000000',
     backgroundColor: 'transparent',
+    fontFamily: FONTS.medium,
+  },
+  inputWithLeftAddon: {
+    // 왼쪽 아이콘과 너무 붙지 않도록
+    paddingLeft: 4,
   },
   inputBorderless: {
     backgroundColor: 'transparent',

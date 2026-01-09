@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontFamily: 'BMDOHYEON',
   },
   menuSubText: {
-    color: COLORS.gray,
+    color: COLORS.secondary,
     fontFamily: 'BMDOHYEON',
     fontSize: 12,
   },
