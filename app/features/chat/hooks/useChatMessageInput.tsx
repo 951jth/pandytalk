@@ -73,7 +73,6 @@ export const useChatMessageInput = ({
           type: chatType,
         })
       }
-      console.log('fetchedRoomInfo', fetchedRoomInfo)
       if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
       //step 4. 메세지 전송 및 캐시 반영
       const reformedMsg = setChatMessagePayload({

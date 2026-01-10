@@ -6,6 +6,8 @@ import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate'
+import {messageTestService} from '@app/features/chat/service/messageTestService'
 import {setProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
 import {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
@@ -65,23 +67,38 @@ export function useProfileScreen() {
     }
   }
 
-  const onClean = async () => {
+  const onClear = () => {
+    Alert.alert(
+      '로컬 캐시 재동기화',
+      '로컬에 저장된 메시지/캐시를 초기화하고 서버에서 다시 불러옵니다.\n(서버 데이터는 삭제되지 않습니다)',
+      [
+        {text: '취소', style: 'cancel'},
+        {
+          text: '초기화',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await messageLocal.clearAllMessages()
+              await messageMigrate.initMessageTable() // init이 async면 await 필수
+              queryClient.clear()
+              const allMessages = await messageLocal.getAllMessages()
+              console.log('all messages: ', allMessages)
+              Alert.alert('완료', '로컬 캐시를 초기화했습니다.')
+            } catch (e: any) {
+              Alert.alert('초기화 실패', e?.message ?? '초기화 실패!')
+            }
+          },
+        },
+      ],
+    )
+  }
+  const onMigrateTest = () => {
     try {
-      await messageLocal.clearAllMessages()
-      messageLocal.initMessageTable()
-      queryClient.clear()
-      const allMessages = await messageLocal.getAllMessages()
-      console.log('all messages: ', allMessages)
-    } catch (e: any) {
-      Alert.alert(e?.message ?? '초기화 실패!')
+      messageTestService.migrateToLatest(2)
+    } catch (e) {
+      console.log(e)
     }
   }
-
-  // 테스트용: 버튼 클릭 시 강제 크래시
-  // const forceCrash = () => {
-  //   crashlytics().log('Test crash button clicked')
-  //   crashlytics().crash() // 강제 크래시
-  // }
 
   return {
     userInfo,
@@ -91,7 +108,7 @@ export function useProfileScreen() {
     formRef,
     profileRef,
     updateUserProfile,
-    setKeyboardHeight,
-    onClean,
+    onClear,
+    onMigrateTest,
   }
 }

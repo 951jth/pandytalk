@@ -15,7 +15,7 @@ export const messageService = {
   //채팅방 메세지 조회
   getChatMessages: async (
     roomId: string,
-    ms?: number, //sqlite가 읽어야하기 떄문에 클라이언트에선 ms로 관리.
+    ms?: number | null, //sqlite가 읽어야하기 떄문에 클라이언트에선 ms로 관리.
     pageSize?: number,
   ) => {
     const ts = toRNFTimestamp(ms) //milisecond -> firestore timestamp
@@ -47,7 +47,6 @@ export const messageService = {
       roomId,
       lastSeq,
       async newMessages => {
-        console.log('remote.subscribeChatMessages', newMessages)
         if (newMessages.length === 0) return []
         //SQLite 저장 시도
         await messageLocal.saveMessagesToSQLite(roomId, newMessages)

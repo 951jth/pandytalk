@@ -98,7 +98,6 @@ export const downloadWithSystemUI = async (uid: string, imageUrl: string) => {
 
   const fileName = `pandyTalk_${uid}_${Date.now()}.jpg`
   const path = `${downloads}/${fileName}`
-  console.log('path')
   try {
     const res = await config({
       fileCache: true,
@@ -113,7 +112,6 @@ export const downloadWithSystemUI = async (uid: string, imageUrl: string) => {
       },
     }).fetch('GET', imageUrl)
 
-    console.log('다운로드 완료(DownloadManager):', res.path())
     return res.path()
   } catch (e) {
     console.log('DownloadManager 다운로드 실패:', e)
@@ -146,8 +144,6 @@ export const downloadUrl = async (
     const targetDir = `${downloadsRoot}/PandyTalk` // 원하면 서브폴더
     const path = `${targetDir}/${fileName}`
 
-    console.log('[ANDROID] DownloadManager path:', path)
-
     try {
       const res = await config({
         addAndroidDownloads: {
@@ -161,7 +157,6 @@ export const downloadUrl = async (
         },
       }).fetch('GET', fileUrl)
 
-      console.log('다운로드 완료(DownloadManager):', res.path())
       // DownloadManager가 저장한 실제 경로 대신 우리가 지정한 path 리턴
       return path
     } catch (e) {

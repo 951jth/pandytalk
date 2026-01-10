@@ -7,7 +7,6 @@ import {useEffect, useRef} from 'react'
 export const useSyncAndSubsMessages = (roomId?: string | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const {addMessages} = useChatMessageUpsertMutation(roomId)
-  console.log('roomId', roomId)
   // useEffect(() => {
   //   messageLocal.getAllMessages(res => console.log(res))
   // }, [])
@@ -25,11 +24,12 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
         const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
         // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
         if (isCancelled) return
-        try {
+        if (!!localMaxSeq) {
           //채팅방이 아직 생성안된경우에도 구독로직은 타야함.
           newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
           addMessages(newMsgs)
-        } catch (e) {}
+        }
+
         const lastSeq =
           newMsgs.length > 0
             ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
@@ -40,7 +40,6 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
           roomId,
           lastSeq,
           (newMessages: ChatMessage[]) => {
-            console.log('newMessages!', newMessages)
             addMessages(newMessages)
           },
         )

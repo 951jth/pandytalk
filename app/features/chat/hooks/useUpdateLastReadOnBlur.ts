@@ -29,14 +29,11 @@ export const useUpdateLastReadOnBlur = (
         const currentReadSeq = room?.lastReadSeqs?.[userId ?? ''] ?? 0
         const msgs = messagesRef.current ?? []
         if (!userId || !room?.id) return
-        console.log(userId)
-        console.log('msgs', msgs)
         //해당 유저 마지막 읽음 처리
         const lastSeq =
           msgs.length > 0
             ? msgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), 0)
             : 0
-        console.log(currentReadSeq, lastSeq)
         if (currentReadSeq !== lastSeq) {
           //채팅방 벗어나면 seq, read time 설정
           readStatusRemote.updateChatLastReadByUser(room.id, userId, lastSeq)

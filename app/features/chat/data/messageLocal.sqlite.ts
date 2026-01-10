@@ -1,38 +1,13 @@
+import {
+  MESSAGE_COLUMN_SQL,
+  MESSAGE_PLACEHOLDERS,
+  MESSAGE_TABLE,
+} from '@app/features/chat/data/messages.schema'
 import {db} from '@app/shared/sqlite/sqlite'
 import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
 import {ChatMessage} from '@app/shared/types/chat'
 import {toMillisFromServerTime} from '@app/shared/utils/firebase'
 import {Transaction} from 'react-native-sqlite-storage'
-
-const MESSAGE_TABLE = 'messages' as const
-const MESSAGE_COLUMNS = [
-  'id',
-  'roomId',
-  'text',
-  'senderId',
-  'createdAt',
-  'type',
-  'imageUrl',
-  'seq',
-  'status',
-] as const
-
-const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS.map(() => '?').join(', ')
-const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS.join(', ')
-const CREATE_MESSAGE_TABLE_SQL = `
-CREATE TABLE IF NOT EXISTS messages (
-  id TEXT PRIMARY KEY,
-  roomId TEXT NOT NULL,
-  text TEXT,
-  senderId TEXT NOT NULL,
-  createdAt INTEGER NOT NULL,
-  type TEXT NOT NULL,
-  imageUrl TEXT,
-  seq INTEGER NOT NULL,
-  status TEXT
-);
-`
-const LATEST_DB_VERSION = 3
 
 export const messageLocal = {
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
@@ -43,9 +18,7 @@ export const messageLocal = {
           (tx: Transaction) => {
             // 2. 상수를 사용하여 쿼리 문자열 조합
             const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
-            console.log('query', query)
             messages.forEach(msg => {
-              console.log('Inserting message into SQLite:', msg)
               // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
               const values = [
                 msg.id,
@@ -58,7 +31,6 @@ export const messageLocal = {
                 msg.seq ?? 1,
                 msg.status ?? 'success',
               ]
-              console.log('values', values)
               tx.executeSql(query, values, undefined, (_, error) => {
                 console.log(_)
                 console.error('SQLite 쿼리 오류:', error)
@@ -81,7 +53,6 @@ export const messageLocal = {
     return sqliteCall('messageLocal.updateMessageStatus', () => {
       return new Promise<void>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
-          console.log('updateMessageStatus: ', roomId, messageId, status)
           const query = `UPDATE ${MESSAGE_TABLE} SET status = ? WHERE roomId = ? AND id = ?`
           tx.executeSql(
             query,
@@ -161,55 +132,13 @@ export const messageLocal = {
       })
     })
   },
-  initMessageTable: () => {
-    return sqliteCall('messageLocal.initMessageTable', async () => {
-      await new Promise<void>((resolve, reject) => {
-        db.transaction(
-          (tx: Transaction) => {
-            tx.executeSql(
-              CREATE_MESSAGE_TABLE_SQL,
-              [],
-              () => {
-                // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
-                tx.executeSql(
-                  `PRAGMA user_version = ${LATEST_DB_VERSION};`,
-                  [],
-                  () => {
-                    if (__DEV__)
-                      console.log(
-                        `✅ messages table ready (v${LATEST_DB_VERSION})`,
-                      )
-                  },
-                  (_tx, error) => {
-                    if (__DEV__)
-                      console.error('❌ Failed to set user_version', error)
-                    reject(error)
-                    return true
-                  },
-                )
-              },
-              (_tx, error) => {
-                if (__DEV__)
-                  console.error('❌ Failed to create messages table', error)
-                reject(error)
-                return true
-              },
-            )
-          },
-          // ✅ 트랜잭션 레벨 에러도 잡아서 reject
-          error => reject(error),
-          // ✅ 트랜잭션 완료 보장
-          () => resolve(),
-        )
-      })
-    })
-  },
+
   clearAllMessages: () => {
     return sqliteCall('messageLocal.clearAllMessages', async () => {
       return new Promise<void>((resolve, reject) => {
         db.transaction(
           (tx: Transaction) => {
-            tx.executeSql(`DELETE FROM ${MESSAGE_TABLE}`)
+            tx.executeSql(`DROP TABLE IF EXISTS ${MESSAGE_TABLE};`)
           },
           reject,
           resolve,

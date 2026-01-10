@@ -12,6 +12,15 @@ const initChatPage = {
   isLastPage: true,
 }
 
+const createPageResult = (messages: ChatMessage[]) => {
+  const lastMsg = messages[messages.length - 1]
+  return {
+    data: messages,
+    lastVisible: lastMsg?.createdAt ?? null,
+    isLastPage: messages.length < PAGE_SIZE,
+  }
+}
+
 export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
@@ -21,9 +30,10 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       //pageParam은 마지막 데이터
       try {
+        console.log('pageParam', pageParam)
         if (!roomId) return initChatPage
         const ms = toMillisFromServerTime(pageParam)
-
+        console.log('ms', ms)
         const localMessages = (await messageLocal.getChatMessagesByCreated(
           roomId,
           ms, //pageParam은 여기서 마지막 읽은 날짜임
@@ -36,7 +46,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기
             const {items: serverMessages} =
-              await messageService.getChatMessages(roomId, pageParam, PAGE_SIZE)
+              await messageService.getChatMessages(roomId, ms, PAGE_SIZE)
 
             //서버데이터가 있으면 그대로 sqlite에 push
             if (serverMessages.length > 0) {
@@ -48,31 +58,14 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
               roomId,
               ms,
             )
-            console.log('shoulde updated message: ', updatedMessages)
-            return {
-              data: updatedMessages,
-              lastVisible:
-                updatedMessages[updatedMessages.length - 1]?.createdAt ?? null,
-              isLastPage: updatedMessages.length < PAGE_SIZE,
-            }
+            return createPageResult(updatedMessages)
           } catch (e) {
-            return {
-              data: localMessages,
-              lastVisible:
-                localMessages?.[localMessages.length - 1]?.createdAt ?? null,
-              isLastPage: localMessages.length < PAGE_SIZE,
-            }
+            return createPageResult(localMessages)
           }
         }
 
         // CASE 2. 서버에러는 있지만 로컬데이터가 충분히 있는 경우
-        console.log('Using local messages only:', localMessages)
-        return {
-          data: localMessages,
-          lastVisible:
-            localMessages?.[localMessages.length - 1]?.createdAt ?? null,
-          isLastPage: localMessages.length < PAGE_SIZE,
-        }
+        return createPageResult(localMessages)
       } catch (e) {
         //로컬데이터 조차 가져오지 못하는 경우.
         return initChatPage
@@ -92,7 +85,6 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       // 1. 현재 해당 쿼리가 fetching 중인지 확인
       const isFetching = queryClient.isFetching({queryKey}) > 0
       if (isFetching) {
-        console.log('🛑 Already refetching. Skipping reset.')
         return
       }
       // 2. SQLite 메시지 삭제

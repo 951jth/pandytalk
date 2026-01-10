@@ -1,18 +1,3 @@
-import SQLite from 'react-native-sqlite-storage'
-
-export const db = SQLite.openDatabase(
-  {
-    name: 'chat.db',
-    location: 'default',
-  },
-  () => {
-    console.log('Database opened successfully')
-  },
-  (error: any) => {
-    console.log('Error opening database', error)
-  },
-)
-
 type Tx = {
   executeSql: (
     sql: string,
@@ -23,11 +8,6 @@ type Tx = {
 }
 type DB = {
   transaction: (fn: (tx: Tx) => void, onError?: (e: any) => void) => void
-}
-
-export type ColumnDef = {
-  name: string
-  sql: string // "colName TYPE ..." 형태(컬럼명 포함)
 }
 
 export const execSql = (tx: Tx, sql: string, params: any[] = []) =>
@@ -72,18 +52,3 @@ export const run = (tx: Tx, sql: string, params: any[] = []) =>
       },
     )
   })
-
-export const makeInsertSql = (table: string, columns: string[]) => {
-  const cols = columns.join(', ')
-  const placeholders = columns.map(() => '?').join(', ')
-  return `INSERT INTO ${table} (${cols}) VALUES (${placeholders});`
-}
-
-export const makeCreateTableSql = (table: string, cols: ColumnDef[]) => {
-  const body = cols.map(c => `  ${c.sql}`).join(',\n')
-  return `CREATE TABLE IF NOT EXISTS ${table} (\n${body}\n);`
-}
-
-export const buildColumnsArray = (colDef: ColumnDef[]) => {
-  return colDef?.map(col => col?.name) as string[]
-}

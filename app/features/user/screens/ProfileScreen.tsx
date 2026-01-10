@@ -18,14 +18,17 @@ export default function ProfileScreen(): React.JSX.Element {
     formRef,
     profileRef,
     updateUserProfile,
-    setKeyboardHeight,
-    onClean,
+    onClear,
+    onMigrateTest,
   } = useProfileScreen()
 
   return (
     <View style={[styles.container, {paddingBottom: keyboardHeight}]}>
-      <Button icon="close" onPress={onClean} style={styles.cleanButton}>
-        캐시 초기화
+      {/* <Button icon="close" onPress={onMigrateTest} style={styles.cleanButton}>
+        마이그레이션 테스트
+      </Button> */}
+      <Button icon="close" onPress={onClear} style={styles.cleanButton}>
+        메시지 재동기화
       </Button>
       <IconButton
         icon="refresh"

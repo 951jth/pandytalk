@@ -97,7 +97,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     },
     [membersMap, userId, roomId],
   )
-
+  console.log('messages', messages)
   return (
     <FlatList
       style={styles.flex}
