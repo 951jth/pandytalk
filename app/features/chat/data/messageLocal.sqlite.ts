@@ -28,6 +28,8 @@ export const messageLocal = {
                 toMillisFromServerTime(msg.createdAt),
                 msg.type,
                 msg.imageUrl ?? '',
+                msg?.senderPicURL ?? '',
+                msg?.senderName ?? '',
                 msg.seq ?? 1,
                 msg.status ?? 'success',
               ]

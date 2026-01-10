@@ -21,8 +21,8 @@ android {
         applicationId = "com.cshchatapp"
         minSdk = 24
         targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 6      // 이전보다 +1
-        versionName = "1.0.5"
+        versionCode = 8      // 이전보다 +1
+        versionName = "1.0.6"
        ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
         }
