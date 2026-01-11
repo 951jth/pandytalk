@@ -31,15 +31,12 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
           newMsgs.length > 0
             ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
             : localMaxSeq
-
         //2. 마지막 시퀀스를 기준으로 구독 시작 (아이디가 없어도 구독은 타야함.)
         unsubRef.current = await messageService.subscribeChatMessages(
           roomId,
           lastSeq,
           (newMessages: ChatMessage[]) => {
             addMessages(newMessages)
-            //데이터 정합성을 위해 다시 설정
-            messageLocal.saveMessagesToSQLite(roomId, newMessages)
           },
         )
       } catch (e) {

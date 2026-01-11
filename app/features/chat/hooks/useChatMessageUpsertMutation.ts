@@ -57,6 +57,8 @@ export const useChatMessageUpsertMutation = (
         }
       },
     )
+    //데이터 정합성을 위해 sqlite 다시 푸쉬
+    messageLocal.saveMessagesToSQLite(rid, newMessages)
   }
 
   // 메시지 상태 업데이트 (pending -> success / fail)

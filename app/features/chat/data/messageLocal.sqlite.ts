@@ -152,13 +152,13 @@ export const messageLocal = {
     return sqliteCall('messageLocal.getMaxLocalSeq', async () => {
       return new Promise<number>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
-          const query = `SELECT COUNT(*) FROM messages WHERE roomId = ?`
+          const query = `SELECT MAX(seq) as maxSeq FROM messages WHERE roomId = ?`
           tx.executeSql(
             query,
             [roomId],
             (_, result) => {
-              const count = result.rows.item(0)['COUNT(*)']
-              resolve(count)
+              const maxSeq = result.rows.item(0).maxSeq
+              resolve(maxSeq || 0)
             },
             (_, error) => {
               reject(error)
