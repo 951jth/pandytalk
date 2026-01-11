@@ -7,9 +7,6 @@ import {useEffect, useRef} from 'react'
 export const useSyncAndSubsMessages = (roomId?: string | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const {addMessages} = useChatMessageUpsertMutation(roomId)
-  // useEffect(() => {
-  //   messageLocal.getAllMessages(res => console.log(res))
-  // }, [])
 
   useEffect(() => {
     let isCancelled = false
@@ -41,6 +38,8 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
           lastSeq,
           (newMessages: ChatMessage[]) => {
             addMessages(newMessages)
+            //데이터 정합성을 위해 다시 설정
+            messageLocal.saveMessagesToSQLite(roomId, newMessages)
           },
         )
       } catch (e) {

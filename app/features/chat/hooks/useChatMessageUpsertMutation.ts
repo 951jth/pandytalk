@@ -10,7 +10,6 @@ import {
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query'
-import {Alert} from 'react-native'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
@@ -63,7 +62,7 @@ export const useChatMessageUpsertMutation = (
   // 메시지 상태 업데이트 (pending -> success / fail)
   const updateMessageStatus = (
     key: readonly unknown[],
-    messageId: string,
+    message: ChatMessage,
     status: ChatMessage['status'],
   ) => {
     queryClient.setQueryData<MessagesInfiniteData>(key, old => {
@@ -71,14 +70,16 @@ export const useChatMessageUpsertMutation = (
       const newPages = base.pages.map(page => ({
         ...page,
         data: page.data.map(msg =>
-          msg.id === messageId ? {...msg, status} : msg,
+          msg.id === message?.id ? {...message, status} : msg,
         ),
       }))
-
       return {
         ...base,
         pages: newPages,
       }
+    })
+    messageLocal.getAllMessages().then(res => {
+      console.log('all msgs: ', res)
     })
   }
   // 메시지 삭제
@@ -121,18 +122,17 @@ export const useChatMessageUpsertMutation = (
       ] as ChatMessage[]
       addMessages(msgs, rid)
       //방이 없음 -> 생성되는 경우 key값이 바뀌므로 전달해줘야함
-      return {prev, optimisticId: message.id, createdRoomId: rid, key}
+      return {prev, optimistic: message, createdRoomId: rid, key}
     },
-
-    onSuccess: (data, message, ctx) => {
-      if (!ctx?.optimisticId) return
-      updateMessageStatus(ctx.key, ctx.optimisticId, 'success')
-    },
+    // 성공 시 onSnapshot에서 데이터를 내려주기떄문에 별도의 설정하지않음.
+    // onSuccess: (data, message, ctx) => {
+    //   if (!ctx?.optimistic?.id) return
+    //   updateMessageStatus(ctx.key, ctx.optimistic, 'success')
+    // },
 
     onError: (err, message, ctx) => {
-      Alert.alert('전송 오류', err?.message)
-      if (ctx?.optimisticId)
-        updateMessageStatus(ctx.key, ctx.optimisticId, 'failed')
+      if (ctx?.optimistic?.id)
+        updateMessageStatus(ctx.key, ctx.optimistic, 'failed')
     },
   })
 

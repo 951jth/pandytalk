@@ -40,12 +40,12 @@ const arePropsEqual = (
   const n = next.item
   const isItemSame =
     p.id === n.id &&
-    p.status === n.status && // 'pending' -> 'success' 상태 변화 감지 (중요)
+    p.status === n.status && // 'pending' -> 'success' 상태 변화 감지
     p.text === n.text && // 메시지 수정 감지
     p.imageUrl === n.imageUrl && // 이미지 URL 변경 감지
     p.createdAt === n.createdAt && // 생성 시간
-    p.senderPicURL === n.senderPicURL && // 보낸 사람 프사 변경 (스냅샷)
-    p.senderName === n.senderName && // 보낸 사람 이름 변경 (스냅샷)
+    p.senderPicURL === n.senderPicURL && // 보낸 사람 프사 변경
+    p.senderName === n.senderName && // 보낸 사람 이름 변경
     p.type === n.type // 메시지 타입
 
   return isItemSame
@@ -97,7 +97,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     },
     [membersMap, userId, roomId],
   )
-  console.log('messages', messages)
+
   return (
     <FlatList
       style={styles.flex}

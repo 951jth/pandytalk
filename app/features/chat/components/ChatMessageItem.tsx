@@ -95,7 +95,7 @@ export default function ChatMessageItem({
             )}
             <View
               style={{
-                marginLeft: hideProfile ? 55 : 0,
+                marginLeft: hideProfile ? 53 : 0,
               }}>
               {/* 닉네임 */}
               {!hideProfile && (
@@ -221,7 +221,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
-    marginRight: 10,
   },
   profile: {
     width: 48,
