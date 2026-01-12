@@ -19,7 +19,7 @@ const initialData = {
   intro: '',
 }
 
-export default function AddUserScreen() {
+export default function UserJoinScreen() {
   const {
     formRef,
     profileRef,

@@ -41,7 +41,7 @@ export function useLoginScreen() {
   const [errors, setErrors] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList, 'addGuest'>>()
+    useNavigation<NativeStackNavigationProp<AuthStackParamList, 'user-join'>>()
 
   const onSubmit = async () => {
     try {
@@ -67,7 +67,7 @@ export function useLoginScreen() {
     setErrors(msg || null)
   }
 
-  const moveJoinPage = () => navigation.push('addGuest')
+  const moveJoinPage = () => navigation.push('user-join')
 
   useEffect(() => {
     if (email) validateCheck('email', email)

@@ -15,7 +15,7 @@ export type TabParamList = {
 
 export type AuthStackParamList = {
   login: undefined
-  addGuest: undefined
+  'user-join': undefined
 }
 
 export type AppRouteParamList = {

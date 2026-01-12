@@ -6,8 +6,8 @@ import ChatListScreen from '@app/features/chat/screens/ChatListScreen'
 import DmChatRoomScreen from '@app/features/chat/screens/DmChatRoomScreen'
 import GroupChatRoomScreen from '@app/features/chat/screens/GroupChatRoomScreen'
 import GroupManageScreen from '@app/features/group/screens/GroupManageScreen'
-import AddUserScreen from '@app/features/user/screens/AddUserScreen'
 import ProfileScreen from '@app/features/user/screens/ProfileScreen'
+import UserJoinScreen from '@app/features/user/screens/UserJoinScreen'
 import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
 import UsersScreen from '@app/features/user/screens/UsersScreen'
 import MainLayout from '@app/layout/MainLayout'
@@ -150,8 +150,8 @@ const authRoutes: RouteItem[] = [
     component: LoginScreen,
   },
   {
-    name: 'addGuest',
-    component: AddUserScreen,
+    name: 'user-join',
+    component: UserJoinScreen,
   },
 ]
 
