@@ -25,7 +25,7 @@ export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
           <CustomButton
             fullWidth={true}
             shape="normal"
-            colorType="gray"
+            colorType="danger"
             onPress={onClose}>
             닫기
           </CustomButton>

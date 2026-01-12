@@ -10,7 +10,7 @@ type DmChatRouteProp = RouteProp<AppRouteParamList, 'dm-chat'>
 export const useDmChatRoomScreen = () => {
   const route = useRoute<DmChatRouteProp>()
   const {myId, targetId, title} = route.params //DM 채팅은 내아이디와 상대방 아이디 필수
-  const roomId = getDMChatId(myId, targetId) //DM채팅은 aId_bId의 형식(사용자는 채팅방 아이디를 미리 알고있음.)
+  const roomId = route?.params?.roomId ?? getDMChatId(myId, targetId) //DM채팅은 aId_bId의 형식(사용자는 채팅방 아이디를 미리 알고있음.)
 
   const {data: user, loading, error} = useAppSelector(state => state.user)
   const {data: roomInfo} = useChatRoomInfo(roomId)

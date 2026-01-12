@@ -64,7 +64,7 @@ export const messageRemote = {
       return newMessages
     })
   },
-  subscribeChatMessages: (
+  subscribeChatMessages: async (
     roomId: string,
     lastSeq: number | null | undefined,
     callback: (docs: ChatMessage[]) => void,
@@ -73,10 +73,37 @@ export const messageRemote = {
 
     // const ts = toRNFTimestamp(lastCreatedAt)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+    let messageQuery // 초기값 없이 선언만 함
 
-    let messageQuery = query(messagesRef, orderBy('seq', 'desc'), limit(50))
+    // 1. 로컬 데이터가 있는 경우: lastSeq 이후만 구독 (가장 효율적)
+    if (lastSeq) {
+      // seq 기준 정렬 (asc: 100, 101, 102... 순서로 받음)
+      messageQuery = query(
+        messagesRef,
+        orderBy('seq', 'asc'),
+        where('seq', '>', lastSeq),
+      )
+    }
+    // 2. 로컬 데이터가 없는 경우: 최신 데이터의 마지막 시간을 기준으로 읽기.
+    else {
+      // 2-1. 서버에서 가장 최신 메시지 1개 가져오기
+      const anchorSnapshot = await getDocs(
+        query(messagesRef, orderBy('createdAt', 'desc'), limit(1)),
+      )
 
-    if (lastSeq) messageQuery = query(messageQuery, where('seq', '>', lastSeq))
+      if (!anchorSnapshot.empty) {
+        // 최신데이터가 있으면 그시점 부터 구독
+        const lastDoc = anchorSnapshot.docs[0]
+        messageQuery = query(
+          messagesRef,
+          orderBy('createdAt', 'asc'), // 시간 순서대로 받음
+          startAfter(lastDoc), // "이 문서(lastDoc) 다음부터 주세요" (시간 계산 불필요)
+        )
+      } else {
+        // 빈 방임 -> 처음부터 구독 (어차피 데이터 0개)
+        messageQuery = query(messagesRef, orderBy('createdAt', 'asc'))
+      }
+    }
 
     return firebaseObserver(
       `messageRemote.subscribeChatMessages_${roomId}`,

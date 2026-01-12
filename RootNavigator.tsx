@@ -22,6 +22,7 @@ export function RootNavigator() {
   if (shouldShowSplash) {
     return <PandySplashScreen />
   }
+  console.log('canEnterApp', canEnterApp)
 
   return (
     <>

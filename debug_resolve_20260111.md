@@ -52,3 +52,8 @@ type ColumnDef = {
   sql: string
 }
 ```
+
+잘한 점
+스키마 정의를 코드 기반으로 통합
+마이그레이션/CREATE/INSERT 정합성 확보
+캐시 초기화 기능을 운영 안전 관점으로 재설계

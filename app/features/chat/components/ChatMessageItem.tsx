@@ -2,7 +2,7 @@ import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageSta
 import {useChatMessageDeleteMutation} from '@app/features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import COLORS from '@app/shared/constants/color'
-import type {User} from '@app/shared/types/auth'
+import {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
 import {formatChatTime, formatServerDate} from '@app/shared/utils/firebase'
@@ -11,10 +11,19 @@ import {StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 
 export type ChatMessageItemProps = {
+  // item: ChatMessage
+  // hideProfile: boolean
+  // hideMinute: boolean
+  // hideDate: boolean
+  // isMine: boolean
+  // roomId?: string | null
+  // member?: User
   item: ChatMessage
-  hideProfile: boolean
-  hideMinute: boolean
-  hideDate: boolean
+  uiConfig: {
+    hideProfile: boolean
+    hideMinute: boolean
+    hideDate: boolean
+  }
   isMine: boolean
   roomId?: string | null
   member?: User
@@ -23,12 +32,11 @@ export type ChatMessageItemProps = {
 export default function ChatMessageItem({
   item,
   isMine,
-  hideProfile,
-  hideMinute,
-  hideDate,
+  uiConfig,
   roomId,
   member,
 }: ChatMessageItemProps) {
+  const {hideProfile, hideMinute, hideDate} = uiConfig
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   return (

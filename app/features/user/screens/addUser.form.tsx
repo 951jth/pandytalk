@@ -33,13 +33,19 @@ export const addUserItems: FormItem[] = [
     label: '비밀번호',
     required: true,
     validation: {
-      pattern: /^.{8,32}$/, // 길이 8~32자
-      message: '비밀번호는 8–32자여야 합니다.',
       customFn: (v: string) => {
         if (!v) return '비밀번호를 입력하세요.'
-        if (!/[A-Za-z]/.test(v) || !/[0-9]/.test(v))
-          return '영문과 숫자를 모두 포함하세요.'
+        // 1. 공백 체크 (가장 먼저 체크하는 것이 좋음)
         if (/\s/.test(v)) return '공백은 사용할 수 없습니다.'
+        // 2. 길이 체크 (pattern 대신 여기서 명시적으로 처리)
+        if (v.length < 8 || v.length > 32)
+          return '비밀번호는 8~32자여야 합니다.'
+        // 3. 조합 체크 (영문 + 숫자)
+        const hasLetter = /[A-Za-z]/.test(v)
+        const hasNumber = /[0-9]/.test(v)
+        if (!hasLetter || !hasNumber) {
+          return '영문과 숫자를 모두 포함해야 합니다.'
+        }
         return true
       },
     },

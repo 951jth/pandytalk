@@ -50,7 +50,8 @@ export default function LoginScreen() {
               onTouchEnd={onSubmit}
               mode="contained"
               style={styles.submitBtn}
-              loading={loading}>
+              loading={loading}
+              disabled={!!errors}>
               로그인
             </Button>
           </View>

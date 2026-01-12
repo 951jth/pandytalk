@@ -1,7 +1,6 @@
 import {userService} from '@app/features/user/service/userService'
 import {auth} from '@app/shared/firebase/firestore'
 import {useLogout} from '@app/shared/hooks/useLogout'
-import {isNewUser} from '@app/shared/utils/firebase'
 import {useAppSelector} from '@app/store/reduxHooks'
 import type {AppDispatch} from '@app/store/store'
 import {fetchUserById} from '@app/store/userSlice'
@@ -40,8 +39,10 @@ export function useAuthGate() {
   // FB Auth 상태 감시
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, fbUser => {
+      console.log('fbUser', fbUser)
       setUser(fbUser)
-      if (fbUser?.uid && !isNewUser(fbUser)) {
+      if (fbUser?.uid) {
+        console.log(fbUser.uid)
         fetchProfile(fbUser.uid)
       }
       if (initializing) setInitializing(false)

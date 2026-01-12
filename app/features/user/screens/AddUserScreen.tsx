@@ -51,22 +51,6 @@ export default function AddUserScreen() {
             ref={formRef}
             items={addUserItems}
             buttonLabel="회원 가입"
-            // topElement={<ProfileHeader profileRef={profileRef} />}
-            // topElement={
-            //   <View style={styles.profileWrap}>
-            //     <EditProfile
-            //       edit={true}
-            //       defaultUrl={null}
-            //       boxSize={100}
-            //       iconSize={75}
-            //       ref={profileRef}
-            //     />
-            //     <Text style={styles.notiText}>
-            //       {`관리자 확인 후 승인이 완료되면\n게스트로 입장할 수 있습니다.`}
-            //     </Text>
-            //   </View>
-            // }
-            // style={styles.inputForm}
             formData={initialData}
             onSubmit={handleAddGuest}
             loading={loading}

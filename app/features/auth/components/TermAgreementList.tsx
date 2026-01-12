@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'BMDOHYEON',
     marginRight: 4,
-    color: COLORS.deepGray,
+    color: COLORS.secondary,
   },
   termTitle: {color: COLORS.text, fontFamily: 'BMDOHYEON', fontSize: 13},
   iconRIght: {position: 'absolute', right: 0},

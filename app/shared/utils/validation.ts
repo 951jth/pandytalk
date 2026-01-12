@@ -110,7 +110,7 @@ export const validateField = (
     if (typeof validation.customFn === 'function') {
       const result = validation.customFn(value, allValues)
       if (result !== true) {
-        return validation.message || '유효하지 않은 값입니다.'
+        return result || validation.message || '유효하지 않은 값입니다.'
       }
     }
   }
