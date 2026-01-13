@@ -1,8 +1,9 @@
 import COLORS from '@app/shared/constants/color'
-import DefaultProfile from '@app/shared/ui/common/DefaultProfile'
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
+import logo from '@shared/assets/images/pandy_logo.png'
 import React from 'react'
 import {
+  Image,
   StyleSheet,
   Text,
   View,
@@ -21,19 +22,17 @@ export default function GroupMainThumnail({
   const {data: userInfo} = useAppSelector(state => state?.user)
   const groupId = userInfo?.groupId
   const {data: groupInfo} = useGroup(groupId)
+
   return (
     <View style={[styles.container, style]}>
       <View style={styles.groupPhotoZone}>
         {groupInfo?.photoURL ? (
           <ImageViewer
             images={[{uri: groupInfo?.photoURL}]}
-            imageProps={{
-              resizeMode: 'cover',
-              style: styles.chatImage,
-            }}
+            imageProps={{resizeMode: 'cover', style: styles.chatImage}}
           />
         ) : (
-          <DefaultProfile boxSize={100} iconSize={75} />
+          <Image source={logo} resizeMode="cover" style={styles.chatImage} />
         )}
       </View>
       <View style={styles.textZone}>

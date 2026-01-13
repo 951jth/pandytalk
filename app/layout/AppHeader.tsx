@@ -1,15 +1,12 @@
-import {authService} from '@app/features/auth/service/authService'
 import {appRoutes, tabScreens} from '@app/navigation/useScreens'
 import COLORS from '@app/shared/constants/color'
+import {useLogout} from '@app/shared/hooks/useLogout'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {ReactNode} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
-import {useDispatch} from 'react-redux'
 import type {RootStackParamList} from '../shared/types/navigate'
-import type {AppDispatch} from '../store/store'
-import {clearUser} from '../store/userSlice'
 
 interface propTypes {
   title?: string
@@ -23,7 +20,7 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
   const allRoutes =
     appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
   const tabs = tabScreens()
-  const dispatch = useDispatch<AppDispatch>()
+  const {confirmLogout} = useLogout()
 
   const currentTitle = useNavigationState(state => {
     const current = state.routes[state.index]
@@ -41,16 +38,6 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
     return matchedRoute?.title ?? current.name
   })
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout()
-      dispatch?.(clearUser())
-      // 필요시 로그인 화면으로 리디렉션
-    } catch (e) {
-      console.log('로그아웃 실패:', e)
-    }
-  }
-
   return (
     <View style={styles.header}>
       {canGoBack && (
@@ -66,7 +53,7 @@ export default function AppHeader({title, rightActions = []}: propTypes) {
         {!canGoBack && (
           <IconButton
             icon="logout"
-            onPress={handleLogout}
+            onPress={confirmLogout}
             style={{margin: -12}}
           />
         )}

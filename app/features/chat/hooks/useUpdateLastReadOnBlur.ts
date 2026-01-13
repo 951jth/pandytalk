@@ -18,7 +18,6 @@ export const useUpdateLastReadOnBlur = (
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
-
   //스크린이 “포커스될 때”
   useFocusEffect(
     //매렌더마다 재등록/cleanup을 실행해서 참조고정

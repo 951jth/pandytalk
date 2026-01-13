@@ -30,10 +30,8 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       //pageParam은 마지막 데이터
       try {
-        console.log('pageParam', pageParam)
         if (!roomId) return initChatPage
         const ms = toMillisFromServerTime(pageParam)
-        console.log('ms', ms)
         const localMessages = (await messageLocal.getChatMessagesByCreated(
           roomId,
           ms, //pageParam은 여기서 마지막 읽은 날짜임

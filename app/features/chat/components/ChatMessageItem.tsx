@@ -39,6 +39,7 @@ export default function ChatMessageItem({
   const {hideProfile, hideMinute, hideDate} = uiConfig
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
+  const {type} = item
   return (
     <>
       <View
@@ -68,8 +69,10 @@ export default function ChatMessageItem({
             </View>
             {/* 채팅내용 */}
             <View style={styles.myChatBubble}>
-              <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
-              {item?.type == 'image' && item?.imageUrl && (
+              {type === 'text' && (
+                <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
+              )}
+              {type == 'image' && item?.imageUrl && (
                 <View>
                   <ImageViewer
                     images={[{uri: item?.imageUrl}]}
@@ -113,8 +116,10 @@ export default function ChatMessageItem({
               )}
               {/* 말풍선 */}
               <View style={styles.otherChatBubble}>
-                <Text style={{color: COLORS.text}}>{item.text}</Text>
-                {item?.type == 'image' && item?.imageUrl && (
+                {type == 'text' && (
+                  <Text style={{color: COLORS.text}}>{item.text}</Text>
+                )}
+                {type == 'image' && item?.imageUrl && (
                   <ImageViewer
                     images={[{uri: item?.imageUrl}]}
                     imageProps={{
@@ -207,7 +212,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 14,
     alignSelf: 'flex-start', // make width fit content
-    paddingHorizontal: 4,
+    // paddingHorizontal: 4,
   },
   statusIcon: {
     margin: 0,
@@ -244,6 +249,5 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 8,
-    marginTop: 8,
   },
 })

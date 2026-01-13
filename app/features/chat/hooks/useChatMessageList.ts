@@ -17,7 +17,6 @@ export const useChatMessageList = ({
   userId,
   roomInfo, //실제 채팅방 정보 생성 확인
 }: Props) => {
-  // const roomId = useMemo(() => roomInfo?.id ?? null, [roomInfo?.id])
   const {
     data,
     isLoading,

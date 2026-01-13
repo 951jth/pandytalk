@@ -24,11 +24,12 @@ export const setChatMessagePayload = ({
   message,
 }: SetChatMessagePayload): ChatMessage | null => {
   if (!roomId || !user?.uid || !message) return null
-
   const trimmed = (message.text ?? '').trim()
 
-  if (message.type === 'text' && !trimmed) return null
-  if (message.type === 'image' && !message.imageUrl) return null
+  if (message.type === 'text' && !trimmed)
+    throw new Error('내용을 입력해주세요.')
+  if (message.type === 'image' && !message.imageUrl)
+    throw new Error('이미지를 선택해주세요.')
 
   const id = messageRemote.generateMessageId(roomId)
 

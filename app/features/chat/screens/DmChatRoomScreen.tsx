@@ -53,10 +53,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: 'white',
-    // paddingVertical: 10,
-    // paddingHorizontal: 16,
-    // borderTopWidth: 1,
-    // borderTopColor: '#eee',
     zIndex: 10,
   },
 })

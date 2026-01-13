@@ -2,7 +2,6 @@ import {fileService} from '@app/features/media/service/fileService'
 import COLORS from '@app/shared/constants/color'
 import React, {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useState,
   type ForwardedRef,
@@ -32,18 +31,10 @@ export interface ProfileInputRef {
 
 //ref로 받도록 수정함
 const EditProfile = forwardRef(function EditProfile(
-  {
-    // previewUrl,
-    // setPreviewUrl = () => {},
-    defaultUrl,
-    edit,
-    boxSize = 120,
-    iconSize = 90,
-  }: propTypes,
+  {defaultUrl, edit, boxSize = 120, iconSize = 90}: propTypes,
   ref: ForwardedRef<ProfileInputRef>,
 ) {
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
-  // const [imageUri, setImageUri] = useState<string | null>(uri)
   const [loading, setLoading] = useState<boolean>(false)
   useImperativeHandle(
     ref,
@@ -56,47 +47,10 @@ const EditProfile = forwardRef(function EditProfile(
     [previewUrl, upload],
   )
 
-  useEffect(() => {
-    ;(async () => {
-      // Android 13 이상일 경우 권한 체크
-      const hasPermission = await requestPhotoPermission()
-      if (!hasPermission) return
-    })()
-  }, [])
-
-  // 사용자가 이미지 변경 할때마다다 파일업로드 하는방식
-  // const pickAndUploadImage = async () => {
-  //   try {
-  //     setLoading(true)
-  //     const result = await launchImageLibrary({mediaType: 'photo'})
-  //     const oldPhotoUrl = cloneDeep(imageUri)
-  //     if (result.didCancel || !result.assets?.[0]?.uri) return
-
-  //     const localUri = result.assets[0].uri!
-  //     const fileName = `profile_${Date.now()}.jpg`
-
-  //     const ref = storage().ref(`profiles/${fileName}`)
-  //     await ref.putFile(localUri)
-
-  //     const downloadURL = await ref.getDownloadURL()
-  //     setImageUri(downloadURL)
-  //     if (oldPhotoUrl) {
-  //       const match = decodeURIComponent(oldPhotoUrl).match(/profiles\/.+/)
-  //       if (match) {
-  //         const oldRef = storage().ref(match[0])
-  //         await oldRef.delete()
-  //       }
-  //     }
-  //   } catch (e) {
-  //     console.error('이미지 업로드 실패:', e)
-  //     Alert.alert('오류', '이미지 업로드에 실패했습니다.')
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const pickImage = async () => {
     try {
+      const hasPermission = await requestPhotoPermission()
+      if (!hasPermission) return
       const result = await launchImageLibrary({
         mediaType: 'photo',
         selectionLimit: 1,

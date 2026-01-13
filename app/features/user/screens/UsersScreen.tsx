@@ -33,8 +33,6 @@ export default function UsersScreen(): React.JSX.Element {
             <ChatMember
               item={item}
               onPress={() => {
-                // dismissKeyboard()
-                // if (!isKeyboardVisible)
                 moveToChatRoom(item.uid, item?.displayName)
               }}
               style={{marginHorizontal: 12}}

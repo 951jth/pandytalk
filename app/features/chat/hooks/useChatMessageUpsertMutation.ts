@@ -1,6 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
-import {rebuildMessagePages} from '@app/features/chat/utils/message'
 import type {ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/shared/types/react-quert'
 import {mergeMessages} from '@app/shared/utils/chat'
@@ -17,8 +16,8 @@ const init: MessagesInfiniteData = {
   pages: [
     {
       data: [] as ChatMessage[],
-      lastVisible: null, // 쓰지 않으면 null
-      isLastPage: true, // 초기엔 true로 둬도 무방
+      lastVisible: null,
+      isLastPage: true,
     },
   ],
   pageParams: [undefined],
@@ -39,10 +38,11 @@ export const useChatMessageUpsertMutation = (
   roomId: string | null | undefined,
 ) => {
   const queryClient = useQueryClient()
-  const queryKey = ['chatMessages', roomId]
-
   // 메시지 추가
-  const addMessages = (newMessages: ChatMessage[], createdRoomId?: string) => {
+  const addMessages = async (
+    newMessages: ChatMessage[],
+    createdRoomId?: string,
+  ) => {
     const rid = createdRoomId ?? roomId
     if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
     queryClient.setQueryData(
@@ -57,8 +57,11 @@ export const useChatMessageUpsertMutation = (
         }
       },
     )
-    //데이터 정합성을 위해 sqlite 다시 푸쉬
-    messageLocal.saveMessagesToSQLite(rid, newMessages)
+    try {
+      await messageLocal.saveMessagesToSQLite(rid, newMessages)
+    } catch (e) {
+      console.warn('[sqlite] saveMessages failed', e)
+    }
   }
 
   // 메시지 상태 업데이트 (pending -> success / fail)
@@ -80,27 +83,6 @@ export const useChatMessageUpsertMutation = (
         pages: newPages,
       }
     })
-    messageLocal.getAllMessages().then(res => {
-      console.log('all msgs: ', res)
-    })
-  }
-  // 메시지 삭제
-  const deleteMessage = async (messageId: string) => {
-    if (!roomId) throw new Error('채팅방이 존재하지 않습니다.')
-    queryClient.setQueryData(
-      queryKey,
-      async (old: MessagesInfiniteData | undefined) => {
-        if (!old) return old
-        const flat =
-          (old ?? init)?.pages.flatMap(page => page?.data ?? []) ?? []
-        await messageLocal.deleteMessageById(roomId, messageId)
-        return rebuildMessagePages(
-          flat.filter(e => e.id !== messageId),
-          old,
-          20,
-        )
-      },
-    )
   }
 
   const mutation = useMutation({
@@ -124,7 +106,7 @@ export const useChatMessageUpsertMutation = (
       ] as ChatMessage[]
       addMessages(msgs, rid)
       //방이 없음 -> 생성되는 경우 key값이 바뀌므로 전달해줘야함
-      return {prev, optimistic: message, createdRoomId: rid, key}
+      return {prev, optimistic: message, key}
     },
     // 성공 시 onSnapshot에서 데이터를 내려주기떄문에 별도의 설정하지않음.
     // onSuccess: (data, message, ctx) => {
@@ -138,5 +120,5 @@ export const useChatMessageUpsertMutation = (
     },
   })
 
-  return {...mutation, addMessages, updateMessageStatus, deleteMessage}
+  return {...mutation, addMessages, updateMessageStatus}
 }

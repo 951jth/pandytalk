@@ -20,8 +20,6 @@ const arePropsEqual = (
   prev: ChatMessageItemProps,
   next: ChatMessageItemProps,
 ) => {
-  // 1. UI 플래그 비교 (가장 빈번한 변경 요소)
-  // uiConfig 객체 자체도 새로 만들어지므로 내부 값 비교가 안전합니다.
   const {item: pMsg, uiConfig: pUi} = prev
   const {item: nMsg, uiConfig: nUi} = next
   const isUiConfigSame =
@@ -29,10 +27,7 @@ const arePropsEqual = (
     pUi.hideMinute === nUi.hideMinute &&
     pUi.hideDate === nUi.hideDate
   if (!isUiConfigSame) return false
-  // 2. 멤버 정보 비교 (참조 체크 혹은 ID 체크)
   if (prev.member !== next.member) return false
-  // 3. [핵심] 메시지 데이터 비교
-  // 원본 객체의 참조(Reference)가 같다면, 내용은 무조건 같은 것입니다.
   return pMsg === nMsg
 }
 const MemoizedChatMessage = memo(ChatMessageItem, arePropsEqual)
@@ -69,18 +64,21 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     })
   }, [messages, roomId, membersMap, userId])
 
-  const renderMessage = useCallback(({item}: {item: ChatMessageItemProps}) => {
-    const {item: chatMessage, uiConfig, isMine, member} = item
-    return (
-      <MemoizedChatMessage
-        item={chatMessage}
-        isMine={isMine}
-        uiConfig={uiConfig}
-        roomId={roomId ?? null}
-        member={member}
-      />
-    )
-  }, [])
+  const renderMessage = useCallback(
+    ({item}: {item: ChatMessageItemProps}) => {
+      const {item: chatMessage, uiConfig, isMine, member} = item
+      return (
+        <MemoizedChatMessage
+          item={chatMessage}
+          isMine={isMine}
+          uiConfig={uiConfig}
+          roomId={roomId ?? null}
+          member={member}
+        />
+      )
+    },
+    [roomId],
+  )
 
   return (
     <FlatList
