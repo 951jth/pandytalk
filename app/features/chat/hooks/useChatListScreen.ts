@@ -54,7 +54,10 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
   }, [input, debouncedSetSearchText])
 
   const filteredChat = useMemo(
-    () => chats?.filter(chat => chat?.name?.includes(searchText)),
+    () =>
+      chats?.filter(chat =>
+        chat?.name?.toUpperCase().includes(searchText?.toUpperCase()),
+      ),
     [chats, searchText],
   )
 

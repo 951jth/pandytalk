@@ -74,7 +74,7 @@ export const useChatMessageInput = ({
       if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
       // step 4. 메세지 전송 및 캐시 반영
       const reformedMsg = setChatMessagePayload({
-        roomId: fetchedRoomInfo.id,
+        roomInfo: fetchedRoomInfo,
         message,
         user,
       })
@@ -87,7 +87,7 @@ export const useChatMessageInput = ({
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)
-      Alert.alert('전송 오류', message)
+      Alert.alert('안내', message)
     } finally {
       setLoading(false)
     }

@@ -40,7 +40,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
         ) : (
           <Icon source="account" size={40} color={COLORS.primary} />
         )}
-        {findMember?.status == 'online' && <View style={styles.point} />}
+        {/* {findMember?.status == 'online' && <View style={styles.point} />} */}
       </View>
       <View style={styles.contents}>
         <Text style={styles.name}>{viewItem?.name ?? '-'}</Text>

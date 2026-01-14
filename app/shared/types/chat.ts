@@ -14,6 +14,8 @@ export interface ChatMessage {
   senderName?: string
   seq?: number
   status?: 'pending' | 'success' | 'failed'
+  roomTitle?: string
+  roomUrl?: string
 }
 
 export type ChatMessagesWithUiType = ChatMessage & {

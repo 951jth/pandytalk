@@ -12,7 +12,7 @@ export const sendNewMessageNotification = onDocumentCreated(
   async event => {
     try {
       const message = event.data?.data()
-      logger.info('새 메시지 도착 트리거 실행', message)
+      console.log('message', message)
       const chatId = event.params.chatId as string
       if (!message || !chatId) {
         logger.info('⚠️ message or chatId 누락')
@@ -32,52 +32,70 @@ export const sendNewMessageNotification = onDocumentCreated(
         return
       }
       const receiverIds = members.filter(uid => uid !== senderId)
+      const isGroup = chatType == 'group'
 
       // 2) 수신자들의 fcmToken 조회  (※ 기존 코드의 덮어쓰기 버그 수정: push/concat)
-      const userReads = receiverIds.map(uid => db.doc(`users/${uid}`).get())
-      const userSnaps = await Promise.all(userReads) // 여기서 한방에 다 가져옴
       const targetUsers: {uid: string; fcmToken: string}[] = []
-
-      for (const userSnap of userSnaps) {
+      for (const uid of receiverIds) {
+        const userSnap = await db.doc(`users/${uid}`).get()
         const userData = userSnap.data()
         if (!userData) continue
-
         const fcmTokens = userData.fcmTokens as string[] | undefined
         if (Array.isArray(fcmTokens)) {
-          // 수신자의 ID와 토큰 매핑
-          for (const token of fcmTokens) {
-            targetUsers.push({uid: userSnap.id, fcmToken: token})
-          }
+          for (const token of fcmTokens)
+            targetUsers.push({uid, fcmToken: token})
         }
       }
+      if (targetUsers.length === 0) {
+        logger.info('❌ 전송할 토큰 없음')
+        return
+      }
+
+      const rawMsg = message.imageUrl
+        ? '사진을 보냈습니다.'
+        : (message.text ?? '내용 없음')
+      // 3. 타이틀 & 바디 설정 (핵심!)
+      let finalTitle = ''
+      let finalBody = ''
+      if (isGroup) {
+        // [그룹 채팅]
+        // 제목: 그룹명
+        // 내용: 닉네임 + 줄바꿈(\n) + 메시지
+        finalTitle = message?.roomTitle
+        finalBody = `${message?.senderName}\n${rawMsg}`
+      } else {
+        // [1:1 채팅]
+        // 제목: 보낸 사람 닉네임
+        // 내용: 메시지
+        finalTitle = message?.senderName
+        finalBody = rawMsg
+      }
+      const fushImageUrl = isGroup
+        ? (message?.roomUrl ?? message?.senderPicURL)
+        : message?.senderPicURL
 
       // 3) 멀티캐스트 메시지
       const multicastMessage: MulticastMessage = {
         tokens: targetUsers.map(u => u.fcmToken),
         notification: {
-          title: message?.senderName ?? '새 메시지 도착!',
-          body: text ?? '내용이 없습니다',
+          title: finalTitle ?? '새 메시지 도착!',
+          body: finalBody ?? '내용이 없습니다',
+          imageUrl: fushImageUrl,
         },
-        //안드로이드 전용 설정
         android: {
-          //"알림 묶기(스택)" 또는 "덮어쓰기" 기능
           notification: {tag: `chat_${chatId}`},
-          //안드로이드의 **Doze 모드(배터리 절약 모드)**를 뚫고 알림을 즉시 띄우겠다는 뜻
           priority: 'high',
         },
-        //iOS 전용 설정 - Apple Push Notification Service
         apns: {
-          // 즉시 전송하라는 명령 ( = priority: 'high')
           headers: {'apns-priority': '10'},
           payload: {
             aps: {
-              alert: {title: message?.senderName || '새 메시지', body: text}, //iOS 알림 센터에 표시될 제목과 본문.
-              sound: 'default', // 알림음
-              'thread-id': `chat_${chatId}`, // 안드로이드의 tag랑 비슷
+              alert: {title: finalTitle || '새 메시지 도착!', body: finalBody},
+              sound: 'default',
+              'thread-id': `chat_${chatId}`,
             },
           },
         },
-        //커스텀 데이터 페이로드, String으로 넣어줘야함.
         data: {
           chatId: String(chatId),
           text: message.text ?? '',

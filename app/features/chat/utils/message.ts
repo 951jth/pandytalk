@@ -1,12 +1,12 @@
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase' // 경로 맞춰
 import type {InputMessageParams} from '@app/features/chat/hooks/useChatMessageInput'
 import type {User} from '@app/shared/types/auth'
-import type {ChatMessage} from '@app/shared/types/chat'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {InfiniteData} from '@tanstack/react-query'
 // 또는 messageRemote가 이미 import 가능한 위치면 그걸 사용
 
 type SetChatMessagePayload = {
-  roomId: string
+  roomInfo: ChatRoom
   message: InputMessageParams
   user: User
 }
@@ -19,10 +19,11 @@ type pageType = {
 
 //채팅방의 메세지 페이로드 생성 유틸
 export const setChatMessagePayload = ({
-  roomId,
+  roomInfo,
   user,
   message,
 }: SetChatMessagePayload): ChatMessage | null => {
+  const roomId = roomInfo?.id
   if (!roomId || !user?.uid || !message) return null
   const trimmed = (message.text ?? '').trim()
 
@@ -32,7 +33,6 @@ export const setChatMessagePayload = ({
     throw new Error('이미지를 선택해주세요.')
 
   const id = messageRemote.generateMessageId(roomId)
-
   return {
     ...message,
     id,
@@ -41,6 +41,8 @@ export const setChatMessagePayload = ({
     senderName: user.displayName ?? '',
     senderPicURL: user.photoURL ?? '',
     createdAt: Date.now(),
+    roomTitle: roomInfo?.name,
+    roomUrl: roomInfo?.image,
   }
 }
 

@@ -1,3 +1,6 @@
+// # 로그인
+// firebase login
+
 // # 배포 명령어
 // firebase deploy --only functions
 // firebase deploy --only functions:functionName    # 특정 함수만

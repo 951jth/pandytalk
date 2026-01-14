@@ -70,7 +70,9 @@ export default function ChatMessageItem({
             {/* 채팅내용 */}
             <View style={styles.myChatBubble}>
               {type === 'text' && (
-                <Text style={{color: COLORS.onPrimary}}>{item.text}</Text>
+                <Text style={{color: COLORS.onPrimary}} selectable={true}>
+                  {item.text}
+                </Text>
               )}
               {type == 'image' && item?.imageUrl && (
                 <View>
@@ -91,9 +93,11 @@ export default function ChatMessageItem({
             {!hideProfile && (
               //프로필
               <View style={styles.frame}>
-                {member?.photoURL ? (
+                {member?.photoURL || !!item?.senderPicURL ? (
                   <ImageViewer
-                    images={[{uri: member?.photoURL}]}
+                    images={[
+                      {uri: member?.photoURL ?? item.senderPicURL ?? ''},
+                    ]}
                     imageProps={{
                       resizeMode: 'cover',
                       style: styles.profile,
@@ -111,13 +115,15 @@ export default function ChatMessageItem({
               {/* 닉네임 */}
               {!hideProfile && (
                 <Text style={styles.nickname}>
-                  {member?.displayName ?? '알수없음'}
+                  {member?.displayName ?? item?.senderName ?? '알수없음'}
                 </Text>
               )}
               {/* 말풍선 */}
               <View style={styles.otherChatBubble}>
                 {type == 'text' && (
-                  <Text style={{color: COLORS.text}}>{item.text}</Text>
+                  <Text style={{color: COLORS.text}} selectable={true}>
+                    {item.text}
+                  </Text>
                 )}
                 {type == 'image' && item?.imageUrl && (
                   <ImageViewer
