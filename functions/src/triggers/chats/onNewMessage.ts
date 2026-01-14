@@ -51,9 +51,9 @@ export const sendNewMessageNotification = onDocumentCreated(
         return
       }
 
-      const rawMsg = message.imageUrl
+      const rawMsg = message?.imageUrl
         ? '사진을 보냈습니다.'
-        : (message.text ?? '내용 없음')
+        : (text ?? '내용 없음')
       // 3. 타이틀 & 바디 설정 (핵심!)
       let finalTitle = ''
       let finalBody = ''
@@ -70,9 +70,6 @@ export const sendNewMessageNotification = onDocumentCreated(
         finalTitle = message?.senderName
         finalBody = rawMsg
       }
-      const fushImageUrl = isGroup
-        ? (message?.roomUrl ?? message?.senderPicURL)
-        : message?.senderPicURL
 
       // 3) 멀티캐스트 메시지
       const multicastMessage: MulticastMessage = {
@@ -80,7 +77,7 @@ export const sendNewMessageNotification = onDocumentCreated(
         notification: {
           title: finalTitle ?? '새 메시지 도착!',
           body: finalBody ?? '내용이 없습니다',
-          imageUrl: fushImageUrl,
+          imageUrl: message?.imageUrl ?? '',
         },
         android: {
           notification: {tag: `chat_${chatId}`},
@@ -98,7 +95,7 @@ export const sendNewMessageNotification = onDocumentCreated(
         },
         data: {
           chatId: String(chatId),
-          text: message.text ?? '',
+          text,
           type: message.type ?? '',
           senderId: String(message.senderId ?? ''),
           senderName: message.senderName ?? '',

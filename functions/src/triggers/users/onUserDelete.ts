@@ -58,30 +58,33 @@ async function deleteUserFromAllGroups(uid: string) {
 }
 
 // Auth 유저가 삭제될 때마다 실행
-export const onAuthUserDeleted = functions.auth.user().onDelete(async user => {
-  const uid = user.uid
+export const onAuthUserDeleted = functions
+  .region('asia-northeast3')
+  .auth.user()
+  .onDelete(async user => {
+    const uid = user.uid
 
-  const userRef = db.collection('users').doc(uid)
+    const userRef = db.collection('users').doc(uid)
 
-  try {
-    // 1. chats/*/messages/* 에서 senderId == uid 인 메시지 삭제
-    //    -> messages 는 모든 채팅방의 서브컬렉션 이름이라고 가정
-    // const messagesQuery = db
-    //   .collectionGroup('messages')
-    //   .where('senderId', '==', uid)
-    // await deleteByQuery(messagesQuery)
+    try {
+      // 1. chats/*/messages/* 에서 senderId == uid 인 메시지 삭제
+      //    -> messages 는 모든 채팅방의 서브컬렉션 이름이라고 가정
+      // const messagesQuery = db
+      //   .collectionGroup('messages')
+      //   .where('senderId', '==', uid)
+      // await deleteByQuery(messagesQuery)
 
-    // 2. users 컬렉션에서 내 user 문서 삭제
-    await userRef.delete()
+      // 2. users 컬렉션에서 내 user 문서 삭제
+      await userRef.delete()
 
-    // 3. groups/*/members/* 에서 문서 ID == uid 인 멤버 삭제
-    await deleteUserFromAllGroups(uid)
+      // 3. groups/*/members/* 에서 문서 ID == uid 인 멤버 삭제
+      await deleteUserFromAllGroups(uid)
 
-    // 4. Storage: profiles/{uid}/ 밑의 프로필 이미지들 삭제
-    await deleteUserProfileFiles(uid)
+      // 4. Storage: profiles/{uid}/ 밑의 프로필 이미지들 삭제
+      await deleteUserProfileFiles(uid)
 
-    console.log(`Cleanup done for user: ${uid}`)
-  } catch (err) {
-    console.error(`Error cleaning up data for user ${uid}`, err)
-  }
-})
+      console.log(`Cleanup done for user: ${uid}`)
+    } catch (err) {
+      console.error(`Error cleaning up data for user ${uid}`, err)
+    }
+  })
