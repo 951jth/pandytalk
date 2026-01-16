@@ -11,8 +11,9 @@
     "node": "22"
   },
   "dependencies": {
-    "firebase-admin": "^11.10.1",
-    "firebase-functions": "^4.5.0"
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^4.5.0",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "typescript": "^5.4.0"

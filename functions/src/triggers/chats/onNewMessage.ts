@@ -2,7 +2,7 @@ import {MulticastMessage} from 'firebase-admin/messaging'
 import * as logger from 'firebase-functions/logger'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {db, messaging} from '../../core/firebase'
-import {removeFcmTokenFromUser} from '../../utils/fcm'
+import {removeEmptyValues, removeFcmTokenFromUser} from '../../utils/fcm'
 
 export const sendNewMessageNotification = onDocumentCreated(
   {
@@ -36,16 +36,32 @@ export const sendNewMessageNotification = onDocumentCreated(
 
       // 2) 수신자들의 fcmToken 조회  (※ 기존 코드의 덮어쓰기 버그 수정: push/concat)
       const targetUsers: {uid: string; fcmToken: string}[] = []
-      for (const uid of receiverIds) {
-        const userSnap = await db.doc(`users/${uid}`).get()
+
+      // 이 코드는 반드시 async 함수 안에서 실행되어야 해
+      const promises = receiverIds.map(uid => db.doc(`users/${uid}`).get())
+      // 1. 모든 데이터를 가져올 때까지 여기서 '딱' 기다림!
+      const userSnaps = await Promise.all(promises)
+
+      // 2. 다 가져온 뒤에 배열 처리 시작
+      for (const userSnap of userSnaps) {
+        // 문서가 실제로 존재하는지 체크 (중요!)
+        if (!userSnap.exists) continue
+
         const userData = userSnap.data()
         if (!userData) continue
+
+        // 3. uid 가져오기 (userData 안에 uid가 없다면 userSnap.id 사용 추천)
+        const uid = userData.uid || userSnap.id
         const fcmTokens = userData.fcmTokens as string[] | undefined
+
         if (Array.isArray(fcmTokens)) {
-          for (const token of fcmTokens)
+          for (const token of fcmTokens) {
             targetUsers.push({uid, fcmToken: token})
+          }
         }
       }
+
+      // 4. 이제 targetUsers에는 데이터가 확실히 들어있음!
       if (targetUsers.length === 0) {
         logger.info('❌ 전송할 토큰 없음')
         return
@@ -70,15 +86,16 @@ export const sendNewMessageNotification = onDocumentCreated(
         finalTitle = message?.senderName
         finalBody = rawMsg
       }
-
       // 3) 멀티캐스트 메시지
       const multicastMessage: MulticastMessage = {
         tokens: targetUsers.map(u => u.fcmToken),
-        notification: {
+        notification: removeEmptyValues({
           title: finalTitle ?? '새 메시지 도착!',
           body: finalBody ?? '내용이 없습니다',
           imageUrl: message?.imageUrl ?? '',
-        },
+          // title: message?.senderName ?? '새 메시지 도착!',
+          // body: text ?? '내용이 없습니다',
+        }),
         android: {
           notification: {tag: `chat_${chatId}`},
           priority: 'high',
@@ -88,6 +105,8 @@ export const sendNewMessageNotification = onDocumentCreated(
           payload: {
             aps: {
               alert: {title: finalTitle || '새 메시지 도착!', body: finalBody},
+              // title: message?.senderName ?? '새 메시지 도착!',
+              // body: text ?? '내용이 없습니다',
               sound: 'default',
               'thread-id': `chat_${chatId}`,
             },
