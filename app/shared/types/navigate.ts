@@ -1,12 +1,6 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
 import type {ChatRoom} from './chat'
 
-//값을 지정하는 경우 해당 key의 조건을 따지고, 아닌경우 기본값 지정
-type ParamListOf<
-  Specific extends Record<string, any>,
-  Default extends any = Record<string, unknown> | undefined,
-> = Specific & Record<string, Default>
-
 export type TabParamList = {
   'group-chat': {groupId: string} | undefined
   'group-chat-list': {type: ChatRoom['type']}

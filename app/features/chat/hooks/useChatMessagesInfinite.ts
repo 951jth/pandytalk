@@ -31,6 +31,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       //pageParam은 마지막 데이터
       try {
         if (!roomId) return initChatPage
+        console.log('roomId', roomId)
         const ms = toMillisFromServerTime(pageParam)
         const localMessages = (await messageLocal.getChatMessagesByCreated(
           roomId,
@@ -39,7 +40,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
         )) as ChatMessage[]
         //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
         const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
-
+        console.log('shouldFetchFromServer', shouldFetchFromServer)
         if (shouldFetchFromServer) {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기

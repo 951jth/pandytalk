@@ -1,7 +1,7 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatMessage} from '@app/shared/types/chat'
-import type {ReactQueryPageType} from '@app/shared/types/react-quert'
+import type {ReactQueryPageType} from '@app/shared/types/react-query'
 import {mergeMessages} from '@app/shared/utils/chat'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import {

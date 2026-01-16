@@ -1,7 +1,7 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {rebuildMessagePages} from '@app/features/chat/utils/message'
 import {ChatMessage} from '@app/shared/types/chat'
-import {ReactQueryPageType} from '@app/shared/types/react-quert'
+import {ReactQueryPageType} from '@app/shared/types/react-query'
 import {InfiniteData, useMutation, useQueryClient} from '@tanstack/react-query'
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
