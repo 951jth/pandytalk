@@ -1,6 +1,6 @@
 # 프로젝트 이름: 팬디톡
 
-- Firebase 기반의 React Native 1:1/그룹 채팅 앱으로, 개인 프로젝트의 관리자용 커뮤니케이션 도구로 개발되었습니다.
+- Firebase 기반의 React Native 1:1/그룹 채팅 앱으로, 개인의 커뮤니케이션 도구로 개발되었습니다.
 - 기본적인 개인 간 채팅 기능을 중심으로 설계되었으며, 실제 서비스 환경에서도 활용할 수 있도록 SQLite, React Query 기반의 데이터 캐싱 및 최적화 구조를 적용했습니다.
 
 ---
@@ -28,6 +28,7 @@
 - Firestore의 onSnapshot 기반 실시간 구독으로 1:1 및 그룹 채팅 기능을 구현했습니다.
 - 메시지 변경사항을 구독하여 채팅방별 **읽지 않은 메시지(언리드 카운트)**를 자동 계산하도록 설계했습니다.
 - 불필요한 리스너를 방지하고 성능을 유지하기 위해 채팅방 단위로 구독을 분리해 최적화했습니다.
+  = 오프라인 환경에서도 텍스트를 볼 수 있으며, 통신이 끊긴경우, 재전송 및 삭제 기능을 추가하였습니다.
 
 3. **채팅방 리스트 & 정렬**
 
@@ -91,13 +92,36 @@
 .
 ├─ android
 ├─ ios
-├─ src
-│  ├─ components      # 재사용 UI 컴포넌트
-│  ├─ screens         # 화면 단위 컴포넌트
-│  ├─ hooks           # 커스텀 훅
-│  ├─ store           # 전역 상태 관리
-│  ├─ services        # API / Firebase / 외부 연동
-│  ├─ db              # SQLite 로직들
-│  └─ utils           # 유틸 함수
-└─ App.tsx
+├─ functions                # (선택) Cloud Functions / 서버리스 로직
+├─ app
+│  ├─ bootstrap             # 앱 초기화(앱 시작 시 1회): provider, env, polyfill, startup flow 등
+│  ├─ features              # 도메인(기능) 단위 모듈: 화면/훅/서비스/타입을 기능별로 캡슐화
+│  │  ├─ admin              # 관리자 기능 영역
+│  │  ├─ app                # 앱 공통 플로우(스플래시, 권한, 버전체크 등) 또는 app-level feature
+│  │  ├─ auth               # 로그인/회원가입/세션
+│  │  ├─ chat               # 채팅(메시지/룸/구독/전송 등)
+│  │  ├─ group              # 그룹/멤버/참여자 관련
+│  │  ├─ media              # 이미지/파일 업로드, 미디어 처리
+│  │  ├─ notification       # 푸시/알림함/FCM 토큰/라우팅
+│  │  └─ user               # 유저 프로필/설정/차단 등
+│  ├─ layout                # 공통 레이아웃(헤더/탭/컨테이너) 및 화면 뼈대 컴포넌트
+│  ├─ navigation            # 네비게이션 정의/스택 구성/라우팅 헬퍼
+│  │  ├─ AppNavigator.tsx
+│  │  ├─ AuthNavigator.tsx
+│  │  ├─ TabScreenNavigator.tsx
+│  │  ├─ RootNavigation.ts  # navigation ref / 전역 네비게이션 유틸
+│  │  └─ useScreens.ts      # 스크린 등록/타입/맵핑 유틸
+│  ├─ shared                # 여러 feature에서 공용으로 쓰는 기반 레이어(재사용 + 인프라)
+│  │  ├─ assets             # 이미지/폰트 등 리소스
+│  │  ├─ constants          # 색상/타이포/환경값/키 상수
+│  │  ├─ firebase           # Firestore/FCM 래퍼, 공통 쿼리/구독 유틸
+│  │  ├─ hooks              # feature에 종속되지 않는 공용 훅
+│  │  ├─ sqlite             # 로컬 DB 스키마/쿼리/캐시 레이어
+│  │  ├─ types              # 전역 타입(공통 DTO, 유틸 타입)
+│  │  ├─ ui                 # 디자인 시스템/공용 UI 컴포넌트(버튼, 모달 등)
+│  │  └─ utils              # 공용 유틸(포맷터, 로거, 에러 처리 등)
+│  └─ store                 # 전역 상태(로그인 유저, 앱 설정 등) - 최소화 권장
+├─ settings.gradle
+└─ (entry file)             # App.tsx / index.js 등 프로젝트 엔트리(현재 구성에 맞게 표기)
+
 ```
