@@ -1,7 +1,6 @@
 // features/chat/hooks/useChatListScreen.ts
 import {useChatWithMembersInfo} from '@app/features/chat/hooks/useChatWithMembersInfo'
 import {useMyChatListInfinite} from '@app/features/chat/hooks/useMyChatListInfinite'
-import {useSubscribeChatList} from '@app/features/chat/hooks/useSubscribeChatList'
 import {ChatItemWithMemberInfo, ChatRoom} from '@app/shared/types/chat'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
@@ -32,7 +31,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     refetch,
   } = useMyChatListInfinite(user?.uid, type)
   // 실시간 구독
-  useSubscribeChatList(user?.uid, type)
+  // useSubscribeChatList(user?.uid, type)
 
   const rawChats: ChatRoom[] = useMemo(
     () => data?.pages.flatMap(page => page?.chats ?? []) ?? [],

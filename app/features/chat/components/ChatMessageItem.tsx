@@ -5,6 +5,7 @@ import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
+import CopyableText from '@app/shared/ui/text/CopyableText'
 import {formatChatTime, formatServerDate} from '@app/shared/utils/firebase'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -70,9 +71,10 @@ export default function ChatMessageItem({
             {/* 채팅내용 */}
             <View style={styles.myChatBubble}>
               {type === 'text' && (
-                <Text style={{color: COLORS.onPrimary}} selectable={true}>
-                  {item.text}
-                </Text>
+                <CopyableText
+                  textStyle={{color: COLORS.onPrimary}}
+                  value={item?.text ?? '-'}
+                />
               )}
               {type == 'image' && item?.imageUrl && (
                 <View>
@@ -121,9 +123,10 @@ export default function ChatMessageItem({
               {/* 말풍선 */}
               <View style={styles.otherChatBubble}>
                 {type == 'text' && (
-                  <Text style={{color: COLORS.text}} selectable={true}>
-                    {item.text}
-                  </Text>
+                  <CopyableText
+                    textStyle={{color: COLORS.text}}
+                    value={item?.text ?? '-'}
+                  />
                 )}
                 {type == 'image' && item?.imageUrl && (
                   <ImageViewer

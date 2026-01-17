@@ -39,10 +39,8 @@ export function useAuthGate() {
   // FB Auth 상태 감시
   useEffect(() => {
     const subscriber = onAuthStateChanged(auth, fbUser => {
-      console.log('fbUser', fbUser)
       setUser(fbUser)
       if (fbUser?.uid) {
-        console.log(fbUser.uid)
         fetchProfile(fbUser.uid)
       }
       if (initializing) setInitializing(false)

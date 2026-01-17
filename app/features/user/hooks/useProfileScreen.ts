@@ -69,8 +69,8 @@ export function useProfileScreen() {
 
   const onClear = () => {
     Alert.alert(
-      '로컬 캐시 재동기화',
-      '로컬에 저장된 메시지/캐시를 초기화하고 서버에서 다시 불러옵니다.\n(서버 데이터는 삭제되지 않습니다)',
+      '메세지 재동기화',
+      '기기에 저장된 메시지/캐시를 초기화하고 서버에서 다시 불러옵니다.\n(서버 데이터는 삭제되지 않습니다)',
       [
         {text: '취소', style: 'cancel'},
         {
@@ -83,7 +83,7 @@ export function useProfileScreen() {
               queryClient.clear()
               const allMessages = await messageLocal.getAllMessages()
               console.log('all messages: ', allMessages)
-              Alert.alert('완료', '로컬 캐시를 초기화했습니다.')
+              Alert.alert('완료', '메시지를 초기화했습니다.')
             } catch (e: any) {
               Alert.alert('초기화 실패', e?.message ?? '초기화 실패!')
             }
