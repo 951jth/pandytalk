@@ -5,7 +5,6 @@ import {
 } from '@app/features/chat/utils/chat'
 import {ChatRoom} from '@app/shared/types/chat'
 import {AppDispatch} from '@app/store/store'
-import {setGroupChatCount} from '@app/store/unreadCountSlice'
 import {InfiniteData, useQueryClient} from '@tanstack/react-query'
 import {useEffect} from 'react'
 import {useDispatch} from 'react-redux'
@@ -80,7 +79,7 @@ export function useSubscribeChatList(
             // 고민 포인트: 그룹채팅 badge를 subscribe 방식으로 바꿀지 여기서 계속 사용할 지
             const sum = flat.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0)
             // if (type === 'dm') dispatch(setDMChatCount(sum))
-            if (type === 'group') dispatch(setGroupChatCount(sum))
+            // if (type === 'group') dispatch(setGroupChatCount(sum))
 
             // 5) pages 재구성
             return rebuildChatPages(flat, old, PAGE_SIZE)
