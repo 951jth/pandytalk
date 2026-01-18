@@ -8,7 +8,7 @@ import {
   onAuthStateChanged,
   type FirebaseAuthTypes,
 } from '@react-native-firebase/auth'
-import {useCallback, useEffect, useRef, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
@@ -19,18 +19,6 @@ export function useAuthGate() {
   const dispatch = useDispatch<AppDispatch>()
   const {data: userInfo, loading} = useAppSelector(state => state.user)
   const {logout} = useLogout()
-  // 왜 mountedRef를 쓰는가?
-  // 1. 단순 경고 무시 목적보다는, 비동기 로직이 완료된 시점에 사용자가 이미 화면을 벗어나면
-  //  굳이 loading 상태를 끄거나 화면을 전환하는 로직을 실행할 필요가 없기 때문.
-  // 2. 혹시 모를 setInitializing로 인한 사이드이펙트로 인해 이전화면에서의 navigation 요청이 무시되는것을 다시 막기위함.(이미 RootApp에서 한번막지만)
-
-  const mountedRef = useRef(true)
-
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false
-    }
-  }, [])
 
   const fetchProfile = useCallback(
     async (uid: string) => {
@@ -52,12 +40,11 @@ export function useAuthGate() {
   )
 
   useEffect(() => {
-    mountedRef.current = true
     const unsubscribe = onAuthStateChanged(auth, user => {
       ;(async () => {
         setFbUser(user)
         if (!user?.uid) {
-          if (mountedRef.current) setInitializing(false)
+          setInitializing(false)
           return
         }
 
@@ -66,7 +53,7 @@ export function useAuthGate() {
         } catch (err) {
           console.log('❌ 유저 정보 로딩 실패:', err)
         } finally {
-          if (mountedRef.current) setInitializing(false)
+          setInitializing(false)
         }
       })()
     })
