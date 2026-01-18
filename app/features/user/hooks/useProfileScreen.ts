@@ -6,7 +6,6 @@ import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate'
 import {messageTestService} from '@app/features/chat/service/messageTestService'
 import {setProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
@@ -79,7 +78,6 @@ export function useProfileScreen() {
           onPress: async () => {
             try {
               await messageLocal.clearAllMessages()
-              await messageMigrate.initMessageTable() // init이 async면 await 필수
               queryClient.clear()
               const allMessages = await messageLocal.getAllMessages()
               console.log('all messages: ', allMessages)

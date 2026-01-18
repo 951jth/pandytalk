@@ -1,5 +1,5 @@
-import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate'
+import {messageMigrateLocal} from '@app/features/chat/data/messagLocal.migrate.sqlite'
+import {messageMigrateService} from '@app/features/chat/service/messageMigrateService'
 import {safeCall} from '@app/shared/utils/call'
 import {useEffect} from 'react'
 
@@ -8,11 +8,12 @@ export default function useEnsureChatMessagesSchema() {
   useEffect(() => {
     safeCall(async () => {
       //sqlite table 생성유무 체크
-      const exists = await messageLocal.isMessagesTableExists()
+      const exists = await messageMigrateLocal.isMessagesTableExists()
       if (!exists) {
-        console.log('exists', exists)
-        messageMigrate.initMessageTable()
-      } else await messageMigrate.migrateDatabaseIfNeeded()
+        await messageMigrateLocal.initMessageTable()
+      } else {
+        await messageMigrateService.ensureMessageColumns()
+      }
     })
   }, [])
 }

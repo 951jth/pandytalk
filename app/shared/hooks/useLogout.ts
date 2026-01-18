@@ -2,6 +2,7 @@ import {authService} from '@app/features/auth/service/authService'
 import type {AppDispatch} from '@app/store/store'
 import {clearUser} from '@app/store/userSlice'
 import {useQueryClient} from '@tanstack/react-query'
+import {useCallback} from 'react'
 import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
@@ -9,7 +10,7 @@ import {useDispatch} from 'react-redux'
 export const useLogout = () => {
   const queryClient = useQueryClient()
   const dispatch = useDispatch<AppDispatch>()
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await authService.logout()
       queryClient.clear()
@@ -18,7 +19,8 @@ export const useLogout = () => {
     } catch (e) {
       console.log('로그아웃 실패:', e)
     }
-  }
+  }, [dispatch])
+
   const confirmLogout = () => {
     Alert.alert(
       '로그아웃',
