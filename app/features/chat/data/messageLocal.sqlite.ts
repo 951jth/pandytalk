@@ -111,7 +111,7 @@ export const messageLocal = {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           const query = cursorSeq
-            ? `SELECT * FROM messages WHERE roomId = ? AND seq < ? ORDER BY createdAt DESC LIMIT ?`
+            ? `SELECT * FROM messages WHERE roomId = ? AND seq < ? ORDER BY seq DESC LIMIT ?`
             : `SELECT * FROM messages WHERE roomId = ? ORDER BY seq DESC LIMIT ?`
           const params = cursorSeq
             ? [roomId, cursorSeq, pageSize]

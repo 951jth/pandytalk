@@ -20,12 +20,13 @@ const PAGE_SIZE = 20
 export function useSubscribeChatList(
   uid?: string | null,
   type: ChatRoom['type'] = 'dm',
+  disabled?: boolean,
 ) {
   const queryClient = useQueryClient()
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
-    if (!uid) return
+    if (!uid && disabled) return
 
     let isInitial = true
     const unsub = chatService.subscribeMyChats(
