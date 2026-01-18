@@ -2,7 +2,6 @@ import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
 import {ChatMessage} from '@app/shared/types/chat'
 import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
-import {toMillisFromServerTime} from '../../../shared/utils/firebase'
 
 const PAGE_SIZE = 20
 
@@ -16,7 +15,7 @@ const createPageResult = (messages: ChatMessage[]) => {
   const lastMsg = messages[messages.length - 1]
   return {
     data: messages,
-    lastVisible: lastMsg?.createdAt ?? null,
+    lastVisible: lastMsg?.seq ?? null,
     isLastPage: messages.length < PAGE_SIZE,
   }
 }
@@ -31,11 +30,10 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       //pageParam은 마지막 데이터
       try {
         if (!roomId) return initChatPage
-        console.log('roomId', roomId)
-        const ms = toMillisFromServerTime(pageParam)
-        const localMessages = (await messageLocal.getChatMessagesByCreated(
+        const seq = pageParam
+        const localMessages = (await messageLocal.getChatMessagesBySeq(
           roomId,
-          ms, //pageParam은 여기서 마지막 읽은 날짜임
+          seq, //pageParam은 여기서 마지막 읽은 날짜임
           PAGE_SIZE,
         )) as ChatMessage[]
         //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
@@ -45,17 +43,20 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기
             const {items: serverMessages} =
-              await messageService.getChatMessages(roomId, ms, PAGE_SIZE)
+              await messageService.getChatMessagesFromSeq(
+                roomId,
+                seq,
+                PAGE_SIZE,
+              )
 
             //서버데이터가 있으면 그대로 sqlite에 push
-            if (serverMessages.length > 0) {
+            if (serverMessages?.length > 0)
               await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
-            }
             //1. 데이터가 중복으로 들어오는경우가 있음, 다시조회하는 로직에서 REPLACE 및 정렬됨
             //2. 데이터를 일관되게 SQLITE를 바라보게해서, 유지보수성 증가
-            const updatedMessages = await messageLocal.getChatMessagesByCreated(
+            const updatedMessages = await messageLocal.getChatMessagesBySeq(
               roomId,
-              ms,
+              seq,
             )
             return createPageResult(updatedMessages)
           } catch (e) {

@@ -16,25 +16,20 @@ import {
   serverTimestamp,
   startAfter,
   where,
-  type FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore'
 
 const debug = true
 
 export const messageRemote = {
-  getChatMessages: (
-    roomId: string,
-    ts?: FirebaseFirestoreTypes.Timestamp | null, //firebase 타임스탬프로 변환해서 보내야함.
-    pageSize?: number,
-  ) => {
-    return firebaseCall('messageRemote.getChatMessages', async () => {
-      const PAGE_SIZE = pageSize ?? 20
+  getChatMessagesBySeq: (roomId: string, seq?: number, pageSize?: number) => {
+    return firebaseCall('messageRemote.getChatMessagesBySeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-
-      const constraints = [orderBy('createdAt', 'desc'), limit(PAGE_SIZE)]
-      if (ts) {
-        constraints.push(startAfter(ts))
-      }
+      const PAGE_SIZE = pageSize ?? 20
+      const constraints = [
+        seq ? where('seq', '<', seq) : null,
+        orderBy('seq', 'desc'), // ✅ 최신→과거 방향으로 페이지 잘림
+        limit(PAGE_SIZE),
+      ].filter(Boolean)
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
       const result = toPageResult<ChatMessage>(snapshot.docs, PAGE_SIZE, d => ({
@@ -44,17 +39,10 @@ export const messageRemote = {
       return result
     })
   },
-  getChatMessageBySeq: async (
-    roomId: string,
-    seq: number,
-    pageSize?: number,
-  ) => {
-    return firebaseCall('messageRemote.getChatMessageBySeq', async () => {
+  getAllChatMessagesFromSeq: async (roomId: string, seq: number) => {
+    return firebaseCall('messageRemote.getAllChatMessagesFromSeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
       const constraints = [where('seq', '>', seq), orderBy('seq', 'asc')]
-      if (pageSize) {
-        constraints.push(limit(pageSize))
-      }
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
       const newMessages = snapshot.docs.map(doc => ({
@@ -74,10 +62,9 @@ export const messageRemote = {
     // const ts = toRNFTimestamp(lastCreatedAt)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     let messageQuery // 초기값 없이 선언만 함
-
     // 1. 로컬 데이터가 있는 경우: lastSeq 이후만 구독 (가장 효율적)
     if (lastSeq) {
-      // seq 기준 정렬 (asc: 100, 101, 102... 순서로 받음)
+      //lastSeq가 0인 경우도 채팅방이 없는 경우임. 항상 1부터 시작
       messageQuery = query(
         messagesRef,
         orderBy('seq', 'asc'),
@@ -97,7 +84,7 @@ export const messageRemote = {
         messageQuery = query(
           messagesRef,
           orderBy('createdAt', 'asc'), // 시간 순서대로 받음
-          startAfter(lastDoc), // "이 문서(lastDoc) 다음부터 주세요" (시간 계산 불필요)
+          startAfter(lastDoc),
         )
       } else {
         // 빈 방임 -> 처음부터 구독 (어차피 데이터 0개)

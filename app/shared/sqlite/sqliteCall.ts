@@ -1,28 +1,31 @@
+import {sqliteLock} from '@app/features/chat/utils/message'
+
 const BE_QUITE = false
 
 export async function sqliteCall<T>(
   label: string,
   fn: () => Promise<T>,
+  opts?: {lock?: boolean}, // <- 선택 옵션
 ): Promise<T> {
-  // 배포 환경에서는 바로 실행
-  if (!__DEV__ || BE_QUITE) return await fn()
+  const run = () => fn()
+  const shouldLock = opts?.lock ?? true
+  //sqliteLock은 테이블이 삭제중 일때, sqlite요청이 완료될 떄 까지 기다리는 옵션임.
+  const exec = () => (shouldLock ? sqliteLock.runExclusive(run) : run())
 
-  // 1. [변경] group -> groupCollapsed (기본적으로 접힘)
+  // 배포 환경에서는 바로 실행(로그만 스킵). 락은 운영에서도 유지하는 게 안전함.
+  if (!__DEV__ || BE_QUITE) return await exec()
+
   console.groupCollapsed(`🧱 [SQLITE] ${label}`)
-
   const start = Date.now()
+
   try {
-    const res = await fn()
-    // 2. [개선] 성공 로그에 결과값(res)을 함께 출력
-    // 화살표를 눌러 펼치면 쿼리 결과를 바로 볼 수 있습니다.
+    const res = await exec()
     console.log(`✅ SUCCESS (${Date.now() - start}ms)`, res)
     return res
   } catch (e) {
-    // 3. 실패 시에는 console.error 사용 (빨간색 강조)
     console.error(`❌ FAIL (${Date.now() - start}ms)`, e)
     throw e
   } finally {
-    // 그룹 닫기 (필수)
     console.groupEnd()
   }
 }

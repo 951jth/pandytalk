@@ -3,7 +3,7 @@ import {
   messageLocalTest,
   type TargetOldVersion,
 } from '@app/features/chat/data/messageLocal.test.sqlite'
-import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate'
+import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate.sqlite'
 
 export const messageTestService = {
   //message테이블을 구버전으로 (테스트용)

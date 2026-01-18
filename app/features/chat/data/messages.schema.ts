@@ -85,5 +85,6 @@ export const migrations: Record<number, Migration> = {
 //🔥🔥TODO: 중요 가장 최근 컬럼값으로 설정해야함 (초기화 할떄 사용함)🔥🔥
 export const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS_V3.map(() => '?').join(', ')
 export const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS_V3.join(', ')
+export const MESSAGES_COLUMNS = MESSAGE_COLUMNS_V3
 export const LATEST_DB_VERSION = 3
 export const CREATE_MESSAGE_TABLE_RECENT_SQL = CREATE_MESSAGE_TABLE_V3_SQL

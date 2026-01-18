@@ -3,6 +3,7 @@ import {
   MESSAGE_PLACEHOLDERS,
   MESSAGE_TABLE,
 } from '@app/features/chat/data/messages.schema'
+import {sqliteLock} from '@app/features/chat/utils/message'
 import {db} from '@app/shared/sqlite/sqlite'
 import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
 import {ChatMessage} from '@app/shared/types/chat'
@@ -10,65 +11,79 @@ import {toMillisFromServerTime} from '@app/shared/utils/firebase'
 import {Transaction} from 'react-native-sqlite-storage'
 
 export const messageLocal = {
+  //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
+  withDbLock: <T>(fn: () => Promise<T>) => sqliteLock.runExclusive(fn),
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
-    // 1. 디버깅 및 성능 측정을 위해 sqliteCall 래퍼 사용
-    return sqliteCall('messageLocal.saveMessagesToSQLite', () => {
-      return new Promise<void>((resolve, reject) => {
-        db.transaction(
-          (tx: Transaction) => {
-            // 2. 상수를 사용하여 쿼리 문자열 조합
-            const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
-            messages.forEach(msg => {
-              // 3. 값 매핑: 컬럼 순서(MESSAGE_COLUMNS)와 정확히 일치해야 함
-              const values = [
-                msg.id,
-                roomId,
-                msg.text,
-                msg.senderId,
-                toMillisFromServerTime(msg.createdAt),
-                msg.type,
-                msg.imageUrl ?? '',
-                msg?.senderPicURL ?? '',
-                msg?.senderName ?? '',
-                msg.seq ?? 1,
-                msg.status ?? 'success',
-              ]
-              tx.executeSql(query, values, undefined, (_, error) => {
-                console.log(_)
-                console.error('SQLite 쿼리 오류:', error)
-                reject(error)
-                return true
-              })
-            })
-          },
-          reject, // ✅ 트랜잭션 전체 실패
-          resolve,
-        )
-      })
-    })
+    return sqliteCall(
+      'messageLocal.saveMessagesToSQLite',
+      () => {
+        if (!messages?.length) return Promise.resolve()
+        return new Promise<void>((resolve, reject) => {
+          const query = `INSERT OR REPLACE INTO ${MESSAGE_TABLE} (${MESSAGE_COLUMN_SQL}) VALUES (${MESSAGE_PLACEHOLDERS})`
+          db.transaction(
+            (tx: Transaction) => {
+              for (const msg of messages) {
+                // values 매핑
+                const values = [
+                  msg.id,
+                  roomId,
+                  msg.text ?? '',
+                  msg.senderId,
+                  toMillisFromServerTime(msg.createdAt),
+                  msg.type,
+                  msg.imageUrl ?? '',
+                  msg.senderPicURL ?? '',
+                  msg.senderName ?? '',
+                  msg.seq ?? 1,
+                  msg.status ?? 'success',
+                ]
+                tx.executeSql(query, values, undefined, (_tx, error) => {
+                  console.error('[SQLite] saveMessagesToSQLite stmt fail', {
+                    roomId,
+                    msgId: msg.id,
+                    error,
+                  })
+                  return true
+                })
+              }
+            },
+            err => {
+              console.error('[SQLite] saveMessagesToSQLite tx fail', err)
+              reject(err)
+            },
+            () => resolve(),
+          )
+        })
+      },
+      {lock: true}, //메세지를 쓸때는 테이블마이그레이션(재생성)이 끝난 뒤에 설정하도록함
+    )
   },
   updateMessageStatus: (
     roomId: string,
     messageId: string,
     status: ChatMessage['status'],
   ) => {
-    return sqliteCall('messageLocal.updateMessageStatus', () => {
-      return new Promise<void>((resolve, reject) => {
-        db.transaction((tx: Transaction) => {
-          const query = `UPDATE ${MESSAGE_TABLE} SET status = ? WHERE roomId = ? AND id = ?`
-          tx.executeSql(
-            query,
-            [status, roomId, messageId],
-            () => resolve(),
-            (_, error) => {
-              console.error('SQLite 쿼리 오류:', error)
-              reject(error)
-              return true
-            },
-          )
+    return sqliteCall(
+      'messageLocal.updateMessageStatus',
+      () => {
+        return new Promise<void>((resolve, reject) => {
+          db.transaction((tx: Transaction) => {
+            const query = `UPDATE ${MESSAGE_TABLE} SET status = ? WHERE roomId = ? AND id = ?`
+            tx.executeSql(
+              query,
+              [status, roomId, messageId],
+              () => resolve(),
+              (_, error) => {
+                console.error('SQLite 쿼리 오류:', error)
+                reject(error)
+                return true
+              },
+            )
+          })
         })
-      })
-    })
+      },
+      {lock: true}, //테이블마이그레이션(재생성)이 끝난 뒤에 설정하도록함
+    )
   },
   getChatMessagesByCreated: (
     roomId: string,
@@ -102,12 +117,12 @@ export const messageLocal = {
       })
     })
   },
-  getChatMessageBySeq: (
+  getChatMessagesBySeq: (
     roomId: string,
     cursorSeq?: number | null,
     pageSize: number = 20,
   ) => {
-    return sqliteCall('messageLocal.getChatMessageBySeq', async () => {
+    return sqliteCall('messageLocal.getChatMessagesBySeq', async () => {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           const query = cursorSeq
@@ -134,13 +149,12 @@ export const messageLocal = {
       })
     })
   },
-
   clearAllMessages: () => {
     return sqliteCall('messageLocal.clearAllMessages', async () => {
       return new Promise<void>((resolve, reject) => {
         db.transaction(
           (tx: Transaction) => {
-            tx.executeSql(`DROP TABLE IF EXISTS ${MESSAGE_TABLE};`)
+            tx.executeSql(`DELETE FROM messages`)
           },
           reject,
           resolve,
@@ -195,27 +209,7 @@ export const messageLocal = {
       })
     })
   },
-  isMessagesTableExists: () => {
-    return sqliteCall('messageLocal.isMessagesTableExists', async () => {
-      return new Promise((resolve, reject) => {
-        db.transaction(tx => {
-          tx.executeSql(
-            `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
-            [],
-            (_, result) => {
-              const exists = result.rows.length > 0
-              resolve(exists)
-            },
-            (_, error) => {
-              console.log('error', error)
-              reject(error)
-              return true
-            },
-          )
-        })
-      })
-    })
-  },
+
   deleteMessageById: (roomId: string, messageId: string) => {
     return sqliteCall('messageLocal.deleteChatMessage', async () => {
       return new Promise<boolean>((resolve, reject) => {
@@ -236,5 +230,23 @@ export const messageLocal = {
         })
       })
     })
+  },
+  //메세지 테이블 삭제는 최후의 수단,
+  dropMessageTable: () => {
+    return sqliteCall(
+      'messageLocal.dropMessageTable',
+      async () => {
+        return new Promise<void>((resolve, reject) => {
+          db.transaction(
+            (tx: Transaction) => {
+              tx.executeSql(`DROP TABLE IF EXISTS ${MESSAGE_TABLE};`)
+            },
+            reject,
+            resolve,
+          )
+        })
+      },
+      {lock: true},
+    )
   },
 }

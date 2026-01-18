@@ -1,10 +1,7 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageRemote} from '@app/features/chat/data/messageRemote.firebase'
 import type {ChatMessage} from '@app/shared/types/chat'
-import {
-  toMillisFromServerTime,
-  toRNFTimestamp,
-} from '@app/shared/utils/firebase'
+import {toMillisFromServerTime} from '@app/shared/utils/firebase'
 
 export type SendMessageParams = {
   roomId?: string
@@ -12,18 +9,14 @@ export type SendMessageParams = {
 }
 
 export const messageService = {
-  //채팅방 메세지 조회
-  getChatMessages: async (
+  getChatMessagesFromSeq: async (
     roomId: string,
-    ms?: number | null, //sqlite가 읽어야하기 떄문에 클라이언트에선 ms로 관리.
+    seq?: number,
     pageSize?: number,
   ) => {
-    const ts = toRNFTimestamp(ms) //milisecond -> firestore timestamp
-    const {items, nextPageParam, hasNext} = await messageRemote.getChatMessages(
-      roomId,
-      ts,
-      pageSize ?? 20,
-    )
+    console.log('seq', seq)
+    const {items, nextPageParam, hasNext} =
+      await messageRemote.getChatMessagesBySeq(roomId, seq, pageSize ?? 20)
     const reformed = items?.map(item => ({
       ...item,
       createdAt: toMillisFromServerTime(item?.createdAt) ?? Date.now(),
@@ -61,16 +54,15 @@ export const messageService = {
     seq: number,
     pageSize?: number,
   ): Promise<ChatMessage[]> => {
-    const newMessages = await messageRemote.getChatMessageBySeq(
+    const newMessages = await messageRemote.getAllChatMessagesFromSeq(
       roomId,
       seq,
-      pageSize,
     )
 
     if (newMessages.length === 0) return []
     await messageLocal.saveMessagesToSQLite(roomId, newMessages)
     //데이터 정합성을 위해 save이후에 sqlite를 바라보고 데이터를 가져옴
-    const messages = await messageLocal.getChatMessageBySeq(
+    const messages = await messageLocal.getChatMessagesBySeq(
       roomId,
       seq,
       pageSize,
