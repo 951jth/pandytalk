@@ -20,15 +20,10 @@ export function useAuthGate() {
   const {data: userInfo, loading} = useAppSelector(state => state.user)
   const {logout} = useLogout()
   // 왜 mountedRef를 쓰는가?
-  // - 스플래시 스크린이 실제 페이지가 마운트될 때만 뜨도록 하기 위함.
-  // - 기존에는 로그인 시도시에 강제로 스플래시 스크린이 떴엇는데, 이걸 방지.
+  // 1. 단순 경고 무시 목적보다는, 비동기 로직이 완료된 시점에 사용자가 이미 화면을 벗어나면
+  //  굳이 loading 상태를 끄거나 화면을 전환하는 로직을 실행할 필요가 없기 때문.
+  // 2. 혹시 모를 setInitializing로 인한 사이드이펙트로 인해 이전화면에서의 navigation 요청이 무시되는것을 다시 막기위함.(이미 RootApp에서 한번막지만)
 
-  // 1. 앱 시작 → onAuthStateChanged 콜백 호출됨 (fbUser 있음)
-  // 2. fetchProfile 시작 -> 프로필 결과가 confirm이 아님 → logout() 호출됨
-  // → 이 순간 auth 상태가 바뀌면서 루트가 바뀌거나, onAuthStateChanged가 다시 들어옴
-  // 3. 그런데 fetchProfile는 updateLastSeen 같은 await 흐름 때문에 아직 끝나기 전/끝난 직후일 수 있음
-  // → 늦게 도착한 finally에서 setInitializing(false)를 치려는 순간, 이미 해당 훅을 쓰는 컴포넌트가 교체/언마운트 됐을 수 있음
-  // → 그걸 막는 게 mountedRef 체크
   const mountedRef = useRef(true)
 
   useEffect(() => {
