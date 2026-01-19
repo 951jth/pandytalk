@@ -122,12 +122,12 @@ export default function ChatMessageItem({
               )}
               {/* 말풍선 */}
               <View style={styles.otherChatBubble}>
-                {/* {type == 'text' && (
+                {type == 'text' && (
                   <CopyableText
                     textStyle={{color: COLORS.text}}
                     value={item?.text ?? '-'}
                   />
-                )} */}
+                )}
                 {type == 'image' && item?.imageUrl && (
                   <ImageViewer
                     images={[{uri: item?.imageUrl}]}
