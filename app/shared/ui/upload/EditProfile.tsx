@@ -6,10 +6,13 @@ import React, {
   useState,
   type ForwardedRef,
 } from 'react'
-import {StyleSheet, View} from 'react-native'
+import {Alert, StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
-import {requestPhotoPermission} from '../../utils/permission'
+import {
+  requestPhotoPermission,
+  showPermissionBlockedAlert,
+} from '../../utils/permission'
 import DefaultProfile from '../common/DefaultProfile'
 import ImageViewer from '../common/ImageViewer'
 
@@ -50,7 +53,12 @@ const EditProfile = forwardRef(function EditProfile(
   const pickImage = async () => {
     try {
       const hasPermission = await requestPhotoPermission()
-      if (!hasPermission) return
+      console.log('hasPermission', hasPermission)
+
+      if (hasPermission?.status == 'BLOCKED')
+        return showPermissionBlockedAlert({})
+      if (!hasPermission?.ok)
+        return Alert.alert('권한 확인', hasPermission?.reason)
       const result = await launchImageLibrary({
         mediaType: 'photo',
         selectionLimit: 1,

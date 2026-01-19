@@ -1,12 +1,15 @@
 import React from 'react'
-import {StyleSheet} from 'react-native'
+import {Alert, StyleSheet} from 'react-native'
 import {
   ImageLibraryOptions,
   ImagePickerResponse,
   launchImageLibrary,
 } from 'react-native-image-picker'
 import {IconButton} from 'react-native-paper'
-import {requestPhotoPermission} from '../../utils/permission'
+import {
+  requestPhotoPermission,
+  showPermissionBlockedAlert,
+} from '../../utils/permission'
 interface propTypes {
   iconSize?: number
   onChange?: (result: ImagePickerResponse) => void
@@ -21,7 +24,10 @@ export default function UploadButton({
   const pickFile = async () => {
     try {
       const hasPermission = await requestPhotoPermission()
-      if (!hasPermission) return
+      if (hasPermission?.status == 'BLOCKED')
+        return showPermissionBlockedAlert({})
+      if (!hasPermission?.ok)
+        return Alert.alert('권한 확인', hasPermission?.reason)
       const result = await launchImageLibrary({mediaType: 'photo', ...options})
       if (result.didCancel || !result.assets?.[0]?.uri) return
       if (onChange) onChange(result)

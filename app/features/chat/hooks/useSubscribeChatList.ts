@@ -26,7 +26,7 @@ export function useSubscribeChatList(
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
-    if (!uid && disabled) return
+    if (!uid || disabled) return
 
     let isInitial = true
     const unsub = chatService.subscribeMyChats(
