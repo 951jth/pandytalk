@@ -29,7 +29,9 @@ export const useChatMessageInput = ({
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
-  const {mutate: sendChatAndCache} = useChatMessageUpsertMutation(roomInfo?.id)
+  const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
+    roomInfo?.id,
+  )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
 
   const onSendMessage = async (
@@ -79,7 +81,7 @@ export const useChatMessageInput = ({
         user,
       })
       if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
-      sendChatAndCache({
+      sendMessageAndCache({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
       })

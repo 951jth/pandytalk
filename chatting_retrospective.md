@@ -42,7 +42,7 @@ UI가 서버 데이터를 직접 바라보지 않게 했습니다. 모든 데이
 비용 절감과 최신성 보장을 위해 초기 진입과 실시간 구독을 분리했습니다.
 
 - **Initial Load:** 진입 시 `REST Fetch`로 최신 20건을 강제 조회하여 기준점을 잡습니다. (데이터 정합성 확보)
-- **Subscription:** 이후 도착하는 메시지는 `lastCreatedAt` 타임스탬프를 기준으로 `onSnapshot`을 연결해 델타(Delta) 업데이트만 수행합니다. (비용 최소화)
+- **Subscription:** 이후 도착하는 메시지는 `seq` 타임스탬프를 기준으로 `onSnapshot`을 연결해 델타(Delta) 업데이트만 수행합니다. (비용 최소화)
 
 ### 3.3. '시간의 연속성'을 이용한 Gap Filling (Data Continuity)
 
