@@ -14,7 +14,6 @@ export const messageService = {
     seq?: number,
     pageSize?: number,
   ) => {
-    console.log('seq', seq)
     const {items, nextPageParam, hasNext} =
       await messageRemote.getChatMessagesBySeq(roomId, seq, pageSize ?? 20)
     const reformed = items?.map(item => ({
