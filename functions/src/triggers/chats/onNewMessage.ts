@@ -1,8 +1,8 @@
-import {MulticastMessage} from 'firebase-admin/messaging'
+import { MulticastMessage } from 'firebase-admin/messaging'
 import * as logger from 'firebase-functions/logger'
-import {onDocumentCreated} from 'firebase-functions/v2/firestore'
-import {db, messaging} from '../../core/firebase'
-import {removeEmptyValues, removeFcmTokenFromUser} from '../../utils/fcm'
+import { onDocumentCreated } from 'firebase-functions/v2/firestore'
+import { db, messaging } from '../../core/firebase'
+import { removeEmptyValues, removeFcmTokenFromUser } from '../../utils/fcm'
 
 export const sendNewMessageNotification = onDocumentCreated(
   {
@@ -37,20 +37,15 @@ export const sendNewMessageNotification = onDocumentCreated(
       // 2) 수신자들의 fcmToken 조회  (※ 기존 코드의 덮어쓰기 버그 수정: push/concat)
       const targetUsers: {uid: string; fcmToken: string}[] = []
 
-      // 이 코드는 반드시 async 함수 안에서 실행되어야 해
       const promises = receiverIds.map(uid => db.doc(`users/${uid}`).get())
-      // 1. 모든 데이터를 가져올 때까지 여기서 '딱' 기다림!
       const userSnaps = await Promise.all(promises)
 
-      // 2. 다 가져온 뒤에 배열 처리 시작
       for (const userSnap of userSnaps) {
-        // 문서가 실제로 존재하는지 체크 (중요!)
         if (!userSnap.exists) continue
 
         const userData = userSnap.data()
         if (!userData) continue
 
-        // 3. uid 가져오기 (userData 안에 uid가 없다면 userSnap.id 사용 추천)
         const uid = userData.uid || userSnap.id
         const fcmTokens = userData.fcmTokens as string[] | undefined
 
@@ -61,7 +56,6 @@ export const sendNewMessageNotification = onDocumentCreated(
         }
       }
 
-      // 4. 이제 targetUsers에는 데이터가 확실히 들어있음!
       if (targetUsers.length === 0) {
         logger.info('❌ 전송할 토큰 없음')
         return
@@ -70,23 +64,15 @@ export const sendNewMessageNotification = onDocumentCreated(
       const rawMsg = message?.imageUrl
         ? '사진을 보냈습니다.'
         : (text ?? '내용 없음')
-      // 3. 타이틀 & 바디 설정 (핵심!)
       let finalTitle = ''
       let finalBody = ''
       if (isGroup) {
-        // [그룹 채팅]
-        // 제목: 그룹명
-        // 내용: 닉네임 + 줄바꿈(\n) + 메시지
-        finalTitle = message?.roomTitle
+        finalTitle = chatDoc.get('name') as string
         finalBody = `${message?.senderName}\n${rawMsg}`
       } else {
-        // [1:1 채팅]
-        // 제목: 보낸 사람 닉네임
-        // 내용: 메시지
         finalTitle = message?.senderName
         finalBody = rawMsg
       }
-      // 3) 멀티캐스트 메시지
       const multicastMessage: MulticastMessage = {
         tokens: targetUsers.map(u => u.fcmToken),
         notification: removeEmptyValues({
@@ -126,7 +112,6 @@ export const sendNewMessageNotification = onDocumentCreated(
         },
       }
 
-      // 4) 전송 및 실패 토큰 정리
       const response = await messaging.sendEachForMulticast(multicastMessage)
       logger.info(
         `✅ 푸시 전송 완료: 성공 ${response.successCount} / 실패 ${response.failureCount}`,
