@@ -66,7 +66,3 @@
   - 전송 시: `id: 'msg_123'` (Local)
   - 수신 시: `id: 'msg_123'` (Server Echo)
 - **결과:** ID가 동일하므로 별도의 교체 로직 없이, `Map` 자료구조에 덮어씌우는 것만으로 **자동 중복 제거(Idempotency)** 및 데이터 최신화(Seq 업데이트) 달성.
-
-## 3. 핵심 코드 (Refactored Code)
-
-**메시지 병합 및 정렬 유틸리티 (Deduplication Logic)**

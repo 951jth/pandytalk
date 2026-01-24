@@ -1,27 +1,14 @@
-# [Tech Retrospective] 대규모 실시간 채팅 시스템: 비용 최적화와 데이터 정합성을 향한 여정
 
-## 1. 개요 (Overview)
 
-- **프로젝트:** 팬디톡 (실시간 팬덤 소통 플랫폼) / Payking
-- **역할:** 프론트엔드 리드 개발자 (5년 차)
-- **기술 스택:** React Native, Firebase Firestore, SQLite, TanStack Query, TypeScript
-- **핵심 과제:** Firestore의 읽기 비용을 최소화하면서도, 오프라인 지원과 완벽한 데이터 정합성(Consistency)을 보장하는 채팅 시스템 구축
-
----
-
-## 2. 직면했던 문제 (The Challenge)
-
-초기 개발 단계에서 단순한 `onSnapshot`(실시간 리스너) 구현만으로는 프로덕션 레벨의 요구사항을 충족하기 어렵다는 것을 발견했습니다. 특히 다음과 같은 세 가지 기술적 병목이 발생했습니다.
-
-### 2.1. 비용과 성능의 딜레마 (Billing vs Performance)
+### 1. 비용과 성능의 딜레마 (Billing vs Performance)
 
 채팅방 진입 시마다 전체 데이터를 `onSnapshot`으로 불러올 경우, 메시지 1개가 추가될 때마다 과거 데이터(limit 50)까지 중복 과금되는 **Read Cost Explosion** 문제가 있었습니다. 반대로 비용을 아끼려 구독을 제한하면 실시간성이 떨어지는 트레이드오프가 발생했습니다.
 
-### 2.2. 데이터 단절 (Data Gap & Island)
+### 2. 데이터 단절 (Data Gap & Island)
 
 로컬 캐싱(SQLite)을 도입했으나, 사용자가 오랫동안 오프라인 상태였다가 접속했을 때 **'로컬의 최신 데이터'와 '서버의 과거 데이터' 사이에 공백(Gap)**이 생기는 현상이 발생했습니다. 단순히 개수(`count`)만 체크하는 로직으로는 이 "데이터 섬(Island)" 현상을 탐지하지 못해 메시지가 누락되는 치명적인 UX 이슈가 있었습니다.
 
-### 2.3. 비동기 라이프사이클의 함정 (Async Lifecycle)
+### 3. 비동기 라이프사이클의 함정 (Async Lifecycle)
 
 `useEffect` 내부에서 `async` 함수로 구독을 설정할 때, Promise 반환 시점과 컴포넌트 언마운트 시점의 불일치(Race Condition)로 인해 **메모리 누수(Memory Leak)** 및 구독 해제 실패 현상을 겪었습니다.
 
@@ -72,12 +59,6 @@ useEffect(() => {
 }, [roomId]);
 ```
 
-4. 성과 (Result)
-   비용 절감: 불필요한 재구독과 중복 읽기를 제거하여 Firestore Read 비용을 약 40% 절감했습니다.
-
-안정성: 네트워크가 불안정한 환경이나 앱을 껐다 켠 상황에서도 메시지 누락 0건을 달성했습니다.
-
-UX 개선: 로컬 캐시를 우선 보여주되(Stale-While-Revalidate), 백그라운드 동기화를 통해 **'로딩 없는 즉각적인 화면 진입'**을 구현했습니다.
 
 5. 회고 및 배운 점 (Lessons Learned)
    이번 기능을 개발하며 **"Happy Path(정상적인 상황)만 코딩하는 것은 주니어의 영역"**임을 깨달았습니다.
