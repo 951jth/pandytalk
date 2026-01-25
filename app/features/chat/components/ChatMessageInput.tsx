@@ -1,12 +1,13 @@
-import {
-  useChatMessageInput,
-  type ChatInputPropTypes,
-} from '@app/features/chat/hooks/useChatMessageInput'
-import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
-import UploadButton from '../../../shared/ui/upload/UploadButton'
+
+import {
+  useChatMessageInput,
+  type ChatInputPropTypes,
+} from '@features/chat/hooks/useChatMessageInput'
+import COLORS from '@shared/constants/color'
+import UploadButton from '@shared/ui/upload/UploadButton'
 
 export default function ChatMessageInput({
   roomInfo,
@@ -39,8 +40,9 @@ export default function ChatMessageInput({
         size={25}
         style={styles.sendButton}
         iconColor={COLORS.onPrimary}
-        onPress={() => onSendMessage('text')}
+        onPress={() => !loading && onSendMessage('text')} // ✅ 로딩 중 추가 전송 방지
         loading={loading}
+        disabled={loading} // ✅ 확실한 비활성화
       />
     </View>
   )

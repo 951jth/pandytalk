@@ -1,9 +1,10 @@
-import COLORS from '@app/shared/constants/color'
-import {AppRouteParamList} from '@app/shared/types/navigate'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React from 'react'
 import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native'
+
+import COLORS from '@shared/constants/color'
+import {AppRouteParamList} from '@shared/types/navigate'
 
 type AppRouteName = Extract<keyof AppRouteParamList, string>
 type MenuItem = {

@@ -1,11 +1,11 @@
+import React, {memo, useCallback} from 'react'
+import {FlatList, StyleSheet} from 'react-native'
+
 import ChatMessageItem, {
   ChatMessageItemProps,
-} from '@app/features/chat/components/ChatMessageItem'
-import {useChatMessageList} from '@app/features/chat/hooks/useChatMessageList'
-import {ChatRoom} from '@app/shared/types/chat'
-import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
-import React, {memo, useCallback, useMemo} from 'react'
-import {FlatList, StyleSheet} from 'react-native'
+} from '@features/chat/components/ChatMessageItem'
+import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
+import {ChatRoom} from '@shared/types/chat'
 
 interface Props {
   roomId: string | null
@@ -15,7 +15,7 @@ interface Props {
 }
 
 // ChatMessageItem에 props를 전달시 ChatMessagesWithUi의
-// uiConfig 떄문에 참조가 꺠져서 메모효과가 없어짐. 그래서 areEqual옵션을 활용함
+// uiConfig 떄문에 참조가 꺠져서 메모효과가 없어짐. 그래서 arePropsEqual옵션을 활용함
 const arePropsEqual = (
   prev: ChatMessageItemProps,
   next: ChatMessageItemProps,
@@ -25,7 +25,8 @@ const arePropsEqual = (
   const isUiConfigSame =
     pUi.hideProfile === nUi.hideProfile &&
     pUi.hideMinute === nUi.hideMinute &&
-    pUi.hideDate === nUi.hideDate
+    pUi.hideDate === nUi.hideDate &&
+    pUi.isMine === nUi.isMine
   if (!isUiConfigSame) return false
   if (prev.member !== next.member) return false
   return pMsg === nMsg
@@ -34,43 +35,19 @@ const MemoizedChatMessage = memo(ChatMessageItem, arePropsEqual)
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
-    messages,
+    messagesWithUi, // 훅에서 가공된 데이터 받아옴(멤버 정보도 포함)
     isLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    membersMap,
   } = useChatMessageList({userId, roomId, roomInfo})
-
-  const ChatMessagesWithUi = useMemo(() => {
-    return messages?.map((msg, idx) => {
-      const nextItem = messages?.[idx + 1] ?? null
-      const hideProfile = isSameSender(msg, nextItem)
-      const hideMinute = isSameMinute(msg, nextItem)
-      const hideDate = isSameDate(msg, nextItem)
-      const isMine = msg?.senderId === userId
-      const member = membersMap.get(msg.senderId)
-      return {
-        item: msg,
-        uiConfig: {
-          hideProfile,
-          hideMinute,
-          hideDate,
-        },
-        isMine,
-        roomId,
-        member,
-      }
-    })
-  }, [messages, roomId, membersMap, userId])
 
   const renderMessage = useCallback(
     ({item}: {item: ChatMessageItemProps}) => {
-      const {item: chatMessage, uiConfig, isMine, member} = item
+      const {item: chatMessage, uiConfig, member} = item
       return (
         <MemoizedChatMessage
           item={chatMessage}
-          isMine={isMine}
           uiConfig={uiConfig}
           roomId={roomId ?? null}
           member={member}
@@ -83,7 +60,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   return (
     <FlatList
       style={styles.flex}
-      data={ChatMessagesWithUi || []}
+      data={messagesWithUi || []} // 메시지 가공 데이터 연결
       keyExtractor={item => item.item?.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
@@ -95,8 +72,13 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
           fetchNextPage()
         }
       }}
-      // onRefresh={resetChatMessages}
-      // refreshing={isLoading}
+      onEndReachedThreshold={0.1}
+      // 새로운 아이템이 위나 아래에 추가되어도 현재 보고 있는 위치 유지
+      //초기 렌더링 개수 및 업데이트 배치 설정
+      initialNumToRender={20}
+      maxToRenderPerBatch={10}
+      windowSize={20}
+      removeClippedSubviews={true}
     />
   )
 }

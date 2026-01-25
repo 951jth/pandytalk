@@ -1,8 +1,9 @@
-import COLORS from '@app/shared/constants/color'
-import {ChatMessage} from '@app/shared/types/chat'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {ActivityIndicator, IconButton} from 'react-native-paper'
+
+import COLORS from '@shared/constants/color'
+import {ChatMessage} from '@shared/types/chat'
 
 type ChatMessageStatusIconsProps = {
   item: ChatMessage
