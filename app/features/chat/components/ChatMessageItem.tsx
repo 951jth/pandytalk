@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
 import { useChatMessageDeleteMutation } from '@app/features/chat/hooks/useChatMessageDeleteMutation'
 import { useChatMessageUpsertMutation } from '@app/features/chat/hooks/useChatMessageUpsertMutation'
@@ -7,9 +8,21 @@ import type { ChatMessage } from '@app/shared/types/chat'
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
 import CopyableText from '@app/shared/ui/text/CopyableText'
 import { formatChatTime, formatServerDate } from '@app/shared/utils/firebase'
+=======
+>>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Icon, Text } from 'react-native-paper'
+
+import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
+import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
+import {useChatMessageUpsertMutation} from '@features/chat/hooks/useChatMessageUpsertMutation'
+import COLORS from '@shared/constants/color'
+import {User} from '@shared/types/auth'
+import type {ChatMessage} from '@shared/types/chat'
+import ImageViewer from '@shared/ui/common/ImageViewer'
+import CopyableText from '@shared/ui/text/CopyableText'
+import {formatChatTime, formatServerDate} from '@shared/utils/firebase'
 
 export type ChatMessageItemProps = {
   item: ChatMessage
@@ -17,20 +30,19 @@ export type ChatMessageItemProps = {
     hideProfile: boolean
     hideMinute: boolean
     hideDate: boolean
+    isMine: boolean
   }
-  isMine: boolean
   roomId?: string | null
   member?: User
 }
 
 export default function ChatMessageItem({
   item,
-  isMine,
   uiConfig,
   roomId,
   member,
 }: ChatMessageItemProps) {
-  const {hideProfile, hideMinute, hideDate} = uiConfig
+  const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   const {type} = item

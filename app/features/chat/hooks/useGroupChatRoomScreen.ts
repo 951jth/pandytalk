@@ -21,7 +21,7 @@ export const useGroupChatRoomScreen = () => {
 
   return {
     user,
-    loading,
+    loading: loading || isLoading,
     roomId: groupId,
     roomInfo,
     headerTitle,

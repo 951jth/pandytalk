@@ -1,10 +1,22 @@
+<<<<<<< HEAD
 import { useChatMessagesInfinite } from '@app/features/chat/hooks/useChatMessagesInfinite'
 import { useSyncAndSubsMessages } from '@app/features/chat/hooks/useSyncAndSubsMessages'
 import { useUpdateLastReadOnBlur } from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type { User } from '@app/shared/types/auth'
 import type { ChatRoom } from '@app/shared/types/chat'
+import { isSameDate, isSameMinute, isSameSender } from '@app/shared/utils/chat'
 import { useEffect, useMemo, useRef } from 'react'
 import { FlatList } from 'react-native'
+=======
+import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
+import {useSyncAndSubsMessages} from '@app/features/chat/hooks/useSyncAndSubsMessages'
+import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
+import type {User} from '@app/shared/types/auth'
+import type {ChatRoom} from '@app/shared/types/chat'
+import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
+import {useMemo, useRef} from 'react'
+import {FlatList} from 'react-native'
+>>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
 
 type Props = {
   roomId: string | null
@@ -13,20 +25,15 @@ type Props = {
 }
 
 export const useChatMessageList = ({
-  roomId, //쿼리를 통해 알수있는 정보(구독전용)
+  roomId, // 쿼리를 통해 알수있는 정보(구독전용)
   userId,
-  roomInfo, //실제 채팅방 정보 생성 확인
+  roomInfo, // 실제 채팅방 정보 생성 확인
 }: Props) => {
-  const {
-    data,
-    isLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    resetChatMessages,
-  } = useChatMessagesInfinite(roomId)
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList>(null)
+  const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
+    useChatMessagesInfinite(roomId)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
+
   // 멤버들 정보 map
   const membersMap = useMemo(() => {
     const init = new Map<string, User>()
@@ -35,10 +42,35 @@ export const useChatMessageList = ({
     }, init)
     return map ?? init
   }, [roomInfo?.memberInfos])
-  //마지막 읽은 시간,SEQ 처리
+
+  // UI용 메시지 데이터 가공 로직
+  // 멤버 정보를 포함하기 떄문에 훅 내부로 이동.
+  const messagesWithUi = useMemo(() => {
+    return messages?.map((msg, idx) => {
+      const nextItem = messages?.[idx + 1] ?? null
+      const hideProfile = isSameSender(msg, nextItem)
+      const hideMinute = isSameMinute(msg, nextItem)
+      const hideDate = isSameDate(msg, nextItem)
+      const isMine = msg?.senderId === userId
+      const member = membersMap.get(msg.senderId)
+      return {
+        item: msg,
+        uiConfig: {
+          hideProfile,
+          hideMinute,
+          hideDate,
+          isMine,
+        },
+        roomId,
+        member,
+      }
+    })
+  }, [messages, roomId, membersMap, userId])
+
+  // 마지막 읽은 시간, SEQ 처리
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
-  //채팅 목록 구독
-  useSyncAndSubsMessages(roomId) //채팅방 구독설정
+  // 채팅 목록 구독
+  useSyncAndSubsMessages(roomId) // 채팅방 구독설정
 
   const lastMessageIdRef = useRef<string | null>(null)
 
@@ -58,7 +90,7 @@ export const useChatMessageList = ({
   }, [messages?.[0]?.id, userId])
 
   return {
-    messages,
+    messagesWithUi, // 가공된 채팅 메세지
     isLoading,
     fetchNextPage,
     hasNextPage,

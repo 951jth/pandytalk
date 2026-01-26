@@ -9,7 +9,6 @@ export const useSubscribeChatUnreadCount = (
   const [unreadCnt, setUnreadCnt] = useState(0)
 
   useEffect(() => {
-    console.log('roomId, userId: ', roomId, userId)
     if (!roomId || !userId) return
     const unsub = chatService.subscribeChatRoom(roomId, roomInfo => {
       const {lastReadSeqs, lastSeq} = roomInfo

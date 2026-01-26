@@ -49,10 +49,10 @@ export const useChatMessageUpsertMutation = (
       ['chatMessages', rid],
       (old: MessagesInfiniteData | undefined) => {
         const cur = old ?? init
-        //등록하는과정에서 id를 기준으로 replace됨
+        // 등록하는 과정에서 id를 기준으로 mergeMessages 내에서 중복 제거 및 정렬됨
         const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
         return {
-          ...(old ?? init), //초기값이 없는 경우가 있음.
+          ...(old ?? init),
           pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
         }
       },

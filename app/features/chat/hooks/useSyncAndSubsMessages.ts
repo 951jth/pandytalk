@@ -1,9 +1,9 @@
-import { messageLocal } from '@app/features/chat/data/messageLocal.sqlite'
-import { useChatMessageUpsertMutation } from '@app/features/chat/hooks/useChatMessageUpsertMutation'
-import { messageService } from '@app/features/chat/service/messageService'
-import type { ChatMessage } from '@app/shared/types/chat'
-import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useRef } from 'react'
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
+import {messageService} from '@app/features/chat/service/messageService'
+import type {ChatMessage} from '@app/shared/types/chat'
+import {useFocusEffect} from '@react-navigation/native'
+import {useCallback, useRef} from 'react'
 
 export const useSyncAndSubsMessages = (roomId?: string | null) => {
   const unsubRef = useRef<(() => void) | null>(null)
@@ -26,16 +26,14 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
           if (!!localMaxSeq) {
             //채팅방이 아직 생성안된경우에도 구독로직은 타야함.
             newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
-            addMessages(newMsgs)
+            if (newMsgs?.length) {
+              addMessages(newMsgs)
+            }
           }
 
-          const lastSeq =
-            newMsgs.length > 0
-              ? newMsgs.reduce(
-                  (acc, m) => Math.max(acc, m.seq ?? 0),
-                  localMaxSeq,
-                )
-              : localMaxSeq
+          const lastSeq = newMsgs?.length
+            ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
+            : localMaxSeq
           //2. 마지막 시퀀스를 기준으로 구독 시작 (아이디가 없어도 구독은 타야함.)
           unsubRef.current = await messageService.subscribeChatMessages(
             roomId,
