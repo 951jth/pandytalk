@@ -1,20 +1,11 @@
-import React, {memo, useCallback} from 'react'
-import {FlatList, StyleSheet} from 'react-native'
+import React, { memo, useCallback } from 'react'
+import { FlatList, StyleSheet } from 'react-native'
 
 import ChatMessageItem, {
   ChatMessageItemProps,
-<<<<<<< HEAD
-} from '@app/features/chat/components/ChatMessageItem'
-import { useChatMessageList } from '@app/features/chat/hooks/useChatMessageList'
-import { ChatRoom } from '@app/shared/types/chat'
-import { isSameDate, isSameMinute, isSameSender } from '@app/shared/utils/chat'
-import React, { memo, useCallback, useMemo } from 'react'
-import { FlatList, StyleSheet } from 'react-native'
-=======
 } from '@features/chat/components/ChatMessageItem'
-import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
-import {ChatRoom} from '@shared/types/chat'
->>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
+import { useChatMessageList } from '@features/chat/hooks/useChatMessageList'
+import { ChatRoom } from '@shared/types/chat'
 
 interface Props {
   roomId: string | null
@@ -49,11 +40,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-<<<<<<< HEAD
-    membersMap,
     flatListRef
-=======
->>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
   } = useChatMessageList({userId, roomId, roomInfo})
 
   const renderMessage = useCallback(

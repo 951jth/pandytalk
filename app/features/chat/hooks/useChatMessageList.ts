@@ -1,22 +1,11 @@
-<<<<<<< HEAD
-import { useChatMessagesInfinite } from '@app/features/chat/hooks/useChatMessagesInfinite'
-import { useSyncAndSubsMessages } from '@app/features/chat/hooks/useSyncAndSubsMessages'
-import { useUpdateLastReadOnBlur } from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
-import type { User } from '@app/shared/types/auth'
-import type { ChatRoom } from '@app/shared/types/chat'
-import { isSameDate, isSameMinute, isSameSender } from '@app/shared/utils/chat'
-import { useEffect, useMemo, useRef } from 'react'
-import { FlatList } from 'react-native'
-=======
 import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
 import {useSyncAndSubsMessages} from '@app/features/chat/hooks/useSyncAndSubsMessages'
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
 import type {ChatRoom} from '@app/shared/types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
-import {useMemo, useRef} from 'react'
+import {useEffect, useMemo, useRef} from 'react'
 import {FlatList} from 'react-native'
->>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
 
 type Props = {
   roomId: string | null
@@ -85,7 +74,7 @@ export const useChatMessageList = ({
     if (isNewMessage && isMine) {
       flatListRef.current?.scrollToOffset({offset: 0, animated: false})
     }
-    
+
     lastMessageIdRef.current = latestMessage.id
   }, [messages?.[0]?.id, userId])
 
