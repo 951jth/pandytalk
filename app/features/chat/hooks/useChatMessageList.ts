@@ -3,7 +3,8 @@ import { useSyncAndSubsMessages } from '@app/features/chat/hooks/useSyncAndSubsM
 import { useUpdateLastReadOnBlur } from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type { User } from '@app/shared/types/auth'
 import type { ChatRoom } from '@app/shared/types/chat'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import { FlatList } from 'react-native'
 
 type Props = {
   roomId: string | null
@@ -24,6 +25,7 @@ export const useChatMessageList = ({
     isFetchingNextPage,
     resetChatMessages,
   } = useChatMessagesInfinite(roomId)
+  const flatListRef = useRef<FlatList>(null);
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
   // 멤버들 정보 map
   const membersMap = useMemo(() => {
@@ -38,6 +40,23 @@ export const useChatMessageList = ({
   //채팅 목록 구독
   useSyncAndSubsMessages(roomId) //채팅방 구독설정
 
+  const lastMessageIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    const latestMessage = messages[0]
+    console.log('latestMessage', latestMessage)
+    if (!latestMessage) return
+
+    const isNewMessage = latestMessage.id !== lastMessageIdRef.current
+    const isMine = latestMessage.senderId === userId
+
+    if (isNewMessage && isMine) {
+      flatListRef.current?.scrollToOffset({offset: 0, animated: false})
+    }
+    
+    lastMessageIdRef.current = latestMessage.id
+  }, [messages?.[0]?.id, userId])
+
   return {
     messages,
     isLoading,
@@ -45,5 +64,6 @@ export const useChatMessageList = ({
     hasNextPage,
     isFetchingNextPage,
     membersMap,
+    flatListRef,
   }
 }

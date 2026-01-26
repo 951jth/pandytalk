@@ -3,12 +3,12 @@ import {
   MESSAGE_PLACEHOLDERS,
   MESSAGE_TABLE,
 } from '@app/features/chat/data/messages.schema'
-import {sqliteLock} from '@app/features/chat/utils/message'
-import {db} from '@app/shared/sqlite/sqlite'
-import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
-import {ChatMessage} from '@app/shared/types/chat'
-import {toMillisFromServerTime} from '@app/shared/utils/firebase'
-import {Transaction} from 'react-native-sqlite-storage'
+import { sqliteLock } from '@app/features/chat/utils/message'
+import { db } from '@app/shared/sqlite/sqlite'
+import { sqliteCall } from '@app/shared/sqlite/sqliteCall'
+import { ChatMessage } from '@app/shared/types/chat'
+import { toMillisFromServerTime } from '@app/shared/utils/firebase'
+import { Transaction } from 'react-native-sqlite-storage'
 
 export const messageLocal = {
   //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
@@ -249,4 +249,24 @@ export const messageLocal = {
       {lock: true},
     )
   },
+  //채팅방 초기화
+  clearMessagesByChatRoomId: (roomId: string) => {
+    return sqliteCall('messageLocal.clearMessagesByChatRoomId', async () => {
+      return new Promise<void>((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `DELETE FROM ${MESSAGE_TABLE} WHERE roomId = ?`,
+            [roomId],
+            () => resolve(),
+            (_, error) => {
+              console.log('clearMessagesByChatRoomId error', error)
+              reject(error)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+
 }

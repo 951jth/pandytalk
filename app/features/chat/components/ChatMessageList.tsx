@@ -1,11 +1,11 @@
 import ChatMessageItem, {
   ChatMessageItemProps,
 } from '@app/features/chat/components/ChatMessageItem'
-import {useChatMessageList} from '@app/features/chat/hooks/useChatMessageList'
-import {ChatRoom} from '@app/shared/types/chat'
-import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
-import React, {memo, useCallback, useMemo} from 'react'
-import {FlatList, StyleSheet} from 'react-native'
+import { useChatMessageList } from '@app/features/chat/hooks/useChatMessageList'
+import { ChatRoom } from '@app/shared/types/chat'
+import { isSameDate, isSameMinute, isSameSender } from '@app/shared/utils/chat'
+import React, { memo, useCallback, useMemo } from 'react'
+import { FlatList, StyleSheet } from 'react-native'
 
 interface Props {
   roomId: string | null
@@ -40,6 +40,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     hasNextPage,
     isFetchingNextPage,
     membersMap,
+    flatListRef
   } = useChatMessageList({userId, roomId, roomInfo})
 
   const ChatMessagesWithUi = useMemo(() => {
@@ -82,6 +83,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
 
   return (
     <FlatList
+      ref={flatListRef}
       style={styles.flex}
       data={ChatMessagesWithUi || []}
       keyExtractor={item => item.item?.id}
@@ -89,12 +91,16 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       contentContainerStyle={styles.chatList}
       inverted={true}
       keyboardShouldPersistTaps="handled"
+      maintainVisibleContentPosition={{
+        minIndexForVisible: 0,
+      }}
       refreshing={isLoading}
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
           fetchNextPage()
         }
       }}
+
       // onRefresh={resetChatMessages}
       // refreshing={isLoading}
     />

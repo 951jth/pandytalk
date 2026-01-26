@@ -1,7 +1,7 @@
-import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {messageService} from '@app/features/chat/service/messageService'
-import {ChatMessage} from '@app/shared/types/chat'
-import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
+import { messageLocal } from '@app/features/chat/data/messageLocal.sqlite'
+import { messageService } from '@app/features/chat/service/messageService'
+import { ChatMessage } from '@app/shared/types/chat'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 
 const PAGE_SIZE = 20
 
@@ -88,12 +88,9 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
         return
       }
       // 2. SQLite 메시지 삭제
-      await messageLocal.clearAllMessages()
-      // 3. React Query 캐시 제거
-      await queryClient.invalidateQueries({
-        queryKey: ['chatMessages'],
-        refetchType: 'active',
-      })
+      await messageLocal.clearMessagesByChatRoomId(roomId)
+      // 3. 채팅방 캐시제거
+     await queryClient.resetQueries({ queryKey: ['chatMessages', roomId] })
     } catch (e) {
       console.log('resetChatMessages error:', e)
     }

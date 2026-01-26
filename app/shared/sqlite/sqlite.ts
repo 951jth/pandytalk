@@ -1,4 +1,4 @@
-import SQLite from 'react-native-sqlite-storage'
+import SQLite, { Transaction } from 'react-native-sqlite-storage'
 
 export const db = SQLite.openDatabase(
   {
@@ -13,24 +13,14 @@ export const db = SQLite.openDatabase(
   },
 )
 
-type Tx = {
-  executeSql: (
-    sql: string,
-    params?: any[],
-    success?: (tx: any, res: any) => void,
-    error?: (tx: any, err: any) => boolean | void,
-  ) => void
-}
-type DB = {
-  transaction: (fn: (tx: Tx) => void, onError?: (e: any) => void) => void
-}
+
 
 export type ColumnDef = {
   name: string
   sql: string // "colName TYPE ..." 형태(컬럼명 포함)
 }
 
-export const execSql = (tx: Tx, sql: string, params: any[] = []) =>
+export const execSql = (tx: Transaction, sql: string, params: any[] = []) =>
   new Promise<void>((resolve, reject) => {
     tx.executeSql(
       sql,
@@ -43,7 +33,7 @@ export const execSql = (tx: Tx, sql: string, params: any[] = []) =>
     )
   })
 
-export const getUserVersionTx = (tx: Tx) =>
+export const getUserVersionTx = (tx: Transaction) =>
   new Promise<number>((resolve, reject) => {
     tx.executeSql(
       `PRAGMA user_version;`,
@@ -56,11 +46,11 @@ export const getUserVersionTx = (tx: Tx) =>
     )
   })
 
-export const setUserVersionTx = (tx: Tx, version: number) =>
+export const setUserVersionTx = (tx: Transaction, version: number) =>
   execSql(tx, `PRAGMA user_version = ${version};`)
 
 // tx.executeSql 콜백 체인 유틸 (가독성용)
-export const run = (tx: Tx, sql: string, params: any[] = []) =>
+export const run = (tx: Transaction, sql: string, params: any[] = []) =>
   new Promise<any>((res, rej) => {
     tx.executeSql(
       sql,

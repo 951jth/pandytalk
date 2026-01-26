@@ -1,12 +1,12 @@
-import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
-import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
-import {setChatMessagePayload} from '@app/features/chat/utils/message'
-import {fileService} from '@app/features/media/service/fileService'
-import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
-import {useAppSelector} from '@app/store/reduxHooks'
-import {useState} from 'react'
-import {Alert} from 'react-native'
-import type {ImagePickerResponse} from 'react-native-image-picker'
+import { useChatMessageUpsertMutation } from '@app/features/chat/hooks/useChatMessageUpsertMutation'
+import { useCreateChatRoomMutation } from '@app/features/chat/hooks/useChatRoomCreateMutation'
+import { setChatMessagePayload } from '@app/features/chat/utils/message'
+import { fileService } from '@app/features/media/service/fileService'
+import type { ChatMessage, ChatRoom } from '@app/shared/types/chat'
+import { useAppSelector } from '@app/store/reduxHooks'
+import { useState } from 'react'
+import { Alert } from 'react-native'
+import type { ImagePickerResponse } from 'react-native-image-picker'
 
 export type InputMessageParams = {
   text: string
@@ -85,7 +85,7 @@ export const useChatMessageInput = ({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
       })
-      setText('')
+      if(type == 'text') setText('')
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)
