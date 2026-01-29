@@ -4,8 +4,9 @@ import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastRea
 import type {User} from '@app/shared/types/auth'
 import type {ChatRoom} from '@app/shared/types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
+import {FlashList} from '@shopify/flash-list'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
-import {FlatList, NativeScrollEvent, NativeSyntheticEvent} from 'react-native'
+import {NativeScrollEvent, NativeSyntheticEvent} from 'react-native'
 
 type Props = {
   roomId: string | null
@@ -18,7 +19,7 @@ export const useChatMessageList = ({
   userId,
   roomInfo, // 실제 채팅방 정보 생성 확인
 }: Props) => {
-  const flatListRef = useRef<FlatList>(null)
+  const flatListRef = useRef<FlashList<any>>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
 
   const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
@@ -66,7 +67,7 @@ export const useChatMessageList = ({
   const lastMessageIdRef = useRef<string | null>(null)
 
   //스크롤 튐 현상 떄문에, 사용자가 하단근처를 보고있을떄만 맨 아래로 자동스크롤
-  const scrollToBottom = useCallback((animated = true) => {
+  const scrollToBottom = useCallback((animated = false) => {
     flatListRef.current?.scrollToOffset({offset: 0, animated})
   }, [])
 
@@ -91,10 +92,15 @@ export const useChatMessageList = ({
 
     // 내가 보낸 메시지거나, 현재 바닥을 보고 있는 상태라면 자동으로 스크롤
     if (isNewMessage && (isMine || isAtBottom)) {
-      // 메시지 렌더링 후 스크롤을 보장하기 위해 약간의 지연을 줍니다 (InteractionManager 등 활용 가능)
-      requestAnimationFrame(() => {
+      if (isMine) {
+        // 내가 보낸 메시지는 즉시 최하단으로 스냅 (카카오톡 스타일)
         scrollToBottom(true)
-      })
+      } else {
+        // 남이 보낸 메시지는 레이아웃 안정을 위해 프레임 대기 후 스크롤
+        requestAnimationFrame(() => {
+          scrollToBottom(true)
+        })
+      }
     }
 
     lastMessageIdRef.current = latestMessage.id

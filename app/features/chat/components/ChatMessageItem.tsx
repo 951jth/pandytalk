@@ -40,7 +40,10 @@ export default function ChatMessageItem({
         style={[
           styles.chatRow,
           {justifyContent: isMine ? 'flex-end' : 'flex-start'},
-        ]}>
+        ]}
+        onLayout={content => {
+          console.log(content)
+        }}>
         {/* 내 채팅 */}
         {isMine ? (
           <>
@@ -157,13 +160,6 @@ export default function ChatMessageItem({
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  chatList: {
-    minHeight: 100,
-    flexGrow: 1,
-    paddingBottom: 16,
-    paddingTop: 8,
-    paddingHorizontal: 16,
   },
   chatRow: {
     flexDirection: 'row',

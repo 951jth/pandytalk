@@ -1,5 +1,6 @@
+import {FlashList} from '@shopify/flash-list'
 import React, {memo, useCallback} from 'react'
-import {FlatList, StyleSheet} from 'react-native'
+import {StyleSheet} from 'react-native'
 
 import ChatMessageItem, {
   ChatMessageItemProps,
@@ -13,6 +14,9 @@ interface Props {
   roomInfo: ChatRoom | null | undefined
   chatType?: ChatRoom['type']
 }
+
+//FlatList vs FlashList
+// 왜 FlashList를 사용하는가?
 
 // ChatMessageItem에 props를 전달시 ChatMessagesWithUi의
 // uiConfig 떄문에 참조가 꺠져서 메모효과가 없어짐. 그래서 arePropsEqual옵션을 활용함
@@ -60,14 +64,13 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   )
 
   return (
-    <FlatList
+    <FlashList
       ref={flatListRef}
       style={styles.flex}
       data={messagesWithUi || []} // 메시지 가공 데이터 연결
       keyExtractor={item => item.item?.id}
       renderItem={renderMessage}
       contentContainerStyle={styles.chatList}
-      inverted={true}
       keyboardShouldPersistTaps="handled"
       refreshing={isLoading}
       onEndReached={() => {
@@ -80,14 +83,9 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       onEndReachedThreshold={0.5}
       onScroll={handleScroll}
       scrollEventThrottle={16}
-      maintainVisibleContentPosition={{
-        minIndexForVisible: 0,
-        autoscrollToTopThreshold: 10, // 상단 추가 시 자동 유지
-      }}
-      // 리스트 안정성을 위한 최적화 옵션 (복구 및 보완)
-      initialNumToRender={15}
-      maxToRenderPerBatch={10}
-      windowSize={10}
+      // FlashList 필수 및 권장 옵션
+      estimatedItemSize={80} // 말풍선의 평균적인 높이
+      drawDistance={500}
       removeClippedSubviews={true}
     />
   )
