@@ -1,11 +1,11 @@
-import React, { memo, useCallback } from 'react'
-import { FlatList, StyleSheet } from 'react-native'
+import React, {memo, useCallback} from 'react'
+import {FlatList, StyleSheet} from 'react-native'
 
 import ChatMessageItem, {
   ChatMessageItemProps,
 } from '@features/chat/components/ChatMessageItem'
-import { useChatMessageList } from '@features/chat/hooks/useChatMessageList'
-import { ChatRoom } from '@shared/types/chat'
+import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
+import {ChatRoom} from '@shared/types/chat'
 
 interface Props {
   roomId: string | null
@@ -40,7 +40,8 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    flatListRef
+    flatListRef,
+    handleScroll,
   } = useChatMessageList({userId, roomId, roomInfo})
 
   const renderMessage = useCallback(
@@ -74,18 +75,19 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
           fetchNextPage()
         }
       }}
-
       // onRefresh={resetChatMessages}
       // refreshing={isLoading}
-      onEndReachedThreshold={0.1}
+      onEndReachedThreshold={0.5}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
       maintainVisibleContentPosition={{
         minIndexForVisible: 0,
+        autoscrollToTopThreshold: 10, // 상단 추가 시 자동 유지
       }}
-      // 새로운 아이템이 위나 아래에 추가되어도 현재 보고 있는 위치 유지
-      //초기 렌더링 개수 및 업데이트 배치 설정
-      initialNumToRender={20}
+      // 리스트 안정성을 위한 최적화 옵션 (복구 및 보완)
+      initialNumToRender={15}
       maxToRenderPerBatch={10}
-      windowSize={20}
+      windowSize={10}
       removeClippedSubviews={true}
     />
   )

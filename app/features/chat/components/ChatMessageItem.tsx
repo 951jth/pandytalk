@@ -1,18 +1,6 @@
-<<<<<<< HEAD
-import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
-import { useChatMessageDeleteMutation } from '@app/features/chat/hooks/useChatMessageDeleteMutation'
-import { useChatMessageUpsertMutation } from '@app/features/chat/hooks/useChatMessageUpsertMutation'
-import COLORS from '@app/shared/constants/color'
-import { User } from '@app/shared/types/auth'
-import type { ChatMessage } from '@app/shared/types/chat'
-import ImageViewer from '@app/shared/ui/common/ImageViewer'
-import CopyableText from '@app/shared/ui/text/CopyableText'
-import { formatChatTime, formatServerDate } from '@app/shared/utils/firebase'
-=======
->>>>>>> 9e2569c8321745536b7a05575eff3a3c38bcdf9f
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { Icon, Text } from 'react-native-paper'
+import {StyleSheet, View} from 'react-native'
+import {Icon, Text} from 'react-native-paper'
 
 import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
 import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
