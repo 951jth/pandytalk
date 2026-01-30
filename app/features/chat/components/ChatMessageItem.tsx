@@ -47,10 +47,7 @@ export default function ChatMessageItem({
         style={[
           styles.chatRow,
           {justifyContent: isMine ? 'flex-end' : 'flex-start'},
-        ]}
-        onLayout={content => {
-          console.log('ChatMessageItem Layout:', content.nativeEvent.layout)
-        }}>
+        ]}>
         {/* 내 채팅 */}
         {isMine ? (
           <>
