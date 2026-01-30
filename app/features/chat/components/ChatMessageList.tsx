@@ -87,6 +87,11 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
       estimatedItemSize={80} // 말풍선의 평균적인 높이
       drawDistance={500}
       removeClippedSubviews={true}
+      maintainVisibleContentPosition={{
+        minIndexForVisible: 0,
+        autoscrollToTopThreshold: 10,
+      }}
+      inverted={true}
     />
   )
 }

@@ -36,13 +36,20 @@ export default function ChatMessageItem({
   const {type} = item
   return (
     <>
+      {!hideDate && (
+        <View style={styles.chatDateWrap}>
+          <Text style={styles.chatDateText}>
+            {formatServerDate(item?.createdAt, 'YYYY년 MM월 DD일 dddd')}
+          </Text>
+        </View>
+      )}
       <View
         style={[
           styles.chatRow,
           {justifyContent: isMine ? 'flex-end' : 'flex-start'},
         ]}
         onLayout={content => {
-          console.log(content)
+          console.log('ChatMessageItem Layout:', content.nativeEvent.layout)
         }}>
         {/* 내 채팅 */}
         {isMine ? (
@@ -146,13 +153,6 @@ export default function ChatMessageItem({
           </>
         )}
       </View>
-      {!hideDate && (
-        <View style={styles.chatDateWrap}>
-          <Text style={styles.chatDateText}>
-            {formatServerDate(item?.createdAt, 'YYYY년 MM월 DD일 dddd')}
-          </Text>
-        </View>
-      )}
     </>
   )
 }
