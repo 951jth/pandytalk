@@ -1,6 +1,6 @@
 import {FlashList} from '@shopify/flash-list'
 import React, {memo, useCallback} from 'react'
-import {StyleSheet} from 'react-native'
+import {StyleSheet, View} from 'react-native'
 
 import ChatMessageItem, {
   ChatMessageItemProps,
@@ -64,35 +64,36 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   )
 
   return (
-    <FlashList
-      ref={flatListRef}
-      style={styles.flex}
-      data={messagesWithUi || []} // 메시지 가공 데이터 연결
-      keyExtractor={item => item.item?.id}
-      renderItem={renderMessage}
-      contentContainerStyle={styles.chatList}
-      keyboardShouldPersistTaps="handled"
-      refreshing={isLoading}
-      onEndReached={() => {
-        if (hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
-        }
-      }}
-      // onRefresh={resetChatMessages}
-      // refreshing={isLoading}
-      onEndReachedThreshold={0.5}
-      onScroll={handleScroll}
-      scrollEventThrottle={16}
-      // FlashList 필수 및 권장 옵션
-      estimatedItemSize={80} // 말풍선의 평균적인 높이
-      drawDistance={500}
-      removeClippedSubviews={true}
-      maintainVisibleContentPosition={{
-        minIndexForVisible: 0,
-        autoscrollToTopThreshold: 10,
-      }}
-      inverted={true}
-    />
+    <View style={styles.flex}>
+      <FlashList
+        ref={flatListRef}
+        data={messagesWithUi || []} // 메시지 가공 데이터 연결
+        keyExtractor={item => item.item?.id}
+        renderItem={renderMessage}
+        contentContainerStyle={styles.chatList}
+        keyboardShouldPersistTaps="handled"
+        refreshing={isLoading}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage()
+          }
+        }}
+        // onRefresh={resetChatMessages}
+        // refreshing={isLoading}
+        onEndReachedThreshold={0.5}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        // FlashList 필수 및 권장 옵션
+        estimatedItemSize={80} // 말풍선의 평균적인 높이
+        drawDistance={500}
+        removeClippedSubviews={true}
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10,
+        }}
+        inverted={true}
+      />
+    </View>
   )
 }
 
@@ -101,8 +102,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatList: {
-    minHeight: 100,
-    flexGrow: 1,
     paddingBottom: 16,
     paddingTop: 8,
     paddingHorizontal: 16,
