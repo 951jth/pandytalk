@@ -7,7 +7,7 @@
     <!-- 하위호환이 정말 필요할 때만 유지 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission/RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- 앱 전체에서 사용할 Application 클래스 (React Native 초기화 등) -->
     <application
@@ -17,7 +17,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:allowBackup="false"
         android:theme="@style/AppTheme"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true">
 
         <!-- ✅ 런처로 실행되는 메인 액티비티 (앱 아이콘 눌렀을 때 가장 먼저 실행되는 화면) -->
         <activity
@@ -37,6 +38,5 @@
         </activity>
 
     </application>
-
 
 </manifest>
