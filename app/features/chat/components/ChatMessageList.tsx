@@ -6,9 +6,7 @@ import ChatMessageItem, {
   ChatMessageItemProps,
 } from '@features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
-import {usePerformanceMeasure} from '@shared/hooks/usePerformanceMeasure'
 import {ChatRoom} from '@shared/types/chat'
-import {useEffect} from 'react'
 
 interface Props {
   roomId: string | null
@@ -49,17 +47,6 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     flatListRef,
     handleScroll,
   } = useChatMessageList({userId, roomId, roomInfo})
-
-  const {results, getAverage} = usePerformanceMeasure()
-
-  useEffect(() => {
-    if (results.length > 0) {
-      const avg = getAverage('FETCH_CHAT_MESSAGES')
-      if (avg > 0) {
-        console.log(`[Performance] SQLite Fetch Average: ${avg.toFixed(2)}ms`)
-      }
-    }
-  }, [results, getAverage])
 
   const renderMessage = useCallback(
     ({item}: {item: ChatMessageItemProps}) => {
