@@ -10,6 +10,6 @@ module.exports = {
   },
   transformIgnorePatterns: [
     //패키지 변환 무시
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@shopify/flash-list|react-redux|react-native-blob-util|react-native-fs)/)',
+    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@shopify/flash-list|react-redux|react-native-blob-util|react-native-fs|react-native-permissions|react-native-image-picker|react-native-image-viewing|react-native-fast-image|react-native-vector-icons|react-native-modal)/)',
   ],
 }

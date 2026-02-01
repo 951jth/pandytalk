@@ -3,6 +3,4 @@ plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'cshchatapp'
 include ':app'
-include ':react-native-flash-list'
-project(':react-native-flash-list').projectDir = new File(rootProject.projectDir, '../node_modules/@shopify/flash-list/android')
 includeBuild('../node_modules/@react-native/gradle-plugin')
