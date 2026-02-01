@@ -3,7 +3,6 @@ import type {InputMessageParams} from '@app/features/chat/hooks/useChatMessageIn
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {InfiniteData} from '@tanstack/react-query'
-// 또는 messageRemote가 이미 import 가능한 위치면 그걸 사용
 
 type SetChatMessagePayload = {
   roomInfo: ChatRoom

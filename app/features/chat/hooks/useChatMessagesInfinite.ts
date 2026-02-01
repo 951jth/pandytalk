@@ -1,7 +1,8 @@
-import { messageLocal } from '@app/features/chat/data/messageLocal.sqlite'
-import { messageService } from '@app/features/chat/service/messageService'
-import { ChatMessage } from '@app/shared/types/chat'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {messageService} from '@app/features/chat/service/messageService'
+import {usePerformanceMeasure} from '@app/shared/hooks/usePerformanceMeasure'
+import {ChatMessage} from '@app/shared/types/chat'
+import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
 
 const PAGE_SIZE = 20
 
@@ -23,6 +24,8 @@ const createPageResult = (messages: ChatMessage[]) => {
 export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
+  const {measureAsync} = usePerformanceMeasure()
+
   const queryResult = useInfiniteQuery({
     enabled: !!roomId,
     queryKey,
@@ -31,31 +34,43 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       try {
         if (!roomId) return initChatPage
         const seq = pageParam
-        const localMessages = (await messageLocal.getChatMessagesBySeq(
-          roomId,
-          seq, //pageParam은 여기서 마지막 읽은 날짜임
-          PAGE_SIZE,
-        )) as ChatMessage[]
+
+        // 1. SQLite 조회 성능 측정
+        const localMessages = await measureAsync(
+          'FETCH_CHAT_MESSAGES',
+          async () => {
+            return (await messageLocal.getChatMessagesBySeq(
+              roomId,
+              seq,
+              PAGE_SIZE,
+            )) as ChatMessage[]
+          },
+        )
+
         //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
         const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
         if (shouldFetchFromServer) {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기
-            const {items: serverMessages} =
-              await messageService.getChatMessagesFromSeq(
-                roomId,
-                seq,
-                PAGE_SIZE,
-              )
+            // Firestore 조회 성능 측정
+            const {items: serverMessages} = await measureAsync(
+              'FIRESTORE_FETCH',
+              () =>
+                messageService.getChatMessagesFromSeq(roomId, seq, PAGE_SIZE),
+            )
 
             //서버데이터가 있으면 그대로 sqlite에 push
-            if (serverMessages?.length > 0)
-              await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
-            //1. 데이터가 중복으로 들어오는경우가 있음, 다시조회하는 로직에서 REPLACE 및 정렬됨
-            //2. 데이터를 일관되게 SQLITE를 바라보게해서, 유지보수성 증가
-            const updatedMessages = await messageLocal.getChatMessagesBySeq(
-              roomId,
-              seq,
+            if (serverMessages?.length > 0) {
+              // 3. SQLite 저장 성능 측정
+              await measureAsync('SQLITE_SAVE', () =>
+                messageLocal.saveMessagesToSQLite(roomId, serverMessages),
+              )
+            }
+
+            //다시 조회 (저장 후 SQLite 데이터를 바라보게함.)
+            const updatedMessages = await measureAsync(
+              'FETCH_CHAT_MESSAGES',
+              () => messageLocal.getChatMessagesBySeq(roomId, seq),
             )
             return createPageResult(updatedMessages)
           } catch (e) {
@@ -89,7 +104,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
       // 2. SQLite 메시지 삭제
       await messageLocal.clearMessagesByChatRoomId(roomId)
       // 3. 채팅방 캐시제거
-     await queryClient.resetQueries({ queryKey: ['chatMessages', roomId] })
+      await queryClient.resetQueries({queryKey: ['chatMessages', roomId]})
     } catch (e) {
       console.log('resetChatMessages error:', e)
     }

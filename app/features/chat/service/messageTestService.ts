@@ -3,7 +3,7 @@ import {
   messageLocalTest,
   type TargetOldVersion,
 } from '@app/features/chat/data/messageLocal.test.sqlite'
-import {messageMigrate} from '@app/features/chat/data/messagLocal.migrate.sqlite'
+import {messageMigrateLocal} from '@app/features/chat/data/messagLocal.migrate.sqlite'
 
 export const messageTestService = {
   //message테이블을 구버전으로 (테스트용)
@@ -14,7 +14,7 @@ export const messageTestService = {
       await messageLocalTest.resetMessagesToOldSchema(version)
       const msgs = await messageLocal.getAllMessages()
       console.log('migrateToLatest Messages: ', msgs)
-      const vs = await messageMigrate.getUserVersion()
+      const vs = await messageMigrateLocal.getUserVersion()
       console.log('migrateToLatest Version: ', vs)
     } catch (e) {
       console.log(e)
