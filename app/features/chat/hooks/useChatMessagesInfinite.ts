@@ -55,7 +55,9 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
             if (serverMessages?.length > 0)
               await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
             //1. 데이터가 중복으로 들어오는경우가 있음, 다시조회하는 로직에서 REPLACE 및 정렬됨
-            //2. 데이터를 일관되게 SQLITE를 바라보게해서, 유지보수성 증가
+            //2. 데이터를 일관되게 SQLITE를 바라보게함
+            // - 오프라인에서도 로컬메세지를 볼 수 있음
+            // - 로컬에 저장하는 과정에서 중복 및 정렬 로직이 적용됨
             const updatedMessages = await messageLocal.getChatMessagesBySeq(
               roomId,
               seq,
