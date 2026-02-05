@@ -2,7 +2,7 @@ import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
 import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
 import {act, renderHook} from '@testing-library/react-native'
-import {useChatMessagesInfinite} from './useChatMessagesInfinite'
+import {useChatMessagesInfinite} from '../hooks/useChatMessagesInfinite'
 
 // 의존성 모킹
 jest.mock('@app/features/chat/data/messageLocal.sqlite')
@@ -56,12 +56,17 @@ describe('useChatMessagesInfinite - 스마트 데이터 로딩 로직 테스트'
     ;(messageService.getChatMessagesFromSeq as jest.Mock).mockResolvedValue({
       items: [{id: 'server_msg_1'}],
     })
-    ;(useInfiniteQuery as jest.Mock).mockImplementation(async ({queryFn}) => {
-      await queryFn({pageParam: undefined})
+    ;(useInfiniteQuery as jest.Mock).mockImplementation(({queryFn}) => {
+      queryFn({pageParam: undefined})
       return {data: undefined}
     })
 
     renderHook(() => useChatMessagesInfinite(mockRoomId))
+
+    // 검증: 서버 데이터 조회가 발생했는가? (Async 대응을 위해 waitFor 사용)
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0)) // tick
+    })
 
     // 검증: 서버 데이터 조회가 발생했는가?
     expect(messageService.getChatMessagesFromSeq).toHaveBeenCalled()

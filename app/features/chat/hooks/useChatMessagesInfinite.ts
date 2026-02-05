@@ -24,53 +24,43 @@ const createPageResult = (messages: ChatMessage[]) => {
 export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
-  const {measureAsync} = usePerformanceMeasure()
 
   const queryResult = useInfiniteQuery({
     enabled: !!roomId,
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
-      //pageParam은 마지막 데이터
       try {
         if (!roomId) return initChatPage
+        // 성능측정용
+        // await fetchMessageWithMeasure(roomId, pageParam)
         const seq = pageParam
-
-        // 1. SQLite 조회 성능 측정
-        const localMessages = await measureAsync(
-          'FETCH_CHAT_MESSAGES',
-          async () => {
-            return (await messageLocal.getChatMessagesBySeq(
-              roomId,
-              seq,
-              PAGE_SIZE,
-            )) as ChatMessage[]
-          },
-        )
-
+        const localMessages = (await messageLocal.getChatMessagesBySeq(
+          roomId,
+          seq, //마지막 채팅의 SEQ 값
+          PAGE_SIZE,
+        )) as ChatMessage[]
         //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
         const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
         if (shouldFetchFromServer) {
           try {
             // CASE 1. 로컬에 없으면 Firestore에서 가져오기
-            // Firestore 조회 성능 측정
-            const {items: serverMessages} = await measureAsync(
-              'FIRESTORE_FETCH',
-              () =>
-                messageService.getChatMessagesFromSeq(roomId, seq, PAGE_SIZE),
-            )
+            const {items: serverMessages} =
+              await messageService.getChatMessagesFromSeq(
+                roomId,
+                seq,
+                PAGE_SIZE,
+              )
 
             //서버데이터가 있으면 그대로 sqlite에 push
-            if (serverMessages?.length > 0) {
-              // 3. SQLite 저장 성능 측정
-              await measureAsync('SQLITE_SAVE', () =>
-                messageLocal.saveMessagesToSQLite(roomId, serverMessages),
-              )
-            }
-
-            //다시 조회 (저장 후 SQLite 데이터를 바라보게함.)
-            const updatedMessages = await measureAsync(
-              'FETCH_CHAT_MESSAGES',
-              () => messageLocal.getChatMessagesBySeq(roomId, seq),
+            if (serverMessages?.length > 0)
+              await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
+            //1. 데이터가 중복으로 들어오는경우가 있음, 다시조회하는 로직에서 REPLACE 및 정렬됨
+            //2. 데이터를 일관되게 SQLITE를 바라보게함
+            // - 오프라인에서도 로컬메세지를 볼 수 있음
+            // - 로컬에 저장하는 과정에서 중복 및 정렬 로직이 적용됨
+            const updatedMessages = await messageLocal.getChatMessagesBySeq(
+              roomId,
+              seq,
             )
             return createPageResult(updatedMessages)
           } catch (e) {
@@ -113,5 +103,52 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   return {
     ...queryResult,
     resetChatMessages,
+  }
+}
+
+// Firebase + SQLite 조회 성능 측정할떄 쓰기
+const fetchMessageWithMeasure = async (
+  roomId: string,
+  pageParam: number | undefined,
+) => {
+  const {measureAsync} = usePerformanceMeasure()
+  const seq = pageParam
+
+  // 1. SQLite 조회 성능 측정
+  const localMessages = await measureAsync('FETCH_CHAT_MESSAGES', async () => {
+    return (await messageLocal.getChatMessagesBySeq(
+      roomId,
+      seq,
+      PAGE_SIZE,
+    )) as ChatMessage[]
+  })
+
+  //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
+  const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
+  if (shouldFetchFromServer) {
+    try {
+      // CASE 1. 로컬에 없으면 Firestore에서 가져오기
+      // Firestore 조회 성능 측정
+      const {items: serverMessages} = await measureAsync(
+        'FIRESTORE_FETCH',
+        () => messageService.getChatMessagesFromSeq(roomId, seq, PAGE_SIZE),
+      )
+
+      //서버데이터가 있으면 그대로 sqlite에 push
+      if (serverMessages?.length > 0) {
+        // 3. SQLite 저장 성능 측정
+        await measureAsync('SQLITE_SAVE', () =>
+          messageLocal.saveMessagesToSQLite(roomId, serverMessages),
+        )
+      }
+
+      //다시 조회 (저장 후 SQLite 데이터를 바라보게함.)
+      const updatedMessages = await measureAsync('FETCH_CHAT_MESSAGES', () =>
+        messageLocal.getChatMessagesBySeq(roomId, seq),
+      )
+      return createPageResult(updatedMessages)
+    } catch (e) {
+      return createPageResult(localMessages)
+    }
   }
 }

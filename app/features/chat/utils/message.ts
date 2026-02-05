@@ -39,7 +39,7 @@ export const setChatMessagePayload = ({
     senderId: user.uid,
     senderName: user.displayName ?? '',
     senderPicURL: user.photoURL ?? '',
-    createdAt: Date.now(),
+    createdAt: Date.now(), //서버타임으로 대체되지만, 로컬에 먼저표시용
     roomTitle: roomInfo?.name,
     roomUrl: roomInfo?.image,
   }
@@ -48,7 +48,7 @@ export const setChatMessagePayload = ({
 //채팅 메세지 캐시 페이징 재처리
 export const rebuildMessagePages = (
   flat: ChatMessage[],
-  old: InfiniteData<pageType>,
+  old: InfiniteData<pageType>, //기존 서버에서 받아왔던 페이지 lastVisible을 유지
   pageSize: number,
 ): InfiniteData<pageType> => {
   const newPages: pageType[] = []
