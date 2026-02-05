@@ -20,6 +20,10 @@
         android:supportsRtl="true"
         android:hardwareAccelerated="true">
 
+        <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/713adbab-1d3b-4992-9aab-396e9557bd0f" />
+        <meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="53.0.0" />
+        <meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="production" />
+
         <!-- ✅ 런처로 실행되는 메인 액티비티 (앱 아이콘 눌렀을 때 가장 먼저 실행되는 화면) -->
         <activity
             android:name=".MainActivity"

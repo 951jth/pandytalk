@@ -5,7 +5,12 @@ apply plugin: 'com.google.gms.google-services'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 apply plugin: 'com.google.firebase.crashlytics'
 
-react { autolinkLibrariesWithApp() }
+react { autolinkLibrariesWithApp()     //
+    // Added by install-expo-modules
+    entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", rootDir.getAbsoluteFile().getParentFile().getAbsolutePath(), "android", "absolute"].execute(null, rootDir).text.trim())
+    cliFile = new File(["node", "--print", "require.resolve('@expo/cli')"].execute(null, rootDir).text.trim())
+    bundleCommand = "export:embed"
+}
 
 def enableHermes = true
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'

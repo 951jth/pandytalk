@@ -121,3 +121,7 @@ android/app/my-release-key.keystore
 # Firebase config (DO NOT COMMIT)
 **/google-services.json
 **/GoogleService-Info.plist
+# Expo
+.expo
+dist/
+web-build/
