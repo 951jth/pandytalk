@@ -1,9 +1,8 @@
 {
-  "name": "cshchatapp",
-  "displayName": "cshchatapp",
   "expo": {
     "name": "cshchatapp",
     "slug": "cshchatapp",
+    "displayName": "cshchatapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./app/shared/assets/images/icon.png",

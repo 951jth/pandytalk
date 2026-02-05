@@ -14,9 +14,9 @@ id("expo-autolinking-settings")
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand) }
 rootProject.name = 'cshchatapp'
 include ':app'
-include ':react-native-flash-list'
-project(':react-native-flash-list').projectDir = new File(rootProject.projectDir, '../node_modules/@shopify/flash-list/android')
 includeBuild('../node_modules/@react-native/gradle-plugin')
 expoAutolinking.useExpoModules()
 expoAutolinking.useExpoVersionCatalog()
+includeBuild(expoAutolinking.reactNativeGradlePlugin)
+
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

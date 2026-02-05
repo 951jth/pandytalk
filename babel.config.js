@@ -1,28 +1,29 @@
-module.exports = {
-  presets: ['babel-preset-expo'],
-  plugins: [
-    [
-      'module-resolver',
-      {
-        root: ['./app'],
-        alias: {
-          '@app': './app',
-          '@features': './app/features',
-          '@shared': './app/shared',
-          '@services': './app/services',
-          '@repositories': './app/repositories',
-          '@navigation': './app/navigation',
-          '@layout': './app/layout',
-          '@providers': './app/providers',
-          '@constants': './app/shared/constants',
-          '@assets': './app/shared/assets',
-          '@db': './app/db',
+module.exports = function (api) {
+  api.cache(true)
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: [
+      [
+        'module-resolver',
+        {
+          root: ['./app'],
+          alias: {
+            '@app': './app',
+            '@features': './app/features',
+            '@shared': './app/shared',
+            '@services': './app/services',
+            '@repositories': './app/repositories',
+            '@navigation': './app/navigation',
+            '@layout': './app/layout',
+            '@providers': './app/providers',
+            '@constants': './app/shared/constants',
+            '@assets': './app/shared/assets',
+            '@db': './app/db',
+          },
+          extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
         },
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
-      },
+      ],
+      'react-native-reanimated/plugin',
     ],
-
-    // ✅ 이건 항상 마지막에 단독으로 추가
-    'react-native-reanimated/plugin',
-  ],
+  }
 }

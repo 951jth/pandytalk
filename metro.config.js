@@ -1,10 +1,17 @@
+const {getDefaultConfig} = require('expo/metro-config')
+const {mergeConfig} = require('@react-native/metro-config')
 const path = require('path')
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config')
 
 const projectRoot = __dirname
+const config = getDefaultConfig(projectRoot)
+
+const {
+  resolver: {sourceExts, assetExts},
+} = config
+
 const appDir = path.resolve(projectRoot, 'app')
 
-const config = {
+const customConfig = {
   resolver: {
     extraNodeModules: new Proxy(
       {},
@@ -21,4 +28,4 @@ const config = {
   watchFolders: [appDir],
 }
 
-module.exports = mergeConfig(getDefaultConfig(projectRoot), config)
+module.exports = mergeConfig(config, customConfig)
