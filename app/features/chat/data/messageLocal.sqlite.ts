@@ -3,16 +3,14 @@ import {
   MESSAGE_PLACEHOLDERS,
   MESSAGE_TABLE,
 } from '@app/features/chat/data/messages.schema'
-import { sqliteLock } from '@app/features/chat/utils/message'
-import { db } from '@app/shared/sqlite/sqlite'
-import { sqliteCall } from '@app/shared/sqlite/sqliteCall'
-import { ChatMessage } from '@app/shared/types/chat'
-import { toMillisFromServerTime } from '@app/shared/utils/firebase'
-import { Transaction } from 'react-native-sqlite-storage'
+import {db} from '@app/shared/sqlite/sqlite'
+import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
+import {ChatMessage} from '@app/shared/types/chat'
+import {toMillisFromServerTime} from '@app/shared/utils/firebase'
+import {Transaction} from 'react-native-sqlite-storage'
 
 export const messageLocal = {
   //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
-  withDbLock: <T>(fn: () => Promise<T>) => sqliteLock.runExclusive(fn),
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
     return sqliteCall(
       'messageLocal.saveMessagesToSQLite',
@@ -140,7 +138,6 @@ export const messageLocal = {
               for (let i = 0; i < result.rows.length; i++) {
                 messages.push(result.rows.item(i))
               }
-              // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
               resolve(messages)
             },
             reject,
@@ -268,5 +265,4 @@ export const messageLocal = {
       })
     })
   },
-
 }

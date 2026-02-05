@@ -13,6 +13,8 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 import com.shopify.reactnative.flash_list.ReactNativeFlashListPackage
+import expo.modules.ReactNativeHostWrapper
+import expo.modules.ApplicationLifecycleDispatcher
 
 class MainApplication : Application(), ReactApplication {
 

@@ -14,9 +14,6 @@ id("expo-autolinking-settings")
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand) }
 rootProject.name = 'cshchatapp'
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
 expoAutolinking.useExpoModules()
 expoAutolinking.useExpoVersionCatalog()
-includeBuild(expoAutolinking.reactNativeGradlePlugin)
-
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

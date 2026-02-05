@@ -18,8 +18,6 @@ import {
   where,
 } from '@react-native-firebase/firestore'
 
-const debug = true
-
 export const messageRemote = {
   getChatMessagesBySeq: (roomId: string, seq?: number, pageSize?: number) => {
     return firebaseCall('messageRemote.getChatMessagesBySeq', async () => {
