@@ -59,7 +59,7 @@ export const useChatMessageList = ({
   // 마지막 읽은 시간, SEQ 처리
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
   // 채팅 목록 동기화 후 구독
-  useSyncAndSubsMessages(roomId) // 채팅방 구독설정
+  useSyncAndSubsMessages(roomId, roomInfo?.lastSeq) // 채팅방 구독설정
   // 채팅 메시지 스크롤
   const latestMessage = messages?.[0]
   const {flatListRef, isAtBottom, handleScroll, scrollToBottom} = useChatScroll(

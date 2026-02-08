@@ -5,7 +5,10 @@ import type {ChatMessage} from '@app/shared/types/chat'
 import {useFocusEffect} from '@react-navigation/native'
 import {useCallback, useRef} from 'react'
 
-export const useSyncAndSubsMessages = (roomId?: string | null) => {
+export const useSyncAndSubsMessages = (
+  roomId?: string | null,
+  serverLastSeq?: number,
+) => {
   const unsubRef = useRef<(() => void) | null>(null)
   const {addMessages} = useChatMessageUpsertMutation(roomId)
 
@@ -19,31 +22,30 @@ export const useSyncAndSubsMessages = (roomId?: string | null) => {
         try {
           if (!roomId) return
           let newMsgs: ChatMessage[] = []
-          //1. 현재 시점으로 메세지 동기화
-          const localMaxSeq = await messageLocal.getMaxLocalSeq(roomId)
+          //1. 현재 시점으로 가장 마지막 로컬 SEQ 조회
+          const localLastSeq = await messageLocal.getMaxLocalSeq(roomId)
           // 만약 await 중에 컴포넌트가 언마운트 되었다면 중단
           if (isCancelled) return
-          if (!!localMaxSeq) {
-            //채팅방이 아직 생성안된경우에도 구독로직은 타야함.
-            newMsgs = await messageService.syncNewMessages(roomId, localMaxSeq)
+          // 2. 로컬 SEQ가 서버 SEQ보다 작으면
+          if (localLastSeq < (serverLastSeq ?? 0)) {
+            //localMaxSeq가 serverLastSeq보다 작으면
+            //데이터를 현재 시점으로 모두 조회
+            newMsgs = await messageService.syncNewMessages(roomId, localLastSeq)
             if (newMsgs?.length) {
               addMessages(newMsgs)
             }
           }
-
-          const lastSeq = newMsgs?.length
-            ? newMsgs.reduce((acc, m) => Math.max(acc, m.seq ?? 0), localMaxSeq)
-            : localMaxSeq
+          if (isCancelled) return
           //2. 마지막 시퀀스를 기준으로 구독 시작 (아이디가 없어도 구독은 타야함.)
           unsubRef.current = await messageService.subscribeChatMessages(
             roomId,
-            lastSeq,
+            serverLastSeq ?? 0,
             (newMessages: ChatMessage[]) => {
               addMessages(newMessages)
             },
           )
         } catch (e) {
-          console.log('subscribeChatMessages', e)
+          console.log('useSyncAndSubsMessages error:', e)
           return () => {}
         }
       }
