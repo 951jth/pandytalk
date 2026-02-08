@@ -54,12 +54,14 @@ export function mergeMessages(
   incoming: ChatMessage[],
 ): ChatMessage[] {
   const map = new Map<string, ChatMessage>()
+  //map에 id 기준으로 중복제거
   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
+  //map을 배열로 변환하고 최신순 정렬
   return Array.from(map.values()).sort(
     (a, b) =>
       (toMillisFromServerTime(b.createdAt) || 0) -
       (toMillisFromServerTime(a.createdAt) || 0),
-  ) // 최신순 정렬
+  )
 }
 //체팅 날짜순 정렬
 export const compareChat = (a: ChatRoom, b: ChatRoom) => {
