@@ -9,6 +9,7 @@ export type SendMessageParams = {
 }
 
 export const messageService = {
+  //채팅방 메세지 가져오기 By Seq(서버)
   getChatMessagesFromSeq: async (
     roomId: string,
     seq?: number,

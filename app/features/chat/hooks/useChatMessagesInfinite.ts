@@ -111,6 +111,7 @@ const fetchMessageWithMeasure = async (
   roomId: string,
   pageParam: number | undefined,
 ) => {
+  // CRUD 작업이나 비동기 함수의 성능(Latency)을 측정하기 위한 커스텀 훅
   const {measureAsync} = usePerformanceMeasure()
   const seq = pageParam
 
