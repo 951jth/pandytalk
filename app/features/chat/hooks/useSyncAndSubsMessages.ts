@@ -36,7 +36,7 @@ export const useSyncAndSubsMessages = (
             }
           }
           if (isCancelled) return
-          //2. 마지막 시퀀스를 기준으로 구독 시작 (아이디가 없어도 구독은 타야함.)
+          //2. 마지막 시퀀스를 기준으로 구독 시작 (채팅방정보가 없어도 구독은 타야함.)
           unsubRef.current = await messageService.subscribeChatMessages(
             roomId,
             serverLastSeq ?? 0,

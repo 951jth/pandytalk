@@ -1,12 +1,12 @@
-import { useChatMessageUpsertMutation } from '@app/features/chat/hooks/useChatMessageUpsertMutation'
-import { useCreateChatRoomMutation } from '@app/features/chat/hooks/useChatRoomCreateMutation'
-import { setChatMessagePayload } from '@app/features/chat/utils/message'
-import { fileService } from '@app/features/media/service/fileService'
-import type { ChatMessage, ChatRoom } from '@app/shared/types/chat'
-import { useAppSelector } from '@app/store/reduxHooks'
-import { useState } from 'react'
-import { Alert } from 'react-native'
-import type { ImagePickerResponse } from 'react-native-image-picker'
+import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
+import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
+import {setChatMessagePayload} from '@app/features/chat/utils/message'
+import {fileService} from '@app/features/media/service/fileService'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
+import {useAppSelector} from '@app/store/reduxHooks'
+import {useState} from 'react'
+import {Alert} from 'react-native'
+import type {ImagePickerResponse} from 'react-native-image-picker'
 
 export type InputMessageParams = {
   text: string
@@ -34,10 +34,23 @@ export const useChatMessageInput = ({
   )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
 
+  const isDisabled = (() => {
+    if (!roomInfo) return false
+    // DM인데 멤버가 1명 이하인 경우 (상대방 탈퇴 등)
+    if (chatType === 'dm' && (roomInfo.members?.length ?? 0) < 2) {
+      return true
+    }
+    return false
+  })()
+
   const onSendMessage = async (
-    type: ChatMessage['type'], //메세지 타입임
+    type: ChatMessage['type'],
     result?: ImagePickerResponse,
   ) => {
+    if (isDisabled) {
+      Alert.alert('안내', '대화가 불가능한 상태입니다.')
+      return
+    }
     try {
       if (type == 'text' && !text) return
       if (!user?.uid) throw new Error('유저정보 조회 실패')
@@ -85,7 +98,7 @@ export const useChatMessageInput = ({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
       })
-      if(type == 'text') setText('')
+      if (type == 'text') setText('')
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)
@@ -95,5 +108,5 @@ export const useChatMessageInput = ({
     }
   }
 
-  return {text, setText, onSendMessage, loading}
+  return {text, setText, onSendMessage, loading, isDisabled}
 }

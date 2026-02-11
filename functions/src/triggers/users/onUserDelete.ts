@@ -1,5 +1,4 @@
 import * as admin from 'firebase-admin'
-import {FieldValue} from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions'
 import {db} from '../../core/firebase'
 
@@ -20,41 +19,58 @@ async function deleteUserProfileFiles(uid: string) {
 async function deleteUserFromAllGroups(uid: string) {
   const db = admin.firestore()
 
-  const groupsSnap = await db.collection('groups').get()
+  // 1. 모든 'members' 하위 컬렉션에서 ID가 uid인 문서만 찾습니다.
+  // (색인 생성이 필요할 수 있습니다)
+  const membersSnap = await db
+    .collectionGroup('members')
+    .where(admin.firestore.FieldPath.documentId(), '==', uid)
+    .get()
 
-  const batches: FirebaseFirestore.WriteBatch[] = []
-  let batch = db.batch()
-  let opCount = 0
+  if (membersSnap.empty) return
 
-  groupsSnap.forEach(groupDoc => {
-    // 1. 멤버 하위 컬렉션에서 유저 삭제
-    const memberRef = groupDoc.ref.collection('members').doc(uid)
-    batch.delete(memberRef)
+  const batch = db.batch()
 
-    // 2. 그룹 문서의 memberCount -1 감소 (Atomically)
-    batch.update(groupDoc.ref, {
-      memberCount: FieldValue.increment(-1),
-    })
-
-    // ⭐ 중요: 작업이 2개 추가됐으니 카운트도 2 증가!
-    opCount += 2
-
-    // Firestore batch는 500 writes 제한 (여유 있게 450쯤에서 끊기)
-    if (opCount >= 450) {
-      batches.push(batch)
-      batch = db.batch()
-      opCount = 0
+  // 2. 검색된 결과(내가 가입한 그룹의 멤버 문서들)만 순회합니다.
+  membersSnap.forEach(memberDoc => {
+    const groupRef = memberDoc.ref.parent.parent // members/uid 의 상위인 groups/groupId
+    if (groupRef) {
+      batch.delete(memberDoc.ref) // 내 멤버 정보 삭제
+      batch.update(groupRef, {
+        memberCount: admin.firestore.FieldValue.increment(-1), // 실제 가입된 그룹만 -1
+      })
     }
   })
 
-  if (opCount > 0) {
-    batches.push(batch)
-  }
+  await batch.commit()
+  console.log(
+    `Removed user from ${membersSnap.size} groups and updated counts.`,
+  )
+}
 
-  // 순차 커밋
-  for (const b of batches) {
-    await b.commit()
-  }
+/**
+ * 유저가 포함된 모든 채팅방의 members 배열에서 해당 UID 제거
+ */
+async function cleanupUserChats(uid: string) {
+  const db = admin.firestore()
+
+  // 유저가 포함된 모든 채팅방 조회
+  const chatsSnap = await db
+    .collection('chats')
+    .where('members', 'array-contains', uid)
+    .get()
+
+  if (chatsSnap.empty) return
+
+  const batch = db.batch()
+  chatsSnap.forEach(chatDoc => {
+    // members 배열에서 해당 UID 제거
+    batch.update(chatDoc.ref, {
+      members: admin.firestore.FieldValue.arrayRemove(uid),
+    })
+  })
+
+  await batch.commit()
+  console.log(`Removed user ${uid} from ${chatsSnap.size} chat rooms`)
 }
 
 // Auth 유저가 삭제될 때마다 실행
@@ -80,7 +96,10 @@ export const onAuthUserDeleted = functions
       // 3. groups/*/members/* 에서 문서 ID == uid 인 멤버 삭제
       await deleteUserFromAllGroups(uid)
 
-      // 4. Storage: profiles/{uid}/ 밑의 프로필 이미지들 삭제
+      // 4. 채팅방 members 배열에서 UID 제거
+      await cleanupUserChats(uid)
+
+      // 5. Storage: profiles/{uid}/ 밑의 프로필 이미지들 삭제
       await deleteUserProfileFiles(uid)
 
       console.log(`Cleanup done for user: ${uid}`)

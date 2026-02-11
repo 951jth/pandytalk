@@ -23,7 +23,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
     dm: {name: findMember?.displayName, image: findMember?.photoURL},
     group: {name: item?.name, image: item?.image},
   }
-  const viewItem = nameMaps?.[item?.type]
+  const viewByType = nameMaps?.[item?.type]
   const targetId = item?.findMember?.id
   const roomId = item?.id
 
@@ -32,9 +32,9 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
       onPress={() => moveToChatRoom?.(targetId, roomId)}
       style={styles.chatRoom}>
       <View style={styles.frame}>
-        {viewItem?.image ? (
+        {viewByType?.image ? (
           <FastImage
-            source={{uri: viewItem?.image}}
+            source={{uri: viewByType?.image}}
             resizeMode={FastImage.resizeMode.cover}
             style={styles.image}
           />
@@ -44,7 +44,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
         {/* {findMember?.status == 'online' && <View style={styles.point} />} */}
       </View>
       <View style={styles.contents}>
-        <Text style={styles.name}>{viewItem?.name ?? '-'}</Text>
+        <Text style={styles.name}>{viewByType?.name ?? '알 수 없음'}</Text>
         <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
           {item?.lastMessage?.text || '대화 없음'}
         </Text>

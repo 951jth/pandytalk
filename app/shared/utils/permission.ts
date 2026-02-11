@@ -134,3 +134,14 @@ export const showPermissionBlockedAlert = ({
     {cancelable: true},
   )
 }
+/**
+ * Android 13 미만에서 파일 쓰기 권한 보장
+ */
+export const ensureAndroidWritePermission = async (): Promise<boolean> => {
+  if (Platform.OS !== 'android') return true
+  if (Platform.Version >= 33) return true
+  const status = await check(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE)
+  if (status === RESULTS.GRANTED) return true
+  const res = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE)
+  return res === RESULTS.GRANTED
+}

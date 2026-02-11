@@ -1,3 +1,4 @@
+import {logger} from '@app/shared/services/logger'
 import {isExpectedError} from '@app/shared/utils/logger'
 import {
   FirebaseFirestoreTypes,
@@ -37,7 +38,7 @@ export const firebaseCall = async <T>(
       console.log('Reason: Data might not exist yet or permission denied.')
       console.log('Original Error:', error.message)
     } else {
-      console.error('Error Details:', error)
+      logger.error(`[Firestore/Call] ${logName} failed`, error)
     }
     console.groupEnd()
 
