@@ -9,6 +9,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query'
+import {useCallback} from 'react'
 
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
@@ -39,30 +40,30 @@ export const useChatMessageUpsertMutation = (
 ) => {
   const queryClient = useQueryClient()
   // 메시지 추가
-  const addMessages = async (
-    newMessages: ChatMessage[],
-    createdRoomId?: string,
-  ) => {
-    const rid = createdRoomId ?? roomId
-    if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
-    queryClient.setQueryData(
-      ['chatMessages', rid],
-      (old: MessagesInfiniteData | undefined) => {
-        const cur = old ?? init
-        // 등록하는 과정에서 id를 기준으로 mergeMessages 내에서 중복 제거 및 정렬됨
-        const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
-        return {
-          ...(old ?? init),
-          pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
-        }
-      },
-    )
-    try {
-      await messageLocal.saveMessagesToSQLite(rid, newMessages)
-    } catch (e) {
-      console.warn('[sqlite] saveMessages failed', e)
-    }
-  }
+  const addMessages = useCallback(
+    async (newMessages: ChatMessage[], createdRoomId?: string) => {
+      const rid = createdRoomId ?? roomId
+      if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
+      queryClient.setQueryData(
+        ['chatMessages', rid],
+        (old: MessagesInfiniteData | undefined) => {
+          const cur = old ?? init
+          // 등록하는 과정에서 id를 기준으로 mergeMessages 내에서 중복 제거 및 정렬됨
+          const merged = mergeMessages(cur.pages[0]?.data || [], newMessages)
+          return {
+            ...(old ?? init),
+            pages: [{...cur.pages[0], data: merged}, ...cur.pages.slice(1)],
+          }
+        },
+      )
+      try {
+        await messageLocal.saveMessagesToSQLite(rid, newMessages)
+      } catch (e) {
+        console.warn('[sqlite] saveMessages failed', e)
+      }
+    },
+    [roomId],
+  )
 
   // 메시지 상태 업데이트 (pending -> success / fail)
   const updateMessageStatus = (

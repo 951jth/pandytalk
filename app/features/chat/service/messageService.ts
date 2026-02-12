@@ -24,7 +24,7 @@ export const messageService = {
     return {items: reformed, nextPageParam, hasNext}
   },
   //채팅방 메세지 구독
-  subscribeChatMessages: async (
+  subscribeChatMessages: (
     roomId: string | null | undefined,
     lastSeq: number | null | undefined,
     // lastCreatedAt?: number,

@@ -14,11 +14,19 @@ import {
   query,
   runTransaction,
   serverTimestamp,
-  startAfter,
   where,
 } from '@react-native-firebase/firestore'
 
 export const messageRemote = {
+  getLatestSeq: async (roomId: string): Promise<number> => {
+    return firebaseCall('messageRemote.getLatestSeq', async () => {
+      const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+      const q = query(messagesRef, orderBy('seq', 'desc'), limit(1))
+      const snapshot = await getDocs(q)
+      if (snapshot.empty) return 0
+      return snapshot.docs[0].data().seq ?? 0
+    })
+  },
   getChatMessagesBySeq: (roomId: string, seq?: number, pageSize?: number) => {
     return firebaseCall('messageRemote.getChatMessagesBySeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
@@ -50,45 +58,19 @@ export const messageRemote = {
       return newMessages
     })
   },
-  subscribeChatMessages: async (
+  subscribeChatMessages: (
     roomId: string,
     lastSeq: number | null | undefined,
     callback: (docs: ChatMessage[]) => void,
   ) => {
     if (!roomId) return () => {}
 
-    // const ts = toRNFTimestamp(lastCreatedAt)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-    let messageQuery // 초기값 없이 선언만 함
-    // 1. 로컬 데이터가 있는 경우: lastSeq 이후만 구독 (가장 효율적)
-    if (lastSeq) {
-      //lastSeq가 0인 경우도 채팅방이 없는 경우임. 항상 1부터 시작
-      messageQuery = query(
-        messagesRef,
-        orderBy('seq', 'asc'),
-        where('seq', '>', lastSeq),
-      )
-    }
-    // 2. 로컬 데이터가 없는 경우: 최신 데이터의 마지막 시간을 기준으로 읽기.
-    else {
-      // 2-1. 서버에서 가장 최신 메시지 1개 가져오기
-      const anchorSnapshot = await getDocs(
-        query(messagesRef, orderBy('createdAt', 'desc'), limit(1)),
-      )
-
-      if (!anchorSnapshot.empty) {
-        // 최신데이터가 있으면 그시점 부터 구독
-        const lastDoc = anchorSnapshot.docs[0]
-        messageQuery = query(
-          messagesRef,
-          orderBy('createdAt', 'asc'), // 시간 순서대로 받음
-          startAfter(lastDoc),
-        )
-      } else {
-        // 빈 방임 -> 처음부터 구독 (어차피 데이터 0개)
-        messageQuery = query(messagesRef, orderBy('createdAt', 'asc'))
-      }
-    }
+    const messageQuery = query(
+      messagesRef,
+      orderBy('seq', 'asc'),
+      where('seq', '>', lastSeq ?? 0),
+    )
 
     return firebaseObserver(
       `messageRemote.subscribeChatMessages_${roomId}`,
