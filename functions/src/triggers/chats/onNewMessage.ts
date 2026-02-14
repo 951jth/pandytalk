@@ -1,8 +1,9 @@
-import { MulticastMessage } from 'firebase-admin/messaging'
+import {MulticastMessage} from 'firebase-admin/messaging'
 import * as logger from 'firebase-functions/logger'
-import { onDocumentCreated } from 'firebase-functions/v2/firestore'
-import { db, messaging } from '../../core/firebase'
-import { removeEmptyValues, removeFcmTokenFromUser } from '../../utils/fcm'
+import {onDocumentCreated} from 'firebase-functions/v2/firestore'
+import {performance} from 'perf_hooks'
+import {db, messaging} from '../../core/firebase'
+import {removeEmptyValues, removeFcmTokenFromUser} from '../../utils/fcm'
 
 export const sendNewMessageNotification = onDocumentCreated(
   {
@@ -10,9 +11,11 @@ export const sendNewMessageNotification = onDocumentCreated(
     document: 'chats/{chatId}/messages/{messageId}',
   },
   async event => {
+    const startTime = performance.now()
+    const metrics: Record<string, number> = {}
+
     try {
       const message = event.data?.data()
-      console.log('message', message)
       const chatId = event.params.chatId as string
       if (!message || !chatId) {
         logger.info('⚠️ message or chatId 누락')
@@ -23,10 +26,12 @@ export const sendNewMessageNotification = onDocumentCreated(
       if (!senderId) return
       const text: string = message.text || ''
 
-      // 1) 채팅방에서 members 배열 조회 (필요시 groupMembers로 대체)
+      // 1) 채팅방 및 수신 유저 정보 조회 (DB 성능 측정)
+      const dbStart = performance.now()
       const chatDoc = await db.doc(`chats/${chatId}`).get()
       let members = chatDoc.get('members') as string[]
       const chatType = chatDoc.get('type')
+
       if (!Array.isArray(members) || members.length < 2) {
         logger.warn(`⚠️ members 필드 오류, chatId=${chatId}`)
         return
@@ -34,21 +39,18 @@ export const sendNewMessageNotification = onDocumentCreated(
       const receiverIds = members.filter(uid => uid !== senderId)
       const isGroup = chatType == 'group'
 
-      // 2) 수신자들의 fcmToken 조회  (※ 기존 코드의 덮어쓰기 버그 수정: push/concat)
-      const targetUsers: {uid: string; fcmToken: string}[] = []
-
       const promises = receiverIds.map(uid => db.doc(`users/${uid}`).get())
       const userSnaps = await Promise.all(promises)
+      metrics['db_query_ms'] = performance.now() - dbStart
 
+      // 2) 수신자들의 fcmToken 추출
+      const targetUsers: {uid: string; fcmToken: string}[] = []
       for (const userSnap of userSnaps) {
         if (!userSnap.exists) continue
-
         const userData = userSnap.data()
         if (!userData) continue
-
         const uid = userData.uid || userSnap.id
         const fcmTokens = userData.fcmTokens as string[] | undefined
-
         if (Array.isArray(fcmTokens)) {
           for (const token of fcmTokens) {
             targetUsers.push({uid, fcmToken: token})
@@ -73,14 +75,13 @@ export const sendNewMessageNotification = onDocumentCreated(
         finalTitle = message?.senderName
         finalBody = rawMsg
       }
+
       const multicastMessage: MulticastMessage = {
         tokens: targetUsers.map(u => u.fcmToken),
         notification: removeEmptyValues({
           title: finalTitle ?? '새 메시지 도착!',
           body: finalBody ?? '내용이 없습니다',
           imageUrl: message?.imageUrl ?? '',
-          // title: message?.senderName ?? '새 메시지 도착!',
-          // body: text ?? '내용이 없습니다',
         }),
         android: {
           notification: {tag: `chat_${chatId}`},
@@ -91,8 +92,6 @@ export const sendNewMessageNotification = onDocumentCreated(
           payload: {
             aps: {
               alert: {title: finalTitle || '새 메시지 도착!', body: finalBody},
-              // title: message?.senderName ?? '새 메시지 도착!',
-              // body: text ?? '내용이 없습니다',
               sound: 'default',
               'thread-id': `chat_${chatId}`,
             },
@@ -108,21 +107,22 @@ export const sendNewMessageNotification = onDocumentCreated(
           imageUrl: message.imageUrl ?? '',
           createdAt: String(message.createdAt ?? Date.now()),
           pushType: 'chat',
-          chatType,
+          chatType: String(chatType ?? ''),
         },
       }
 
+      // 3) FCM 실제 전송 시간 측정
+      const fcmStart = performance.now()
       const response = await messaging.sendEachForMulticast(multicastMessage)
-      logger.info(
-        `✅ 푸시 전송 완료: 성공 ${response.successCount} / 실패 ${response.failureCount}`,
-      )
+      metrics['fcm_send_ms'] = performance.now() - fcmStart
 
+      // 4) 전송 실패 건 처리 및 토큰 정리 시간 측정
+      const cleanupStart = performance.now()
       await Promise.all(
         response.responses.map(async (res, i) => {
           const {uid, fcmToken} = targetUsers[i]
           if (!res.success) {
             const code = res.error?.code || res.error?.message
-            logger.error('❌ FCM 전송 실패', {uid, fcmToken, error: code})
             const deletable = [
               'messaging/invalid-registration-token',
               'messaging/registration-token-not-registered',
@@ -131,11 +131,31 @@ export const sendNewMessageNotification = onDocumentCreated(
             if (code && deletable.includes(code)) {
               await removeFcmTokenFromUser(uid, fcmToken)
             }
-          } else {
-            logger.info(`✅ 성공: ${fcmToken}`)
           }
         }),
       )
+      metrics['cleanup_ms'] = performance.now() - cleanupStart
+
+      // jsonPayload: {
+      // avg_ms_per_token: 944.2351249999992 // 토큰당 평균 응답 시간
+      // chatId: "mKn39zVd5MgDIse1KuPg"
+      // cleanup_ms: 0.08348599999590078 // 토큰 정리 시간
+      // db_query_ms: 681.4999640000024 // DB 조회 시간
+      // fcm_send_ms: 261.5937969999941 // FCM 전송 시간
+      // message: "🚀 Push Performance Metrics"
+      // receiverCount: 1
+      // total_ms: 944.2351249999992 // 총 응답 시간
+      // }
+
+      // 5) 최종 성능 로그 (이 로그를 Cloud Logging에서 메트릭으로 사용)
+      const totalTime = performance.now() - startTime
+      logger.info(`🚀 Push Performance Metrics`, {
+        chatId,
+        receiverCount: targetUsers.length,
+        total_ms: totalTime,
+        ...metrics,
+        avg_ms_per_token: totalTime / targetUsers.length,
+      })
     } catch (e) {
       logger.error('푸시 오류', e as Error)
     }

@@ -21,3 +21,17 @@ export {
 export {onUserApprove} from './triggers/users/onUserApprove'
 export {onAuthUserDeleted} from './triggers/users/onUserDelete'
 export {onUserGroupIdUpdated} from './triggers/users/onUserUpdate'
+
+// 테스트 전용 함수
+/*
+curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/setupTestDummyData \
+-H "Content-Type: application/json" \
+-d '{"data": {}}'
+*/
+export {setupTestDummyData} from './triggers/test/setupDummy'
+/*
+curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/testDbPerformanceCompare \
+-H "Content-Type: application/json" \
+-d '{"data": {"memberCount": 100}}'
+*/
+export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
