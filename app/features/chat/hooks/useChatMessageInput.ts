@@ -52,7 +52,8 @@ export const useChatMessageInput = ({
       return
     }
     try {
-      if (type == 'text' && !text) return
+      const trimmedText = text.trim()
+      if (type === 'text' && !trimmedText) return
       if (!user?.uid) throw new Error('유저정보 조회 실패')
       setLoading(true)
       let fetchedRoomInfo = roomInfo
@@ -87,7 +88,7 @@ export const useChatMessageInput = ({
         })
       }
       if (!fetchedRoomInfo) throw new Error('채팅방 정보가 없습니다.')
-      // step 4. 메세지 전송 및 캐시 반영
+      // step 4. 메세지 전송 및 캐시 반영 (여기서 정책에 위반되는 데이터 필터링)
       const reformedMsg = setChatMessagePayload({
         roomInfo: fetchedRoomInfo,
         message,

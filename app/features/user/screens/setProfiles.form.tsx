@@ -6,13 +6,14 @@ import EditTextArea from '@app/shared/ui/input/EditTextarea'
 import dayjs from 'dayjs'
 import React from 'react'
 
-export const setProfileItems = (user?: User | null): FormItem[] => {
+export const createUserProfileItems = (user?: User | null): FormItem[] => {
+  const isTest = user?.authority === 'TEST'
   return [
     {
       label: '닉네임',
       key: 'displayName',
       render: (value, onChange, edit) => (
-        <EditInput value={value} onChangeText={onChange} />
+        <EditInput value={value} onChangeText={onChange} edit={!isTest} />
       ),
       validation: {
         // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
@@ -50,6 +51,7 @@ export const setProfileItems = (user?: User | null): FormItem[] => {
           minRows={1}
           maxRows={6}
           maxLength={200}
+          edit={!isTest}
         />
       ),
     },

@@ -6,7 +6,7 @@ export interface User {
   uid: string
   displayName: string
   email: string
-  authority: 'ADMIN' | 'MANAGER' | 'USER'
+  authority: 'ADMIN' | 'MANAGER' | 'USER' | 'TEST'
   status: 'online' | 'offline'
   photoURL?: string
   lastSeen?: Timestamp | number | FieldValue | null // RN Firebase 기준 차후 Timestamp로 변경예정

@@ -7,7 +7,7 @@ import {useDispatch} from 'react-redux'
 
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageTestService} from '@app/features/chat/service/messageTestService'
-import {setProfileItems} from '@app/features/user/screens/setProfiles.form'
+import {createUserProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
 import {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
@@ -26,12 +26,17 @@ export function useProfileScreen() {
   const profileRef = useRef<ProfileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
   const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
-  const formItems = useMemo(() => setProfileItems(userInfo), [userInfo])
+  const formItems = useMemo(() => createUserProfileItems(userInfo), [userInfo])
 
   const updateUserProfile = async () => {
     try {
       const ok = formRef?.current?.validate()
       if (!ok) return
+
+      if (userInfo?.authority === 'TEST') {
+        Alert.alert('알림', 'TEST 계정은 프로필을 수정할 수 없습니다.')
+        return
+      }
 
       const formValues = formRef.current?.getValues() || {}
       if (!uid) throw new Error('로그인된 사용자가 없습니다.')
@@ -52,7 +57,6 @@ export function useProfileScreen() {
         lastSeen: serverTimestamp(),
       }
 
-      // await updateDoc(userRef, payload)
       await userService.fetchProfile(uid, payload)
       await dispatch(fetchUserById(uid))
       queryClient.invalidateQueries({queryKey: ['users']})

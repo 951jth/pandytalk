@@ -6,6 +6,8 @@ import COLORS from '@app/shared/constants/color'
 import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 
+import {useAppSelector} from '@app/store/reduxHooks'
+
 type propTypes = {
   label?: string
   onConfirm?: () => void
@@ -17,7 +19,12 @@ export default function WithdrawalButton({
   onConfirm,
   onCancel,
 }: propTypes) {
+  const {data: user} = useAppSelector(state => state.user)
   const [visible, setVisible] = useState<boolean>(false)
+
+  if (user?.authority === 'TEST') {
+    return null
+  }
 
   const onDelete = async () => {
     try {

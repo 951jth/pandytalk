@@ -16,6 +16,11 @@ type pageType = {
   isLastPage: boolean
 }
 
+export const MESSAGE_POLICY = {
+  MAX_LENGTH: 2000,
+  TRIM: true,
+}
+
 //채팅방의 메세지 페이로드 생성 유틸
 export const setChatMessagePayload = ({
   roomInfo,
@@ -24,18 +29,33 @@ export const setChatMessagePayload = ({
 }: SetChatMessagePayload): ChatMessage | null => {
   const roomId = roomInfo?.id
   if (!roomId || !user?.uid || !message) return null
-  const trimmed = (message.text ?? '').trim()
 
-  if (message.type === 'text' && !trimmed)
-    throw new Error('내용을 입력해주세요.')
-  if (message.type === 'image' && !message.imageUrl)
+  let text = message.text ?? ''
+
+  if (MESSAGE_POLICY.TRIM) {
+    text = text.trim()
+  }
+
+  if (message.type === 'text') {
+    if (!text) {
+      throw new Error('내용을 입력해주세요.')
+    }
+    if (text.length > MESSAGE_POLICY.MAX_LENGTH) {
+      throw new Error(
+        `메시지는 최대 ${MESSAGE_POLICY.MAX_LENGTH}자까지 입력 가능합니다.`,
+      )
+    }
+  }
+
+  if (message.type === 'image' && !message.imageUrl) {
     throw new Error('이미지를 선택해주세요.')
+  }
 
   const id = messageRemote.generateMessageId(roomId)
   return {
     ...message,
     id,
-    text: message.type === 'text' ? trimmed : message.text,
+    text: message.type === 'text' ? text : message.text,
     senderId: user.uid,
     senderName: user.displayName ?? '',
     senderPicURL: user.photoURL ?? '',

@@ -38,6 +38,10 @@ export const userService = {
   },
   //프로필 정보 수정
   fetchProfile: async (uid: string, payload: UpdateInput<User>) => {
+    const user = await userService.getProfile(uid)
+    if (user.authority === 'TEST') {
+      throw new Error('TEST 계정은 프로필을 수정할 수 없습니다.')
+    }
     await userRemote.updateProfile(uid, payload)
   },
   //마지막 읽음 날짜 갱신
@@ -89,6 +93,10 @@ export const userService = {
     const user = auth.currentUser
     try {
       if (!user) return
+      const profile = await userService.getProfile(user.uid)
+      if (profile.authority === 'TEST') {
+        throw new Error('TEST 계정은 탈퇴할 수 없습니다.')
+      }
       await userRemote.deleteUser(user)
       // 여기서부터는 계정이 Auth에서 삭제된 상태
       // 추가로 Firestore/Storage 데이터도 정리해주면 좋음
