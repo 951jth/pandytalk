@@ -1,4 +1,5 @@
-import {appRoutes, tabScreens} from '@app/navigation/useScreens'
+import {tabScreens} from '@app/navigation/tabScreens'
+import {appRoutes} from '@app/navigation/useScreens'
 import COLORS from '@app/shared/constants/color'
 import {useLogout} from '@app/shared/hooks/useLogout'
 import {useNavigation, useNavigationState} from '@react-navigation/native'

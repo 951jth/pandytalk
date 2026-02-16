@@ -1,4 +1,4 @@
-import {tabScreens} from '@app/navigation/useScreens'
+import {tabScreens} from '@app/navigation/tabScreens'
 import COLORS from '@app/shared/constants/color'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'

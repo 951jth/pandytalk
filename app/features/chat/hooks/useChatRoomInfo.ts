@@ -12,5 +12,6 @@ export const useChatRoomInfo = (roomId?: string | null) => {
         await chatService.getChatRoomWithMemberInfo(roomId)
       return roomInfo
     },
+    staleTime: 0, // 입장 시마다 최신 lastSeq 확인을 위해 stale 상태로 간주
   })
 }

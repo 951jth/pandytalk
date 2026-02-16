@@ -21,7 +21,10 @@ const createPageResult = (messages: ChatMessage[]) => {
   }
 }
 
-export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
+export const useChatMessagesInfinite = (
+  roomId: string | null | undefined,
+  serverLastSeq?: number,
+) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
 
@@ -31,19 +34,35 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       try {
         if (!roomId) return initChatPage
-        // 성능측정용
-        // await fetchMessageWithMeasure(roomId, pageParam)
         const seq = pageParam
+
         const localMessages = (await messageLocal.getChatMessagesBySeq(
           roomId,
-          seq, //마지막 채팅의 SEQ 값
+          seq,
           PAGE_SIZE,
         )) as ChatMessage[]
-        //첫 데이터 조회거나, 로컬데이터가 마지막이 아닌 경우는 서버조회
-        const shouldFetchFromServer = (localMessages?.length || 0) < PAGE_SIZE
+        console.log('seq', seq)
+        console.log('localMessagesLastSeq', localMessages[0]?.seq ?? 0)
+        // 1. 첫 페이지 조회 시: 로컬 최신 데이터가 서버 최신보다 낮으면 스케일(Stale)
+        const isLocalStale =
+          !seq &&
+          serverLastSeq !== undefined &&
+          (localMessages[0]?.seq ?? 0) < serverLastSeq
+
+        // 2. 중간 페이지 조회 시: 현재 커서(seq)와 로컬 첫 데이터 사이에 번호 간극(Gap)이 있는가?
+        // 예: 커서가 100인데 로컬 첫 데이터가 70이면, 중간의 99~71번을 서버에서 가져와야 함
+        const hasGap =
+          seq !== undefined &&
+          localMessages.length > 0 &&
+          (localMessages?.[0]?.seq || 0) < seq - 1
+
+        const shouldFetchFromServer =
+          (localMessages?.length || 0) < PAGE_SIZE || isLocalStale || hasGap
+
         if (shouldFetchFromServer) {
           try {
-            // CASE 1. 로컬에 없으면 Firestore에서 가져오기
+            // CASE 1. 로컬에 없거나 간극(Gap)이 발생했다면 Firestore에서 가져오기
+            // pageParam이 없으면 서버의 최신 지점부터 가져오기 위해 undefined(또는 serverLastSeq + 1) 전달
             const {items: serverMessages} =
               await messageService.getChatMessagesFromSeq(
                 roomId,

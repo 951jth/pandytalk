@@ -18,9 +18,11 @@ export const useChatMessageList = ({
   userId,
   roomInfo, // 실제 채팅방 정보 생성 확인
 }: Props) => {
-  //채팅 목록 무한 스크롤
+  const serverLastSeq = roomInfo?.lastSeq
+
+  // 채팅 목록 무한 스크롤
   const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
-    useChatMessagesInfinite(roomId)
+    useChatMessagesInfinite(roomId, serverLastSeq)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
 
   // 멤버들 정보 map
@@ -58,8 +60,9 @@ export const useChatMessageList = ({
 
   // 마지막 읽은 시간, SEQ 처리
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
+
   // 채팅 목록 구독
-  useSubscribeChatMessages(roomId, roomInfo?.lastSeq) // 채팅방 구독설정
+  useSubscribeChatMessages(roomId, serverLastSeq) // 채팅방 구독설정
   // 채팅 메시지 스크롤
   const latestMessage = messages?.[0]
   const {flatListRef, isAtBottom, handleScroll, scrollToBottom} = useChatScroll(

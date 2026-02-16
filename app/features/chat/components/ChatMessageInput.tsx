@@ -33,6 +33,8 @@ export default function ChatMessageInput({
         outlineStyle={styles.chatTextOutlined}
         value={text}
         onChangeText={setText}
+        multiline={true}
+        dense={true}
         onSubmitEditing={() => onSendMessage('text')}
       />
       <IconButton
@@ -68,18 +70,20 @@ const styles = StyleSheet.create({
   },
   chatTextInput: {
     flex: 1,
-    height: 40,
+    minHeight: 40,
+    maxHeight: 120,
     justifyContent: 'center',
     paddingVertical: 0,
     textAlignVertical: 'center',
   },
   chatTextContent: {
-    paddingVertical: 0,
     paddingHorizontal: 12,
     textAlignVertical: 'center',
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   chatTextOutlined: {
-    borderRadius: 50,
+    borderRadius: 25,
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
