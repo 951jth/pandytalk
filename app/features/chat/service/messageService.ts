@@ -23,6 +23,7 @@ export const messageService = {
     }))
     return {items: reformed, nextPageParam, hasNext}
   },
+
   //채팅방 메세지 구독
   subscribeChatMessages: (
     roomId: string | null | undefined,
@@ -48,6 +49,7 @@ export const messageService = {
     )
     return unsub
   },
+
   //최신 채팅과 동기화
   syncNewMessages: async (
     roomId: string,
@@ -69,6 +71,7 @@ export const messageService = {
     )
     return messages
   },
+
   //메세지 전송 (신규채팅생성)
   sendChatMessage: async ({roomId, message}: SendMessageParams) => {
     let fetchedRoomId: string = roomId ?? ''
@@ -108,5 +111,72 @@ export const messageService = {
       // 기타 에러
       throw new Error('메시지 전송에 실패했습니다. 다시 시도해주세요.')
     }
+  },
+
+  /**
+   * 채팅 메시지를 통합 조회하는 로직 (Local-First + Sync)
+   */
+  getChatMessages: async (
+    roomId: string,
+    cursorSeq?: number,
+    pageSize: number = 20,
+    serverLastSeq?: number,
+  ) => {
+    // 1. 로컬 SQLite에서 먼저 조회
+    const localMessages = (await messageLocal.getChatMessagesBySeq(
+      roomId,
+      cursorSeq,
+      pageSize,
+    )) as ChatMessage[]
+
+    // 2. 서버 데이터와 비교하여 동기화가 필요한지 판단
+    // (1) 첫 페이지 조회 시: 로컬 최신 데이터가 서버 최신보다 낮으면 Stale
+    const isLocalStale =
+      !cursorSeq &&
+      serverLastSeq !== undefined &&
+      (localMessages[0]?.seq ?? 0) < serverLastSeq
+
+    // (2) 중간 페이지 조회 시: 현재 커서(seq)와 로컬 첫 데이터 사이에 간극(Gap)이 있는가?
+    const hasGap =
+      cursorSeq !== undefined &&
+      localMessages.length > 0 &&
+      (localMessages?.[0]?.seq || 0) < cursorSeq - 1
+
+    // (3) 데이터 개수가 부족하거나 Stale하거나 Gap이 있는 경우 서버 호출
+    const shouldFetchFromServer =
+      (localMessages?.length || 0) < pageSize || isLocalStale || hasGap
+
+    if (shouldFetchFromServer) {
+      try {
+        // 서버에서 데이터 가져오기 (reformat된 데이터 반환)
+        const {items: serverMessages} =
+          await messageService.getChatMessagesFromSeq(
+            roomId,
+            cursorSeq,
+            pageSize,
+          )
+
+        if (serverMessages?.length > 0) {
+          // 서버 데이터를 SQLite에 저장 (INSERT OR REPLACE)
+          await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
+        }
+
+        // 저장 후 가장 정확한 상태인 SQLite에서 다시 조회하여 반환
+        const updatedMessages = await messageLocal.getChatMessagesBySeq(
+          roomId,
+          cursorSeq,
+          pageSize,
+        )
+        return updatedMessages
+      } catch (e) {
+        console.error(
+          '[getChatMessages] Server fetch failed, fallback to local',
+          e,
+        )
+        return localMessages
+      }
+    }
+
+    return localMessages
   },
 }

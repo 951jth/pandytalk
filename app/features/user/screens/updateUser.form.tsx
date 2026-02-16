@@ -89,6 +89,7 @@ export const updateUserItems: FormItem[] = [
             label: '일반유저',
             value: 'USER',
           },
+          {label: '테스트계정', value: 'TEST'},
         ]}
         value={value}
         onChange={onChange}

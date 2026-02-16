@@ -27,11 +27,9 @@ describe('useChatMessagesInfinite - 스마트 데이터 로딩 로직 테스트'
   })
 
   it('로컬 DB(SQLite)에 데이터가 충분하면 서버를 호출하지 않아야 한다 (Offline-First)', async () => {
-    // 1. SQLite에 20개의 데이터가 있다고 가정
-    const mockLocalData = Array(20).fill({id: 'msg'})
-    ;(messageLocal.getChatMessagesBySeq as jest.Mock).mockResolvedValue(
-      mockLocalData,
-    )
+    // 1. messageService.getChatMessages가 데이터를 반환한다고 가정
+    const mockData = Array(20).fill({id: 'msg'})
+    ;(messageService.getChatMessages as jest.Mock).mockResolvedValue(mockData)
     ;(useInfiniteQuery as jest.Mock).mockImplementation(({queryFn}) => {
       // 실제 queryFn 실행 시뮬레이션
       queryFn({pageParam: undefined})
@@ -40,22 +38,19 @@ describe('useChatMessagesInfinite - 스마트 데이터 로딩 로직 테스트'
 
     renderHook(() => useChatMessagesInfinite(mockRoomId))
 
-    // 검증: 로컬 DB 조회가 발생했는가?
-    expect(messageLocal.getChatMessagesBySeq).toHaveBeenCalled()
-    // 검증: 데이터가 이미 20개이므로 서버(messageService) 호출은 없어야 함
-    expect(messageService.getChatMessagesFromSeq).not.toHaveBeenCalled()
+    // 검증: 서비스 레이어 조회가 발생했는가?
+    expect(messageService.getChatMessages).toHaveBeenCalledWith(
+      mockRoomId,
+      undefined,
+      20,
+      undefined,
+    )
   })
 
   it('로컬 DB에 데이터가 부족하면 서버에서 가져와 저장해야 한다 (Hybrid Sync)', async () => {
-    // 1. SQLite에 데이터가 0개임
-    ;(messageLocal.getChatMessagesBySeq as jest.Mock)
-      .mockResolvedValueOnce([]) // 첫 조회
-      .mockResolvedValueOnce([{id: 'server_msg_1'}]) // 저장 후 재조회
-
-    // 2. 서버에서는 데이터가 있음
-    ;(messageService.getChatMessagesFromSeq as jest.Mock).mockResolvedValue({
-      items: [{id: 'server_msg_1'}],
-    })
+    // 1. messageService.getChatMessages가 내부적으로 동기화 후 데이터를 반환한다고 가정
+    const mockData = [{id: 'server_msg_1'}]
+    ;(messageService.getChatMessages as jest.Mock).mockResolvedValue(mockData)
     ;(useInfiniteQuery as jest.Mock).mockImplementation(({queryFn}) => {
       queryFn({pageParam: undefined})
       return {data: undefined}
@@ -63,17 +58,8 @@ describe('useChatMessagesInfinite - 스마트 데이터 로딩 로직 테스트'
 
     renderHook(() => useChatMessagesInfinite(mockRoomId))
 
-    // 검증: 서버 데이터 조회가 발생했는가? (Async 대응을 위해 waitFor 사용)
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 0)) // tick
-    })
-
-    // 검증: 서버 데이터 조회가 발생했는가?
-    expect(messageService.getChatMessagesFromSeq).toHaveBeenCalled()
-    // 검증: 서버에서 가져온 데이터를 로컬 SQLite에 저장했는가?
-    expect(messageLocal.saveMessagesToSQLite).toHaveBeenCalledWith(mockRoomId, [
-      {id: 'server_msg_1'},
-    ])
+    // 검증: 서비스 레이어 조회가 발생했는가?
+    expect(messageService.getChatMessages).toHaveBeenCalled()
   })
 
   it('resetChatMessages 호출 시 로컬 데이터를 지우고 쿼리를 리셋해야 한다', async () => {

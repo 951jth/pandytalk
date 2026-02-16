@@ -65,6 +65,15 @@ jest.mock('@react-native-firebase/storage', () => ({
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
 }))
+jest.mock('@react-native-firebase/crashlytics', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    log: jest.fn(),
+    recordError: jest.fn(),
+    setAttributes: jest.fn(),
+    setUserId: jest.fn(),
+  })),
+}))
 
 // React Native Mocks
 jest.mock('react-native', () => {

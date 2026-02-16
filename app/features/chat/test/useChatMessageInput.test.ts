@@ -38,7 +38,7 @@ describe('useChatMessageInput (채팅 전송 로직 테스트)', () => {
     const {result} = renderHook(() =>
       useChatMessageInput({
         roomInfo: mockRoomInfo,
-        chatType: 'dm',
+        chatType: 'group',
       }),
     )
 
@@ -55,7 +55,7 @@ describe('useChatMessageInput (채팅 전송 로직 테스트)', () => {
     const {result} = renderHook(() =>
       useChatMessageInput({
         roomInfo: mockRoomInfo,
-        chatType: 'dm',
+        chatType: 'group',
       }),
     )
 
@@ -84,7 +84,7 @@ describe('useChatMessageInput (채팅 전송 로직 테스트)', () => {
     const {result} = renderHook(() =>
       useChatMessageInput({
         roomInfo: mockRoomInfo,
-        chatType: 'dm',
+        chatType: 'group',
       }),
     )
 
