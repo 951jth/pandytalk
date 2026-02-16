@@ -26,7 +26,13 @@ const InputRowRender = ({
   errMsg,
 }: inputRowType) => {
   const {key, render, type, meta, rowStyle} = item
-  const {rowsStyle, labelWidth, fontSize, labelStyle, contentsStyle} = layout
+  const {
+    rowsStyle,
+    labelWidth,
+    fontSize = 10,
+    labelStyle,
+    contentsStyle,
+  } = layout
   let InnerContents = <></>
 
   switch (type) {
@@ -89,11 +95,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    alignContent: 'center',
   },
   label: {
     fontFamily: 'BMDOHYEON',
     fontSize: 10,
-    paddingTop: 8,
   },
   contents: {
     flex: 1,

@@ -62,7 +62,7 @@ export interface InputFormRef {
 const DEFAULT_LAYOUT = {
   style: {},
   labelWidth: 80,
-  fontSize: 16,
+  fontSize: 12,
   rowsStyle: {},
   labelStyle: {},
   contentsStyle: {},

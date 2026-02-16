@@ -54,6 +54,30 @@ describe('message.ts', () => {
       expect(payload?.createdAt).toBeDefined()
       expect(payload?.roomTitle).toBe('테스트방')
     })
+    it('텍스트 앞뒤 공백 제거 확인', () => {
+      const payload = setChatMessagePayload({
+        roomInfo: mockRoomInfo,
+        user: mockUser,
+        message: {
+          type: 'text',
+          text: '  공백 제거 확인  ',
+        },
+      })
+      expect(payload?.text).toBe('공백 제거 확인')
+    })
+    it('길이 제한(2000자) 초과 시 에러', () => {
+      const longText = 'a'.repeat(2001)
+      expect(() =>
+        setChatMessagePayload({
+          roomInfo: mockRoomInfo,
+          user: mockUser,
+          message: {
+            type: 'text',
+            text: longText,
+          },
+        }),
+      ).toThrow('메시지는 최대 2000자까지 입력 가능합니다.')
+    })
     it('이미지 메세지 페이로드 생성', () => {
       const payload = setChatMessagePayload({
         roomInfo: mockRoomInfo,

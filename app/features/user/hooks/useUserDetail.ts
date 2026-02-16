@@ -1,4 +1,4 @@
-import {setProfileItems} from '@app/features/user/screens/setProfiles.form'
+import {createUserProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
 import type {User} from '@app/shared/types/auth'
 import type {InputFormRef} from '@app/shared/ui/form/InputForm'
@@ -12,7 +12,7 @@ export const useUserDetail = (onComplete: () => void) => {
   const formRef = useRef<InputFormRef>(null)
   const profileRef = useRef<ProfileInputRef>(null)
   const currentAdminUid = user?.uid
-  const formItems = setProfileItems(user)
+  const formItems = createUserProfileItems(user)
 
   const handleMemberStatusUpdate = async (
     status: User['accountStatus'] & 'delete',

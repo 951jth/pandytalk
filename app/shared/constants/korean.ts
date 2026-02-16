@@ -2,6 +2,7 @@ export const authority = {
   ADMIN: '관리자',
   MANAGER: '매니저',
   USER: '일반',
+  TEST: '테스트 계정',
 }
 
 export const status = {

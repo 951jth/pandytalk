@@ -30,15 +30,17 @@ export default function ProfileScreen(): React.JSX.Element {
       <Button icon="close" onPress={onClear} style={styles.cleanButton}>
         메시지 재동기화
       </Button>
-      <IconButton
-        icon="refresh"
-        size={20}
-        style={styles.resetBtn}
-        onTouchEnd={() => {
-          formRef?.current?.resetValues()
-          profileRef?.current?.onReset()
-        }}
-      />
+      {userInfo?.authority !== 'TEST' && (
+        <IconButton
+          icon="refresh"
+          size={20}
+          style={styles.resetBtn}
+          onTouchEnd={() => {
+            formRef?.current?.resetValues()
+            profileRef?.current?.onReset()
+          }}
+        />
+      )}
       <ScrollView style={styles.contents} contentContainerStyle={{flexGrow: 1}}>
         <InputForm
           items={formItems}
@@ -51,7 +53,7 @@ export default function ProfileScreen(): React.JSX.Element {
           topElement={
             <View style={styles.profileWrap}>
               <EditProfile
-                edit={true}
+                edit={userInfo?.authority !== 'TEST'}
                 ref={profileRef}
                 defaultUrl={userInfo?.photoURL}
               />
@@ -59,10 +61,15 @@ export default function ProfileScreen(): React.JSX.Element {
           }
           bottomElement={
             <View style={styles.buttons}>
-              <CustomButton loading={submitting} onTouchEnd={updateUserProfile}>
-                프로필 저장
-              </CustomButton>
-              {userInfo?.authority !== 'ADMIN' && <WithdrawalButton />}
+              {userInfo?.authority !== 'TEST' && (
+                <CustomButton
+                  loading={submitting}
+                  onTouchEnd={updateUserProfile}>
+                  프로필 저장
+                </CustomButton>
+              )}
+              {userInfo?.authority !== 'ADMIN' &&
+                userInfo?.authority !== 'TEST' && <WithdrawalButton />}
             </View>
           }
         />
