@@ -30,7 +30,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     isFetchingNextPage,
     refetch,
   } = useMyChatListInfinite(user?.uid, type)
-  // 실시간 구독
+  // 실시간 구독은 현재 레이아웃단에서 구독함(뱃지 카운트 때문에)
   // useSubscribeChatList(user?.uid, type)
 
   const rawChats: ChatRoom[] = useMemo(

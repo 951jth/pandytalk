@@ -53,12 +53,12 @@ export const chatService = {
   },
   createChatRoom: async (options: CreateChatRoomOptions) => {
     const {myId, targetIds, name, image} = options
-    // ✅ 멤버 아이디 정리 (현재 유저 + 타겟들)
+    // 멤버 아이디 정리 (현재 유저 + 타겟들)
     const memberIds = [myId, ...targetIds].filter(Boolean)
     const sortedIds = Array.from(new Set(memberIds)).sort() // 중복 제거 + 정렬
     const dmRoomId = `${sortedIds[0]}_${sortedIds[1]}`
 
-    // ✅ 타입 자동 판별 (명시된 type이 있으면 우선)
+    // 타입 자동 판별 (명시된 type이 있으면 우선)
     const type: ChatRoom['type'] =
       options.type ?? (sortedIds.length > 2 ? 'group' : 'dm')
 

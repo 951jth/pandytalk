@@ -23,21 +23,26 @@ export {onAuthUserDeleted} from './triggers/users/onUserDelete'
 export {onUserGroupIdUpdated} from './triggers/users/onUserUpdate'
 
 // 테스트 전용 함수
+// 더미 그룹 생성하기 (유저포함)
+export {setupTestDummyData} from './triggers/test/setupDummy'
 /*
 curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/setupTestDummyData \
 -H "Content-Type: application/json" \
 -d '{"data": {}}'
 */
-export {setupTestDummyData} from './triggers/test/setupDummy'
+
+// 푸쉬메세지 병렬처리 속도확인하기
+export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
 /*
 curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/testDbPerformanceCompare \
 -H "Content-Type: application/json" \
 -d '{"data": {"memberCount": 100}}'
 */
-export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
+
+// 더미 메시지 생성하기
+export {sendDummyMessages} from './triggers/test/sendDummyMessages'
 /*
 curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/sendDummyMessages \
 -H "Content-Type: application/json" \
--d '{"data": {"roomId": "mKn39zVd5MgDIse1KuPg", "count": 100}}'
+-d '{"data": {"roomId": "mKn39zVd5MgDIse1KuPg", "count": 50}}'
 */
-export {sendDummyMessages} from './triggers/test/sendDummyMessages'
