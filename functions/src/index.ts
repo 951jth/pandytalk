@@ -35,3 +35,9 @@ curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/testDbPerformance
 -d '{"data": {"memberCount": 100}}'
 */
 export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
+/*
+curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/sendDummyMessages \
+-H "Content-Type: application/json" \
+-d '{"data": {"roomId": "mKn39zVd5MgDIse1KuPg", "count": 100}}'
+*/
+export {sendDummyMessages} from './triggers/test/sendDummyMessages'
