@@ -36,6 +36,10 @@ const arePropsEqual = (
   return pMsg === nMsg
 }
 const MemoizedChatMessage = memo(ChatMessageItem, arePropsEqual)
+const maintainVisibleContentPosition = {
+  minIndexForVisible: 0,
+  autoscrollToTopThreshold: 10,
+}
 
 export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
@@ -83,14 +87,10 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
         onEndReachedThreshold={0.5}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        // FlashList 필수 및 권장 옵션
         estimatedItemSize={80} // 말풍선의 평균적인 높이
         drawDistance={500}
         removeClippedSubviews={true}
-        maintainVisibleContentPosition={{
-          minIndexForVisible: 0,
-          autoscrollToTopThreshold: 10,
-        }}
+        maintainVisibleContentPosition={maintainVisibleContentPosition}
         inverted={true}
       />
     </View>

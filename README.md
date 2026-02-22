@@ -1,123 +1,74 @@
-# PandyTalk
+# PandyTalk - Local-First Chat App
 
-👉 **Live App (Android)**: Google Play – [PandyTalk](https://play.google.com/store/apps/details?id=com.cshchatapp)
-👉 **Performance & Architecture Notes**: [Notion](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
+👉 **Live App (Android)**: Google Play – [PandyTalk](https://play.google.com/store/apps/details?id=com.cshchatapp)  
+👉 **Detailed Engineering Log**: [Notion](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
 
-오프라인 환경에서도 **항상 동일한 메시지 순서와 화면을 제공**하기 위해  
-SQLite를 조회 기준으로 설계한 React Native 기반 채팅 앱입니다.
-
----
-
-## 📌 Overview
-
-이 프로젝트는 실시간 채팅 서비스에서 자주 발생하는  
-**메시지 누락, 순서 불일치, 네트워크 의존성 문제**를  
-구조적으로 해결하는 것을 목표로 한 개인 프로젝트입니다.
-
-실시간 반영 속도보다 **“항상 같은 결과를 보여주는 UX”**를 우선하는 방향으로 판단하여,  
-Firestore 기반 실시간 구독과 SQLite 기반 로컬 조회를 분리한  
-오프라인 퍼스트 아키텍처를 설계·검증했습니다.
+네트워크 지연을 최소화하고 오프라인에서도 끊김 없는 사용자 경험을 제공하기 위해 **SQLite 기반 Local-First 아키텍처**로 설계된 채팅 앱입니다.
 
 ---
 
-## 🎯 핵심 문제 & 판단
+## 📊 Performance Results
 
-- Firestore persistence만으로는  
-  오프라인·장기 미접속 구간에서 일관된 메시지 조회 UX를 보장하기 어려움
-- 네트워크 상태에 따라 사용자마다 다른 메시지 순서·목록이 노출되는 문제 발생
-- 실시간성과 UX 일관성 사이에서 **일관성을 우선하는 설계 판단**을 선택
+| 지표          | Firestore (Cloud) | SQLite (Local)         | 개선 결과        |
+| :------------ | :---------------- | :--------------------- | :--------------- |
+| **로딩 속도** | ~286.74ms         | **~9.24ms**            | **약 31배 향상** |
+| **안정성**    | 낮음 (최대 535ms) | **매우 높음 (±1.5ms)** | 일관된 UX 제공   |
 
-### 핵심 결정
-
-- SQLite를 단순 캐시가 아닌 **조회 기준 데이터 소스**로 사용
-- 실시간 구독(Firestore)은 “미래 데이터 동기화” 역할로 분리
+> _참고: 위 수치는 특정 테스트 환경의 측정 결과로, 절대적인 수치보다는 로컬 DB 도입 전후의 상대적인 성능 차이를 확인하기 위한 참고용 데이터입니다._
 
 ---
 
-## 🧠 Architecture Overview
+## ✨ Core Features & Key Logic
 
-- **Service Layer**
-  - 도메인 정책, 상태 흐름 관리
-  - 중복 요청 및 순서 불일치 방지
+### 1. 지능형 증분 동기화 (Incremental Sync)
 
-- **Data Layer**
-  - Local: SQLite (조회 기준)
-  - Remote: Firestore (실시간 구독 / 동기화)
+서버의 메시지 순번(`seq`)을 기반으로 누락된 데이터만 정밀하게 동기화하여 비용과 지연을 최소화합니다.
 
-> 실시간 데이터와 조회 데이터를 분리하여  
-> 네트워크 상태와 관계없이 동일한 화면 결과를 보장하도록 설계
+- [🔗 messageService.getChatMessages (통합 조회 로직)](app/features/chat/service/messageService.ts)
+- [🔗 useChatMessagesInfinite (인피니트 쿼리 연동)](app/features/chat/hooks/useChatMessagesInfinite.ts)
 
----
+### 2. Local-First 데이터 구조
 
-## ✨ Core Features
+모든 데이터의 기준을 로컬 DB에 두어 네트워크 의존성을 제거하고 오프라인 사용성을 확보했습니다.
 
-### 1. 실시간 + 오프라인 채팅 구조
+- [🔗 messageLocal.sqlite.ts (SQLite CRUD)](app/features/chat/data/messageLocal.sqlite.ts)
+- [🔗 messageRemote.firebase.ts (Firestore 연동)](app/features/chat/data/messageRemote.firebase.ts)
 
-- Firestore `onSnapshot` 기반 실시간 메시지 수신
-- SQLite 기반 로컬 조회로 오프라인·지연 환경에서도 동일한 메시지 순서 유지
+### 3. 공용 폼 엔진 (InputForm)
 
-### 2. 채팅방 리스트 & 언리드 동기화
+JSON 설정 기반으로 복잡한 폼을 선언적으로 관리하며, 유효성 검사 및 데이터 바인딩을 자동화하여 공통 UI의 생산성을 높였습니다.
 
-- 채팅방 목록, 언리드 카운트, 신규 메시지 감지를
-  기능 단위 커스텀 훅으로 분리
-- 불필요한 리렌더링 및 리스너 최소화
-
-### 3. FCM 푸시 알림 & 딥링크
-
-- 신규 메시지 수신 시 Firebase Cloud Messaging 기반 알림 발송
-- 알림 클릭 시 해당 채팅방으로 즉시 이동하도록 딥링크 구성
-
----
-
-## 📊 Results
-
-| 구분                  | 평균 속도     | 안정성 (지터)          | UX 등급                   |
-| :-------------------- | :------------ | :--------------------- | :------------------------ |
-| **Firestore (Cloud)** | **~286.74ms** | 낮음 (최대 535ms)      | 보통 (네트워크 대기 발생) |
-| **SQLite (Local)**    | **~9.24ms**   | **매우 높음 (±1.5ms)** | **최상 (즉각적인 응답)**  |
+- [🔗 InputForm.tsx (선언적 폼 엔진)](app/shared/ui/form/InputForm.tsx)
+- [🔗 useInputForm (폼 상태 및 검증 훅)](app/shared/ui/form/hooks/useInputForm.ts)
 
 ---
 
 ## 🧰 Tech Stack
 
-### App Framework
-
-- React Native (`@react-native-community/cli`)
-
-### Language
-
-- TypeScript
-
-### State / Data
-
-- React Query (서버 상태 관리)
-- Redux (전역 상태 일부)
-- SQLite (로컬 데이터베이스)
-- Firebase Firestore / FCM
-
-### Backend / Cloud
-
-- Firebase Authentication
-- Firebase Firestore
-- Firebase Cloud Functions (FCM 발송, 관리자 승인 로직)
+- **Frontend**: React Native, TypeScript
+- **State**: React Query, Redux
+- **Database**: SQLite, Firebase Firestore
+- **Backend**: Firebase Cloud Functions, FCM
 
 ---
 
 ## 🗂 Project Structure
 
-<details>
-<summary>Feature-based Architecture 구조 보기</summary>
+도메인(Feature) 단위로 로직을 캡슐화하여 유지보수성을 높인 **Feature-based Architecture**를 채택했습니다.
 
 ```bash
 app
-├─ bootstrap          # 앱 초기화 로직
-├─ features           # 도메인 단위 기능 모듈
-│  ├─ auth
-│  ├─ chat
-│  ├─ group
-│  ├─ notification
-│  └─ user
-├─ navigation         # 네비게이션 구성
-├─ shared             # 공용 레이어 (firebase, sqlite, ui, utils)
-└─ store              # 최소한의 전역 상태
+├─ bootstrap          # Native 연동 및 앱 초기화 (Firebase, SQLite, Sentry 등)
+├─ features           # 도메인 중심의 서비스 로직 및 UI
+│  ├─ chat            # 핵심 채팅 엔진 (Sync Service, Message Hooks, Layered Data)
+│  ├─ auth            # 가입/로그인 및 세션 관리
+│  ├─ notification    # FCM 및 내부 알림 시스템
+│  └─ user            # 프로필 및 유저 컨텍스트
+├─ shared             # 전역 재사용 인프라 및 UI Kit
+│  ├─ sqlite          # Local-First의 핵심인 SQLite SSOT 관리
+│  ├─ firebase        # Firestore Remote 클라이언트
+│  ├─ ui              # 공용 시각 요소 (InputForm 엔진, 공용 버튼 등)
+│  └─ utils           # 시간 변환, 포맷터 등 유틸리티
+├─ navigation         # 권한별 화면 라우팅 정책
+└─ store              # 서버 상태 외의 최소한의 앱 전역 상태(Redux)
 ```
