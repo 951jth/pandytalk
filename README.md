@@ -20,7 +20,7 @@
 
 ## ✨ Core Features & Key Logic
 
-### 1. 스마트 데이터 동기화 (Smart Sync)
+### 1. 스마트 데이터 동기화
 
 서버와 로컬의 데이터를 비교하여 누락된 메시지만 골라 빠르게 동기화합니다. 불필요한 데이터 전송을 줄여 성능을 최적화했습니다.
 
@@ -80,7 +80,7 @@ React Native의 비동기 환경에서 SQLite 데이터가 꼬이는 것을 방�
 
 ### 3. 정량적 성능 최적화
 
-모든 주요 데이터 액션의 레이턴시를 `usePerformanceMeasure`로 정량 측정합니다. 이 데이터를 기반으로 Firestore 직접 호출 대비 SQLite 조회가 **약 31배 빠르다는 수치**를 도출했으며, 성능 병목 없는 아키텍처를 유지하고 있습니다.
+채팅 조회 데이터 액션의 레이턴시를 `usePerformanceMeasure`로 정량 측정합니다. 이 데이터를 기반으로 Firestore 직접 호출 대비 SQLite 조회가 **약 31배 빠르다는 수치**를 도출했으며, 성능 병목 없는 아키텍처를 유지하고 있습니다.
 
 - [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
 
