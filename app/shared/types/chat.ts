@@ -1,5 +1,12 @@
 import type {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 import type {User} from './auth'
+
+export const PANDY_AI_BOT = {
+  uid: 'pandytalk_ai_bot',
+  name: '팬디봇 🤖',
+  profilePic: 'https://cdn-icons-png.flaticon.com/512/4712/4712010.png', // 임시 봇 프로필 이미지
+}
+
 export type ServerTime =
   | FirebaseFirestoreTypes.FieldValue
   | FirebaseFirestoreTypes.Timestamp
@@ -7,7 +14,7 @@ export interface ChatMessage {
   id: string
   senderId: string
   text?: string
-  type: 'text' | 'image' | 'file'
+  type: 'text' | 'image' | 'file' | 'ai_text'
   imageUrl?: string
   createdAt: number //sqlite에 저장하기 위해 number 타입으로 변환함
   senderPicURL?: string
@@ -40,7 +47,7 @@ export interface PushMessage extends ChatMessage {
 
 export interface ChatRoom {
   id: string
-  type: 'dm' | 'group'
+  type: 'dm' | 'group' | 'ai'
   createdAt: ServerTime
   members?: string[]
   name?: string // 그룹일 경우만

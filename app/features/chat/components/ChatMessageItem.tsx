@@ -1,5 +1,5 @@
 import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import {Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 
 import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
@@ -34,6 +34,17 @@ export default function ChatMessageItem({
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   const {type} = item
+
+  // 로컬 에셋 이미지를 URI 형태로 변환하여 ImageViewer가 인식할 수 있게 합니다
+  const botImageUri = Image.resolveAssetSource(
+    require('@shared/assets/images/pandybot.png'),
+  ).uri
+
+  const profileUri =
+    type === 'ai_text'
+      ? botImageUri
+      : member?.photoURL || item?.senderPicURL || ''
+
   return (
     <>
       {!hideDate && (
@@ -70,7 +81,7 @@ export default function ChatMessageItem({
             </View>
             {/* 채팅내용 */}
             <View style={styles.myChatBubble}>
-              {type === 'text' && (
+              {(type === 'text' || type === 'ai_text') && (
                 <CopyableText
                   textStyle={{color: COLORS.onPrimary}}
                   value={item?.text ?? '-'}
@@ -95,11 +106,10 @@ export default function ChatMessageItem({
             {!hideProfile && (
               //프로필
               <View style={styles.frame}>
-                {member?.photoURL || !!item?.senderPicURL ? (
+                {profileUri ? (
                   <ImageViewer
-                    images={[
-                      {uri: member?.photoURL ?? item.senderPicURL ?? ''},
-                    ]}
+                    images={[{uri: profileUri}]}
+                    useDownload={type !== 'ai_text'} // 봇 이미지 다운로드는 비활성화
                     imageProps={{
                       resizeMode: 'cover',
                       style: styles.profile,
@@ -122,7 +132,7 @@ export default function ChatMessageItem({
               )}
               {/* 말풍선 */}
               <View style={styles.otherChatBubble}>
-                {type == 'text' && (
+                {(type === 'text' || type === 'ai_text') && (
                   <CopyableText
                     textStyle={{color: COLORS.text}}
                     value={item?.text ?? '-'}

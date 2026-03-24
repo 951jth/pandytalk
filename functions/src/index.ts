@@ -13,6 +13,7 @@
 // firebase functions:log --start "1h"               # 지난 1시간치만
 
 export {sendNewMessageNotification} from './triggers/chats/onNewMessage'
+export {onAiMention} from './triggers/chats/onAiMention'
 export {
   onGroupCreate,
   onGroupMembersUpdate,
