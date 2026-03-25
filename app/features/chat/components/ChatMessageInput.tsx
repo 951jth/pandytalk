@@ -1,5 +1,5 @@
 import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import {Image, StyleSheet, View} from 'react-native'
 import {Chip, IconButton, TextInput} from 'react-native-paper'
 
 import {
@@ -22,6 +22,7 @@ export default function ChatMessageInput({
     isMentionSuggested,
     onMentionPress,
     setIsFocused,
+    mentionLabel,
   } = useChatMessageInput({
     roomInfo,
     targetIds,
@@ -30,18 +31,23 @@ export default function ChatMessageInput({
 
   return (
     <>
-      {isMentionSuggested && (
-        <View style={styles.mentionRow}>
-          <Chip
-            style={styles.mentionChip}
-            textStyle={styles.mentionChipText}
-            onPress={() => onMentionPress('@팬디')}
-            icon="panda">
-            팬디봇 멘션하기 🐼
-          </Chip>
-        </View>
-      )}
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper]}>
+        {isMentionSuggested && (
+          <View style={styles.mentionRow}>
+            <Chip
+              style={styles.mentionChip}
+              textStyle={styles.mentionChipText}
+              onPress={() => onMentionPress('@팬디')}
+              icon={({size}) => (
+                <Image
+                  source={require('@shared/assets/icons/pandy_icon.png')}
+                  style={{width: size, height: size, borderRadius: size / 2}}
+                />
+              )}>
+              {mentionLabel}
+            </Chip>
+          </View>
+        )}
         <View style={[styles.inputContents]}>
           <UploadButton
             onChange={res => onSendMessage('image', res)}
@@ -65,9 +71,9 @@ export default function ChatMessageInput({
             size={25}
             style={styles.sendButton}
             iconColor={COLORS.onPrimary}
-            onPress={() => !loading && onSendMessage('text')} // ✅ 로딩 중 추가 전송 방지
+            onPress={() => !loading && onSendMessage('text')}
             loading={loading}
-            disabled={loading} // ✅ 확실한 비활성화
+            disabled={loading}
           />
         </View>
       </View>
@@ -77,12 +83,15 @@ export default function ChatMessageInput({
 
 const styles = StyleSheet.create({
   inputWrapper: {
+    position: 'relative',
     backgroundColor: COLORS.background,
   },
   mentionRow: {
     paddingHorizontal: 12,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 10,
     flexDirection: 'row',
+    // backgroundColor: 'transparent',
   },
   mentionChip: {
     backgroundColor: COLORS.primary + '20', // primary with transparency

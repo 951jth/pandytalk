@@ -22,6 +22,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
   const nameMaps = {
     dm: {name: findMember?.displayName, image: findMember?.photoURL},
     group: {name: item?.name, image: item?.image},
+    ai: {name: findMember?.displayName, image: findMember?.photoURL},
   }
   const viewByType = nameMaps?.[item?.type]
   const targetId = item?.findMember?.id

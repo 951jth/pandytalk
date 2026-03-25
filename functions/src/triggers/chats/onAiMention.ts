@@ -1,3 +1,4 @@
+import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {OpenAI} from 'openai'
@@ -68,7 +69,7 @@ export const onAiMention = onDocumentCreated(
         senderId: AI_BOT_ID,
         senderName: AI_BOT_NAME,
         seq: newSeq,
-        createdAt: Date.now(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
       }
 
       // 빈 메시지 문서 만들기
@@ -111,18 +112,25 @@ export const onAiMention = onDocumentCreated(
       }
 
       // 3. 스트림 반환 완료 후 최종 메시지 + 방 메타데이터 업데이트 (Batch)
+      const now = admin.firestore.FieldValue.serverTimestamp()
       const finalMessage = {
-        ...initialMessage,
+        seq: newSeq,
         text: aiReplyText,
-        createdAt: Date.now(),
+        senderId: AI_BOT_ID,
+        createdAt: now,
+        type: 'ai_text',
+        imageUrl: '',
       }
 
       const batch = db.batch()
-      batch.update(aiMessageRef, {text: aiReplyText})
+      batch.update(aiMessageRef, {
+        text: aiReplyText,
+        createdAt: now,
+      })
       batch.update(roomRef, {
         lastMessage: finalMessage,
         lastSeq: newSeq,
-        lastMessageAt: Date.now(),
+        lastMessageAt: now,
       })
 
       await batch.commit()

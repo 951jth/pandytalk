@@ -2,11 +2,20 @@ import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMess
 import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
+import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
+
+const MENTION_LABELS = [
+  '팬디봇에게 물어보기 ✨',
+  '팬디랑 수다 떨기 ✨',
+  '오늘의 팬디 소식은? 🐾',
+  '팬디한테 질문하기 💡',
+  '팬디봇 멘션하기 ✨',
+] as const
 
 export type InputMessageParams = {
   text: string
@@ -33,6 +42,25 @@ export const useChatMessageInput = ({
     roomInfo?.id,
   )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
+  const [isFocused, setIsFocused] = useState<boolean>(false)
+  const {isKeyboardVisible} = useKeyboardFocus()
+  const isMentionSuggested =
+    isKeyboardVisible &&
+    isFocused &&
+    !text.includes('@팬디') &&
+    (text === '' || text.endsWith('@') || text.includes('@팬'))
+
+  const mentionLabel = useMemo(() => {
+    return MENTION_LABELS[Math.floor(Math.random() * MENTION_LABELS.length)]
+  }, [isMentionSuggested])
+
+  const onMentionPress = (mention: string) => {
+    if (text.endsWith('@')) {
+      setText(prev => prev + mention.replace('@', '') + ' ')
+    } else {
+      setText(prev => (prev ? prev + ' ' + mention + ' ' : mention + ' '))
+    }
+  }
 
   const isDisabled = (() => {
     if (!roomInfo) return false
@@ -109,21 +137,6 @@ export const useChatMessageInput = ({
     }
   }
 
-  const [isFocused, setIsFocused] = useState<boolean>(false)
-
-  const isMentionSuggested =
-    isFocused &&
-    !text.includes('@팬디') &&
-    (text === '' || text.endsWith('@') || text.includes('@팬'))
-
-  const onMentionPress = (mention: string) => {
-    if (text.endsWith('@')) {
-      setText(prev => prev + mention.replace('@', '') + ' ')
-    } else {
-      setText(prev => (prev ? prev + ' ' + mention + ' ' : mention + ' '))
-    }
-  }
-
   return {
     text,
     setText,
@@ -133,5 +146,6 @@ export const useChatMessageInput = ({
     isMentionSuggested,
     onMentionPress,
     setIsFocused,
+    mentionLabel,
   }
 }

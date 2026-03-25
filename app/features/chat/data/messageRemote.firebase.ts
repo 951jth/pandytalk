@@ -33,7 +33,7 @@ export const messageRemote = {
       const PAGE_SIZE = pageSize ?? 20
       const constraints = [
         seq ? where('seq', '<', seq) : null,
-        orderBy('seq', 'desc'), // ✅ 최신→과거 방향으로 페이지 잘림
+        orderBy('seq', 'desc'),
         limit(PAGE_SIZE),
       ].filter(Boolean)
       const q = query(messagesRef, ...constraints)
