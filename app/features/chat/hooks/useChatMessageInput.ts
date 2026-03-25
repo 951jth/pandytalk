@@ -109,5 +109,29 @@ export const useChatMessageInput = ({
     }
   }
 
-  return {text, setText, onSendMessage, loading, isDisabled}
+  const [isFocused, setIsFocused] = useState<boolean>(false)
+
+  const isMentionSuggested =
+    isFocused &&
+    !text.includes('@팬디') &&
+    (text === '' || text.endsWith('@') || text.includes('@팬'))
+
+  const onMentionPress = (mention: string) => {
+    if (text.endsWith('@')) {
+      setText(prev => prev + mention.replace('@', '') + ' ')
+    } else {
+      setText(prev => (prev ? prev + ' ' + mention + ' ' : mention + ' '))
+    }
+  }
+
+  return {
+    text,
+    setText,
+    onSendMessage,
+    loading,
+    isDisabled,
+    isMentionSuggested,
+    onMentionPress,
+    setIsFocused,
+  }
 }

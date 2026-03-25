@@ -3,7 +3,7 @@ import type {User} from './auth'
 
 export const PANDY_AI_BOT = {
   uid: 'pandytalk_ai_bot',
-  name: '팬디봇 🤖',
+  name: '팬디봇',
   profilePic: 'https://cdn-icons-png.flaticon.com/512/4712/4712010.png', // 임시 봇 프로필 이미지
 }
 

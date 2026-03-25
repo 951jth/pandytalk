@@ -1,6 +1,6 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import {IconButton, TextInput} from 'react-native-paper'
+import {Chip, IconButton, TextInput} from 'react-native-paper'
 
 import {
   useChatMessageInput,
@@ -14,43 +14,86 @@ export default function ChatMessageInput({
   targetIds,
   chatType = 'group',
 }: ChatInputPropTypes) {
-  const {text, setText, onSendMessage, loading} = useChatMessageInput({
+  const {
+    text,
+    setText,
+    onSendMessage,
+    loading,
+    isMentionSuggested,
+    onMentionPress,
+    setIsFocused,
+  } = useChatMessageInput({
     roomInfo,
     targetIds,
     chatType,
   })
 
   return (
-    <View style={[styles.inputContents]}>
-      <UploadButton
-        onChange={res => onSendMessage('image', res)}
-        options={{quality: 0.5}}
-      />
-      <TextInput
-        style={styles.chatTextInput}
-        mode="outlined"
-        contentStyle={styles.chatTextContent}
-        outlineStyle={styles.chatTextOutlined}
-        value={text}
-        onChangeText={setText}
-        multiline={true}
-        dense={true}
-        onSubmitEditing={() => onSendMessage('text')}
-      />
-      <IconButton
-        icon="send"
-        size={25}
-        style={styles.sendButton}
-        iconColor={COLORS.onPrimary}
-        onPress={() => !loading && onSendMessage('text')} // ✅ 로딩 중 추가 전송 방지
-        loading={loading}
-        disabled={loading} // ✅ 확실한 비활성화
-      />
-    </View>
+    <>
+      {isMentionSuggested && (
+        <View style={styles.mentionRow}>
+          <Chip
+            style={styles.mentionChip}
+            textStyle={styles.mentionChipText}
+            onPress={() => onMentionPress('@팬디')}
+            icon="panda">
+            팬디봇 멘션하기 🐼
+          </Chip>
+        </View>
+      )}
+      <View style={styles.inputWrapper}>
+        <View style={[styles.inputContents]}>
+          <UploadButton
+            onChange={res => onSendMessage('image', res)}
+            options={{quality: 0.5}}
+          />
+          <TextInput
+            style={styles.chatTextInput}
+            mode="outlined"
+            contentStyle={styles.chatTextContent}
+            outlineStyle={styles.chatTextOutlined}
+            value={text}
+            onChangeText={setText}
+            multiline={true}
+            dense={true}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            onSubmitEditing={() => onSendMessage('text')}
+          />
+          <IconButton
+            icon="send"
+            size={25}
+            style={styles.sendButton}
+            iconColor={COLORS.onPrimary}
+            onPress={() => !loading && onSendMessage('text')} // ✅ 로딩 중 추가 전송 방지
+            loading={loading}
+            disabled={loading} // ✅ 확실한 비활성화
+          />
+        </View>
+      </View>
+    </>
   )
 }
 
 const styles = StyleSheet.create({
+  inputWrapper: {
+    backgroundColor: COLORS.background,
+  },
+  mentionRow: {
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+    flexDirection: 'row',
+  },
+  mentionChip: {
+    backgroundColor: COLORS.primary + '20', // primary with transparency
+    borderColor: COLORS.primary,
+    borderWidth: 0.5,
+  },
+  mentionChipText: {
+    color: COLORS.primary,
+    fontFamily: 'BMDOHYEON',
+    fontSize: 12,
+  },
   inputContents: {
     backgroundColor: COLORS.background,
     shadowColor: '#000',
@@ -66,7 +109,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    // ✅ 그림자 효과 (iOS + Android 호환)
   },
   chatTextInput: {
     flex: 1,
