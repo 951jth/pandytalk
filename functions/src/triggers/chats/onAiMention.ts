@@ -92,7 +92,7 @@ export const onAiMention = onDocumentCreated(
 
       let aiReplyText = ''
       let lastUpdateTime = Date.now()
-      const UPDATE_INTERVAL = 400 // 800ms 단위로 Firestore 업데이트
+      const UPDATE_INTERVAL = 800 // 800ms 단위로 Firestore 업데이트
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || ''
