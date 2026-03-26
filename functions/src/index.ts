@@ -16,3 +16,6 @@ export {setupTestDummyData} from './triggers/test/setupDummy'
 export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
 // 더미 메시지 생성하기
 export {sendDummyMessages} from './triggers/test/sendDummyMessages'
+
+// 하이브리드 스트리밍 엔드포인트
+export {onAiStream} from './triggers/chats/onAiStream'
