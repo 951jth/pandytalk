@@ -1,10 +1,11 @@
 import type {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 import type {User} from './auth'
 
+import {AI_BOT_ID, AI_BOT_NAME} from '../constants/ai'
+
 export const PANDY_AI_BOT = {
-  uid: 'pandytalk_ai_bot',
-  name: '팬디봇',
-  profilePic: 'https://cdn-icons-png.flaticon.com/512/4712/4712010.png', // 임시 봇 프로필 이미지
+  uid: AI_BOT_ID,
+  name: AI_BOT_NAME,
 }
 
 export type ServerTime =

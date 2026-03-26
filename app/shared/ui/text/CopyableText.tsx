@@ -1,7 +1,9 @@
+import {FONTS} from '@app/shared/constants/font'
 import Clipboard from '@react-native-clipboard/clipboard'
 import React, {useCallback} from 'react'
 import {
   Alert,
+  Platform,
   Text,
   TouchableOpacity,
   type StyleProp,
@@ -15,6 +17,11 @@ type propTypes = {
   textStyle?: StyleProp<TextStyle>
   longPressDelayMs?: number
 }
+
+const androidConfig = {
+  includeFontPadding: false,
+  textAlignVertical: 'center',
+} as const
 
 export default function CopyableText({
   wrapperStyle,
@@ -45,7 +52,18 @@ export default function CopyableText({
       delayLongPress={longPressDelayMs}
       activeOpacity={0.7}
       {...wrapperStyle}>
-      <Text style={textStyle}>{value}</Text>
+      <Text
+        style={[
+          {
+            fontFamily: FONTS.regular,
+            ...Platform.select({
+              android: androidConfig,
+            }),
+          },
+          textStyle,
+        ]}>
+        {value}
+      </Text>
     </TouchableOpacity>
   )
 }

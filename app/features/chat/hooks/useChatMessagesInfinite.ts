@@ -29,7 +29,7 @@ export const useChatMessagesInfinite = (
   const queryKey = ['chatMessages', roomId]
 
   const queryResult = useInfiniteQuery({
-    enabled: !!roomId,
+    enabled: !!roomId && serverLastSeq !== undefined,
     queryKey,
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       try {

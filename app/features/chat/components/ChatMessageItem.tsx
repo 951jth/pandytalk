@@ -3,6 +3,7 @@ import {Image, StyleSheet, View} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 
 import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
+import {AI_BOT_ID, AI_BOT_IMAGE} from '@shared/constants/ai'
 import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@features/chat/hooks/useChatMessageUpsertMutation'
 import COLORS from '@shared/constants/color'
@@ -36,9 +37,7 @@ export default function ChatMessageItem({
   const {type} = item
 
   // 로컬 에셋 이미지를 URI 형태로 변환하여 ImageViewer가 인식할 수 있게 합니다
-  const botImageUri = Image.resolveAssetSource(
-    require('@shared/assets/images/pandybot.png'),
-  ).uri
+  const botImageUri = Image.resolveAssetSource(AI_BOT_IMAGE).uri
 
   const profileUri =
     type === 'ai_text'
