@@ -1,7 +1,5 @@
-
-
-export {sendNewMessageNotification} from './triggers/chats/onNewMessage'
 export {onAiMention} from './triggers/chats/onAiMention'
+export {sendNewMessageNotification} from './triggers/chats/onNewMessage'
 export {
   onGroupCreate,
   onGroupMembersUpdate,
