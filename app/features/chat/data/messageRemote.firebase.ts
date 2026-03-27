@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   where,
 } from '@react-native-firebase/firestore'
+import * as Updates from 'expo-updates'
 
 export const messageRemote = {
   getLatestSeq: async (roomId: string): Promise<number> => {
@@ -64,7 +65,7 @@ export const messageRemote = {
     callback: (docs: ChatMessage[]) => void,
   ) => {
     if (!roomId) return () => {}
-
+    console.log('현재 앱 채널:', Updates.channel)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     const messageQuery = query(
       messagesRef,

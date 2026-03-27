@@ -5,27 +5,32 @@
     "name": "cshchatapp",
     "slug": "cshchatapp",
     "displayName": "cshchatapp",
-    "version": "1.0.0",
+    "version": "1.2.3",
     "orientation": "portrait",
     "icon": "./app/shared/assets/images/icon.png",
     "userInterfaceStyle": "light",
     "updates": {
       "url": "https://u.expo.dev/713adbab-1d3b-4992-9aab-396e9557bd0f"
     },
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cshchatapp"
+      "bundleIdentifier": "com.cshchatapp",
+      "buildNumber": "2"
     },
     "android": {
-      "package": "com.cshchatapp"
+      "package": "com.cshchatapp",
+      "versionCode": 26
     },
     "extra": {
       "eas": {
         "projectId": "713adbab-1d3b-4992-9aab-396e9557bd0f"
       }
     },
-    "owner": "sehooncho"
+    "owner": "sehooncho",
+    "plugins": ["expo-font"]
   }
 }
