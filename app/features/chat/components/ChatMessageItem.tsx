@@ -1,11 +1,11 @@
 import React from 'react'
-import {Image, StyleSheet, View} from 'react-native'
+import {Image, StyleSheet, View, useWindowDimensions} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 
 import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
-import {AI_BOT_ID, AI_BOT_IMAGE} from '@shared/constants/ai'
 import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@features/chat/hooks/useChatMessageUpsertMutation'
+import {AI_BOT_IMAGE} from '@shared/constants/ai'
 import COLORS from '@shared/constants/color'
 import {User} from '@shared/types/auth'
 import type {ChatMessage} from '@shared/types/chat'
@@ -32,6 +32,8 @@ export default function ChatMessageItem({
   member,
 }: ChatMessageItemProps) {
   const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
+  const {width} = useWindowDimensions()
+  const bubbleMaxWidth = width - 145 // 화면 너비의 70%를 최대 너비로 설정
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   const {type} = item
@@ -79,7 +81,7 @@ export default function ChatMessageItem({
               )}
             </View>
             {/* 채팅내용 */}
-            <View style={styles.myChatBubble}>
+            <View style={[styles.myChatBubble, {maxWidth: bubbleMaxWidth}]}>
               {(type === 'text' || type === 'ai_text') && (
                 <CopyableText
                   textStyle={{color: COLORS.onPrimary}}
@@ -130,7 +132,8 @@ export default function ChatMessageItem({
                 </Text>
               )}
               {/* 말풍선 */}
-              <View style={styles.otherChatBubble}>
+              <View
+                style={[styles.otherChatBubble, {maxWidth: bubbleMaxWidth}]}>
                 {(type === 'text' || type === 'ai_text') && (
                   <CopyableText
                     textStyle={{color: COLORS.text}}
@@ -180,7 +183,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     backgroundColor: COLORS.primary,
     position: 'relative',
-    maxWidth: 250,
   },
   otherChatBubble: {
     padding: 10,
@@ -190,7 +192,6 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     backgroundColor: COLORS.background,
     position: 'relative',
-    maxWidth: 250,
   },
   chatDateWrap: {
     alignSelf: 'center',
