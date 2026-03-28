@@ -49,6 +49,7 @@ export const onAiMention = onDocumentCreated(
         id: aiMessageRef.id,
         text: '팬디봇이 입력 중입니다...',
         prompt: prompt, // SSE에서 사용할 실제 질문 보관
+        mentionerId: senderId, // 중복 방지를 위해 질문자 UID 보관
         type: 'ai_text',
         senderId: AI_BOT_ID,
         senderName: AI_BOT_NAME,

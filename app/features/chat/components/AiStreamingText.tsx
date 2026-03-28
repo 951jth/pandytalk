@@ -1,3 +1,4 @@
+import {auth} from '@app/shared/firebase/firestore'
 import type {ChatMessage} from '@app/shared/types/chat'
 import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
@@ -19,18 +20,42 @@ export default function AiStreamingText({
   const isStreamingStatus = item?.status === 'streaming'
   const prompt = item?.prompt ?? '' // onAiMention에서 넣어준 원본 질문 사용
   const messageId = item?.id
+  const currentUid = auth.currentUser?.uid
+  const isOwner = item?.mentionerId === currentUid
 
-  // 훅 내부에서 chatId, prompt가 존재하고 enabled가 true면 자동으로 스트리밍 시작
+  // 상대방용 동적 점 애니메이션 (., .., ...)
+  const [dots, setDots] = React.useState('.')
+
+  React.useEffect(() => {
+    if (!isStreamingStatus || isOwner) return
+
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? '.' : prev + '.'))
+    }, 500)
+
+    return () => clearInterval(interval)
+  }, [isStreamingStatus, isOwner])
+
+  // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
   const {streamedText} = useAiStreamResponse({
     chatId,
     prompt,
     messageId,
-    enabled: isStreamingStatus,
+    enabled: isStreamingStatus && isOwner,
   })
 
-  const displayValue = isStreamingStatus
-    ? streamedText || '팬디봇이 답변을 생성 중입니다...'
-    : item?.text || ''
+  // 2) 스트리밍 상태에 따른 텍스트 결정
+  let displayValue = item?.text || ''
+
+  if (isStreamingStatus) {
+    if (isOwner) {
+      // 본인: 스트리밍 중인 텍스트 표시
+      displayValue = streamedText || `팬디봇이 답변을 생성 중입니다${dots}`
+    } else {
+      // 타인: 동적 대기 메시지 표시 (., .., ...)
+      displayValue = `팬디봇이 답변을 생성 중입니다${dots}`
+    }
+  }
 
   return (
     <View style={styles.container}>
