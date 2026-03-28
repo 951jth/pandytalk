@@ -15,6 +15,7 @@ export interface ChatMessage {
   id: string
   senderId: string
   text?: string
+  prompt?: string // AI 응답 시 원본 질문 보관 (SSE 연동용)
   type: 'text' | 'image' | 'file' | 'ai_text'
   imageUrl?: string
   createdAt: number //sqlite에 저장하기 위해 number 타입으로 변환함
@@ -24,6 +25,7 @@ export interface ChatMessage {
   status?: 'pending' | 'success' | 'failed' | 'streaming'
   roomTitle?: string
   roomUrl?: string
+  skipPush?: boolean
 }
 
 export type ChatMessagesWithUiType = ChatMessage & {

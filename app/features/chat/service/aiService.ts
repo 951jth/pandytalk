@@ -7,17 +7,19 @@ export const aiService = {
    */
   requestAiResponse: async (
     chatId: string,
-    userQuestion: string,
+    prompt: string,
     onChunk: (text: string) => void,
     onDone: () => void,
     onError: (error: any) => void,
+    messageId?: string,
   ) => {
     // 1. 필요한 경우 로컬 상태 기록 또는 전처리 진행 가능
     
     // 2. 리모트 호출
     return aiRemote.streamAiResponse({
       chatId,
-      userQuestion,
+      prompt,
+      messageId,
       onChunk,
       onDone,
       onError,

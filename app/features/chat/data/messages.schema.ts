@@ -68,17 +68,42 @@ export const migrations: Record<number, Migration> = {
 
   // v1 -> v2 : seq 컬럼 추가
   2: tx => {
-    tx.executeSql(`ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;`)
-    tx.executeSql(
-      `CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);`,
-    )
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
+
+      if (!columns.includes('seq')) {
+        console.log('➕ [Migration] Adding "seq" column...')
+        tx.executeSql(`ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;`)
+      } else {
+        console.log('ℹ️ [Migration] "seq" column already exists, skipping.')
+      }
+
+      // 인덱스는 IF NOT EXISTS가 있으므로 안전하게 호출 가능
+      tx.executeSql(
+        `CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);`,
+      )
+    })
   },
   //v2 -> v3 : status 컬럼 추가
   3: tx => {
-    // 뒤에 DEFAULT 'success' 추가!
-    tx.executeSql(
-      `ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'success';`,
-    )
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
+
+      if (!columns.includes('status')) {
+        console.log('➕ [Migration] Adding "status" column...')
+        tx.executeSql(
+          `ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'success';`,
+        )
+      } else {
+        console.log('ℹ️ [Migration] "status" column already exists, skipping.')
+      }
+    })
   },
 }
 

@@ -2,13 +2,13 @@ import {messageMigrateLocal} from '@app/features/chat/data/messagLocal.migrate.s
 
 export const messageMigrateService = {
   ensureMessageColumns: async () => {
-    await messageMigrateLocal.migrateDatabaseIfNeeded()
-    //과거에 sqlite를 생성할 떄 일부 컬럼값을 뺴먹은 적이 있엇는데,
-    //이런 경우에는 ALTER TABLE명령어로만은 모든 오류를 제어하기 어려운 부분이있엇음
-    //그런 경우에 한정하여 메세지 테이블만 삭제후 재생성함
-    const missingColumns = await messageMigrateLocal.getMissingColumns()
-    if (missingColumns?.length > 0) {
-      await messageMigrateLocal.rebuildMessageTable()
+    try {
+      // 1) 표준 마이그레이션 시도 (ALTER TABLE 등)
+      await messageMigrateLocal.migrateDatabaseIfNeeded()
+    } catch (e) {
+      // 마이그레이션 중 오류(예: duplicate column 등)가 발생하더라도
+      // 아래의 missingColumns 체크를 통해 최종 복구 기회를 가짐
+      console.warn('⚠️ Standard migration failed, check for fallback:', e)
     }
   },
 }

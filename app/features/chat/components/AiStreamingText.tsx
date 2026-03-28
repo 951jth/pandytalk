@@ -2,7 +2,7 @@ import type {ChatMessage} from '@app/shared/types/chat'
 import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
 import COLORS from '@shared/constants/color'
-import React, {useEffect} from 'react'
+import React from 'react'
 import {StyleSheet, View} from 'react-native'
 
 interface AiStreamingTextProps {
@@ -16,18 +16,20 @@ export default function AiStreamingText({
   color,
   item,
 }: AiStreamingTextProps) {
-  const {streamedText, startStreaming} = useAiStreamResponse()
   const isStreamingStatus = item?.status === 'streaming'
-  const userQuestion = item?.text ?? ''
+  const prompt = item?.prompt ?? '' // onAiMention에서 넣어준 원본 질문 사용
+  const messageId = item?.id
 
-  useEffect(() => {
-    if (isStreamingStatus && chatId && userQuestion) {
-      startStreaming(chatId, userQuestion)
-    }
-  }, [isStreamingStatus, chatId, userQuestion, startStreaming])
+  // 훅 내부에서 chatId, prompt가 존재하고 enabled가 true면 자동으로 스트리밍 시작
+  const {streamedText} = useAiStreamResponse({
+    chatId,
+    prompt,
+    messageId,
+    enabled: isStreamingStatus,
+  })
 
   const displayValue = isStreamingStatus
-    ? streamedText || '팬디봇이 입력 중입니다...'
+    ? streamedText || '팬디봇이 답변을 생성 중입니다...'
     : item?.text || ''
 
   return (
@@ -35,7 +37,6 @@ export default function AiStreamingText({
       <CopyableText
         value={displayValue}
         textStyle={[styles.text, color ? {color} : {}]}
-        // wrapperStyle={{disabled: isStreamingStatus}}
         disabled={isStreamingStatus}
       />
     </View>

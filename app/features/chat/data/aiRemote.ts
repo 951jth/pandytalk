@@ -3,7 +3,8 @@ import {AI_STREAM_URL} from '@shared/constants/ai'
 
 export interface AiStreamParams {
   chatId: string
-  userQuestion: string
+  prompt: string
+  messageId?: string
   onChunk: (text: string) => void
   onDone: () => void
   onError: (error: any) => void
@@ -16,7 +17,8 @@ export const aiRemote = {
    */
   streamAiResponse: async ({
     chatId,
-    userQuestion,
+    prompt,
+    messageId,
     onChunk,
     onDone,
     onError,
@@ -30,7 +32,8 @@ export const aiRemote = {
         },
         body: JSON.stringify({
           chatId,
-          userQuestion,
+          prompt,
+          messageId,
         }),
       })
 

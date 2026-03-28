@@ -43,25 +43,30 @@ export const messageMigrateLocal = {
                 console.log('📘 Current DB version:', currentVersion)
                 let nextVersion = currentVersion + 1 // 🔥 여기서 +1부터 시작
                 while (nextVersion <= LATEST_DB_VERSION) {
-                  // 🔥 조건 수정
-                  const migrate = migrations[nextVersion] // 다음 버전을 가져옴
+                  const migrate = migrations[nextVersion]
 
                   if (migrate) {
-                    console.log(`🚀 Migrating to version ${nextVersion}...`)
+                    console.log(`🚀 [Migration] Version ${nextVersion - 1} -> ${nextVersion} 시작...`)
                     migrate(tx)
                   } else {
-                    console.warn(`⚠️ No migration found for v${nextVersion}`)
+                    console.warn(`⚠️ [Migration] v${nextVersion}에 대한 정의를 찾을 수 없습니다.`)
                   }
 
                   nextVersion++
                 }
                 // 최종 버전 업데이트
                 if (nextVersion > currentVersion + 1) {
-                  // 마지막에 한 번만 실행해도 됨
-                  tx.executeSql(`PRAGMA user_version = ${LATEST_DB_VERSION};`)
-                  console.log(`✅ DB updated to version ${LATEST_DB_VERSION}`)
+                  tx.executeSql(
+                    `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                    [],
+                    () => {
+                      console.log(
+                        `✅ [Migration] DB updated to version ${LATEST_DB_VERSION}`,
+                      )
+                    },
+                  )
                 } else {
-                  console.log('✅ DB already up to date.')
+                  console.log('✅ [Migration] DB already up to date.')
                 }
               })
             },
