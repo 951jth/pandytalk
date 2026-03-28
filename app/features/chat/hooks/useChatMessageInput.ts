@@ -2,20 +2,14 @@ import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMess
 import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
+import {MENTION_CHUNKS} from '@app/shared/constants/ai'
 import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
-
-const MENTION_LABELS = [
-  '팬디봇에게 물어보기 ✨',
-  '팬디랑 수다 떨기 ✨',
-  '오늘의 팬디 소식은? 🐾',
-  '팬디한테 질문하기 💡',
-  '팬디봇 멘션하기 ✨',
-] as const
+import type {SuggestionItem} from '../components/MentionSuggestion'
 
 export type InputMessageParams = {
   text: string
@@ -38,27 +32,58 @@ export const useChatMessageInput = ({
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
-  const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
-    roomInfo?.id,
-  )
+  const {mutate: sendMessageAndCache, addMessages} =
+    useChatMessageUpsertMutation(roomInfo?.id)
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
   const [isFocused, setIsFocused] = useState<boolean>(false)
   const {isKeyboardVisible} = useKeyboardFocus()
+  const isInitialVisit = useRef<boolean>(true)
   const isMentionSuggested =
     isKeyboardVisible &&
     isFocused &&
     !text.includes('@팬디') &&
-    (text === '' || text.endsWith('@') || text.includes('@팬'))
+    ((isInitialVisit.current && text === '') ||
+      text.endsWith('@') ||
+      text.includes('@팬'))
 
-  const mentionLabel = useMemo(() => {
-    return MENTION_LABELS[Math.floor(Math.random() * MENTION_LABELS.length)]
+  const mentionSuggestions = useMemo(() => {
+    // 1. 고정 문구들(fixed: true) 추출
+    const fixedItems = MENTION_CHUNKS.filter(
+      (item: SuggestionItem) => item.fixed,
+    )
+    // 2. 고정되지 않은 나머지 문구들 추출 및 랜덤 셔플
+    const randomItems = MENTION_CHUNKS.filter(
+      (item: SuggestionItem) => !item.fixed,
+    ).sort(() => 0.5 - Math.random())
+
+    // 3. 고정 문구를 앞에 두고 나머지를 뒤에 붙여서 총 3개 노출
+    return [...fixedItems, ...randomItems].slice(0, 3)
   }, [isMentionSuggested])
 
-  const onMentionPress = (mention: string) => {
+  const onMentionPress = (mentionValue: string) => {
+    isInitialVisit.current = false
+    // 1. @로 끝나는 경우 (예: "안녕 @") -> 마지막 @를 지우고 선택 문구 삽입
     if (text.endsWith('@')) {
-      setText(prev => prev + mention.replace('@', '') + ' ')
-    } else {
-      setText(prev => (prev ? prev + ' ' + mention + ' ' : mention + ' '))
+      setText(prev => prev.slice(0, -1) + mentionValue + ' ')
+    }
+    // 2. 이미 텍스트가 있는데 @팬 등으로 시작하는 중일 때 -> 마지막 단어를 교체
+    else if (text.includes('@')) {
+      const parts = text.split(' ')
+      const lastPart = parts[parts.length - 1]
+      if (lastPart.startsWith('@')) {
+        parts[parts.length - 1] = mentionValue
+        setText(parts.join(' ') + ' ')
+      } else {
+        setText(prev =>
+          prev ? prev + ' ' + mentionValue + ' ' : mentionValue + ' ',
+        )
+      }
+    }
+    // 3. 아무것도 없거나 일반 텍스트 뒤일 때 -> 뒤에 추가
+    else {
+      setText(prev =>
+        prev ? prev + ' ' + mentionValue + ' ' : mentionValue + ' ',
+      )
     }
   }
 
@@ -81,6 +106,7 @@ export const useChatMessageInput = ({
     }
     try {
       const trimmedText = text.trim()
+
       if (type === 'text' && !trimmedText) return
       if (!user?.uid) throw new Error('유저정보 조회 실패')
       setLoading(true)
@@ -128,6 +154,7 @@ export const useChatMessageInput = ({
         createdRoomId: fetchedRoomInfo.id,
       })
       if (type == 'text') setText('')
+      isInitialVisit.current = false
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)
@@ -146,6 +173,6 @@ export const useChatMessageInput = ({
     isMentionSuggested,
     onMentionPress,
     setIsFocused,
-    mentionLabel,
+    mentionSuggestions,
   }
 }

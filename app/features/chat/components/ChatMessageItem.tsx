@@ -2,6 +2,7 @@ import React from 'react'
 import {Image, StyleSheet, View, useWindowDimensions} from 'react-native'
 import {Icon, Text} from 'react-native-paper'
 
+import AiStreamingText from '@features/chat/components/AiStreamingText'
 import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
 import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@features/chat/hooks/useChatMessageUpsertMutation'
@@ -46,6 +47,43 @@ export default function ChatMessageItem({
       ? botImageUri
       : member?.photoURL || item?.senderPicURL || ''
 
+  const renderMessageContent = () => {
+    const textColor = isMine ? COLORS.onPrimary : COLORS.text
+
+    if (type === 'ai_text') {
+      return (
+        <AiStreamingText
+          chatId={roomId ?? ''}
+          color={textColor}
+          item={item}
+        />
+      )
+    }
+
+    if (type === 'text') {
+      return (
+        <CopyableText
+          textStyle={{color: textColor}}
+          value={item?.text ?? '-'}
+        />
+      )
+    }
+
+    if (type === 'image' && item?.imageUrl) {
+      return (
+        <ImageViewer
+          images={[{uri: item?.imageUrl}]}
+          imageProps={{
+            resizeMode: 'cover',
+            style: styles.chatImage,
+          }}
+        />
+      )
+    }
+
+    return null
+  }
+
   return (
     <>
       {!hideDate && (
@@ -82,23 +120,7 @@ export default function ChatMessageItem({
             </View>
             {/* 채팅내용 */}
             <View style={[styles.myChatBubble, {maxWidth: bubbleMaxWidth}]}>
-              {(type === 'text' || type === 'ai_text') && (
-                <CopyableText
-                  textStyle={{color: COLORS.onPrimary}}
-                  value={item?.text ?? '-'}
-                />
-              )}
-              {type == 'image' && item?.imageUrl && (
-                <View>
-                  <ImageViewer
-                    images={[{uri: item?.imageUrl}]}
-                    imageProps={{
-                      resizeMode: 'cover',
-                      style: styles.chatImage,
-                    }}
-                  />
-                </View>
-              )}
+              {renderMessageContent()}
             </View>
           </>
         ) : (
@@ -134,21 +156,7 @@ export default function ChatMessageItem({
               {/* 말풍선 */}
               <View
                 style={[styles.otherChatBubble, {maxWidth: bubbleMaxWidth}]}>
-                {(type === 'text' || type === 'ai_text') && (
-                  <CopyableText
-                    textStyle={{color: COLORS.text}}
-                    value={item?.text ?? '-'}
-                  />
-                )}
-                {type == 'image' && item?.imageUrl && (
-                  <ImageViewer
-                    images={[{uri: item?.imageUrl}]}
-                    imageProps={{
-                      resizeMode: 'cover',
-                      style: styles.chatImage,
-                    }}
-                  />
-                )}
+                {renderMessageContent()}
               </View>
             </View>
             {/* 시간 */}

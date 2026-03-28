@@ -1,6 +1,6 @@
 import React from 'react'
-import {Image, StyleSheet, View} from 'react-native'
-import {Chip, IconButton, TextInput} from 'react-native-paper'
+import {StyleSheet, View} from 'react-native'
+import {IconButton, TextInput} from 'react-native-paper'
 
 import {
   useChatMessageInput,
@@ -8,6 +8,8 @@ import {
 } from '@features/chat/hooks/useChatMessageInput'
 import COLORS from '@shared/constants/color'
 import UploadButton from '@shared/ui/upload/UploadButton'
+
+import MentionSuggestion from './MentionSuggestion'
 
 export default function ChatMessageInput({
   roomInfo,
@@ -22,7 +24,7 @@ export default function ChatMessageInput({
     isMentionSuggested,
     onMentionPress,
     setIsFocused,
-    mentionLabel,
+    mentionSuggestions,
   } = useChatMessageInput({
     roomInfo,
     targetIds,
@@ -32,22 +34,11 @@ export default function ChatMessageInput({
   return (
     <>
       <View style={[styles.inputWrapper]}>
-        {isMentionSuggested && (
-          <View style={styles.mentionRow}>
-            <Chip
-              style={styles.mentionChip}
-              textStyle={styles.mentionChipText}
-              onPress={() => onMentionPress('@팬디')}
-              icon={({size}) => (
-                <Image
-                  source={require('@shared/assets/icons/pandy_icon.png')}
-                  style={{width: size, height: size, borderRadius: size / 2}}
-                />
-              )}>
-              {mentionLabel}
-            </Chip>
-          </View>
-        )}
+        <MentionSuggestion
+          isVisible={isMentionSuggested}
+          suggestions={mentionSuggestions}
+          onPress={onMentionPress}
+        />
         <View style={[styles.inputContents]}>
           <UploadButton
             onChange={res => onSendMessage('image', res)}
@@ -85,23 +76,6 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
     backgroundColor: COLORS.background,
-  },
-  mentionRow: {
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 10,
-    flexDirection: 'row',
-    // backgroundColor: 'transparent',
-  },
-  mentionChip: {
-    backgroundColor: COLORS.primary + '20', // primary with transparency
-    borderColor: COLORS.primary,
-    borderWidth: 0.5,
-  },
-  mentionChipText: {
-    color: COLORS.primary,
-    fontFamily: 'BMDOHYEON',
-    fontSize: 12,
   },
   inputContents: {
     backgroundColor: COLORS.background,

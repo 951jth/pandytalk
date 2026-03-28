@@ -21,7 +21,7 @@ export interface ChatMessage {
   senderPicURL?: string
   senderName?: string
   seq?: number
-  status?: 'pending' | 'success' | 'failed'
+  status?: 'pending' | 'success' | 'failed' | 'streaming'
   roomTitle?: string
   roomUrl?: string
 }
