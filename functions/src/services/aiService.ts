@@ -57,6 +57,51 @@ export const getAiResponseStream = async (
 }
 
 /**
+ * OpenAI API를 통해 도구 호출을 포함한 일반 AI 응답(Full Text)을 반환합니다.
+ * (백그라운드 백업용)
+ */
+export const getAiResponse = async (
+  openai: OpenAI,
+  messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  tools: OpenAI.Chat.Completions.ChatCompletionTool[],
+  searchApiKey: string,
+): Promise<string> => {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages,
+    tools,
+    tool_choice: 'auto',
+  })
+
+  const responseMessage = response.choices[0].message
+
+  if (responseMessage.tool_calls) {
+    const nextMessages = [...messages, responseMessage]
+    for (const toolCall of responseMessage.tool_calls) {
+      if (
+        toolCall.type === 'function' &&
+        toolCall.function.name === 'search_web'
+      ) {
+        const queryParam = JSON.parse(toolCall.function.arguments).query
+        const searchContent = await searchGoogle(queryParam, searchApiKey)
+        nextMessages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: searchContent,
+        })
+      }
+    }
+    const finalResponse = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: nextMessages,
+    })
+    return finalResponse.choices[0].message.content || ''
+  }
+
+  return responseMessage.content || ''
+}
+
+/**
  * Serper (Google Search) API를 사용하여 실시간 정보를 검색합니다.
  */
 export const searchGoogle = async (

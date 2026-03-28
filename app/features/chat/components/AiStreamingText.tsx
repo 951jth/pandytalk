@@ -23,19 +23,6 @@ export default function AiStreamingText({
   const currentUid = auth.currentUser?.uid
   const isOwner = item?.mentionerId === currentUid
 
-  // 상대방용 동적 점 애니메이션 (., .., ...)
-  const [dots, setDots] = React.useState('.')
-
-  React.useEffect(() => {
-    if (!isStreamingStatus || isOwner) return
-
-    const interval = setInterval(() => {
-      setDots(prev => (prev.length >= 3 ? '.' : prev + '.'))
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [isStreamingStatus, isOwner])
-
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
   const {streamedText} = useAiStreamResponse({
     chatId,
@@ -50,10 +37,10 @@ export default function AiStreamingText({
   if (isStreamingStatus) {
     if (isOwner) {
       // 본인: 스트리밍 중인 텍스트 표시
-      displayValue = streamedText || `팬디봇이 답변을 생성 중입니다${dots}`
+      displayValue = streamedText || `팬디봇이 답변을 생성 중입니다...`
     } else {
       // 타인: 동적 대기 메시지 표시 (., .., ...)
-      displayValue = `팬디봇이 답변을 생성 중입니다${dots}`
+      displayValue = `팬디봇이 답변을 생성 중입니다...`
     }
   }
 

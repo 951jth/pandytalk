@@ -14,6 +14,7 @@ export {onUserGroupIdUpdated} from './triggers/users/onUserUpdate'
 
 // --- AI 하이브리드 스트리밍 엔드포인트 ---
 export {onAiStream} from './triggers/chats/onAiStream'
+export {onAiStreamBackup} from './triggers/chats/onAiStreamBackup'
 
 // --- 테스트 전용 함수 ---
 // 더미 그룹 생성하기 (유저포함)

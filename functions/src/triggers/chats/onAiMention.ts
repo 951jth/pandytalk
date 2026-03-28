@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin'
+import {getFunctions} from 'firebase-admin/functions'
 import * as logger from 'firebase-functions/logger'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {OpenAI} from 'openai'
@@ -78,6 +79,24 @@ export const onAiMention = onDocumentCreated(
       logger.info(
         `🤖 팬디봇 메시지 예약 완료: [${chatId}] messageId=${aiMessageRef.id}`,
       )
+
+      // 2. [추가] 질문자가 15초 내에 SSE를 시작하지 않을 경우를 대비한 가상 보험(Cloud Task) 예약
+      try {
+        const queue = getFunctions().taskQueue('onAiStreamBackup')
+        await queue.enqueue(
+          {
+            chatId,
+            messageId: aiMessageRef.id,
+            prompt,
+          },
+          {
+            scheduleDelaySeconds: 15, // 15초 대기 후 체크
+          },
+        )
+        logger.info(`🤖 백업 태스크 예약 완료: ${aiMessageRef.id}`)
+      } catch (err) {
+        logger.error('🤖 백업 태스크 예약 실패', err)
+      }
     } catch (e) {
       logger.error('🤖 팬디봇 트리거 에러', e)
     }
