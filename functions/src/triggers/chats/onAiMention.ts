@@ -6,7 +6,7 @@ import {db, messaging} from '../../core/firebase'
 import {getAiResponseStream} from '../../services/aiService'
 import {sendPushToChatMembers} from '../../utils/fcm'
 
-import {AI_BOT_ID, AI_BOT_NAME, AI_BASE_PROMPT} from '../../constants/ai'
+import {AI_BASE_PROMPT, AI_BOT_ID, AI_BOT_NAME} from '../../constants/ai'
 
 // OpenAI 객체 초기화는 함수 내부에서 진행 (Secret Manager 주입 시점 문제 방지)
 export const onAiMention = onDocumentCreated(
@@ -61,6 +61,7 @@ export const onAiMention = onDocumentCreated(
           senderName: AI_BOT_NAME,
           seq: newSeq,
           createdAt: now,
+          status: 'streaming',
           skipPush: true, // 초기 메시지는 푸시 알림 생략
         }
 
@@ -118,22 +119,10 @@ export const onAiMention = onDocumentCreated(
       )
 
       let aiReplyText = ''
-      let lastUpdateTime = Date.now()
-      const UPDATE_INTERVAL = 800 // 800ms 단위로 Firestore 업데이트
-
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || ''
         if (content) {
           aiReplyText += content
-          const currentTime = Date.now()
-
-          if (currentTime - lastUpdateTime > UPDATE_INTERVAL) {
-            // 주기적으로 Firestore 업데이트 처리
-            await aiMessageRef.update({
-              text: aiReplyText + '...', // 스트림 중간에는 줄임표 표시
-            })
-            lastUpdateTime = currentTime
-          }
         }
       }
 
@@ -148,12 +137,14 @@ export const onAiMention = onDocumentCreated(
         type: 'ai_text' as const,
         imageUrl: '',
         senderName: AI_BOT_NAME,
+        status: 'success' as const,
       }
 
       const batch = db.batch()
       batch.update(aiMessageRef, {
         text: aiReplyText,
         createdAt: finalNow,
+        status: 'success',
       })
       batch.update(roomRef, {
         lastMessage: finalMessage,
