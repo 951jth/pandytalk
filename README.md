@@ -46,6 +46,15 @@ JSON 설정 기반으로 복잡한 폼을 선언적으로 관리하며, 유효�
 복잡한 채팅 비즈니스 로직(메시지 전송, 이미지 업로드, 방 생성 등)을 훅으로 분리하여 관리합니다.
 
 - [🔗 useChatMessageInput (메시지 입력 및 전송 로직)](app/features/chat/hooks/useChatMessageInput.ts)
+- [🔗 MentionSuggestion (AI 봇 멘션 추천)](app/features/chat/components/MentionSuggestion.tsx)
+
+### 5. 하이브리드 AI 스트리밍
+
+AI 봇(@팬디)과의 대화에서 즉각적인 반응(SSE)과 영구적인 기록(Firestore)을 동시에 제공하는 하이브리드 방식을 채택했습니다.
+
+- [🔗 onAiMention (봇 응답 및 데이터 수명 주기 관리)](functions/src/triggers/chats/onAiMention.ts)
+- [🔗 onAiStream (실시간 SSE 스트리밍)](functions/src/triggers/chats/onAiStream.ts)
+- [🔗 AiStreamingText (스트리밍 통합 UI 컴포넌트)](app/features/chat/components/AiStreamingText.tsx)
 
 ---
 
@@ -84,14 +93,44 @@ React Native의 비동기 환경에서 SQLite 데이터가 꼬이는 것을 방�
 
 - [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
 
+### 3. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
+
+단순한 요청-응답 방식이 아니라, 사용자 경험을 극대화하기 위해 **실시간 스트리밍(SSE)**과 **데이터베이스 영속성(Trigger)**을 분리하여 처리합니다.
+
+```mermaid
+sequenceDiagram
+    participant App as Client App
+    participant SSE as onAiStream (HTTP/SSE)
+    participant Firestore as Firestore (Trigger)
+    participant AI as OpenAI / Web Search (Serper)
+
+    App->>Firestore: 1. '@팬디' 멘션 메시지 전송
+    par 실시간 스트리밍 요청
+        App->>SSE: 2. SSE 연결 시도 (POST)
+        SSE->>AI: 3. OpenAI 스트림 요청
+        AI-->>SSE: 응답 청크(Chunk) 전달
+        SSE-->>App: 4. 실시간 글자 단위 출력 (typing effect)
+    and 백그라운드 데이터 처리 (Trigger)
+        Firestore->>Firestore: 5. 'onAiMention' 발화 감지
+        Firestore->>Firestore: 6. '입력 중...' 플레이스홀더 생성
+        Firestore->>AI: 7. OpenAI 최종 응답 획득
+        AI-->>Firestore: 최종 텍스트 응답
+        Firestore->>Firestore: 8. 메시지 본문 업데이트 & 푸시 알림
+    end
+    Note over App: 9. 스트리밍 완료 후 최종 DB 데이터로 전환
+```
+
+- **관점의 분리**: `onAiStream`은 오직 클라이언트의 시각적 경험(실시간 스트리밍)에만 집중하며, `onAiMention`은 데이터의 무결성(DB 저장, 푸시 알림, 시퀀스 번호 관리)을 책임집니다.
+- **웹 검색 엔진 통합**: Serper API를 연동하여 AI가 최신 웹 정보를 검색하고 답변에 반영할 수 있는 Function Calling 기능을 갖추고 있습니다.
+
 ---
 
 ## 🧰 Tech Stack
 
-- **Frontend**: React Native, TypeScript
+- **Frontend**: React Native, TypeScript, UI-Kit (Paper)
 - **State**: React Query, Redux
-- **Database**: SQLite, Firebase Firestore
-- **Backend**: Firebase Cloud Functions, FCM
+- **Database**: SQLite (Local), Firebase Firestore (Remote)
+- **AI/Backend**: OpenAI (GPT-4o), Serper (Search), Firebase Cloud Functions, FCM
 
 ---
 
