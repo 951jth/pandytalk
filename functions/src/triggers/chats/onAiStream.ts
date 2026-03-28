@@ -1,7 +1,7 @@
 import * as logger from 'firebase-functions/logger'
 import {onRequest} from 'firebase-functions/v2/https'
 import {OpenAI} from 'openai'
-import {updateAiResponse} from '../../services/aiChatService'
+import {handleAiError, updateAiResponse} from '../../services/aiChatService'
 import {
   getAiResponseStream,
   getPandibotMessages,
@@ -22,11 +22,10 @@ export const onAiStream = onRequest(
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
+    //prompt는 AI Mention에서 질문한 내용
+    const {chatId, prompt, messageId} = req.body
 
     try {
-      //prompt는 AI Mention에서 질문한 내용이 Prompt에 저장되어 있음
-      const {chatId, prompt, messageId} = req.body
-
       if (!chatId || !prompt) {
         res.write(`data: ${JSON.stringify({error: 'Invalid parameters'})}\n\n`)
         res.end()
@@ -39,6 +38,7 @@ export const onAiStream = onRequest(
       const tools = getPandibotTools()
       const messages = getPandibotMessages(prompt)
 
+      // 스트리밍 응답 생성
       const stream = await getAiResponseStream(
         openai,
         messages,
@@ -69,9 +69,16 @@ export const onAiStream = onRequest(
         })
         logger.info(`✅ SSE 스트리밍 및 공통 서비스 업데이트 완료: ${chatId}`)
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('❌ SSE 스트리밍 에러', error)
-      res.write(`data: ${JSON.stringify({error: 'Internal Server Error'})}\n\n`)
+
+      if (chatId && messageId) {
+        await handleAiError({chatId, messageId, error})
+      }
+
+      res.write(
+        `data: ${JSON.stringify({error: error.message || 'Internal Server Error'})}\n\n`,
+      )
       res.end()
     }
   },

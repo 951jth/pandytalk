@@ -2,7 +2,7 @@ import * as logger from 'firebase-functions/logger'
 import {onTaskDispatched} from 'firebase-functions/v2/tasks'
 import {OpenAI} from 'openai'
 import {db} from '../../core/firebase'
-import {updateAiResponse} from '../../services/aiChatService'
+import {handleAiError, updateAiResponse} from '../../services/aiChatService'
 import {
   getAiResponse,
   getPandibotMessages,
@@ -76,9 +76,15 @@ export const onAiStreamBackup = onTaskDispatched(
       logger.info(
         `[onAiStreamBackup] Successfully completed fallback: ${messageId}`,
       )
-    } catch (err) {
+    } catch (err: any) {
       logger.error(`[onAiStreamBackup] Error:`, err)
-      // 에러 시 재시도하도록 throw
+      
+      // 에러 시 상태 변경
+      if (chatId && messageId) {
+        await handleAiError({chatId, messageId, error: err})
+      }
+
+      // 에러 시 재시도하도록 throw (단, 3회 시도 후엔 종료됨)
       throw err
     }
   },

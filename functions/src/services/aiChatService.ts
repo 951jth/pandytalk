@@ -55,7 +55,7 @@ export async function updateAiResponse(params: {
     }
 
     const batch = db.batch()
-    
+
     // 1. 메시지 문서 업데이트
     batch.update(messageRef, {
       text,
@@ -82,9 +82,38 @@ export async function updateAiResponse(params: {
       createdAt: Date.now(), // 클라이언트용 숫자 타임스탬프
     })
 
-    logger.info(`[aiChatService] Successfully updated AI response: ${messageId}`)
+    logger.info(
+      `[aiChatService] Successfully updated AI response: ${messageId}`,
+    )
   } catch (err) {
-    logger.error(`[aiChatService] Failed to update AI response: ${messageId}`, err)
+    logger.error(
+      `[aiChatService] Failed to update AI response: ${messageId}`,
+      err,
+    )
     throw err
+  }
+}
+
+/**
+ * AI 응답 생성 중 에러 발생 시 상태를 'failed'로 변경합니다.
+ */
+export async function handleAiError(params: {
+  chatId: string
+  messageId: string
+  error?: any
+}) {
+  const {chatId, messageId, error} = params
+  logger.error(`[aiChatService] AI Error Handled for ${messageId}:`, error)
+
+  try {
+    const messageRef = db.doc(`chats/${chatId}/messages/${messageId}`)
+    await messageRef.update({
+      status: 'failed',
+      text: '답변을 생성하는 중에 오류가 발생했습니다. 잠시 후 재시도 해주세요.',
+      error: error?.message || 'Unknown error',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    })
+  } catch (err) {
+    logger.error(`[aiChatService] Critical failure in handleAiError:`, err)
   }
 }
