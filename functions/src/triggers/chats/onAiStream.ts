@@ -1,11 +1,12 @@
-import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
 import {onRequest} from 'firebase-functions/v2/https'
 import {OpenAI} from 'openai'
-import {AI_BASE_PROMPT, AI_BOT_ID, AI_BOT_NAME} from '../../constants/ai'
-import {db, messaging} from '../../core/firebase'
-import {getAiResponseStream} from '../../services/aiService'
-import {sendPushToChatMembers} from '../../utils/fcm'
+import {updateAiResponse} from '../../services/aiChatService'
+import {
+  getAiResponseStream,
+  getPandibotMessages,
+  getPandibotTools,
+} from '../../services/aiService'
 
 /**
  * HTTP SSE 스트리밍을 통해 AI 응답을 즉시 반환하고 Firestore에 저장하는 하이브리드 함수
@@ -34,32 +35,9 @@ export const onAiStream = onRequest(
 
       const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
 
-      // AI 응답 도구 설정 (검색 기능 포함)
-      const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-        {
-          type: 'function',
-          function: {
-            name: 'search_web',
-            description: '실시간 검색이 필요할 때 사용해',
-            parameters: {
-              type: 'object',
-              properties: {
-                query: {type: 'string'},
-              },
-              required: ['query'],
-            },
-          },
-        },
-      ]
-
-      // 시스템 프롬프트 업데이트
-      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-        {
-          role: 'system',
-          content: `${AI_BASE_PROMPT}`,
-        },
-        {role: 'user', content: prompt},
-      ]
+      // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
+      const tools = getPandibotTools()
+      const messages = getPandibotMessages(prompt)
 
       const stream = await getAiResponseStream(
         openai,
@@ -82,47 +60,14 @@ export const onAiStream = onRequest(
       res.write('data: [DONE]\n\n')
       res.end()
 
-      // 4. 스트림 완료 후 Firestore 업데이트 및 푸시 알림 (비동기 처리 가능하도록 res.end() 이후 수행)
+      // 4. 스트림 완료 후 Firestore 업데이트 및 푸시 알림
       if (messageId && aiReplyText) {
-        const roomRef = db.doc(`chats/${chatId}`)
-        const aiMessageRef = roomRef.collection('messages').doc(messageId)
-        const finalNow = admin.firestore.FieldValue.serverTimestamp()
-
-        const finalMessage = {
-          id: messageId,
-          text: aiReplyText,
-          senderId: AI_BOT_ID,
-          senderName: AI_BOT_NAME,
-          createdAt: finalNow,
-          type: 'ai_text' as const,
-          status: 'success' as const,
-        }
-
-        const batch = db.batch()
-        batch.update(aiMessageRef, {
-          text: aiReplyText,
-          createdAt: finalNow,
-          status: 'success',
-        })
-        batch.update(roomRef, {
-          lastMessage: finalMessage,
-          lastMessageAt: finalNow,
-        })
-
-        await batch.commit()
-
-        // 푸시 알림 전송
-        await sendPushToChatMembers(db, messaging, chatId, {
-          id: messageId,
+        await updateAiResponse({
           chatId,
+          messageId,
           text: aiReplyText,
-          type: 'ai_text',
-          senderId: AI_BOT_ID,
-          senderName: AI_BOT_NAME,
-          createdAt: Date.now(),
         })
-
-        logger.info(`✅ SSE 스트리밍 및 Firestore 업데이트 완료: ${chatId}`)
+        logger.info(`✅ SSE 스트리밍 및 공통 서비스 업데이트 완료: ${chatId}`)
       }
     } catch (error) {
       logger.error('❌ SSE 스트리밍 에러', error)

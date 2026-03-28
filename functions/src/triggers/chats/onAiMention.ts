@@ -1,13 +1,11 @@
-import * as admin from 'firebase-admin'
 import {getFunctions} from 'firebase-admin/functions'
 import * as logger from 'firebase-functions/logger'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {OpenAI} from 'openai'
-import {db, messaging} from '../../core/firebase'
-import {getAiResponseStream} from '../../services/aiService'
-import {sendPushToChatMembers} from '../../utils/fcm'
+import {db} from '../../core/firebase'
 
-import {AI_BASE_PROMPT, AI_BOT_ID, AI_BOT_NAME} from '../../constants/ai'
+import {AI_BOT_ID} from '../../constants/ai'
+import {createAiInitialMessage} from '../../services/aiChatService'
 
 // OpenAI 객체 초기화는 함수 내부에서 진행 (Secret Manager 주입 시점 문제 방지)
 export const onAiMention = onDocumentCreated(
@@ -44,21 +42,14 @@ export const onAiMention = onDocumentCreated(
       const aiMessageRef = roomRef.collection('messages').doc()
 
       let newSeq = 0
-      const now = admin.firestore.FieldValue.serverTimestamp()
 
-      const initialMessage = {
+      // 초기 메시지 객체 생성 (공통 서비스 활용)
+      const initialMessage = createAiInitialMessage({
         id: aiMessageRef.id,
-        text: '팬디봇이 입력 중입니다...',
-        prompt: prompt, // SSE에서 사용할 실제 질문 보관
-        mentionerId: senderId, // 중복 방지를 위해 질문자 UID 보관
-        type: 'ai_text',
-        senderId: AI_BOT_ID,
-        senderName: AI_BOT_NAME,
-        seq: 0, // 트랜잭션 내에서 설정됨
-        createdAt: now,
-        status: 'streaming',
-        skipPush: true, // 입력 중 상태는 푸시 생략
-      }
+        prompt,
+        mentionerId: senderId,
+        seq: 0, // 트랜잭션 내에서 업데이트됨
+      })
 
       await db.runTransaction(async tx => {
         const roomSnap = await tx.get(roomRef)
@@ -71,7 +62,7 @@ export const onAiMention = onDocumentCreated(
         tx.set(aiMessageRef, initialMessage)
         tx.update(roomRef, {
           lastSeq: newSeq,
-          lastMessageAt: now,
+          lastMessageAt: initialMessage.createdAt,
           lastMessage: initialMessage,
         })
       })
