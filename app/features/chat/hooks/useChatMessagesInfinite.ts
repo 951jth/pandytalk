@@ -35,7 +35,6 @@ export const useChatMessagesInfinite = (
       try {
         if (!roomId) return initChatPage
         const seq = pageParam
-
         const messages = await messageService.getChatMessages(
           roomId,
           seq,

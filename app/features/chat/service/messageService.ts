@@ -136,15 +136,45 @@ export const messageService = {
       serverLastSeq !== undefined &&
       (localMessages[0]?.seq ?? 0) < serverLastSeq
 
-    // (2) 중간 페이지 조회 시: 현재 커서(seq)와 로컬 첫 데이터 사이에 간극(Gap)이 있는가?
-    const hasGap =
-      cursorSeq !== undefined &&
-      localMessages.length > 0 &&
-      (localMessages?.[0]?.seq || 0) < cursorSeq - 1
+    // (2) 데이터 연속성 검증 (배열 내의 seq 번호들이 하나라도 비어있는지 체크)
+    let hasGapInRange = false
+    if (localMessages.length > 1) {
+      const firstSeq = localMessages[0].seq || 0
+      const lastSeq = localMessages[localMessages.length - 1].seq || 0
+      // DESC 정렬이므로 (첫 번호 - 마지막 번호)가 (길이 - 1)과 같아야 연속적임
+      if (firstSeq - lastSeq !== localMessages.length - 1) {
+        hasGapInRange = true
+      }
+    }
 
-    // (3) 데이터 개수가 부족하거나 Stale하거나 Gap이 있는 경우 서버 호출
+    // (3) 커서(cursorSeq)와 조회된 첫 데이터 사이의 간극 체크
+    const hasCursorGap =
+      cursorSeq !== undefined &&
+      (localMessages.length === 0 ||
+        (localMessages[0]?.seq || 0) < cursorSeq - 1)
+
+    // (4) 데이터 개수가 부족하거나, Stale하거나, 내부에 Gap이 있거나, 커서와 차이가 나면 서버 호출
     const shouldFetchFromServer =
-      (localMessages?.length || 0) < pageSize || isLocalStale || hasGap
+      (localMessages?.length || 0) < pageSize ||
+      isLocalStale ||
+      hasGapInRange ||
+      hasCursorGap
+
+    if (__DEV__ && shouldFetchFromServer) {
+      const reasons = [
+        isLocalStale && '로컬 최신화 필요(Stale)',
+        hasGapInRange && '중간 데이터 누락(Gap)',
+        hasCursorGap && '커서 시작점 누락',
+        (localMessages?.length || 0) < pageSize && '데이터 개수 부족',
+      ].filter(Boolean)
+
+      console.log(`[messageService] 🚀 서버 조회 시도 (${roomId}):`, {
+        reasons,
+        localRange: `${localMessages[localMessages.length - 1]?.seq ?? 0} ~ ${localMessages[0]?.seq ?? 0}`,
+        serverLast: serverLastSeq,
+        cursor: cursorSeq,
+      })
+    }
 
     if (shouldFetchFromServer) {
       try {
