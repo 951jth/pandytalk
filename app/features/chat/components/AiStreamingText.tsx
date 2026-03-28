@@ -1,9 +1,9 @@
 import type {ChatMessage} from '@app/shared/types/chat'
+import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
 import COLORS from '@shared/constants/color'
 import React, {useEffect} from 'react'
 import {StyleSheet, View} from 'react-native'
-import {Text} from 'react-native-paper'
 
 interface AiStreamingTextProps {
   chatId?: string
@@ -26,13 +26,18 @@ export default function AiStreamingText({
     }
   }, [isStreamingStatus, chatId, userQuestion, startStreaming])
 
+  const displayValue = isStreamingStatus
+    ? streamedText || '팬디봇이 입력 중입니다...'
+    : item?.text || ''
+
   return (
     <View style={styles.container}>
-      <Text style={[styles.text, color ? {color} : {}]}>
-        {isStreamingStatus
-          ? streamedText || '팬디봇이 입력 중입니다...'
-          : item?.text || ''}
-      </Text>
+      <CopyableText
+        value={displayValue}
+        textStyle={[styles.text, color ? {color} : {}]}
+        // wrapperStyle={{disabled: isStreamingStatus}}
+        disabled={isStreamingStatus}
+      />
     </View>
   )
 }

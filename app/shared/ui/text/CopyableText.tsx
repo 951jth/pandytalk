@@ -11,9 +11,8 @@ import {
   type TouchableOpacityProps,
 } from 'react-native'
 
-type propTypes = {
+type propTypes = TouchableOpacityProps & {
   value: string
-  wrapperStyle?: TouchableOpacityProps
   textStyle?: StyleProp<TextStyle>
   longPressDelayMs?: number
 }
@@ -24,10 +23,10 @@ const androidConfig = {
 } as const
 
 export default function CopyableText({
-  wrapperStyle,
   textStyle,
   value,
   longPressDelayMs = 300,
+  ...rest
 }: propTypes) {
   const handleCopy = useCallback(() => {
     Alert.alert(
@@ -51,7 +50,7 @@ export default function CopyableText({
       onLongPress={handleCopy}
       delayLongPress={longPressDelayMs}
       activeOpacity={0.7}
-      {...wrapperStyle}>
+      {...rest}>
       <Text
         style={[
           {
