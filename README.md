@@ -3,7 +3,7 @@
 👉 **Live App (Android)**: Google Play – [PandyTalk](https://play.google.com/store/apps/details?id=com.cshchatapp)  
 👉 **Detailed Engineering Log**: [Notion](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
 
-네트워크 지연을 최소화하는 **SQLite 기반 Local-First 아키텍처**와 실시간 웹 검색 기능을 갖춘 **하이브리드 AI 스트리밍(@팬디)** 기술이 결합된 고성능 지능형 채팅 앱입니다.
+**SQLite 기반 Local-First 아키텍처**로 오프라인에서도 끊김 없이, 실시간 웹 검색 기능을 갖춘 **AI 비서(@팬디)와 함께 그룹 및 DM 채팅**을 즐길 수 있는 지능형 채팅 서비스입니다.
 
 ---
 
