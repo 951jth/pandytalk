@@ -66,7 +66,7 @@ export async function updateAiResponse(params: {
     // 2. 채팅방 상단 요약 업데이트
     batch.update(roomRef, {
       lastMessage: finalMessage,
-      // lastMessageAt: now,
+      lastMessageAt: now,
     })
 
     await batch.commit()
