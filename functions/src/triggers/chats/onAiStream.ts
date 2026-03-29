@@ -18,16 +18,22 @@ export const onAiStream = onRequest(
     cors: true,
   },
   async (req, res) => {
+    // 🔍 디버깅용 로그 추가
+    logger.info('[onAiStream] Request Headers:', req.headers)
+    logger.info('[onAiStream] Request Body:', req.body)
+
     // SSE 헤더 설정
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
-    //prompt는 AI Mention에서 질문한 내용
+    
+    // prompt는 AI Mention에서 질문한 내용
     const {chatId, prompt, messageId} = req.body
 
     try {
       if (!chatId || !prompt) {
-        res.write(`data: ${JSON.stringify({error: 'Invalid parameters'})}\n\n`)
+        logger.warn(`⚠️ 필수 파라미터 누락됨: chatId=${chatId}, prompt=${prompt ? '있음' : '없음'}`)
+        res.write(`data: ${JSON.stringify({error: 'Invalid parameters', received: req.body})}\n\n`)
         res.end()
         return
       }

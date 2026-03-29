@@ -14,7 +14,8 @@
     "release-android": "cd android && ./gradlew assembleRelease && cd ..",
     "clean-android": "cd android && ./gradlew clean && cd ..",
     "build:aab": "cd android && ./gradlew bundleRelease && cd ..",
-    "update": "npx -y eas-cli update"
+    "update": "npx -y eas-cli update",
+    "eas-build-pre-install": "cp $GOOGLE_SERVICES_JSON ./android/app/google-services.json"
   },
   "dependencies": {
     "@react-native-camera-roll/camera-roll": "^7.10.2",
