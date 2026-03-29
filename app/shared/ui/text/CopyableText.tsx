@@ -1,4 +1,5 @@
 import {FONTS} from '@app/shared/constants/font'
+import {renderTextWithLinks} from '@app/shared/utils/text'
 import Clipboard from '@react-native-clipboard/clipboard'
 import React, {useCallback} from 'react'
 import {
@@ -61,7 +62,7 @@ export default function CopyableText({
           },
           textStyle,
         ]}>
-        {value}
+        {renderTextWithLinks(value)}
       </Text>
     </TouchableOpacity>
   )
