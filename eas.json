@@ -17,7 +17,7 @@
     },
     "apk": {
       "android": {
-        "buildType": "apk"
+        "buildType": "app-bundle"
       },
       "channel": "main"
     }
