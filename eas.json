@@ -14,6 +14,12 @@
     },
     "production": {
       "channel": "main"
+    },
+    "apk": {
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "main"
     }
   },
   "submit": {
