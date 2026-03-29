@@ -1,24 +1,23 @@
 import {useAuthGate} from '@app/bootstrap/useAuthGate'
+import {useCheckForceUpdate} from '@app/bootstrap/useCheckForceUpdate'
 import useEnsureChatMessagesSchema from '@app/bootstrap/useEnsureChatMessagesSchema'
+import {useFontFaceSetup} from '@app/bootstrap/useFontFaceSetup'
 import {useFCMPush} from '@app/features/notification/hooks/useFCMPush'
 import {useFCMSetup} from '@app/features/notification/hooks/useFCMSetup'
-import {useFonts} from 'expo-font'
 
+/**
+ * 앱 전역 설정을 총괄하는 최상위 부트스트랩 훅
+ */
 export function useRootAppSetup() {
-  const [fontsLoaded] = useFonts({
-    BMDOHYEON: require('../shared/assets/fonts/BMDOHYEON.ttf'),
-    'Pretendard-Regular': require('../shared/assets/fonts/Pretendard-Regular.otf'),
-    'Pretendard-Medium': require('../shared/assets/fonts/Pretendard-Medium.otf'),
-    'Pretendard-SemiBold': require('../shared/assets/fonts/Pretendard-SemiBold.otf'),
-  })
+  const fontsLoaded = useFontFaceSetup() // 1. 폰트 로드
+  useCheckForceUpdate() // 2. 업데이트 체크
+  useFCMSetup() // 3. 푸시 권한 및 토큰
+  useFCMPush() // 4. 푸시 클릭 네비게이션
+  useEnsureChatMessagesSchema() // 5. 로컬 DB 스키마 체크
 
-  useFCMSetup() //푸시알림 권한을 설정하고, 푸시토큰을 데이터셋업
-  useFCMPush() //푸시알림 네비게이트
-  useEnsureChatMessagesSchema() //채팅 메세지 테이블 초기설정/마이그레이션
-  const {shouldShowSplash: authLoading, canEnterApp} = useAuthGate() //유저정보 조회 후 권한확인
+  const {shouldShowSplash: authLoading, canEnterApp} = useAuthGate() // 6. 유저 권한 체크
 
-  //  초기/프로필 로딩 중 스플래시
-  // 관리자 승인 완료 여부
+  // 전체 로딩 상태 및 권한 여부 반환
   const shouldShowSplash = !fontsLoaded || authLoading
   return {shouldShowSplash, canEnterApp}
 }
