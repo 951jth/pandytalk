@@ -73,7 +73,8 @@ export const onAiMention = onDocumentCreated(
 
       // 2. [추가] 질문자가 15초 내에 SSE를 시작하지 않을 경우를 대비한 가상 보험(Cloud Task) 예약
       try {
-        const queue = getFunctions().taskQueue('onAiStreamBackup')
+        // v2 함수의 리전이 default(us-central1)가 아니므로 전체 경로를 명시해야 합니다.
+        const queue = getFunctions().taskQueue('locations/asia-northeast3/functions/onAiStreamBackup')
         await queue.enqueue(
           {
             chatId,

@@ -27,7 +27,11 @@ android {
         minSdk = 24
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode = 28
+<<<<<<< HEAD
         versionName = "1.2.6"
+=======
+        versionName = "1.2.7"
+>>>>>>> cbe5d3bdfe26ab2226bae4a292baec884ee38a83
        ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
         }

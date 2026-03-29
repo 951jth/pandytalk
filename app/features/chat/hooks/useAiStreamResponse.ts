@@ -43,8 +43,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       if (timerRef.current) return
 
       timerRef.current = setInterval(() => {
-        if (cursorRef.current < fullTextRef.current.length) {
-          cursorRef.current += 1
+        //밀려있는 글자 수 계산
+        const backlog = fullTextRef.current.length - cursorRef.current
+        if (backlog > 0) {
+          // 밀린 글자가 많으면 한 번에 여러 글자(최대 5글자)씩, 적으면 1글자씩 출력
+          const charsToAdd = Math.max(1, Math.min(5, Math.ceil(backlog / 10)))
+          cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
         } else if (!isStreaming) {
           if (timerRef.current) {
@@ -69,7 +73,11 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
    * 스트리밍을 수동으로 시작합니다.
    */
   const startStreaming = useCallback(
-    async (targetChatId: string, targetPrompt: string, targetMessageId?: string) => {
+    async (
+      targetChatId: string,
+      targetPrompt: string,
+      targetMessageId?: string,
+    ) => {
       setDisplayText('')
       fullTextRef.current = ''
       cursorRef.current = 0

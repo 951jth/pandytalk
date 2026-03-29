@@ -13,6 +13,7 @@ import {
  * 질문자가 10~15초 이내에 스트리밍을 시작하지 않았을 경우,
  * 서버가 대신 답변을 생성하여 Firestore에 저장합니다.
  */
+//Cloud Tasks 큐(Queue) 와 트리거가 연결된 함수
 export const onAiStreamBackup = onTaskDispatched(
   {
     retryConfig: {
@@ -28,6 +29,11 @@ export const onAiStreamBackup = onTaskDispatched(
       messageId: string
       prompt: string
     }
+
+    // 큐에서 작업이 시작되었음을 가장 먼저 로깅으로 확인
+    logger.info(
+      `[onAiStreamBackup] 🕒 백업 태스크 큐 실행 시작: [chatId=${chatId}] messageId=${messageId}`,
+    )
 
     try {
       // 1. 메시지 현재 상태 확인
@@ -78,7 +84,7 @@ export const onAiStreamBackup = onTaskDispatched(
       )
     } catch (err: any) {
       logger.error(`[onAiStreamBackup] Error:`, err)
-      
+
       // 에러 시 상태 변경
       if (chatId && messageId) {
         await handleAiError({chatId, messageId, error: err})

@@ -49,7 +49,7 @@ export async function updateAiResponse(params: {
       text,
       senderId: AI_BOT_ID,
       senderName: AI_BOT_NAME,
-      createdAt: now,
+      // createdAt: now,
       type: 'ai_text' as const,
       status: 'success' as const,
     }
@@ -59,14 +59,14 @@ export async function updateAiResponse(params: {
     // 1. 메시지 문서 업데이트
     batch.update(messageRef, {
       text,
-      createdAt: now,
+      // createdAt: now,
       status: 'success',
     })
 
     // 2. 채팅방 상단 요약 업데이트
     batch.update(roomRef, {
       lastMessage: finalMessage,
-      lastMessageAt: now,
+      // lastMessageAt: now,
     })
 
     await batch.commit()

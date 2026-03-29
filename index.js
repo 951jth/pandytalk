@@ -3,7 +3,8 @@
  */
 import {AppRegistry} from 'react-native'
 import App from './App' // 또는 './src/App' 위치에 맞게
-import {name as appName} from './app.json'
+import {expo} from './app.json'
+const appName = expo.name
 
 // 🔔 FCM background handler도 여기로 옮겨도 되고
 import {getApp} from '@react-native-firebase/app'
