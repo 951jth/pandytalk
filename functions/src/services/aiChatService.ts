@@ -1,8 +1,8 @@
 import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
-import { AI_BOT_ID, AI_BOT_NAME } from '../constants/ai'
-import { db, messaging } from '../core/firebase'
-import { sendPushToChatMembers } from '../utils/fcm'
+import {AI_BOT_ID, AI_BOT_NAME} from '../constants/ai'
+import {db, messaging} from '../core/firebase'
+import {sendPushToChatMembers} from '../utils/fcm'
 
 /**
  * AI의 초기 "입력 중" 메시지 객체를 생성합니다.
@@ -13,7 +13,7 @@ export function createAiInitialMessage(params: {
   mentionerId: string
   seq: number
 }) {
-  const { id, prompt, mentionerId, seq } = params
+  const {id, prompt, mentionerId, seq} = params
   return {
     id,
     text: '팬디봇이 답변을 생성 중입니다...',
@@ -38,7 +38,7 @@ export async function updateAiResponse(params: {
   text: string
   createdAt?: number | admin.firestore.Timestamp | admin.firestore.FieldValue
 }) {
-  const { chatId, messageId, text } = params
+  const {chatId, messageId, text} = params
 
   try {
     const roomRef = db.doc(`chats/${chatId}`)
@@ -67,7 +67,6 @@ export async function updateAiResponse(params: {
     // 1. 메시지 문서 업데이트
     batch.update(messageRef, {
       text,
-      // createdAt: now,
       status: 'success',
     })
 
@@ -110,7 +109,7 @@ export async function handleAiError(params: {
   messageId: string
   error?: any
 }) {
-  const { chatId, messageId, error } = params
+  const {chatId, messageId, error} = params
   logger.error(`[aiChatService] AI Error Handled for ${messageId}:`, error)
 
   try {

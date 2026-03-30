@@ -43,11 +43,8 @@ export const onAiStreamBackup = onTaskDispatched(
       if (!messageSnap.exists) return
 
       const messageData = messageSnap.data()
-      // 이미 성공했거나 실패 처리되었다면 종료
-      if (
-        messageData?.status === 'success' ||
-        messageData?.status === 'failed'
-      ) {
+      // 이미 성공했거나 처리되었다면 종료
+      if (messageData?.status === 'success') {
         logger.info(`[onAiStreamBackup] Already completed: ${messageId}`)
         return
       }
