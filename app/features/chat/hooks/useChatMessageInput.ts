@@ -57,7 +57,7 @@ export const useChatMessageInput = ({
     ).sort(() => 0.5 - Math.random())
 
     // 3. 고정 문구를 앞에 두고 나머지를 뒤에 붙여서 총 3개 노출
-    return [...fixedItems, ...randomItems].slice(0, 3)
+    return [...fixedItems, ...randomItems].slice(0, 4)
   }, [isMentionSuggested])
 
   const onMentionPress = (mentionValue: string) => {
@@ -87,14 +87,14 @@ export const useChatMessageInput = ({
     }
   }
 
-  const isDisabled = (() => {
+  const isDisabled = useMemo(() => {
     if (!roomInfo) return false
     // DM인데 멤버가 1명 이하인 경우 (상대방 탈퇴 등)
     if (chatType === 'dm' && (roomInfo.members?.length ?? 0) < 2) {
       return true
     }
     return false
-  })()
+  }, [roomInfo, chatType])
 
   const onSendMessage = async (
     type: ChatMessage['type'],
