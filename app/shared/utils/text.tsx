@@ -28,54 +28,65 @@ export const renderTextWithLinks = (text: string) => {
     }
   }
 
-  const parts = text.split(linkRegex)
   const result: (string | React.JSX.Element)[] = []
+  let lastIndex = 0
 
-  // 정규식 그룹이 4개이므로, 각 매칭 세트는 [일반텍스트, G1, G2, G3, G4] 총 5개 요소입니다.
-  for (let i = 0; i < parts.length; i += 5) {
-    // 1. 현재 섹션의 일반 텍스트 추가 (항상 추가)
-    if (parts[i]) {
-      result.push(parts[i])
+  // String.prototype.matchAll을 사용하여 모든 매칭 정보를 순회하며
+  // 일반 텍스트와 링크 컴포넌트를 결과 배열에 교차로 삽입합니다.
+  const matches = Array.from(text.matchAll(linkRegex))
+
+  for (const match of matches) {
+    const start = match.index!
+    const end = start + match[0].length
+
+    // 1. 현재 매칭 이전의 일반 텍스트 추가
+    if (start > lastIndex) {
+      result.push(text.substring(lastIndex, start))
     }
 
-    // 2. 루프 끝이면 종료
-    if (i + 1 >= parts.length) {
-      break
-    }
-
-    // 3. 마크다운 링크 매칭됨 (Group 1)
-    if (parts[i + 1]) {
-      const markdown = parts[i + 1]
-      const url = parts[i + 3]
+    // 2. 링크 처리
+    if (match[1]) {
+      // 마크다운 링크 [라벨](url) 매칭 (Group 1)
+      const label = match[2] // Group 2
+      const url = match[3] // Group 3
       result.push(
         <Text
-          key={`markdown-${i}`}
+          key={`markdown-${start}`}
           style={{ textDecorationLine: 'underline', color: '#0A84FF' }}
           onPress={() => handleLinkPress(url)}
         >
-          {markdown}
+          {label}
         </Text>,
       )
-    }
-    // 4. 일반 URL 매칭됨 (Group 4)
-    else if (parts[i + 4]) {
-      const urlText = parts[i + 4]
+    } else if (match[4]) {
+      // 일반 URL 매칭 (Group 4)
+      const urlText = match[4]
       // 문장부호(. , ! ? ) 등)가 URL 끝에 포함되어 있다면 분리 처리 (URL 클릭 정확도 향상)
       const cleanUrl = urlText.replace(/[.,!?)?]+$/, '')
       const trailing = urlText.substring(cleanUrl.length)
 
       result.push(
-        <React.Fragment key={`url-${i}`}>
-          <Text
-            style={{ textDecorationLine: 'underline', color: '#0A84FF' }}
-            onPress={() => handleLinkPress(cleanUrl)}
-          >
-            {cleanUrl}
-          </Text>
-          {trailing}
-        </React.Fragment>,
+        <Text
+          key={`url-${start}`}
+          style={{ textDecorationLine: 'underline', color: '#0A84FF' }}
+          onPress={() => handleLinkPress(cleanUrl)}
+        >
+          {cleanUrl}
+        </Text>,
       )
+
+      if (trailing) {
+        result.push(trailing)
+      }
     }
+
+    lastIndex = end
   }
+
+  // 3. 마지막 매칭 이후의 남은 텍스트 추가
+  if (lastIndex < text.length) {
+    result.push(text.substring(lastIndex))
+  }
+
   return result
 }
