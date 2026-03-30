@@ -1,12 +1,14 @@
 import React from 'react'
-import {Alert, Linking, Text} from 'react-native'
+import { Alert, Linking, Text } from 'react-native'
 
 /**
  * 텍스트 내의 URL(http/https) 또는 마크다운 형식의 링크([라벨](url))를 추출하여
  * 클릭 가능한 텍스트로 렌더링하는 헬퍼 함수
  */
 export const renderTextWithLinks = (text: string) => {
-  if (!text) return null
+  if (!text) {
+    return null
+  }
 
   // 1. 마크다운 링크 [라벨](url)과 일반 URL을 매칭하는 정규식
   // 캡처 그룹: 1-마크다운전체, 2-라벨, 3-마크다운URL, 4-일반URL
@@ -29,56 +31,51 @@ export const renderTextWithLinks = (text: string) => {
   const parts = text.split(linkRegex)
   const result: (string | React.JSX.Element)[] = []
 
-  let i = 0
-  while (i < parts.length) {
-    const part = parts[i]
-    if (part === undefined) {
-      i++
-      continue
+  // 정규식 그룹이 4개이므로, 각 매칭 세트는 [일반텍스트, G1, G2, G3, G4] 총 5개 요소입니다.
+  for (let i = 0; i < parts.length; i += 5) {
+    // 1. 현재 섹션의 일반 텍스트 추가 (항상 추가)
+    if (parts[i]) {
+      result.push(parts[i])
     }
 
-    // 마크다운 링크 매칭됨 (parts[i+1]이 마크다운 전체 텍스트)
-    if (i + 1 < parts.length && parts[i + 1] && parts[i + 1].startsWith('[')) {
-      const label = parts[i + 2]
+    // 2. 루프 끝이면 종료
+    if (i + 1 >= parts.length) {
+      break
+    }
+
+    // 3. 마크다운 링크 매칭됨 (Group 1)
+    if (parts[i + 1]) {
+      const markdown = parts[i + 1]
       const url = parts[i + 3]
       result.push(
         <Text
-          key={i}
-          style={{textDecorationLine: 'underline', color: '#0A84FF'}}
-          onPress={() => handleLinkPress(url)}>
-          {label}
+          key={`markdown-${i}`}
+          style={{ textDecorationLine: 'underline', color: '#0A84FF' }}
+          onPress={() => handleLinkPress(url)}
+        >
+          {markdown}
         </Text>,
       )
-      i += 4 // 그룹 3개(1,2,3) + 원본 텍스트 건너뜀
     }
-    // 일반 URL 매칭됨 (parts[i+4]가 일반 URL 텍스트)
-    else if (
-      i + 4 < parts.length &&
-      parts[i + 4] &&
-      parts[i + 4].startsWith('http')
-    ) {
+    // 4. 일반 URL 매칭됨 (Group 4)
+    else if (parts[i + 4]) {
       const urlText = parts[i + 4]
       // 문장부호(. , ! ? ) 등)가 URL 끝에 포함되어 있다면 분리 처리 (URL 클릭 정확도 향상)
       const cleanUrl = urlText.replace(/[.,!?)?]+$/, '')
       const trailing = urlText.substring(cleanUrl.length)
 
       result.push(
-        <React.Fragment key={i}>
+        <React.Fragment key={`url-${i}`}>
           <Text
-            style={{textDecorationLine: 'underline', color: '#0A84FF'}}
-            onPress={() => handleLinkPress(cleanUrl)}>
+            style={{ textDecorationLine: 'underline', color: '#0A84FF' }}
+            onPress={() => handleLinkPress(cleanUrl)}
+          >
             {cleanUrl}
           </Text>
           {trailing}
         </React.Fragment>,
       )
-      i += 5 // 그룹 4개(1,2,3,4) + 원본 텍스트 건너뜀
-    } else {
-      // 일반 텍스트
-      if (part) result.push(part)
-      i++
     }
   }
-
   return result
 }
