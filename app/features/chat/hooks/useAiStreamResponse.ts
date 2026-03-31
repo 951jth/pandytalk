@@ -80,12 +80,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetPrompt: string,
       targetMessageId?: string,
     ) => {
-      // 0. 기존에 실행 중인 스트림이 있다면 강제 종료
-      if (streamRef.current) {
-        console.log('[useAiStreamResponse] Aborting previous stream...')
-        streamRef.current.close()
-        streamRef.current = null
-      }
+      // 0. 기존에 실행 중인 스트림이 있다면 강제 종료 (임시 주석 처리)
+      // if (streamRef.current) {
+      //   console.log('[useAiStreamResponse] Aborting previous stream...')
+      //   streamRef.current.close()
+      //   streamRef.current = null
+      // }
 
       setDisplayText('')
       fullTextRef.current = ''
@@ -128,15 +128,15 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     [skipTyping],
   )
 
-  // 1-1. 컴포넌트 언마운트 또는 enabled가 false일 때 스트림 종료 보장
-  useEffect(() => {
-    if (!enabled && streamRef.current) {
-      console.log('[useAiStreamResponse] enabled is false, closing active stream')
-      streamRef.current.close()
-      streamRef.current = null
-      setIsStreaming(false)
-    }
-  }, [enabled])
+  // 1-1. 컴포넌트 언마운트 또는 enabled가 false일 때 스트림 종료 보장 (임시 주석 처리)
+  // useEffect(() => {
+  //   if (!enabled && streamRef.current) {
+  //     console.log('[useAiStreamResponse] enabled is false, closing active stream')
+  //     streamRef.current.close()
+  //     streamRef.current = null
+  //     setIsStreaming(false)
+  //   }
+  // }, [enabled])
 
   useEffect(() => {
     return () => {

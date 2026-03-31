@@ -34,7 +34,7 @@ export const onAiStream = onRequest(
     let aiReplyText = ''
     let isResponseSaved = false // 중복 저장 방지용 플래그
 
-    // 클라이언트 연결 종료 감지
+    // 클라이언트 연결 종료 감지 (임시 주석 처리)
     req.on('close', () => {
       if (!res.writableEnded) {
         logger.info(`🔌 [onAiStream] Client disconnected: ${chatId}`)
@@ -111,7 +111,9 @@ export const onAiStream = onRequest(
               createdAt,
             })
             isResponseSaved = true
-            logger.info(`✅ [onAiStream] Response finalized and saved: ${chatId}`)
+            logger.info(
+              `✅ [onAiStream] Response finalized and saved: ${chatId}`,
+            )
           } catch (saveError) {
             logger.error('❌ Final response save failed', saveError)
           }
@@ -125,7 +127,9 @@ export const onAiStream = onRequest(
               error: new Error('No response generated before stream ended'),
             })
             isResponseSaved = true
-            logger.info(`⚠️ [onAiStream] No text generated, status set to failed: ${chatId}`)
+            logger.info(
+              `⚠️ [onAiStream] No text generated, status set to failed: ${chatId}`,
+            )
           } catch (failError) {
             logger.error('❌ Failed to set error status', failError)
           }
