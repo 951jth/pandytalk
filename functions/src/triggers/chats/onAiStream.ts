@@ -90,32 +90,45 @@ export const onAiStream = onRequest(
       } else {
         logger.error('❌ SSE 스트리밍 에러', error)
 
-        // 텍스트가 아예 생성되지 않은 상태에서 일반 에러가 발생한 경우에만 에러 핸들러 호출
-        if (!aiReplyText && chatId && messageId && !isResponseSaved) {
-          await handleAiError({chatId, messageId, error})
-          isResponseSaved = true
-        }
-
         if (!res.writableEnded) {
           res.write(
-            `data: ${JSON.stringify({error: error.message || 'Internal Server Error'})}\n\n`,
+            `data: ${JSON.stringify({
+              error: error.message || 'Internal Server Error',
+            })}\n\n`,
           )
         }
       }
     } finally {
-      // 1. 여기까지 생성된 텍스트가 있다면 저장 (성공/에러/중단 공통 처리)
-      if (messageId && aiReplyText && !isResponseSaved) {
-        try {
-          await updateAiResponse({
-            chatId,
-            messageId,
-            text: aiReplyText,
-            createdAt,
-          })
-          isResponseSaved = true
-          logger.info(`✅ [onAiStream] Response finalized and saved: ${chatId}`)
-        } catch (saveError) {
-          logger.error('❌ Final response save failed', saveError)
+      // 1. 결과 처리 및 상태 업데이트
+      if (messageId && !isResponseSaved) {
+        if (aiReplyText) {
+          // 생성된 텍스트가 있다면 성공/일부 성공으로 저장
+          try {
+            await updateAiResponse({
+              chatId,
+              messageId,
+              text: aiReplyText,
+              createdAt,
+            })
+            isResponseSaved = true
+            logger.info(`✅ [onAiStream] Response finalized and saved: ${chatId}`)
+          } catch (saveError) {
+            logger.error('❌ Final response save failed', saveError)
+          }
+        } else {
+          // 텍스트가 전혀 없는 상태에서 종료된 경우 (중단 포함)
+          // 상태를 'failed'로 변경하여 클라이언트의 무한 재연결 루프 방지
+          try {
+            await handleAiError({
+              chatId,
+              messageId,
+              error: new Error('No response generated before stream ended'),
+            })
+            isResponseSaved = true
+            logger.info(`⚠️ [onAiStream] No text generated, status set to failed: ${chatId}`)
+          } catch (failError) {
+            logger.error('❌ Failed to set error status', failError)
+          }
         }
       }
 

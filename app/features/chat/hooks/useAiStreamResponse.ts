@@ -128,7 +128,16 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     [skipTyping],
   )
 
-  // 1-1. 컴포넌트 언마운트 시 스트림 종료 보장
+  // 1-1. 컴포넌트 언마운트 또는 enabled가 false일 때 스트림 종료 보장
+  useEffect(() => {
+    if (!enabled && streamRef.current) {
+      console.log('[useAiStreamResponse] enabled is false, closing active stream')
+      streamRef.current.close()
+      streamRef.current = null
+      setIsStreaming(false)
+    }
+  }, [enabled])
+
   useEffect(() => {
     return () => {
       if (streamRef.current) {
@@ -140,22 +149,28 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   }, [])
 
   // 2. 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
+  // !error 조건을 추가하여 에러 발생 시 무한 재연결 루프에 빠지는 것을 방지합니다.
   useEffect(() => {
     if (
       enabled &&
       chatId &&
       prompt &&
       !isStreaming &&
+      !error &&
       fullTextRef.current === ''
     ) {
       startStreaming(chatId, prompt, messageId)
     }
-  }, [enabled, chatId, prompt, messageId, startStreaming, isStreaming])
+  }, [enabled, chatId, prompt, messageId, startStreaming, isStreaming, error])
 
   /**
    * 상태 및 타이머 완전 초기화
    */
   const resetStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.close()
+      streamRef.current = null
+    }
     setDisplayText('')
     fullTextRef.current = ''
     cursorRef.current = 0
