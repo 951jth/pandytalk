@@ -58,7 +58,7 @@ export const onAiStreamBackup = onTaskDispatched(
 
       // 🚨 가시성 및 필터링을 위한 로그 강화: SSE가 완료되지 않아 백업이 개입하는 시점
       logger.warn(
-        `[onAiStreamBackup][REWRITE_TRIGGERED] ⚠️ SSE 미완료로 인한 강제 쓰기 시작 | status: ${currentStatus} | messageId: ${messageId} | chatId: ${chatId}`,
+        `[onAiStreamBackup][REWRITE_TRIGGERED] ⚠️ SSE 미완료로 인한 강제 쓰기 시작 | messageData: ${messageData} | messageId: ${messageId} | chatId: ${chatId}`,
       )
 
       // 2. AI 답변 생성 (Full Text)
