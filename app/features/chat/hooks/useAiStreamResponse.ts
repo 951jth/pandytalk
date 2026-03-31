@@ -34,6 +34,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const cursorRef = useRef<number>(0)
   // 타이핑 애니메이션을 위한 타이머
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 현재 실행 중인 SSE 스트림의 제어 객체 (닫기용)
+  const streamRef = useRef<{ close: () => void } | null>(null)
 
   // 1. 동적 타이핑 효과 (Text-to-UI Animation)
   useEffect(() => {
@@ -78,6 +80,13 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetPrompt: string,
       targetMessageId?: string,
     ) => {
+      // 0. 기존에 실행 중인 스트림이 있다면 강제 종료
+      if (streamRef.current) {
+        console.log('[useAiStreamResponse] Aborting previous stream...')
+        streamRef.current.close()
+        streamRef.current = null
+      }
+
       setDisplayText('')
       fullTextRef.current = ''
       cursorRef.current = 0
@@ -85,7 +94,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       setError(null)
 
       try {
-        await aiService.requestAiResponse(
+        // AI 응답 요청 및 제어 객체 저장
+        const stream = aiService.requestAiResponse(
           targetChatId,
           targetPrompt,
           (chunk: string) => {
@@ -96,22 +106,38 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           },
           () => {
             setIsStreaming(false)
+            streamRef.current = null
           },
           (err: any) => {
             console.error('[useAiStreamResponse] Stream Error:', err)
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
+            streamRef.current = null
           },
           targetMessageId,
         )
+
+        streamRef.current = stream
       } catch (err: any) {
         console.error('[useAiStreamResponse] Init Error:', err)
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
+        streamRef.current = null
       }
     },
     [skipTyping],
   )
+
+  // 1-1. 컴포넌트 언마운트 시 스트림 종료 보장
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        console.log('[useAiStreamResponse] Cleanup: Closing active stream')
+        streamRef.current.close()
+        streamRef.current = null
+      }
+    }
+  }, [])
 
   // 2. 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
   useEffect(() => {

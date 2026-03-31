@@ -14,8 +14,9 @@ export const aiRemote = {
   /**
    * AI 응답 스트림을 시작합니다 (react-native-sse 방식)
    * 전용 라이브러리를 사용하여 SSE 연결의 안정성과 가독성을 높였습니다.
+   * @returns 연결을 닫을 수 있는 함수가 포함된 객체
    */
-  streamAiResponse: async ({
+  streamAiResponse: ({
     chatId,
     prompt,
     messageId,
@@ -62,20 +63,29 @@ export const aiRemote = {
 
       // 3. 에러 발생 이벤트 핸들러
       es.addEventListener('error', (event) => {
-        const errorEvent = event as unknown as {message?: string; xhrStatus?: number; type: string}
-        
+        const errorEvent = event as unknown as {
+          message?: string
+          xhrStatus?: number
+          type: string
+        }
+
         console.error('[aiRemote] SSE Error:', errorEvent)
-        
+
         // 에러 발생 시 연결 종료 및 콜백 호출
         onError(new Error(errorEvent.message || 'SSE connection failed'))
         es.close()
       })
 
-      // 4. 연결 종료(close) 지원을 위해 필요한 경우 es 객체를 직접 다룰 수도 있음
-      // 여기서는 이벤트 기반으로 모든 처리가 완료되도록 설계함
-
+      // 4. 외부에서 연결을 수동으로 닫을 수 있도록 close 함수 반환
+      return {
+        close: () => {
+          console.log('[aiRemote] Manual stream close triggered')
+          es.close()
+        },
+      }
     } catch (error) {
       onError(error)
+      return {close: () => {}}
     }
   },
 }

@@ -1,7 +1,7 @@
 import * as logger from 'firebase-functions/logger'
-import { onRequest } from 'firebase-functions/v2/https'
-import { OpenAI } from 'openai'
-import { handleAiError, updateAiResponse } from '../../services/aiChatService'
+import {onRequest} from 'firebase-functions/v2/https'
+import {OpenAI} from 'openai'
+import {handleAiError, updateAiResponse} from '../../services/aiChatService'
 import {
   getAiResponseStream,
   getPandibotMessages,
@@ -28,7 +28,19 @@ export const onAiStream = onRequest(
     res.setHeader('Connection', 'keep-alive')
 
     // prompt는 AI Mention에서 질문한 내용
-    const { chatId, prompt, messageId, createdAt } = req.body
+    const {chatId, prompt, messageId, createdAt} = req.body
+
+    const controller = new AbortController()
+    let aiReplyText = ''
+    let isResponseSaved = false // 중복 저장 방지용 플래그
+
+    // 클라이언트 연결 종료 감지
+    req.on('close', () => {
+      if (!res.writableEnded) {
+        logger.info(`🔌 [onAiStream] Client disconnected: ${chatId}`)
+        controller.abort()
+      }
+    })
 
     try {
       if (!chatId || !prompt) {
@@ -36,13 +48,13 @@ export const onAiStream = onRequest(
           `⚠️ 필수 파라미터 누락됨: chatId=${chatId}, prompt=${prompt ? '있음' : '없음'}`,
         )
         res.write(
-          `data: ${JSON.stringify({ error: 'Invalid parameters', received: req.body })}\n\n`,
+          `data: ${JSON.stringify({error: 'Invalid parameters', received: req.body})}\n\n`,
         )
         res.end()
         return
       }
 
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_SECRET })
+      const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
@@ -54,43 +66,63 @@ export const onAiStream = onRequest(
         messages,
         tools,
         process.env.SERPER_API_SECRET || '',
+        controller.signal,
       )
 
-      let aiReplyText = ''
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || ''
         if (content) {
           aiReplyText += content
-          // 클라이언트에 실시간 청크 전송
-          res.write(`data: ${JSON.stringify({ text: content })}\n\n`)
+          // 클라이언트가 끊겼을 때 write에서 에러가 발생하면 catch로 이동
+          res.write(`data: ${JSON.stringify({text: content})}\n\n`)
         }
       }
 
-      // 스트림 종료 알림
-      res.write('data: [DONE]\n\n')
-      res.end()
-
-      // 4. 스트림 완료 후 Firestore 업데이트 및 푸시 알림
-      if (messageId && aiReplyText) {
-        await updateAiResponse({
-          chatId,
-          messageId,
-          text: aiReplyText,
-          createdAt,
-        })
-        logger.info(`✅ SSE 스트리밍 및 공통 서비스 업데이트 완료: ${chatId}`)
+      // 스트림 정상 종료 알림
+      if (!res.writableEnded) {
+        res.write('data: [DONE]\n\n')
       }
     } catch (error: any) {
-      logger.error('❌ SSE 스트리밍 에러', error)
+      const isAbortError =
+        error.name === 'AbortError' || error.code === 'ERR_CANCELED'
+      if (isAbortError) {
+        logger.info(`🔌 [onAiStream] Stream aborted: ${chatId}`)
+      } else {
+        logger.error('❌ SSE 스트리밍 에러', error)
 
-      if (chatId && messageId) {
-        await handleAiError({ chatId, messageId, error })
+        // 텍스트가 아예 생성되지 않은 상태에서 일반 에러가 발생한 경우에만 에러 핸들러 호출
+        if (!aiReplyText && chatId && messageId && !isResponseSaved) {
+          await handleAiError({chatId, messageId, error})
+          isResponseSaved = true
+        }
+
+        if (!res.writableEnded) {
+          res.write(
+            `data: ${JSON.stringify({error: error.message || 'Internal Server Error'})}\n\n`,
+          )
+        }
+      }
+    } finally {
+      // 1. 여기까지 생성된 텍스트가 있다면 저장 (성공/에러/중단 공통 처리)
+      if (messageId && aiReplyText && !isResponseSaved) {
+        try {
+          await updateAiResponse({
+            chatId,
+            messageId,
+            text: aiReplyText,
+            createdAt,
+          })
+          isResponseSaved = true
+          logger.info(`✅ [onAiStream] Response finalized and saved: ${chatId}`)
+        } catch (saveError) {
+          logger.error('❌ Final response save failed', saveError)
+        }
       }
 
-      res.write(
-        `data: ${JSON.stringify({ error: error.message || 'Internal Server Error' })}\n\n`,
-      )
-      res.end()
+      // 2. 최종 응답 종료 보장
+      if (!res.writableEnded) {
+        res.end()
+      }
     }
   },
 )

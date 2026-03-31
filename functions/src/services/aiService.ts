@@ -46,14 +46,18 @@ export const getAiResponseStream = async (
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools: OpenAI.Chat.Completions.ChatCompletionTool[],
   searchApiKey: string, // 이제 Google(Serper) 키를 전달받음
+  signal?: AbortSignal, // 중단 신호 추가
 ) => {
   // 1단계: 검색 도구 사용 여부 확인
-  const initialResponse = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages,
-    tools,
-    tool_choice: 'auto',
-  })
+  const initialResponse = await openai.chat.completions.create(
+    {
+      model: 'gpt-4o-mini',
+      messages,
+      tools,
+      tool_choice: 'auto',
+    },
+    { signal },
+  )
 
   const responseMessage = initialResponse.choices[0].message
 
@@ -78,19 +82,25 @@ export const getAiResponseStream = async (
     }
 
     // 도구 호출 결과가 포함된 상태로 최종 스트림 생성
-    return await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: nextMessages,
-      stream: true,
-    })
+    return await openai.chat.completions.create(
+      {
+        model: 'gpt-4o-mini',
+        messages: nextMessages,
+        stream: true,
+      },
+      { signal },
+    )
   }
 
   // 도구 호출이 없는 경우 스트림 반환
-  return await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages,
-    stream: true,
-  })
+  return await openai.chat.completions.create(
+    {
+      model: 'gpt-4o-mini',
+      messages,
+      stream: true,
+    },
+    { signal },
+  )
 }
 
 /**
