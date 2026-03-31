@@ -5,22 +5,23 @@ import {AI_BASE_PROMPT} from '../constants/ai'
 /**
  * 팬디봇이 사용할 수 있는 AI 도구(Function Calling) 목록을 반환합니다.
  */
-export const getPandibotTools = (): OpenAI.Chat.Completions.ChatCompletionTool[] => [
-  {
-    type: 'function',
-    function: {
-      name: 'search_web',
-      description: '실시간 검색이 필요할 때 사용해',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: {type: 'string'},
+export const getPandibotTools =
+  (): OpenAI.Chat.Completions.ChatCompletionTool[] => [
+    {
+      type: 'function',
+      function: {
+        name: 'search_web',
+        description: '실시간 검색이 필요할 때 사용해',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {type: 'string'},
+          },
+          required: ['query'],
         },
-        required: ['query'],
       },
     },
-  },
-]
+  ]
 
 /**
  * 팬디봇의 시스템 프롬프트가 포함된 메시지 리스트를 반환합니다.
@@ -46,18 +47,14 @@ export const getAiResponseStream = async (
   messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   tools: OpenAI.Chat.Completions.ChatCompletionTool[],
   searchApiKey: string, // 이제 Google(Serper) 키를 전달받음
-  signal?: AbortSignal, // 중단 신호 추가
 ) => {
   // 1단계: 검색 도구 사용 여부 확인
-  const initialResponse = await openai.chat.completions.create(
-    {
-      model: 'gpt-4o-mini',
-      messages,
-      tools,
-      tool_choice: 'auto',
-    },
-    { signal },
-  )
+  const initialResponse = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages,
+    tools,
+    tool_choice: 'auto',
+  })
 
   const responseMessage = initialResponse.choices[0].message
 
@@ -82,25 +79,19 @@ export const getAiResponseStream = async (
     }
 
     // 도구 호출 결과가 포함된 상태로 최종 스트림 생성
-    return await openai.chat.completions.create(
-      {
-        model: 'gpt-4o-mini',
-        messages: nextMessages,
-        stream: true,
-      },
-      { signal },
-    )
+    return await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: nextMessages,
+      stream: true,
+    })
   }
 
   // 도구 호출이 없는 경우 스트림 반환
-  return await openai.chat.completions.create(
-    {
-      model: 'gpt-4o-mini',
-      messages,
-      stream: true,
-    },
-    { signal },
-  )
+  return await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages,
+    stream: true,
+  })
 }
 
 /**

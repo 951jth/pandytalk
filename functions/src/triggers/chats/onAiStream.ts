@@ -66,7 +66,6 @@ export const onAiStream = onRequest(
         messages,
         tools,
         process.env.SERPER_API_SECRET || '',
-        controller.signal,
       )
 
       for await (const chunk of stream) {
