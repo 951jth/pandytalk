@@ -35,7 +35,11 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   // 타이핑 애니메이션을 위한 타이머
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // 현재 실행 중인 SSE 스트림의 제어 객체 (닫기용)
-  const streamRef = useRef<{ close: () => void } | null>(null)
+  const streamRef = useRef<{close: () => void} | null>(null)
+  // 중복된 messageId 시작을 방지하기 위한 Ref
+  const lastStartedIdRef = useRef<string | null>(null)
+  // startStreaming 함수가 실행 중인지 여부를 동기적으로 확인하기 위한 Ref
+  const isInitiatingRef = useRef<boolean>(false)
 
   // 1. 동적 타이핑 효과 (Text-to-UI Animation)
   useEffect(() => {
@@ -80,12 +84,22 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetPrompt: string,
       targetMessageId?: string,
     ) => {
-      // 0. 기존에 실행 중인 스트림이 있다면 강제 종료 (임시 주석 처리)
-      // if (streamRef.current) {
-      //   console.log('[useAiStreamResponse] Aborting previous stream...')
-      //   streamRef.current.close()
-      //   streamRef.current = null
-      // }
+      // 0. 동기적 중복 호출 방지 및 락킹
+      if (isInitiatingRef.current) return
+      if (lastStartedIdRef.current === targetMessageId && streamRef.current) {
+        console.log('[useAiStreamResponse] Already streaming for this messageId:', targetMessageId)
+        return
+      }
+
+      isInitiatingRef.current = true
+      lastStartedIdRef.current = targetMessageId || null
+
+      // 0-1. 기존에 실행 중인 스트림이 있다면 강제 종료 (다른 messageId일 때만 실행되어야 함)
+      if (streamRef.current) {
+        console.log('[useAiStreamResponse] Aborting previous stream to start new one...')
+        streamRef.current.close()
+        streamRef.current = null
+      }
 
       setDisplayText('')
       fullTextRef.current = ''
@@ -123,20 +137,24 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
         streamRef.current = null
+        lastStartedIdRef.current = null // 에러 시 다시 시도할 수 있도록 초기화
+      } finally {
+        isInitiatingRef.current = false
       }
     },
     [skipTyping],
   )
 
-  // 1-1. 컴포넌트 언마운트 또는 enabled가 false일 때 스트림 종료 보장 (임시 주석 처리)
-  // useEffect(() => {
-  //   if (!enabled && streamRef.current) {
-  //     console.log('[useAiStreamResponse] enabled is false, closing active stream')
-  //     streamRef.current.close()
-  //     streamRef.current = null
-  //     setIsStreaming(false)
-  //   }
-  // }, [enabled])
+  // 1-1. 컴포넌트 언마운트 또는 enabled가 false일 때 스트림 종료 보장
+  useEffect(() => {
+    if (!enabled && streamRef.current) {
+      console.log('[useAiStreamResponse] enabled is false, closing active stream')
+      streamRef.current.close()
+      streamRef.current = null
+      setIsStreaming(false)
+      lastStartedIdRef.current = null // 명시적 종료 시 초기화
+    }
+  }, [enabled])
 
   useEffect(() => {
     return () => {
@@ -149,19 +167,20 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   }, [])
 
   // 2. 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
-  // !error 조건을 추가하여 에러 발생 시 무한 재연결 루프에 빠지는 것을 방지합니다.
+  // 오직 messageId가 변경되거나 enabled가 전환될 때만 체크합니다.
   useEffect(() => {
     if (
       enabled &&
       chatId &&
       prompt &&
-      !isStreaming &&
-      !error &&
+      messageId &&
+      lastStartedIdRef.current !== messageId &&
       fullTextRef.current === ''
     ) {
+      console.log('[useAiStreamResponse] Triggering startStreaming for:', messageId)
       startStreaming(chatId, prompt, messageId)
     }
-  }, [enabled, chatId, prompt, messageId, startStreaming, isStreaming, error])
+  }, [enabled, chatId, prompt, messageId, startStreaming])
 
   /**
    * 상태 및 타이머 완전 초기화

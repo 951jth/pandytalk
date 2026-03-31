@@ -23,6 +23,9 @@ export default function AiStreamingText({
   const currentUid = auth.currentUser?.uid
   const isOwner = item?.mentionerId === currentUid
 
+  // [DEBUG] 스트리밍 상태 모니터링
+  console.log(`[AiStreamingText] Render: ${messageId} | status: ${item?.status} | enabled: ${isStreamingStatus && isOwner}`)
+
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
   const {streamedText} = useAiStreamResponse({
     chatId,
