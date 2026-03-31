@@ -2,7 +2,7 @@
   "name": "cshchatapp",
   "version": "1.2.7",
   "private": true,
-  "main": "index.js",
+  "main": "index.tsx",
   "scripts": {
     "android": "react-native run-android --appId com.cshchatapp.debug",
     "android:custom": "react-native run-android --deviceId emulator-5554",
@@ -10,7 +10,7 @@
     "start": "react-native start",
     "lint": "eslint .",
     "test": "jest",
-    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
+    "bundle-android": "react-native bundle --platform android --dev false --entry-file index.tsx --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
     "release-android": "cd android && ./gradlew assembleRelease && cd ..",
     "clean-android": "cd android && ./gradlew clean && cd ..",
     "build:aab": "cd android && ./gradlew bundleRelease && cd ..",

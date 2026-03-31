@@ -43,16 +43,23 @@ export const onAiStreamBackup = onTaskDispatched(
       if (!messageSnap.exists) return
 
       const messageData = messageSnap.data()
+      const currentStatus = messageData?.status || 'unknown'
+
       // 이미 성공했거나 실패 처리되었다면 종료
       if (
         messageData?.status === 'success' ||
         messageData?.status === 'failed'
       ) {
-        logger.info(`[onAiStreamBackup] Already completed: ${messageId}`)
+        logger.info(
+          `[onAiStreamBackup] ✅ Already completed: ${messageId} (status=${currentStatus})`,
+        )
         return
       }
 
-      logger.info(`[onAiStreamBackup] Fallback starting for: ${messageId}`)
+      // 🚨 가시성 및 필터링을 위한 로그 강화: SSE가 완료되지 않아 백업이 개입하는 시점
+      logger.warn(
+        `[onAiStreamBackup][REWRITE_TRIGGERED] ⚠️ SSE 미완료로 인한 강제 쓰기 시작 | status: ${currentStatus} | messageId: ${messageId} | chatId: ${chatId}`,
+      )
 
       // 2. AI 답변 생성 (Full Text)
       const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
@@ -80,7 +87,7 @@ export const onAiStreamBackup = onTaskDispatched(
       })
 
       logger.info(
-        `[onAiStreamBackup] Successfully completed fallback: ${messageId}`,
+        `[onAiStreamBackup][REWRITE_COMPLETED] ✅ 백업으로 답변 생성 및 업데이트 완료: ${messageId}`,
       )
     } catch (err: any) {
       logger.error(`[onAiStreamBackup] Error:`, err)

@@ -60,7 +60,7 @@ export async function updateAiResponse(params: {
     batch.update(messageRef, {
       text,
       // createdAt: now,
-      status: 'success',
+      status: 'success' as const,
     })
 
     // 2. 채팅방 상단 요약 업데이트
