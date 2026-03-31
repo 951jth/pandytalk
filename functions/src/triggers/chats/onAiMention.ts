@@ -1,7 +1,6 @@
 import {getFunctions} from 'firebase-admin/functions'
 import * as logger from 'firebase-functions/logger'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
-import {OpenAI} from 'openai'
 import {db} from '../../core/firebase'
 
 import {AI_BOT_ID} from '../../constants/ai'
@@ -16,8 +15,6 @@ export const onAiMention = onDocumentCreated(
   },
   async event => {
     try {
-      // 바꾼 시크릿 변수명 지정하여 객체 생성
-      const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
       const message = event.data?.data()
       const chatId = event.params.chatId as string
 
@@ -74,7 +71,9 @@ export const onAiMention = onDocumentCreated(
       // 2. [추가] 질문자가 15초 내에 SSE를 시작하지 않을 경우를 대비한 가상 보험(Cloud Task) 예약
       try {
         // v2 함수의 리전이 default(us-central1)가 아니므로 전체 경로를 명시해야 합니다.
-        const queue = getFunctions().taskQueue('locations/asia-northeast3/functions/onAiStreamBackup')
+        const queue = getFunctions().taskQueue(
+          'locations/asia-northeast3/functions/onAiStreamBackup',
+        )
         await queue.enqueue(
           {
             chatId,
@@ -82,7 +81,7 @@ export const onAiMention = onDocumentCreated(
             prompt,
           },
           {
-            scheduleDelaySeconds: 15, // 15초 대기 후 체크
+            scheduleDelaySeconds: 30, // 30초 대기 후 체크 (SSE 완료 여부 확인)
           },
         )
         logger.info(`🤖 백업 태스크 예약 완료: ${aiMessageRef.id}`)

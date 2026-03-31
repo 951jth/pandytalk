@@ -53,7 +53,6 @@ export const useChatMessagesInfinite = (
     },
     initialPageParam: undefined,
     staleTime: 5000,
-    refetchOnMount: false,
   })
 
   const resetChatMessages = async () => {

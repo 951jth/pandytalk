@@ -1,0 +1,10 @@
+# Handle line endings automatically for files detected as text 
+# and truly force LF as the canonical line ending in the repository
+* text=auto eol=lf
+
+# Image files should be treated as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary

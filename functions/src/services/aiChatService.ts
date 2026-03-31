@@ -36,6 +36,7 @@ export async function updateAiResponse(params: {
   chatId: string
   messageId: string
   text: string
+  createdAt?: number | admin.firestore.Timestamp | admin.firestore.FieldValue
 }) {
   const {chatId, messageId, text} = params
 
@@ -43,13 +44,20 @@ export async function updateAiResponse(params: {
     const roomRef = db.doc(`chats/${chatId}`)
     const messageRef = roomRef.collection('messages').doc(messageId)
     const now = admin.firestore.FieldValue.serverTimestamp()
+    let createdAt = params.createdAt
+
+    if (!createdAt) {
+      const messageSnap = await messageRef.get()
+      const messageData = messageSnap.data()
+      createdAt = messageData?.createdAt || now
+    }
 
     const finalMessage = {
       id: messageId,
       text,
       senderId: AI_BOT_ID,
       senderName: AI_BOT_NAME,
-      // createdAt: now,
+      createdAt,
       type: 'ai_text' as const,
       status: 'success' as const,
     }
@@ -66,7 +74,7 @@ export async function updateAiResponse(params: {
     // 2. 채팅방 상단 요약 업데이트
     batch.update(roomRef, {
       lastMessage: finalMessage,
-      // lastMessageAt: now,
+      lastMessageAt: createdAt,
     })
 
     await batch.commit()
@@ -114,6 +122,6 @@ export async function handleAiError(params: {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     })
   } catch (err) {
-    logger.error(`[aiChatService] Critical failure in handleAiError:`, err)
+    logger.error('[aiChatService] Critical failure in handleAiError:', err)
   }
 }

@@ -1,7 +1,7 @@
 import * as logger from 'firebase-functions/logger'
-import {onRequest} from 'firebase-functions/v2/https'
-import {OpenAI} from 'openai'
-import {handleAiError, updateAiResponse} from '../../services/aiChatService'
+import { onRequest } from 'firebase-functions/v2/https'
+import { OpenAI } from 'openai'
+import { handleAiError, updateAiResponse } from '../../services/aiChatService'
 import {
   getAiResponseStream,
   getPandibotMessages,
@@ -18,21 +18,31 @@ export const onAiStream = onRequest(
     cors: true,
   },
   async (req, res) => {
+    // 🔍 디버깅용 로그 추가
+    logger.info('[onAiStream] Request Headers:', req.headers)
+    logger.info('[onAiStream] Request Body:', req.body)
+
     // SSE 헤더 설정
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
-    //prompt는 AI Mention에서 질문한 내용
-    const {chatId, prompt, messageId} = req.body
+
+    // prompt는 AI Mention에서 질문한 내용
+    const { chatId, prompt, messageId, createdAt } = req.body
 
     try {
       if (!chatId || !prompt) {
-        res.write(`data: ${JSON.stringify({error: 'Invalid parameters'})}\n\n`)
+        logger.warn(
+          `⚠️ 필수 파라미터 누락됨: chatId=${chatId}, prompt=${prompt ? '있음' : '없음'}`,
+        )
+        res.write(
+          `data: ${JSON.stringify({ error: 'Invalid parameters', received: req.body })}\n\n`,
+        )
         res.end()
         return
       }
 
-      const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_SECRET })
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
@@ -52,7 +62,7 @@ export const onAiStream = onRequest(
         if (content) {
           aiReplyText += content
           // 클라이언트에 실시간 청크 전송
-          res.write(`data: ${JSON.stringify({text: content})}\n\n`)
+          res.write(`data: ${JSON.stringify({ text: content })}\n\n`)
         }
       }
 
@@ -66,6 +76,7 @@ export const onAiStream = onRequest(
           chatId,
           messageId,
           text: aiReplyText,
+          createdAt,
         })
         logger.info(`✅ SSE 스트리밍 및 공통 서비스 업데이트 완료: ${chatId}`)
       }
@@ -73,11 +84,11 @@ export const onAiStream = onRequest(
       logger.error('❌ SSE 스트리밍 에러', error)
 
       if (chatId && messageId) {
-        await handleAiError({chatId, messageId, error})
+        await handleAiError({ chatId, messageId, error })
       }
 
       res.write(
-        `data: ${JSON.stringify({error: error.message || 'Internal Server Error'})}\n\n`,
+        `data: ${JSON.stringify({ error: error.message || 'Internal Server Error' })}\n\n`,
       )
       res.end()
     }
