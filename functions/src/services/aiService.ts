@@ -71,7 +71,7 @@ export const getAiResponseStream = async (
         const queryParam = JSON.parse(toolCall.function.arguments).query
         // 구글(Serper) 검색 엔진 사용
         const searchContent = await searchGoogle(queryParam, searchApiKey)
-        logger.info(`🔍 검색 결과: ${searchContent}`)
+        logger.info(`🔍 [onAiStream] 검색 결과: ${searchContent}`)
         nextMessages.push({
           role: 'tool',
           tool_call_id: toolCall.id,
@@ -79,7 +79,7 @@ export const getAiResponseStream = async (
         })
       }
     }
-
+    logger.info(`🔍 도구 호출 결과: ${JSON.stringify(nextMessages)}`)
     // 도구 호출 결과가 포함된 상태로 최종 스트림 생성
     return await openai.chat.completions.create({
       model: 'gpt-4o-mini',
