@@ -1,5 +1,5 @@
-import EventSource from 'react-native-sse'
 import {AI_STREAM_URL} from '@shared/constants/ai'
+import EventSource from 'react-native-sse'
 
 export interface AiStreamParams {
   chatId: string
@@ -38,7 +38,7 @@ export const aiRemote = {
       })
 
       // 2. 메시지 수신 이벤트 핸들러
-      es.addEventListener('message', (event) => {
+      es.addEventListener('message', event => {
         if (!event.data) return
 
         if (event.data === '[DONE]') {
@@ -61,11 +61,15 @@ export const aiRemote = {
       })
 
       // 3. 에러 발생 이벤트 핸들러
-      es.addEventListener('error', (event) => {
-        const errorEvent = event as unknown as {message?: string; xhrStatus?: number; type: string}
-        
+      es.addEventListener('error', event => {
+        const errorEvent = event as unknown as {
+          message?: string
+          xhrStatus?: number
+          type: string
+        }
+
         console.error('[aiRemote] SSE Error:', errorEvent)
-        
+
         // 에러 발생 시 연결 종료 및 콜백 호출
         onError(new Error(errorEvent.message || 'SSE connection failed'))
         es.close()
@@ -73,7 +77,6 @@ export const aiRemote = {
 
       // 4. 연결 종료(close) 지원을 위해 필요한 경우 es 객체를 직접 다룰 수도 있음
       // 여기서는 이벤트 기반으로 모든 처리가 완료되도록 설계함
-
     } catch (error) {
       onError(error)
     }

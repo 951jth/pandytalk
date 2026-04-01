@@ -5,22 +5,23 @@ import {AI_BASE_PROMPT} from '../constants/ai'
 /**
  * 팬디봇이 사용할 수 있는 AI 도구(Function Calling) 목록을 반환합니다.
  */
-export const getPandibotTools = (): OpenAI.Chat.Completions.ChatCompletionTool[] => [
-  {
-    type: 'function',
-    function: {
-      name: 'search_web',
-      description: '실시간 검색이 필요할 때 사용해',
-      parameters: {
-        type: 'object',
-        properties: {
-          query: {type: 'string'},
+export const getPandibotTools =
+  (): OpenAI.Chat.Completions.ChatCompletionTool[] => [
+    {
+      type: 'function',
+      function: {
+        name: 'search_web',
+        description: '실시간 검색이 필요할 때 사용해',
+        parameters: {
+          type: 'object',
+          properties: {
+            query: {type: 'string'},
+          },
+          required: ['query'],
         },
-        required: ['query'],
       },
     },
-  },
-]
+  ]
 
 /**
  * 팬디봇의 시스템 프롬프트가 포함된 메시지 리스트를 반환합니다.
