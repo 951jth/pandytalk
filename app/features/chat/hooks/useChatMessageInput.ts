@@ -6,7 +6,7 @@ import {MENTION_CHUNKS} from '@app/shared/constants/ai'
 import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useMemo, useRef, useState} from 'react'
+import {useMemo, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
 import type {SuggestionItem} from '../components/MentionSuggestion'
@@ -37,14 +37,12 @@ export const useChatMessageInput = ({
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
   const [isFocused, setIsFocused] = useState<boolean>(false)
   const {isKeyboardVisible} = useKeyboardFocus()
-  const isInitialVisit = useRef<boolean>(true)
+  // const isInitialVisit = useRef<boolean>(true)
   const isMentionSuggested =
     isKeyboardVisible &&
     isFocused &&
     !text.includes('@팬디') &&
-    ((isInitialVisit.current && text === '') ||
-      text.endsWith('@') ||
-      text.includes('@팬'))
+    (text === '' || text.endsWith('@') || text.includes('@팬'))
 
   const mentionSuggestions = useMemo(() => {
     // 1. 고정 문구들(fixed: true) 추출
@@ -61,7 +59,7 @@ export const useChatMessageInput = ({
   }, [isMentionSuggested])
 
   const onMentionPress = (mentionValue: string) => {
-    isInitialVisit.current = false
+    // isInitialVisit.current = false
     // 1. @로 끝나는 경우 (예: "안녕 @") -> 마지막 @를 지우고 선택 문구 삽입
     if (text.endsWith('@')) {
       setText(prev => prev.slice(0, -1) + mentionValue + ' ')
@@ -154,7 +152,7 @@ export const useChatMessageInput = ({
         createdRoomId: fetchedRoomInfo.id,
       })
       if (type == 'text') setText('')
-      isInitialVisit.current = false
+      // isInitialVisit.current = false
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)

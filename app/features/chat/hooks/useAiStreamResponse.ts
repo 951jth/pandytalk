@@ -6,23 +6,16 @@ export interface UseAiStreamOptions {
   prompt?: string
   messageId?: string
   enabled?: boolean
-  typingSpeed?: number // 각 글자별 출력 간격 (ms)
-  skipTyping?: boolean // 타이핑 효과 없이 즉시 출력할지 여부
+  // typingSpeed?: number // [비교용] 각 글자별 출력 간격 (ms)
+  // skipTyping?: boolean // [비교용] 타이핑 효과 없이 즉시 출력할지 여부
 }
 
 /**
  * AI 응답 스트리밍 및 동적 렌더링을 위한 커스텀 훅
- * SSE로부터 수신된 원본 텍스트를 담아둔 뒤, 자연스러운 타이핑 효과를 통해 화면에 출력합니다.
+ * SSE로부터 수신된 텍스트를 즉시 화면에 출력합니다.
  */
 export const useAiStreamResponse = (params: UseAiStreamOptions) => {
-  const {
-    chatId,
-    prompt,
-    messageId,
-    enabled = true,
-    typingSpeed = 20,
-    skipTyping = false,
-  } = params
+  const {chatId, prompt, messageId, enabled = true} = params
 
   const [displayText, setDisplayText] = useState<string>('') // 화면에 실시간으로 보여줄 텍스트
   const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 중 여부
@@ -30,23 +23,22 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
   // 실제 서버로부터 수신된 모든 텍스트 원본 (불변성 유지를 위해 ref 사용)
   const fullTextRef = useRef<string>('')
-  // 현재까지 화면에 출력된 텍스트의 누적 길이
+
+  /* [비교용] 타이핑 애니메이션 관련 Refs 및 효과
+   */
+
   const cursorRef = useRef<number>(0)
-  // 타이핑 애니메이션을 위한 타이머
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // 1. 동적 타이핑 효과 (Text-to-UI Animation)
   useEffect(() => {
-    if (skipTyping) return
+    // if (skipTyping) return
 
     const startTyping = () => {
       if (timerRef.current) return
 
       timerRef.current = setInterval(() => {
-        //밀려있는 글자 수 계산
         const backlog = fullTextRef.current.length - cursorRef.current
         if (backlog > 0) {
-          // 밀린 글자가 많으면 한 번에 여러 글자(최대 5글자)씩, 적으면 1글자씩 출력
           const charsToAdd = Math.max(1, Math.min(5, Math.ceil(backlog / 10)))
           cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
@@ -56,7 +48,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             timerRef.current = null
           }
         }
-      }, typingSpeed)
+      }, 20) // typingSpeed 대용
     }
 
     startTyping()
@@ -67,7 +59,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         timerRef.current = null
       }
     }
-  }, [isStreaming, skipTyping, typingSpeed])
+  }, [isStreaming])
 
   /**
    * 스트리밍을 수동으로 시작합니다.
@@ -80,7 +72,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     ) => {
       setDisplayText('')
       fullTextRef.current = ''
-      cursorRef.current = 0
+      // cursorRef.current = 0 // [비교용]
       setIsStreaming(true)
       setError(null)
 
@@ -90,9 +82,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           targetPrompt,
           (chunk: string) => {
             fullTextRef.current += chunk
-            if (skipTyping) {
-              setDisplayText(fullTextRef.current)
-            }
+            // 서버로부터 온 데이터를 즉시 업데이트 (타이핑 효과 사용 시 이 줄을 주석 처리)
+            // setDisplayText(fullTextRef.current)
           },
           () => {
             setIsStreaming(false)
@@ -110,10 +101,10 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         setIsStreaming(false)
       }
     },
-    [skipTyping],
+    [],
   )
 
-  // 2. 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
+  // 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
   useEffect(() => {
     if (
       enabled &&
@@ -127,24 +118,18 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   }, [enabled, chatId, prompt, messageId, startStreaming, isStreaming])
 
   /**
-   * 상태 및 타이머 완전 초기화
+   * 상태 완전 초기화
    */
   const resetStream = useCallback(() => {
     setDisplayText('')
     fullTextRef.current = ''
-    cursorRef.current = 0
     setIsStreaming(false)
     setError(null)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
   }, [])
 
   return {
     streamedText: displayText,
     isStreaming,
-    isTyping: cursorRef.current < fullTextRef.current.length,
     error,
     startStreaming,
     resetStream,
