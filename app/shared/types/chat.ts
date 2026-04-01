@@ -65,6 +65,7 @@ export interface ChatRoom {
   chatId?: string
   groupId?: string
   lastSeq?: number
+  recentMessages?: {role: 'user' | 'assistant'; content: string}[]
 }
 
 export type ChatItemWithMemberInfo = ChatRoom & {findMember: User}

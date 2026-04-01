@@ -71,10 +71,18 @@ export async function updateAiResponse(params: {
       status: 'success' as const,
     })
 
-    // 2. 채팅방 상단 요약 업데이트
+    // 2. 채팅방 상단 요약 및 실시간 맥락 캐싱 업데이트
+    const chatSnap = await roomRef.get()
+    const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
+    const updatedRecent = [
+      ...prevRecent,
+      {role: 'assistant' as const, content: text},
+    ].slice(-10)
+
     batch.update(roomRef, {
       lastMessage: finalMessage,
       lastMessageAt: createdAt,
+      recentMessages: updatedRecent, // AI 답변도 맥락에 추가!
     })
 
     await batch.commit()

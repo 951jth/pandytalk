@@ -28,11 +28,13 @@ export const getPandibotTools =
  */
 export const getPandibotMessages = (
   prompt: string,
+  history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [],
 ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => [
   {
     role: 'system',
     content: AI_BASE_PROMPT,
   },
+  ...history,
   {
     role: 'user',
     content: prompt,

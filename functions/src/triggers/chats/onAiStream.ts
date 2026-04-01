@@ -1,6 +1,7 @@
 import * as logger from 'firebase-functions/logger'
 import {onRequest} from 'firebase-functions/v2/https'
 import {OpenAI} from 'openai'
+import {db} from '../../core/firebase'
 import {handleAiError, updateAiResponse} from '../../services/aiChatService'
 import {
   getAiResponseStream,
@@ -56,9 +57,17 @@ export const onAiStream = onRequest(
 
       const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
 
+      // 🔍 채팅방 문서에서 캐싱된 맥락(recentMessages) 가져오기
+      const chatDoc = await db.doc(`chats/${chatId}`).get()
+      const chatData = chatDoc.data()
+      const history = (chatData?.recentMessages as any[]) || []
+
+      // 현재 질문(prompt)과 중복되는 히스토리는 제외 (가장 마지막 대화와 중복일 확률이 큼)
+      const filteredHistory = history.filter(h => h.content !== prompt)
+
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
-      const messages = getPandibotMessages(prompt)
+      const messages = getPandibotMessages(prompt, filteredHistory)
 
       // 스트리밍 응답 생성
       const stream = await getAiResponseStream(

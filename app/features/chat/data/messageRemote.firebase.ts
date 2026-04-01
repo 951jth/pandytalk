@@ -109,12 +109,22 @@ export const messageRemote = {
 
       //여러 명이 동시에 채팅을 칠 때 단순히 addDoc으로 넣으면 네트워크 속도에 따라 메시지 순서가 뒤죽박죽됨
       await runTransaction(firestore, async tx => {
-        // 1) 현재 채팅방 lastSeq가져오기
+        // 1) 현재 채팅방 데이터 가져오기
         const chatSnap = await tx.get(chatRef)
         const prev = Number(chatSnap.get('lastSeq') ?? 0)
         const next = prev + 1
         const now = serverTimestamp()
-        // 2) 메시지 문서 작성
+
+        // 2) AI 맥락(Context) 업데이트 로직 추가
+        const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
+        const newContextItem = {
+          role: 'user',
+          content: message.text || '',
+        }
+        // 최신 10개만 유지
+        const updatedRecent = [...prevRecent, newContextItem].slice(-10)
+
+        // 3) 메시지 문서 작성
         const newMessage = {
           seq: next,
           senderId: message.senderId,
@@ -126,10 +136,12 @@ export const messageRemote = {
           senderName: message?.senderName ?? null,
         }
         tx.set(msgRef, newMessage)
-        // 3) 채팅방 갱신
+
+        // 4) 채팅방 갱신
         tx.update(chatRef, {
           lastSeq: next,
           lastMessageAt: now,
+          recentMessages: updatedRecent, // 맥락 업데이트
           lastMessage: {
             seq: next,
             text: newMessage.text,
