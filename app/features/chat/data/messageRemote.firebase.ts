@@ -111,18 +111,24 @@ export const messageRemote = {
       await runTransaction(firestore, async tx => {
         // 1) 현재 채팅방 데이터 가져오기
         const chatSnap = await tx.get(chatRef)
-        const prev = Number(chatSnap.get('lastSeq') ?? 0)
+        const chatData = chatSnap.data()
+        const prev = Number(chatData?.lastSeq ?? 0)
         const next = prev + 1
         const now = serverTimestamp()
 
         // 2) AI 맥락(Context) 업데이트 로직 추가
-        const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
-        const newContextItem = {
-          role: 'user',
-          content: message.text || '',
+        const prevRecent = (chatData?.recentMessages as any[]) || []
+        let updatedRecent = prevRecent
+
+        // 텍스트가 있는 경우에만 맥락에 추가
+        if (message.text?.trim()) {
+          const newContextItem = {
+            role: 'user',
+            content: message.text,
+          }
+          // 최신 10개만 유지
+          updatedRecent = [...prevRecent, newContextItem].slice(-10)
         }
-        // 최신 10개만 유지
-        const updatedRecent = [...prevRecent, newContextItem].slice(-10)
 
         // 3) 메시지 문서 작성
         const newMessage = {

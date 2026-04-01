@@ -62,30 +62,32 @@ export async function updateAiResponse(params: {
       status: 'success' as const,
     }
 
-    const batch = db.batch()
+    // 1. 트랜잭션을 통해 메시지 및 채팅방 정보 업데이트
+    await db.runTransaction(async tx => {
+      const chatSnap = await tx.get(roomRef)
+      if (!chatSnap.exists) {
+        throw new Error(`Chat room ${chatId} not found`)
+      }
 
-    // 1. 메시지 문서 업데이트
-    batch.update(messageRef, {
-      text,
-      // createdAt: now,
-      status: 'success' as const,
+      const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
+      const updatedRecent = [
+        ...prevRecent,
+        {role: 'assistant' as const, content: text},
+      ].slice(-10)
+
+      // 메시지 문서 업데이트
+      tx.update(messageRef, {
+        text,
+        status: 'success' as const,
+      })
+
+      // 채팅방 상단 요약 및 실시간 맥락 캐싱 업데이트
+      tx.update(roomRef, {
+        lastMessage: finalMessage,
+        lastMessageAt: createdAt,
+        recentMessages: updatedRecent,
+      })
     })
-
-    // 2. 채팅방 상단 요약 및 실시간 맥락 캐싱 업데이트
-    const chatSnap = await roomRef.get()
-    const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
-    const updatedRecent = [
-      ...prevRecent,
-      {role: 'assistant' as const, content: text},
-    ].slice(-10)
-
-    batch.update(roomRef, {
-      lastMessage: finalMessage,
-      lastMessageAt: createdAt,
-      recentMessages: updatedRecent, // AI 답변도 맥락에 추가!
-    })
-
-    await batch.commit()
 
     // 3. 푸시 알림 전송 (비동기 처리 가능하도록 await 포함)
     await sendPushToChatMembers(db, messaging, chatId, {
