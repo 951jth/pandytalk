@@ -6,7 +6,7 @@ import {MENTION_CHUNKS} from '@app/shared/constants/ai'
 import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
 import type {SuggestionItem} from '../components/MentionSuggestion'
@@ -32,16 +32,19 @@ export const useChatMessageInput = ({
   const [text, setText] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
-  const {mutate: sendMessageAndCache, addMessages} =
-    useChatMessageUpsertMutation(roomInfo?.id)
+  const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
+    roomInfo?.id,
+  )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
   const [isFocused, setIsFocused] = useState<boolean>(false)
   const {isKeyboardVisible} = useKeyboardFocus()
+  const isMentionBlock = useRef<boolean>(false)
   // const isInitialVisit = useRef<boolean>(true)
   const isMentionSuggested =
     isKeyboardVisible &&
     isFocused &&
     !text.includes('@팬디') &&
+    !isMentionBlock.current &&
     (text === '' || text.endsWith('@') || text.includes('@팬'))
 
   const mentionSuggestions = useMemo(() => {
@@ -151,7 +154,13 @@ export const useChatMessageInput = ({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
       })
-      if (type == 'text') setText('')
+      if (type == 'text') {
+        isMentionBlock.current = true
+        setText('')
+        setTimeout(() => {
+          isMentionBlock.current = false
+        }, 500)
+      }
       // isInitialVisit.current = false
     } catch (e) {
       console.log(e)
