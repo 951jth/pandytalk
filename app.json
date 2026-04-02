@@ -12,9 +12,7 @@
     "updates": {
       "url": "https://u.expo.dev/713adbab-1d3b-4992-9aab-396e9557bd0f"
     },
-    "runtimeVersion": {
-      "policy": "nativeVersion"
-    },
+    "runtimeVersion": "30",
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
