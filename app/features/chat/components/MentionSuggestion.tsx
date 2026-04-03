@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     bottom: '100%',
     left: 12, // 입력창 왼쪽에서 살짝 띄움
     zIndex: 100,
-    marginBottom: 8, // 입력창과의 간격
+    marginBottom: 12, // 입력창과의 간격
   },
   dropdown: {
     minWidth: 220, // 최소 너비

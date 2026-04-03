@@ -1,4 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
 import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
 import {useAppSelector} from '@app/store/reduxHooks'
@@ -65,39 +66,46 @@ export function useProfileMenu(onReset: () => void = () => {}) {
     ])
   }
 
+  const onDelete = useCallback(async () => {
+    try {
+      // 탈퇴 로직
+      await userService.deleteMyAccount()
+      Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
+    } catch (e) {}
+  }, [])
+
   // ✅ 메뉴 항목들을 훅 내부에서 동적으로 생산 (명시적 타입 부여)
   const menuItems: MenuItem[] = useMemo(
-    () => [
-      {
-        title: '프로필 초기화',
-        icon: 'refresh',
-        onPress: onReset,
-      },
-      {
-        title: '메시지 재동기화',
-        icon: 'sync',
-        onPress: onClear,
-      },
-      {
-        title: '로그아웃',
-        icon: 'logout',
-        color: COLORS.error,
-        onPress: () => {
-          onLogout()
-        }, // ✅ 동기 래퍼로 감싸서 타입 안정성 확보
-      },
-      ...(userInfo?.authority !== 'ADMIN' && userInfo?.authority !== 'TEST'
-        ? [
-            {
-              title: '회원 탈퇴',
-              icon: 'account-remove-outline',
-              onPress: () => {
-                // Withdrawal logic...
-              },
-            } as MenuItem, // 명시적 캐스팅으로 안전성 강화
-          ]
-        : []),
-    ],
+    () =>
+      [
+        {
+          title: '프로필 초기화',
+          icon: 'refresh',
+          onPress: onReset,
+        },
+        {
+          title: '메시지 재동기화',
+          icon: 'sync',
+          onPress: onClear,
+        },
+        {
+          title: '로그아웃',
+          icon: 'logout',
+          color: COLORS.error,
+          onPress: () => {
+            onLogout()
+          }, // ✅ 동기 래퍼로 감싸서 타입 안정성 확보
+        },
+        {
+          title: '회원 탈퇴',
+          icon: 'account-remove-outline',
+          onPress: () => {
+            onDelete()
+          },
+          filtered:
+            userInfo?.authority !== 'ADMIN' && userInfo?.authority !== 'TEST',
+        },
+      ].filter(item => !item.filtered),
     [userInfo, onClear, onLogout, onReset],
   )
 
