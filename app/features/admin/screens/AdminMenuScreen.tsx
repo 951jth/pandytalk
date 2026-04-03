@@ -1,28 +1,33 @@
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React from 'react'
-import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native'
+import {FlatList, StyleSheet, Text, View} from 'react-native'
+import {Icon} from 'react-native-paper'
 
-import COLORS from '@shared/constants/color'
-import {AppRouteParamList} from '@shared/types/navigate'
+import COLORS from '@app/shared/constants/color'
+import {AppRouteParamList} from '@app/shared/types/navigate'
+import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 
 type AppRouteName = Extract<keyof AppRouteParamList, string>
 type MenuItem = {
   title: string
   path: AppRouteName
   description: string
+  icon: string
 }
 
 const menuItems: MenuItem[] = [
   {
     title: '유저 관리',
     path: 'guest-manage',
-    description: '유저 신청 정보를 관리하는 스크린',
+    description: '가입 신청 및 게스트 정보를 관리합니다.',
+    icon: 'account-cog',
   },
   {
     title: '그룹 관리',
     path: 'group-manage',
-    description: '유저 그룹을 관리하는 스크린',
+    description: '채팅 그룹 생성 및 할당을 관리합니다.',
+    icon: 'domain',
   },
 ]
 
@@ -32,35 +37,37 @@ export default function AdminMenuScreen() {
 
   const MenuRenderer = ({
     item,
-    index,
   }: {
-    item: Record<string, any>
-    index: number
+    item: MenuItem
   }) => {
     return (
-      <Pressable
-        onPress={() => item?.path && navigation.navigate(item?.path)}
-        style={({pressed}) => [
-          {
-            marginBottom: 8,
-            borderRadius: 8,
-            shadowColor: '#000',
-            shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
-            shadowOpacity: 0.1,
-            shadowRadius: pressed ? 1 : 3,
-            elevation: pressed ? 1 : 3,
-            backgroundColor: '#FFF',
-            transform: [{scale: pressed ? 0.98 : 1}],
-          },
-        ]}>
-        <View style={styles.menuItem}>
-          <View style={styles.menuTextRow}>
-            <Text style={styles.menuTitle}>{item?.title}</Text>
-            <Text style={styles.menuSubText}>{item?.path}</Text>
+      <PressableWrapper 
+        onPress={() => item?.path && navigation.navigate(item?.path as any)}
+        style={styles.cardWrapper}
+      >
+        <View style={styles.cardContainer}>
+          {/* 아이콘 영역 */}
+          <View style={styles.iconSection}>
+            <View style={styles.iconCircle}>
+              <Icon source={item.icon} size={28} color={COLORS.primary} />
+            </View>
           </View>
-          <Text style={styles.menuSubText}>{item?.description}</Text>
+
+          {/* 정보 영역 */}
+          <View style={styles.infoSection}>
+            <View style={styles.titleRow}>
+              <Text style={styles.menuTitle}>{item?.title}</Text>
+              <Text style={styles.menuPath}>{item?.path}</Text>
+            </View>
+            <Text style={styles.menuDescription}>{item?.description}</Text>
+          </View>
+
+          {/* 화살표 영역 */}
+          <View style={styles.arrowSection}>
+            <Icon source="chevron-right" size={24} color="#ADB5BD" />
+          </View>
         </View>
-      </Pressable>
+      </PressableWrapper>
     )
   }
 
@@ -72,38 +79,78 @@ export default function AdminMenuScreen() {
       keyboardShouldPersistTaps="handled"
       renderItem={MenuRenderer}
       contentContainerStyle={styles.menuItemContents}
+      showsVerticalScrollIndicator={false}
     />
   )
 }
 
 const styles = StyleSheet.create({
-  // container: {gap: 16m },
-  container: {flex: 1},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background, // 프리미엄 크림 베이지
+  },
   menuItemContents: {
     flexGrow: 1,
     padding: 16,
+    paddingTop: 12,
   },
-  menuItem: {
-    backgroundColor: COLORS.background,
+  cardWrapper: {
+    marginBottom: 12, // 카드 간 간격
+  },
+  cardContainer: {
+    backgroundColor: COLORS.white,
     padding: 16,
+    borderRadius: 32, // 프리미엄 곡률
+    flexDirection: 'row',
+    alignItems: 'center',
+    // 프리미엄 소프트 디퓨전 섀도우
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    borderRadius: 16,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  iconSection: {
+    marginRight: 16,
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FAF5F2', // 연한 테라코타 틴트
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  infoSection: {
+    flex: 1,
+    gap: 4,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
     gap: 8,
   },
-  menuTextRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
   menuTitle: {
-    color: COLORS.text,
+    color: '#2D2D2D',
     fontFamily: 'BMDOHYEON',
+    fontSize: 16,
   },
-  menuSubText: {
-    color: COLORS.secondary,
+  menuPath: {
+    color: COLORS.primary,
+    fontFamily: 'BMDOHYEON',
+    fontSize: 10,
+    opacity: 0.7,
+    marginBottom: 2,
+  },
+  menuDescription: {
+    color: COLORS.textSecondary,
     fontFamily: 'BMDOHYEON',
     fontSize: 12,
+    opacity: 0.6,
+  },
+  arrowSection: {
+    paddingLeft: 8,
   },
 })

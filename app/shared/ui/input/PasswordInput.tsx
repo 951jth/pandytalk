@@ -12,6 +12,7 @@ export default function PasswordInput({
   style,
   secureTextEntry, // 외부에서 강제하고 싶다면 사용 가능 (내부 토글이 우선)
   type = 'borderless',
+  outlineStyle,
   ...others
 }: PasswordInputProps) {
   const [show, setShow] = useState(false)
@@ -21,6 +22,7 @@ export default function PasswordInput({
       style={[style, styles.input]}
       // EditInput과 동일한 룩앤필
       type={type}
+      outlineStyle={outlineStyle}
       // password 동작
       secureTextEntry={secureTextEntry ?? !show}
       autoCapitalize="none"

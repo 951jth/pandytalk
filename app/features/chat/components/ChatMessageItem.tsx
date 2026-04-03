@@ -52,11 +52,7 @@ export default function ChatMessageItem({
 
     if (type === 'ai_text') {
       return (
-        <AiStreamingText
-          chatId={roomId ?? ''}
-          color={textColor}
-          item={item}
-        />
+        <AiStreamingText chatId={roomId ?? ''} color={textColor} item={item} />
       )
     }
 
@@ -180,52 +176,63 @@ const styles = StyleSheet.create({
   },
   chatRow: {
     flexDirection: 'row',
-    marginBottom: 12,
-    gap: 8,
+    marginBottom: 16, // 간격을 조금 더 넓게
+    gap: 10,
   },
   myChatBubble: {
-    padding: 10,
-    borderTopLeftRadius: 16,
+    padding: 12,
+    borderTopLeftRadius: 16, // ✅ 최초의 부드러운 24px 곡률로 복원
     borderTopRightRadius: 16,
     borderBottomRightRadius: 0,
     borderBottomLeftRadius: 16,
     backgroundColor: COLORS.primary,
     position: 'relative',
+    // 최초의 소프트 섀도우
+    shadowColor: COLORS.primary,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   otherChatBubble: {
-    padding: 10,
+    padding: 12,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderBottomRightRadius: 16,
     borderBottomLeftRadius: 0,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#FFFFFF', // 화이트 유지
     position: 'relative',
+    // 최초의 소프트 섀도우
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   chatDateWrap: {
     alignSelf: 'center',
-    backgroundColor: '#E5E5EA', // 연한 회색
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginVertical: 8,
+    backgroundColor: 'rgba(45, 36, 31, 0.08)', // 은은한 다크 베이지
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginVertical: 16,
   },
   chatDateText: {
-    fontSize: 12,
-    color: '#666666',
-    fontWeight: '400',
+    fontSize: 11,
+    fontFamily: 'BMDOHYEON',
+    color: '#8D7D77',
   },
   chatOptionsWrap: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'flex-end',
     alignSelf: 'flex-end',
-    height: 14,
+    marginBottom: 4,
   },
   chatTime: {
-    fontSize: 12,
-    lineHeight: 14,
-    alignSelf: 'flex-start', // make width fit content
-    // paddingHorizontal: 4,
+    fontSize: 10,
+    fontFamily: 'BMDOHYEON',
+    color: '#BDBDBD',
   },
   statusIcon: {
     margin: 0,
@@ -234,33 +241,32 @@ const styles = StyleSheet.create({
     height: 18,
   },
   frame: {
-    width: 45,
-    height: 45,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 15, // ✅ 모던한 라운드 스퀘어
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: COLORS.primary,
-    borderWidth: 1,
     backgroundColor: '#FFF',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
     elevation: 3,
   },
   profile: {
-    width: 48,
-    height: 48,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 15,
   },
   nickname: {
-    marginBottom: 2,
+    marginBottom: 4,
     fontSize: 13,
-    color: COLORS.text,
+    fontFamily: 'BMDOHYEON',
+    color: '#4B3F39', // 부드러운 다크 브라운
   },
   chatImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 8,
+    width: 180, // 이미지를 조금 더 시원하게
+    height: 180,
+    borderRadius: 20,
   },
 })

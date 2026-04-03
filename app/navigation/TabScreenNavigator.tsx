@@ -24,19 +24,31 @@ export default function TabScreenNavigator(): React.JSX.Element {
             <Icon
               source={currentRoute?.icon ?? 'help-circle-outline'}
               color={color}
-              size={size}
+              size={focused ? 26 : 24} // active시에 약간 크게
             />
           ),
           tabBarActiveTintColor: COLORS.primary,
-          tabBarInactiveTintColor: COLORS.text,
+          tabBarInactiveTintColor: COLORS.textSecondary,
           tabBarLabelStyle: {
-            fontFamily: 'BMDOHYEON', // 👈 로컬 폰트 이름
-            fontSize: 10,
+            fontFamily: 'BMDOHYEON',
+            fontSize: 11,
+            marginBottom: 4,
           },
           tabBarStyle: {
-            backgroundColor: COLORS.white,
+            backgroundColor: COLORS.background,
+            borderTopWidth: 0, // 기본 보더 제거
+            height: 65,
+            paddingBottom: 10,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            // 탭바 상단 그림자 (Floating 느낌)
+            shadowColor: '#000',
+            shadowOffset: {width: 0, height: -4},
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
+            elevation: 15,
+            position: 'absolute', // 살짝 떠있는 느낌을 위해 (스크린 paddingBottom 필요)
           },
-          // tabBarBackground: COLORS.gray,
         }
       }}>
       {tabs.map(route => (

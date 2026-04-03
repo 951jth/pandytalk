@@ -1,5 +1,6 @@
 import {useGroupChatRoomScreen} from '@app/features/chat/hooks/useGroupChatRoomScreen'
 import EmptyData from '@app/shared/ui/common/EmptyData'
+import COLORS from '@shared/constants/color'
 import React from 'react'
 import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
@@ -12,13 +13,19 @@ export default function GroupChatRoomScreen() {
   const {user, loading, roomId, roomInfo, headerTitle} =
     useGroupChatRoomScreen()
 
-  if (loading || !user)
-    return <EmptyData text={`페이지를 로딩 중입니다.\n잠시만 기다려주세요.`} />
+  if (loading || !user) {
+    return (
+      <EmptyData
+        text="팬디톡이 소식을 불러오는 중이에요"
+        subText="잠시만 기다려주세요. 곧 대화가 시작됩니다!"
+      />
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardUtilitiesWrapper useTouchable={false}>
-        <AppHeader title={headerTitle} />
+        <AppHeader title={headerTitle} titleAlign="left" />
         <ChatMessageList
           roomId={roomId}
           userId={user?.uid}
@@ -34,5 +41,6 @@ export default function GroupChatRoomScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
 })

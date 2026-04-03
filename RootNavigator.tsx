@@ -5,6 +5,7 @@
  */
 
 import {useRootAppSetup} from '@app/bootstrap/useRootAppSetup'
+import COLORS from '@app/shared/constants/color'
 import type {RootStackParamList} from '@app/shared/types/navigate'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
@@ -25,11 +26,8 @@ export function RootNavigator() {
 
   return (
     <>
-      <StatusBar
-        translucent={false}
-        backgroundColor="#FFF"
-        barStyle="dark-content"
-      />
+      <StatusBar backgroundColor={COLORS.background} barStyle="dark-content" />
+
       <RootStack.Navigator screenOptions={{headerShown: false}}>
         {canEnterApp ? (
           <RootStack.Screen name="app" component={AppNavigator} />

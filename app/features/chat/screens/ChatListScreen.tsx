@@ -7,6 +7,7 @@ import {useRoute, type RouteProp} from '@react-navigation/native'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
+import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatListItemCard from '../components/ChatListItemCard'
 import {useChatListScreen} from '../hooks/useChatListScreen'
 
@@ -40,7 +41,7 @@ export default function ChatListScreen() {
   )
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
       <FlatList
         data={chats}
         keyExtractor={e => e?.id}
@@ -63,7 +64,8 @@ export default function ChatListScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <EmptyData
-              text={`레서판다가 기다리고 있어요.\n새로운 대화를 시작해볼까요?`}
+              text="대화의 꽃을 피워볼까요?"
+              subText="친구들과 즐거운 대화를 시작해 보세요!"
             />
           </View>
         }
@@ -74,36 +76,23 @@ export default function ChatListScreen() {
         style={{flex: 1}}
         contentContainerStyle={styles.chatContents}
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
-  chatContents: {
-    // flex: 1,
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    flexGrow: 1,
-    backgroundColor: COLORS.outerColor,
-    paddingHorizontal: 12,
-    paddingTop: 4,
-  },
-  chatRoom: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-    padding: 8,
-  },
-  contents: {
+  container: {
     flex: 1,
-    gap: 4,
+    flexGrow: 1,
+    backgroundColor: COLORS.background, // 앱 전체 테마 반영
+  },
+  chatContents: {
+    paddingBottom: 24, // 하단 탭바 여백 확보
+    flexGrow: 1, // ✅ 목록이 비었을 때 화면을 꽉 채우도록 설정
   },
   empty: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 12,
   },
 })

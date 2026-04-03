@@ -3,7 +3,6 @@ import {useAppSelector} from '@app/store/reduxHooks'
 import React, {type ReactNode} from 'react'
 import {StyleSheet} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import AppHeader from './AppHeader'
 
 type propsType = {
   children: ReactNode
@@ -15,12 +14,7 @@ export default function MainLayout({children}: propsType): React.JSX.Element {
   useSubscribeChatList(user?.uid, 'dm')
   // 관리자일경우 그룹 채팅 목록도 구독
   useSubscribeChatList(user?.uid, 'group', user?.authority !== 'ADMIN')
-  return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'top']}>
-      <AppHeader />
-      {children}
-    </SafeAreaView>
-  )
+  return <SafeAreaView style={styles.container}>{children}</SafeAreaView>
 }
 
 const styles = StyleSheet.create({

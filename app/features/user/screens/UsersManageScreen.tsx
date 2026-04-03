@@ -1,9 +1,11 @@
 import UserDetailModal from '@app/features/user/components/UserDetailModal'
 import UserListItem from '@app/features/user/components/UserListItem'
 import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
+import AppHeader from '@app/layout/AppHeader'
+import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import React, {useCallback} from 'react'
-import {FlatList, StyleSheet} from 'react-native'
+import {FlatList, StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 
@@ -38,11 +40,14 @@ export default function UsersManageScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
-      <SearchInput
-        placeholder="검색할 닉네임 시작 글자를 입력해주세요."
-        value={input}
-        onChangeText={setInput}
-      />
+      <AppHeader title="유저 관리" />
+      <View style={styles.searchWrapper}>
+        <SearchInput
+          placeholder="검색할 닉네임 시작 글자를 입력해주세요."
+          value={input}
+          onChangeText={setInput}
+        />
+      </View>
       <FlatList
         data={users}
         renderItem={({item}) => <RenderItem item={item} />}
@@ -53,6 +58,7 @@ export default function UsersManageScreen() {
         }}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.friendsContainer}
+        showsVerticalScrollIndicator={false}
       />
       <UserDetailModal
         open={!!modalProps?.open}
@@ -65,10 +71,18 @@ export default function UsersManageScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {flex: 1},
+  container: {
+    flex: 1, 
+    backgroundColor: COLORS.background, // 배경 통일
+  },
+  searchWrapper: {
+    paddingHorizontal: 8,
+    paddingBottom: 8,
+  },
   friendsContainer: {
-    paddingHorizontal: 12,
-    paddingTop: 4,
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 40,
     flexGrow: 1,
   },
 })

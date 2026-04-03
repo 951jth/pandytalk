@@ -1,9 +1,10 @@
+import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import {Group} from '@app/shared/types/group'
 import React, {useState} from 'react'
 import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {IconButton} from 'react-native-paper'
-import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import GroupModalForm from '../components/GroupFormModal'
 import GuestGroup from '../components/GuestGroup'
@@ -24,18 +25,19 @@ export default function GroupManageScreen() {
 
   return (
     <>
-      <SafeAreaView
-        style={styles.container}
-        edges={['right', 'left', 'bottom']}>
+      <View style={styles.container}>
+        <AppHeader title="그룹 관리" />
+        {/* 그룹 추가 프리미엄 FAB */}
         <TouchableOpacity
-          style={[styles.bottomRightButton, {bottom: insets.bottom + 16}]}
+          style={[styles.bottomRightButton]}
           onPress={() => setGroupModalProps({open: true, record: null})}>
-          <IconButton icon="plus" iconColor="#FFF" />
+          <IconButton icon="plus" iconColor="#FFF" size={30} />
         </TouchableOpacity>
+
         <FlatList
           data={groups}
           keyExtractor={item => item.id}
-          style={{flexGrow: 1}}
+          style={{flex: 1}}
           renderItem={({item}) => (
             <GuestGroup
               item={item}
@@ -45,22 +47,20 @@ export default function GroupManageScreen() {
             />
           )}
           ListEmptyComponent={
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingBottom: 12,
-              }}>
-              <EmptyData text={`아직 그룹이 없네요.`} />
+            <View style={styles.emptyContainer}>
+              <EmptyData
+              text="나만의 멋진 그룹을 만들어보세요"
+              subText="대화의 장을 열고 재미있는 이야기를 나눠볼까요?"
+            />
             </View>
           }
           refreshing={isLoading}
           onRefresh={refetch}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
         />
-      </SafeAreaView>
+      </View>
       <GroupModalForm
         open={groupModalProps?.open}
         onClose={() => setGroupModalProps({open: false, record: null})}
@@ -73,32 +73,38 @@ export default function GroupManageScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
-    position: 'relative',
     flex: 1,
-    paddingVertical: 16,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexGrow: 1,
+    backgroundColor: COLORS.background, // 배경 통일
   },
   bottomRightButton: {
     position: 'absolute',
-    right: 16,
-    bottom: 0,
-    width: 50,
-    height: 50,
-    backgroundColor: COLORS.primary,
-    borderRadius: 100,
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    backgroundColor: COLORS.primary, // 테라코타 포인트
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#FFF',
-    zIndex: 10,
-    // display: 'inline-flex',
+    zIndex: 20,
+    // 프리미엄 소프트 섀도우
+    shadowColor: COLORS.primary,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
   contentContainer: {
-    paddingHorizontal: 12,
-    paddingTop: 4,
+    paddingHorizontal: 4,
+    paddingTop: 12,
+    paddingBottom: 100, // FAB와 겹치지 않도록 여백 확보
     flexGrow: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
   },
 })

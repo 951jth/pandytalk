@@ -23,6 +23,8 @@ export type layoutType = {
   rowsStyle?: StyleProp<ViewStyle>
   labelStyle?: StyleProp<TextStyle>
   contentsStyle?: StyleProp<ViewStyle>
+  buttonStyle?: StyleProp<ViewStyle> // ✅ 버튼 커스텀 스타일 추가
+  buttonLabelStyle?: StyleProp<TextStyle> // ✅ 버튼 텍스트 커스텀 스타일 추가 (labelStyle과 혼동 방지 위해 명칭 변경)
 }
 
 interface Props {
@@ -55,6 +57,8 @@ export interface InputFormRef {
   updateValues: (patch: Partial<Record<string, any>>) => void
   // formValues 폼데이터 입력값 초기화
   resetValues: () => void
+  /** 현재 값을 새로운 세이브포인트로 갱신 */
+  updateSavePoint: () => void
   // 폼값 검증
   validate: () => boolean
 }
@@ -66,6 +70,8 @@ const DEFAULT_LAYOUT = {
   rowsStyle: {},
   labelStyle: {},
   contentsStyle: {},
+  buttonStyle: {},
+  buttonLabelStyle: {},
 } as const
 
 //row memoization
@@ -101,6 +107,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     setErrors,
     changeField,
     resetValues,
+    updateSavePoint, // ✅ 갱신 기능 추가
     validateAll,
   } = useInputForm(formData, formKey)
   //부모에서 layout 참조를 고정시키지 않아도 자식에서 참조를 고정시키게
@@ -115,6 +122,11 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
       contentsStyle: [DEFAULT_LAYOUT.contentsStyle, l.contentsStyle].filter(
         Boolean,
       ),
+      buttonStyle: [DEFAULT_LAYOUT.buttonStyle, l.buttonStyle].filter(Boolean),
+      buttonLabelStyle: [
+        DEFAULT_LAYOUT.buttonLabelStyle,
+        l.buttonLabelStyle,
+      ].filter(Boolean),
     }
   }, [layout])
 
@@ -136,8 +148,9 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
       },
       validate: () => validateAll(items),
       resetValues,
+      updateSavePoint, // ✅ 외부 노출
     }),
-    [items, resetValues, validateAll],
+    [items, resetValues, updateSavePoint, validateAll],
   )
 
   const memoizedChangeField = useCallback(
@@ -193,7 +206,10 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
               onSubmit?.(formValues)
             }}
             loading={loading}
-            disabled={btnDisable}>
+            disabled={btnDisable}
+            style={[memoizedLayout.buttonStyle, {marginTop: 20}]} // ✅ 버튼 상단 여백 추가
+            labelStyle={memoizedLayout.buttonLabelStyle} // ✅ 텍스트 커스텀 스타일 연동
+          >
             {buttonLabel}
           </CustomButton>
         )}

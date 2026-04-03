@@ -6,7 +6,7 @@ import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useMemo, useRef, useState} from 'react'
-import {Alert, StyleSheet, Text, View} from 'react-native'
+import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native'
 
 import {auth, firestore} from '../../../shared/firebase/firestore'
 import InputForm from '../../../shared/ui/form/InputForm'
@@ -69,7 +69,13 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         label: '메모',
         required: true,
         render: (value, onChange) => (
-          <EditInput value={value} onChangeText={onChange} />
+          <EditInput
+            value={value}
+            onChangeText={onChange}
+            multiline={true}
+            numberOfLines={4}
+            style={{height: 100}}
+          />
         ),
       },
       {
@@ -149,49 +155,58 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
   }
   return (
     <View style={styles.container}>
-      <InputForm
-        buttonLabel="저장"
-        items={items}
-        formData={record}
-        formKey={record?.uid}
-        onSubmit={handleSubmit}
-        topElement={
-          <>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        <InputForm
+          buttonLabel="저장"
+          items={items}
+          formData={record}
+          formKey={record?.uid}
+          onSubmit={handleSubmit}
+          topElement={
             <View style={styles.topRow}>
               <Text style={styles.title}>그룹 설정하기</Text>
-              <EditProfile
-                ref={profileRef}
-                edit={true}
-                defaultUrl={record?.photoURL || null}
-                boxSize={120}
-                iconSize={80}
-              />
+              <View>
+                <EditProfile
+                  ref={profileRef}
+                  edit={true}
+                  defaultUrl={record?.photoURL || null}
+                  boxSize={120}
+                  iconSize={85}
+                />
+              </View>
             </View>
-          </>
-        }
-        loading={loading}
-        useBotton={true}
-      />
+          }
+          layout={{
+            rowsStyle: {paddingVertical: 8},
+            labelStyle: {fontFamily: 'BMDOHYEON', color: COLORS.secondary},
+          }}
+          loading={loading}
+          useBotton={true}
+        />
+      </ScrollView>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 430,
+    // padding: 24,
+    borderRadius: 32, // 스그니처 32px 곡률
     backgroundColor: '#FFF',
+    height: 570, // 시원하게 가시성 확보
   },
   topRow: {
-    flexDirection: 'column',
-    alignContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 24,
+    marginTop: 8,
   },
   title: {
-    color: COLORS.primary,
+    color: '#2D2D2D',
     fontFamily: 'BMDOHYEON',
-    fontWeight: 500,
-    fontSize: 20,
-    marginBottom: 12,
+    fontSize: 22,
+    marginBottom: 20,
+    textAlign: 'center',
   },
 })

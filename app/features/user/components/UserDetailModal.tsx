@@ -1,5 +1,5 @@
 import React from 'react'
-import {Modal, StyleSheet, View} from 'react-native'
+import {Modal, ScrollView, StyleSheet, Text, View} from 'react-native'
 
 import InputForm from '../../../shared/ui/form/InputForm'
 
@@ -7,7 +7,7 @@ import {useUserDetail} from '@app/features/user/hooks/useUserDetail'
 import {updateUserItems} from '@app/features/user/screens/updateUser.form'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
-import ColorButton from '@app/shared/ui/button/ColorButton'
+import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import CustomModal from '@app/shared/ui/modal/CustomModal'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 
@@ -15,43 +15,41 @@ const ButtonsByType = {
   pending: [
     {
       label: '거절',
-      bgColor: '#FFEBEE',
-      textColor: '#C62828',
+      bgColor: '#FFF5F5', // Soft Pastel Rose
+      textColor: '#E03131',
       status: 'reject',
     },
     {
       label: '승인',
-      bgColor: '#E8F5E9',
-      textColor: '#2E7D32',
+      bgColor: '#F4FCF7', // Soft Pastel Mint
+      textColor: '#099268',
       status: 'confirm',
     },
   ],
   confirm: [
     {
       label: '정지',
-      bgColor: '#FFF3E0',
-      textColor: '#FF9800',
+      bgColor: '#FFF9DB', // Soft Pastel Yellow
+      textColor: '#F08C00',
       status: 'pending',
     },
     {
       label: '수정',
-      bgColor: '#E8F5E9',
-      textColor: '#2E7D32',
-      // bgColor: '#FFEBEE',
-      // textColor: '#C62828',
-      status: 'confirm', //수정은 현재 일반유저만 가능
+      bgColor: '#E7F5FF', // Soft Pastel Sky
+      textColor: '#1C7ED6',
+      status: 'confirm',
     },
   ],
   reject: [
     {
       label: '승인',
-      bgColor: '#E8F5E9',
-      textColor: '#2E7D32',
+      bgColor: '#F4FCF7',
+      textColor: '#099268',
       status: 'confirm',
     },
     {
       label: '삭제',
-      bgColor: '#F44336',
+      bgColor: '#E03131', // Bold Red for destructive action
       textColor: '#FFF',
       status: 'delete',
     },
@@ -80,50 +78,54 @@ export default function UserDetailModal({
   return (
     <CustomModal visible={open} onClose={onClose}>
       <View style={styles.container}>
-        <InputForm
-          ref={formRef}
-          items={updateUserItems}
-          formData={record}
-          formKey={record?.uid}
-          buttonLabel="유저 신청"
-          topElement={
-            <View style={styles.profileWrap}>
-              <EditProfile
-                edit={true}
-                defaultUrl={record?.photoURL || null}
-                boxSize={100}
-                iconSize={75}
-                ref={profileRef}
-              />
-            </View>
-          }
-          layout={{
-            rowsStyle: {paddingVertical: 0},
-          }}
-          bottomElement={
-            user?.accountStatus && (
-              <View style={styles.buttons}>
-                {(ButtonsByType?.[user?.accountStatus] || [])?.map(button => {
-                  return (
-                    <ColorButton
-                      key={button?.label}
-                      label={button?.label}
-                      bgColor={button?.bgColor}
-                      textColor={button?.textColor || '#FFF'}
-                      style={{
-                        paddingVertical: 16,
-                        flex: 1,
-                      }}
-                      onPress={() =>
-                        handleMemberStatusUpdate?.(button?.status as UserStatus)
-                      }
-                    />
-                  )
-                })}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <InputForm
+            ref={formRef}
+            items={updateUserItems}
+            formData={record}
+            formKey={record?.uid}
+            buttonLabel="유저 신청"
+            topElement={
+              <View style={styles.profileWrap}>
+                <Text style={styles.title}>유저 상세 정보</Text>
+                <EditProfile
+                  edit={true}
+                  defaultUrl={record?.photoURL || null}
+                  boxSize={112}
+                  iconSize={85}
+                  ref={profileRef}
+                />
               </View>
-            )
-          }
-        />
+            }
+            layout={{
+              rowsStyle: {paddingVertical: 4},
+              labelStyle: {fontFamily: 'BMDOHYEON', color: COLORS.secondary},
+            }}
+            bottomElement={
+              user?.accountStatus && (
+                <View style={styles.buttons}>
+                  {(ButtonsByType?.[user?.accountStatus] || [])?.map(button => {
+                    return (
+                      <CustomButton
+                        key={button?.label}
+                        onPress={() =>
+                          handleMemberStatusUpdate?.(
+                            button?.status as UserStatus,
+                          )
+                        }
+                        style={{backgroundColor: button?.bgColor, flex: 1}}
+                        labelStyle={{color: button?.textColor || '#FFF'}}>
+                        {button?.label}
+                      </CustomButton>
+                    )
+                  })}
+                </View>
+              )
+            }
+          />
+        </ScrollView>
       </View>
     </CustomModal>
   )
@@ -131,24 +133,24 @@ export default function UserDetailModal({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
-    height: 470,
+    borderRadius: 32, // 스그니처 32px 곡률
+    height: 550, // 시원하게 가시성 확보
   },
   profileWrap: {
-    flexDirection: 'column',
-    alignContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
+    marginTop: 8,
   },
-  notiText: {
-    color: COLORS.error,
+  title: {
+    color: '#2D2D2D',
     fontFamily: 'BMDOHYEON',
+    fontSize: 22,
+    marginBottom: 20,
     textAlign: 'center',
-    marginTop: 16,
   },
   buttons: {
     flexDirection: 'row',
-    marginTop: 12,
-    gap: 8,
+    marginTop: 20,
+    gap: 12,
   },
 })

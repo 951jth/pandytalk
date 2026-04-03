@@ -31,6 +31,8 @@ export type EditInputProps = Omit<RNTextInputProps, 'value' | 'style'> & {
   leftElement?: ReactNode
   leftIconColor?: string
   leftIconSize?: number
+  outlineStyle?: StyleProp<ViewStyle>
+  textAlignVertical?: 'auto' | 'top' | 'bottom' | 'center'
 }
 
 export default function EditInput({
@@ -47,6 +49,8 @@ export default function EditInput({
   leftElement,
   leftIconColor = '#9E9E9E',
   leftIconSize = 20,
+  outlineStyle,
+  textAlignVertical = 'center',
   ...rest
 }: EditInputProps) {
   const [focused, setFocused] = useState(false)
@@ -62,6 +66,8 @@ export default function EditInput({
     underlineStyle,
     underlineColor,
     activeUnderlineColor,
+    // outlineStyle 필터링 (부모로부터 rest로 올 수 있음)
+    outlineStyle: _, 
     ...inputProps
   } = rest as any
 
@@ -105,6 +111,7 @@ export default function EditInput({
           : focused
             ? styles.boxBorderlessFocused
             : styles.boxBorderlessBlurred,
+        isOutlined && outlineStyle, // outlined 일 때만 outlineStyle 적용
         containerStyle,
       ]}>
       {/* 왼쪽 아이콘 / 엘리먼트 영역 */}
@@ -130,6 +137,7 @@ export default function EditInput({
         secureTextEntry={isPasswordField ? !show : undefined}
         style={[
           styles.inputBase,
+          {textAlignVertical}, // ✅ 전달받은 수직 정렬 적용 (기본값 center)
           isOutlined ? styles.inputOutlined : styles.inputBorderless,
           {paddingRight: inputPaddingRight},
           hasLeftAddon && styles.inputWithLeftAddon,
@@ -217,7 +225,10 @@ const styles = StyleSheet.create({
     height: 40,
     paddingHorizontal: 0,
   },
-  inputOutlined: {backgroundColor: 'transparent'},
+  inputOutlined: {
+    backgroundColor: 'transparent',
+    // multiline일 경우 고정 높이를 해제하여 유연하게 대응 가능하도록 (부모 스타일에서 제어 권장)
+  },
 
   fixedText: {fontFamily: 'BMDOHYEON', color: '#5D5D5D', fontSize: 12},
 

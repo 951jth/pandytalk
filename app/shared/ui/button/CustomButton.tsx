@@ -54,22 +54,40 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     normal: styles.normal,
   }
 
-  const labelStyleMap = {
+  const  labelStyleMap = {
     small: styles.smallSizeText,
     middle: styles.middleSizeText,
     large: styles.largeSizeText,
   }
 
-  const colorStyleMap = {
-    primary: styles.primary,
-    danger: styles.danger,
-    secondary: styles.secondary,
-    gray: styles.gray,
-    disabled: styles.disabled,
+  const containerColorMap = {
+    primary: styles.primaryContainer,
+    danger: styles.dangerContainer,
+    secondary: styles.secondaryContainer,
+    gray: styles.grayContainer,
+    disabled: styles.disabledContainer,
+  }
+
+  const labelColorMap = {
+    primary:
+      rest.mode === 'text' || rest.mode === 'outlined'
+        ? styles.primaryLabelText
+        : styles.primaryLabelOnColor,
+    danger:
+      rest.mode === 'text' || rest.mode === 'outlined'
+        ? styles.dangerLabelText
+        : styles.primaryLabelOnColor,
+    secondary:
+      rest.mode === 'text' || rest.mode === 'outlined'
+        ? styles.secondaryLabelText
+        : styles.primaryLabelOnColor,
+    gray: styles.grayLabelText,
+    disabled: styles.disabledLabel,
   }
 
   // disabled 기본 정책: 명시적 disabled 우선 > (loading || (edit && hasErrors))
   const computedDisabled = typeof disabled === 'boolean' ? disabled : !!loading
+  const activeColorType = computedDisabled ? 'disabled' : colorType
 
   return (
     <Button
@@ -78,12 +96,16 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
       style={[
         sizeStyleMap?.[size],
         shapeStyleMap?.[shape],
-        colorStyleMap?.[disabled ? 'disabled' : colorType],
+        containerColorMap?.[activeColorType],
         {minWidth: 0, flex: fullWidth ? 1 : 0},
-        style,
+        style as any,
       ]}
-      labelStyle={labelStyleMap?.[size]}
-      contentStyle={{paddingHorizontal: 4}} // 기본보다 축소
+      labelStyle={[
+        labelStyleMap?.[size],
+        labelColorMap?.[activeColorType],
+        rest.labelStyle,
+      ]} // ✅ 내부 사이즈/컬러 스타일과 외부 커스텀 스타일 병합
+      contentStyle={[styles.contentBase, rest.contentStyle]}
       mode={rest.mode ?? 'contained'}
       disabled={computedDisabled}
       loading={loading}
@@ -108,20 +130,32 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 }
 
 const styles = StyleSheet.create({
+  // CONTENT STYLE
+  contentBase: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
   //SIZE STYLE
   smallSizeButton: {paddingHorizontal: 4},
-  smallSizeText: {fontSize: 11, paddingHorizontal: 0},
-  middleSizeText: {fontSize: 14},
-  largeSizeText: {fontSize: 16},
+  smallSizeText: {fontSize: 12, fontFamily: 'BMDOHYEON'},
+  middleSizeText: {fontSize: 16, fontFamily: 'BMDOHYEON'},
+  largeSizeText: {fontSize: 18, fontFamily: 'BMDOHYEON'},
   //SHAPE STYLE
-  rounded: {borderRadius: 8},
-  circle: {borderRadius: '100px'},
+  rounded: {borderRadius: 12},
+  circle: {borderRadius: 100},
   rectangle: {borderRadius: 0},
-  normal: {borderRadius: 4},
-  //COLOR STYLE
-  primary: {color: COLORS.onPrimary, backgroundColor: COLORS.primary},
-  danger: {color: COLORS.onPrimary, backgroundColor: COLORS?.error},
-  secondary: {color: COLORS.onPrimary, backgroundColor: COLORS.secondary},
-  gray: {color: COLORS.onPrimary, backgroundColor: COLORS.gray},
-  disabled: {color: COLORS.text, backgroundColor: COLORS.gray},
+  normal: {borderRadius: 20},
+  // COLOR - CONTAINER STYLE
+  primaryContainer: {backgroundColor: COLORS.primary},
+  dangerContainer: {backgroundColor: COLORS.error},
+  secondaryContainer: {backgroundColor: COLORS.secondary},
+  grayContainer: {backgroundColor: COLORS.gray},
+  disabledContainer: {backgroundColor: COLORS.gray},
+  // COLOR - LABEL STYLE
+  primaryLabelOnColor: {color: COLORS.onPrimary}, // 박스형일 때 (흰색)
+  primaryLabelText: {color: COLORS.primary}, // 텍스트형일 때 (테라코타)
+  dangerLabelText: {color: COLORS.error},
+  secondaryLabelText: {color: COLORS.secondary},
+  grayLabelText: {color: COLORS.text},
+  disabledLabel: {color: COLORS.text},
 })

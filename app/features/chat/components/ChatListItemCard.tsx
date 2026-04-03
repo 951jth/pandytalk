@@ -32,123 +32,142 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
     <PressableWrapper
       onPress={() => moveToChatRoom?.(targetId, roomId)}
       style={styles.chatRoom}>
-      <View style={styles.frame}>
+      <View style={styles.avatarFrame}>
         {viewByType?.image ? (
           <FastImage
             source={{uri: viewByType?.image}}
             resizeMode={FastImage.resizeMode.cover}
-            style={styles.image}
+            style={styles.avatarImage}
           />
         ) : (
-          <Icon source="account" size={40} color={COLORS.primary} />
-        )}
-        {/* {findMember?.status == 'online' && <View style={styles.point} />} */}
-      </View>
-      <View style={styles.contents}>
-        <Text style={styles.name}>{viewByType?.name ?? '알 수 없음'}</Text>
-        <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
-          {item?.lastMessage?.text || '대화 없음'}
-        </Text>
-        <Text style={styles.lastSendTime}>
-          {item?.lastMessage?.createdAt
-            ? dayjs(
-                toMillisFromServerTime(item?.lastMessage?.createdAt),
-              ).fromNow()
-            : '알 수 없음'}
-        </Text>
-        {!!item?.unreadCount && (
-          <View style={styles.unreadMessageBadge}>
-            <Text style={styles.unreadMessage}>{item?.unreadCount || 0}</Text>
+          <View style={styles.defaultAvatar}>
+            <Icon source="account" size={32} color={COLORS.primary} />
           </View>
         )}
+        {findMember?.status === 'online' && <View style={styles.onlineStatus} />}
+      </View>
+      
+      <View style={styles.contents}>
+        <View style={styles.headerArea}>
+          <Text style={styles.name} numberOfLines={1}>
+            {viewByType?.name ?? '알 수 없음'}
+          </Text>
+          <Text style={styles.lastSendTime}>
+            {item?.lastMessage?.createdAt
+              ? dayjs(toMillisFromServerTime(item?.lastMessage?.createdAt)).fromNow()
+              : ''}
+          </Text>
+        </View>
+        
+        <View style={styles.messageArea}>
+          <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
+            {item?.lastMessage?.text || '새로운 대화를 시작해보세요'}
+          </Text>
+          {!!item?.unreadCount && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadCountText}>{item?.unreadCount > 99 ? '99+' : item?.unreadCount}</Text>
+            </View>
+          )}
+        </View>
       </View>
     </PressableWrapper>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  chatContents: {
-    // flex: 1,
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    flexGrow: 1,
-    backgroundColor: COLORS.outerColor,
-    paddingHorizontal: 12,
-    paddingTop: 4,
-  },
   chatRoom: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-    borderRadius: 8,
-    padding: 8,
+    alignItems: 'center',
+    backgroundColor: '#FFFBF9', // ✅ 프리미엄 크림 베이지 유지
+    marginHorizontal: 16,
+    marginVertical: 10, // 최초의 여백으로 복원
+    padding: 16,
+    borderRadius: 32, // ✅ 최초의 하이퍼 곡률로 복원
+    // 최초의 부드러운 소프트 섀도우
+    shadowColor: '#2D241F',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 4,
   },
-  frame: {
-    width: 55,
-    height: 55,
-    borderRadius: 8,
+  avatarFrame: {
+    position: 'relative',
+    width: 60, // 조금 더 키움
+    height: 60,
+  },
+  avatarImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 20, // 아바타도 카드와 어울리는 라운드 스퀘어
+    backgroundColor: COLORS.outerColor,
+  },
+  defaultAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: COLORS.outerColor,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: COLORS.primary,
-    borderWidth: 1,
-    position: 'relative',
   },
-  image: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-  },
-  point: {
-    backgroundColor: '#2CC069',
-    width: 14,
-    height: 14,
-    borderRadius: 100,
-    borderColor: '#FFF',
-    borderWidth: 2,
+  onlineStatus: {
     position: 'absolute',
-    right: -6,
-    top: -6,
+    right: -1,
+    bottom: -1,
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
+    backgroundColor: COLORS.success,
+    borderWidth: 2.5,
+    borderColor: '#FFFBF9',
   },
   contents: {
     flex: 1,
-    gap: 4,
+    marginLeft: 16,
+    justifyContent: 'center',
+  },
+  headerArea: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   name: {
-    fontSize: 14,
-    color: '#000',
+    fontSize: 17,
     fontFamily: 'BMDOHYEON',
-  },
-  lastMessage: {
-    fontSize: 12,
-    color: '#ADB5BD',
-    fontFamily: 'BMDOHYEON',
+    color: '#2D2D2D', // 딥 차콜
+    flex: 1,
+    marginRight: 8,
   },
   lastSendTime: {
-    fontSize: 12,
-    color: '#ADB5BD',
-    position: 'absolute',
-    top: 0,
-    right: 0,
+    fontSize: 11,
     fontFamily: 'BMDOHYEON',
+    color: '#BDBDBD',
   },
-  unreadMessageBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  messageArea: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center', // ✅ 세로 중앙
-    backgroundColor: COLORS.primary,
+    justifyContent: 'space-between',
   },
-  unreadMessage: {
-    color: COLORS.onPrimary,
-    fontSize: 12,
-    fontWeight: 'bold',
+  lastMessage: {
+    fontSize: 14,
     fontFamily: 'BMDOHYEON',
+    color: '#757575',
+    flex: 1,
+    marginRight: 8,
+  },
+  unreadBadge: {
+    backgroundColor: COLORS.primary,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  unreadCountText: {
+    color: COLORS.onPrimary,
+    fontSize: 11,
+    fontFamily: 'BMDOHYEON',
+    textAlign: 'center',
   },
 })

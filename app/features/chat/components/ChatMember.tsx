@@ -30,25 +30,23 @@ export default function ChatMember({
     item?.lastSeen instanceof Timestamp
       ? item?.lastSeen?.toDate()
       : item?.lastSeen
+  
+  // 가상의 온라인 상태 체크 (최근 5분 이내 활동 시 온라인으로 간주하거나, 실제 status 필드 사용)
+  const isOnline = item?.status === 'online' || (lastSeen && dayjs().diff(dayjs(Number(lastSeen)), 'minute') < 5)
+
   return (
     <Pressable
       onPress={() => onPress(item.uid)}
       style={({pressed}) => [
+        styles.card,
         {
-          marginBottom: 8,
-          borderRadius: 8,
-          shadowColor: '#000',
-          shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
-          shadowOpacity: 0.1,
-          shadowRadius: pressed ? 1 : 3,
-          elevation: pressed ? 1 : 3,
-          backgroundColor: '#FFF',
           transform: [{scale: pressed ? 0.98 : 1}],
+          backgroundColor: pressed ? COLORS.deepGray : COLORS.surface,
         },
         style,
       ]}>
-      <View style={[styles.friend]}>
-        <View style={styles.frame}>
+      <View style={styles.friend}>
+        <View style={styles.avatarContainer}>
           {item?.photoURL ? (
             <FastImage
               source={{uri: item?.photoURL}}
@@ -56,20 +54,26 @@ export default function ChatMember({
               style={styles.image}
             />
           ) : (
-            <Icon source="account" size={40} color={COLORS.primary} />
+            <View style={styles.avatarPlaceholder}>
+              <Icon source="account" size={32} color={COLORS.textSecondary} />
+            </View>
           )}
-          {/* {item?.status == 'online' && <View style={styles.point} />} */}
+          <View 
+            style={[
+              styles.statusDot, 
+              {backgroundColor: isOnline ? COLORS.success : COLORS.gray}
+            ]} 
+          />
         </View>
         <View style={styles.contents}>
           <View style={styles.contentsRow}>
             <Text style={styles.name}>{item?.displayName}</Text>
-            <Text style={styles.status}>
-              {/* {item?.status == 'online' ? '온라인' : '오프라인'} */}
-              {lastSeen ? dayjs(Number(lastSeen)).fromNow() : '알 수 없음'}
+            <Text style={styles.lastSeen}>
+              {lastSeen ? dayjs(Number(lastSeen)).fromNow() : ''}
             </Text>
           </View>
-          <Text style={styles.introduce} numberOfLines={2} ellipsizeMode="tail">
-            {item?.intro}
+          <Text style={styles.introduce} numberOfLines={1} ellipsizeMode="tail">
+            {item?.intro || '멋진 소개글이 아직 없네요.'}
           </Text>
         </View>
       </View>
@@ -78,67 +82,71 @@ export default function ChatMember({
 }
 
 const styles = StyleSheet.create({
+  card: {
+    marginBottom: 10,
+    borderRadius: 16,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
   friend: {
     flexDirection: 'row',
-    // marginBottom: 8,
-    // backgroundColor: '#FFF',
-    padding: 8,
-    // borderRadius: 8,
-    // // ✅ 그림자 효과 (iOS + Android 호환)
-    // shadowColor: '#000',
-    // shadowOffset: {width: 0, height: 1},
-    // shadowOpacity: 0.1,
-    // shadowRadius: 3,
-    // elevation: 3, // Android 전용 그림자
-    gap: 12, // RN 0.71+ 이상에서 사용 가능
-  },
-  frame: {
-    width: 55,
-    height: 55,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: COLORS.primary,
-    borderWidth: 1,
+    gap: 16,
+  },
+  avatarContainer: {
     position: 'relative',
   },
-  // point: {
-  //   backgroundColor: '#2CC069',
-  //   width: 14,
-  //   height: 14,
-  //   borderRadius: 100,
-  //   borderColor: '#FFF',
-  //   borderWidth: 2,
-  //   position: 'absolute',
-  //   right: -6,
-  //   top: -6,
-  // },
+  image: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.gray,
+  },
+  avatarPlaceholder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.outerColor,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: COLORS.surface,
+  },
   contents: {
     flex: 1,
-    gap: 4,
+    justifyContent: 'center',
+    gap: 2,
   },
   contentsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   name: {
-    fontSize: 14,
-    color: '#000',
+    fontSize: 15,
+    color: COLORS.text,
     fontFamily: 'BMDOHYEON',
   },
-  status: {
-    fontSize: 12,
-    color: '#ADB5BD',
+  lastSeen: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
     fontFamily: 'BMDOHYEON',
   },
   introduce: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: 'BMDOHYEON',
-    color: '#ADB5BD',
-  },
-  image: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
+    color: COLORS.textSecondary,
   },
 })

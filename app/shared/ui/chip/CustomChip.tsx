@@ -1,39 +1,34 @@
 import COLORS from '@app/shared/constants/color'
 import React from 'react'
-import {StyleSheet, Text, View} from 'react-native'
-
-// ✅ 승인됨
-// 배경색: #E8F5E9 (연한 그린톤)
-// 글자색: #2E7D32 (짙은 그린)
-
-// 🕒 대기중
-// 배경색: #FFF3E0 (연한 오렌지톤)
-// 글자색: #EF6C00 (짙은 오렌지)
-
-// ❌ 거절됨
-// 배경색: #FFEBEE (연한 레드톤)
-// 글자색: #C62828 (짙은 레드)
-
-const accountStatusMap = {
-  pending: {text: '대기중', textColor: '#FF9800', bgColor: '#FFF3E0'},
-  confirm: {text: '승인됨', textColor: '#4CAF50', bgColor: '#E8F5E9'},
-  reject: {text: '거절됨', textColor: '#F44336', bgColor: '#FFEBEE'},
-}
+import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
+import {Icon} from 'react-native-paper'
 
 type CustomChipType = {
   title: string
   textColor?: string
   bgColor?: string
+  iconName?: string
+  iconColor?: string
+  style?: StyleProp<ViewStyle>
 }
 
 const CustomChip = ({
   title,
   textColor = COLORS.onPrimary,
   bgColor = COLORS.primary,
+  iconName,
+  iconColor,
+  style,
 }: CustomChipType) => {
-  //   const statusObj = accountStatusMap?.[status] || {}
   return (
-    <View style={[styles.colorChip, {backgroundColor: bgColor}]}>
+    <View style={[styles.colorChip, {backgroundColor: bgColor}, style]}>
+      {iconName && (
+        <Icon
+          source={iconName}
+          size={16}
+          color={iconColor || textColor}
+        />
+      )}
       <Text style={[styles.colorChipText, {color: textColor}]}>
         {title || '-'}
       </Text>
@@ -46,15 +41,14 @@ export default CustomChip
 const styles = StyleSheet.create({
   colorChip: {
     borderRadius: 100,
-    fontSize: 10,
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    // paddingHorizontal: 16,
-    padding: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   colorChipText: {
     fontFamily: 'BMDOHYEON',
-    fontSize: 10,
+    fontSize: 12,
   },
 })

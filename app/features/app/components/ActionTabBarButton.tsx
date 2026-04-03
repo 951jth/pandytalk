@@ -2,13 +2,10 @@ import type {BottomTabBarButtonProps} from '@react-navigation/bottom-tabs'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React from 'react'
-import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  type TouchableOpacityProps,
-} from 'react-native'
-import type {AppRouteParamList} from '../../../types/navigate'
+import {StyleSheet, View} from 'react-native'
+
+import type {AppRouteParamList} from '../../../shared/types/navigate'
+import PressableWrapper from '../../../shared/ui/common/PressableWrapper'
 
 type AppNav = NativeStackNavigationProp<AppRouteParamList>
 
@@ -31,37 +28,41 @@ export function ActionTabButton({
   delayLongPress,
   children,
   onPress,
-  //   ...rest
 }: ActionTabButtonProps) {
   const rootNav = useNavigation().getParent<AppNav>()
+  const isFocused = accessibilityState?.selected
+
   return (
-    <TouchableOpacity
-      // ⬇️ 필요한 것만 명시적으로 매핑 (null → undefined 정규화)
+    <PressableWrapper
+      // ⬇️ 필요한 것만 명시적으로 매핑
       accessibilityRole={accessibilityRole}
       accessibilityState={accessibilityState}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style as TouchableOpacityProps['style']}
-      hitSlop={hitSlop as TouchableOpacityProps['hitSlop']}
+      style={[
+        style as any,
+        {transform: [{scale: isFocused ? 1.05 : 1}]},
+      ]}
+      hitSlop={hitSlop as any}
       delayLongPress={delayLongPress ?? undefined}
       onPress={() => {
         if (target) {
-          // (2) path가 있으면: 탭 전환 막고 → 부모 스택으로 push
-          rootNav.navigate(target, params as any) // 필요하면 제네릭으로 더 좁혀도 됩니다)
+          // (2) target이 있으면: 탭 전환 막고 → 부모 스택으로 push
+          rootNav?.navigate(target as any, params as any)
         } else {
-          // (1) path가 없으면: 기본 탭 동작(해당 Tab.Screen으로 전환)
+          // (1) target이 없으면: 기본 탭 동작(해당 Tab.Screen으로 전환)
           onPress?.({} as any)
         }
-      }}
-      //   onLongPress={onLongPress}
-    >
-      {children}
+      }}>
+      <View style={{alignItems: 'center', justifyContent: 'center'}}>
+        {children}
+      </View>
       {BadgeComponent && (
         <View style={styles.badge}>
           <BadgeComponent />
         </View>
       )}
-    </TouchableOpacity>
+    </PressableWrapper>
   )
 }
 

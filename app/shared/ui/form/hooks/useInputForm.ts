@@ -41,6 +41,11 @@ export function useInputForm(formData: object | null, formKey?: any) {
     setErrors({})
   }
 
+  // ✅ 현재 값을 새로운 세이브포인트로 갱신
+  const updateSavePoint = () => {
+    savePoint.current = cloneDeep(formValues ?? {})
+  }
+
   //필수 값 전부 검증
   const validateAll = (items: FormItem[]) => {
     const errorsFields = validateAllFields(
@@ -59,6 +64,7 @@ export function useInputForm(formData: object | null, formKey?: any) {
     setErrors,
     changeField,
     resetValues,
+    updateSavePoint,
     validateAll,
   }
 }

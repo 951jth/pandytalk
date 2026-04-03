@@ -34,42 +34,38 @@ export default function UserListItem({
   style,
   onPress = () => {},
 }: RequestMember) {
+  const formattedDate = item?.createdAt instanceof Timestamp
+    ? dayjs(item?.createdAt?.toDate()).format('YYYY.MM.DD')
+    : '-'
+
   return (
-    <PressableWrapper onPress={() => onPress(item)} style={style}>
-      <View style={[styles.friend, style]}>
-        <View style={styles.frame}>
-          {item?.photoURL ? (
-            <Image
-              source={{uri: item?.photoURL}}
-              resizeMode="cover"
-              style={styles.image}
-            />
-          ) : (
-            <Icon source="account" size={40} color={COLORS.primary} />
-          )}
+    <PressableWrapper onPress={() => onPress(item)} style={[styles.cardWrapper, style]}>
+      <View style={styles.cardContainer}>
+        {/* 아바타 영역 */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatarCircle}>
+            {item?.photoURL ? (
+              <Image
+                source={{uri: item?.photoURL}}
+                resizeMode="cover"
+                style={styles.avatarImage}
+              />
+            ) : (
+              <Icon source="account" size={32} color={COLORS.primary} />
+            )}
+          </View>
         </View>
-        <View style={styles.contents}>
-          <Text style={styles.name}>{item?.displayName}</Text>
-          <Text style={styles.status}>
-            {/* doc.updatedAt instanceof Timestamp ? doc.updatedAt.toDate() : null */}
-            {item?.createdAt instanceof Timestamp
-              ? dayjs(item?.createdAt?.toDate()).format('YYYY-MM-DD')
-              : '-'}
-          </Text>
-          <Text style={styles.email}>{item?.email || '-'}</Text>
+
+        {/* 유저 정보 영역 */}
+        <View style={styles.infoSection}>
+          <Text style={styles.userName}>{item?.displayName || '이름 없음'}</Text>
+          <Text style={styles.userEmail} numberOfLines={1}>{item?.email || '-'}</Text>
+        </View>
+
+        {/* 상태 및 날짜 영역 (우측) */}
+        <View style={styles.statusSection}>
           <ColorChip status={item.accountStatus} />
-          {/* <View style={styles.buttons}>
-            {(ButtonsByType?.[item.accountStatus] || [])?.map(button => {
-              return (
-                <ColorButton
-                  key={button?.label}
-                  label={button?.label}
-                  bgColor={button?.bgColor}
-                  style={{paddingHorizontal: 12}}
-                />
-              )
-            })}
-          </View> */}
+          <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
       </View>
     </PressableWrapper>
@@ -77,78 +73,64 @@ export default function UserListItem({
 }
 
 const styles = StyleSheet.create({
-  friend: {
-    flexDirection: 'row',
-    padding: 8,
-    gap: 12, // RN 0.71+ 이상에서 사용 가능
-    justifyContent: 'center',
-    alignItems: 'center',
+  cardWrapper: {
+    marginVertical: 8,
+    marginHorizontal: 12,
   },
-  frame: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+  cardContainer: {
+    padding: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 28, // 프리미엄 곡률
+    flexDirection: 'row',
+    alignItems: 'center',
+    // 프리미엄 소프트 디퓨전 섀도우
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  avatarSection: {
+    marginRight: 16,
+  },
+  avatarCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F9F9F9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: COLORS.primary,
     borderWidth: 1,
-    position: 'relative',
+    borderColor: '#F0F0F0',
+    overflow: 'hidden',
   },
-  point: {
-    backgroundColor: '#2CC069',
-    width: 14,
-    height: 14,
-    // borderRadius: '100%',
-    borderRadius: 100,
-    borderColor: '#FFF',
-    borderWidth: 2,
-    position: 'absolute',
-    right: -6,
-    top: -6,
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
-  contents: {
+  infoSection: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  userName: {
+    fontSize: 16,
+    fontFamily: 'BMDOHYEON',
+    color: '#2D2D2D',
+    marginBottom: 4,
+  },
+  userEmail: {
+    fontSize: 12,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.textSecondary,
+    opacity: 0.7,
+  },
+  statusSection: {
+    alignItems: 'flex-end',
     gap: 8,
-    position: 'relative',
   },
-  name: {
-    fontSize: 14,
-    color: '#000',
-    fontFamily: 'BMDOHYEON',
-  },
-  status: {
-    fontSize: 12,
-    color: '#ADB5BD',
-    fontFamily: 'BMDOHYEON',
-  },
-  email: {
-    fontFamily: 'BMDOHYEON',
-    color: '#000',
-    fontSize: 12,
-  },
-  image: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-  },
-  colorChip: {
-    borderRadius: 8,
+  dateText: {
     fontSize: 10,
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    // paddingHorizontal: 16,
-    padding: 8,
-  },
-  colorChipText: {
     fontFamily: 'BMDOHYEON',
-    fontSize: 11,
-  },
-  buttons: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    flexDirection: 'row',
-    gap: 4,
+    color: '#ADB5BD',
   },
 })

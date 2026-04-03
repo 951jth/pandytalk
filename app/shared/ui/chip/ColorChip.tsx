@@ -14,9 +14,9 @@ import {StyleSheet, Text, View} from 'react-native'
 // 글자색: #C62828 (짙은 레드)
 
 const accountStatusMap = {
-  pending: {text: '대기중', textColor: '#FF9800', bgColor: '#FFF3E0'},
-  confirm: {text: '승인됨', textColor: '#4CAF50', bgColor: '#E8F5E9'},
-  reject: {text: '거절됨', textColor: '#F44336', bgColor: '#FFEBEE'},
+  pending: {text: '승인대기', textColor: '#E67E22', bgColor: '#FEF5ED'},
+  confirm: {text: '승인완료', textColor: '#27AE60', bgColor: '#EAF7EE'},
+  reject: {text: '거절됨', textColor: '#E74C3C', bgColor: '#FDEDEC'},
 }
 
 const ColorChip = ({status}: {status: 'pending' | 'confirm' | 'reject'}) => {
@@ -34,16 +34,14 @@ export default ColorChip
 
 const styles = StyleSheet.create({
   colorChip: {
-    borderRadius: 8,
-    fontSize: 10,
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    // paddingHorizontal: 16,
-    padding: 8,
+    borderRadius: 12, // 더 부드러운 곡률
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    alignSelf: 'flex-start', // 내용만큼만 너비 차지
   },
   colorChipText: {
     fontFamily: 'BMDOHYEON',
-    fontSize: 11,
+    fontSize: 10,
+    letterSpacing: -0.5,
   },
 })

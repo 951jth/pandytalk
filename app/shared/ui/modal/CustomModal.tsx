@@ -1,6 +1,7 @@
 import React from 'react'
 import {StyleSheet, View, type StyleProp, type ViewStyle} from 'react-native'
 import Modal from 'react-native-modal'
+import COLORS from '@app/shared/constants/color'
 
 type RNModalProps = React.ComponentProps<typeof Modal>
 
@@ -30,6 +31,8 @@ export default function CustomModal({
   return (
     <Modal
       isVisible={visible}
+      backdropColor={COLORS.modalOverlay} // ✅ 하이엔드 차콜 오버레이
+      backdropOpacity={1} // ✅ 투명도는 컬러 상수에서 직접 조절
       style={[styles.modal, modalStyle]} // ✅ Modal 래퍼 전용
       onBackdropPress={onClose}
       onBackButtonPress={onClose}
@@ -48,8 +51,8 @@ const styles = StyleSheet.create({
   modal: {justifyContent: 'flex-end', margin: 0},
   content: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 32, // ✅ 시그니처 32px 곡률
+    borderTopRightRadius: 32, // ✅ 시그니처 32px 곡률
     minHeight: 200,
     padding: 16,
   },

@@ -5,6 +5,7 @@ import {
   type PressableProps,
   type StyleProp,
   type ViewStyle,
+  StyleSheet,
 } from 'react-native'
 
 type propTyps = {
@@ -12,21 +13,24 @@ type propTyps = {
   style?: StyleProp<ViewStyle>
 } & PressableProps
 
-export default function PressableWrapper({children, style, ...rest}: propTyps) {
+export default function PressableWrapper({
+  children,
+  style,
+  ...rest
+}: propTyps) {
+  // style에서 borderRadius를 추출하여 Pressable의 터치 영역 곡률에 반영 (안드로이드 리플 대응)
+  const flattenedStyle = (StyleSheet.flatten(style) || {}) as ViewStyle
+  const borderRadius = flattenedStyle.borderRadius ?? 0
+
   return (
     <Pressable
       {...rest}
+      accessibilityRole="button"
       style={({pressed}) => [
         {
-          marginBottom: 8,
-          borderRadius: 8,
-          shadowColor: '#000',
-          shadowOffset: {width: 0, height: pressed ? 0.5 : 1.5},
-          shadowOpacity: 0.1,
-          shadowRadius: pressed ? 1 : 3,
-          elevation: pressed ? 1 : 3,
-          backgroundColor: '#FFF',
-          transform: [{scale: pressed ? 0.98 : 1}],
+          borderRadius, // 전달된 곡률과 동일하게 터치 영역 설정
+          transform: [{scale: pressed ? 0.99 : 1}], // 아주 미세하고 고급스러운 눌림 효과
+          opacity: pressed ? 0.9 : 1, // 부드러운 투명도 변화
         },
         style,
       ]}>
