@@ -17,6 +17,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
   const {data: user} = useAppSelector(state => state.user)
   const userInfo = useMemo(() => cloneDeep(user), [user])
   const [menuVisible, setMenuVisible] = useState(false)
+  const [withdrawalVisible, setWithdrawalVisible] = useState(false) // ✅ 추가
   const queryClient = useQueryClient()
 
   const openMenu = () => setMenuVisible(true)
@@ -66,12 +67,19 @@ export function useProfileMenu(onReset: () => void = () => {}) {
     ])
   }
 
+  // 🗑️ 회원 탈퇴 로직 (실제 처리)
   const onDelete = useCallback(async () => {
     try {
-      // 탈퇴 로직
       await userService.deleteMyAccount()
+      setWithdrawalVisible(false) // 성공 시 모달 닫기
       Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
-    } catch (e) {}
+    } catch (e: any) {
+      console.error('Withdrawal error:', e)
+      Alert.alert(
+        '초기화 실패',
+        e?.message ?? '탈퇴 처리 중 문제가 발생했습니다.',
+      )
+    }
   }, [])
 
   // ✅ 메뉴 항목들을 훅 내부에서 동적으로 생산 (명시적 타입 부여)
@@ -100,10 +108,10 @@ export function useProfileMenu(onReset: () => void = () => {}) {
           title: '회원 탈퇴',
           icon: 'account-remove-outline',
           onPress: () => {
-            onDelete()
+            setWithdrawalVisible(true) // ✅ 모달 열기 명령
           },
           filtered:
-            userInfo?.authority !== 'ADMIN' && userInfo?.authority !== 'TEST',
+            userInfo?.authority == 'ADMIN' || userInfo?.authority == 'TEST',
         },
       ].filter(item => !item.filtered),
     [userInfo, onClear, onLogout, onReset],
@@ -111,11 +119,14 @@ export function useProfileMenu(onReset: () => void = () => {}) {
 
   return {
     userInfo,
-    menuItems, // ✅ 완성된 리스트 제공
+    menuItems,
     menuVisible,
+    withdrawalVisible,
+    setWithdrawalVisible,
     openMenu,
     closeMenu,
     onClear,
     onLogout,
+    onDelete,
   }
 }

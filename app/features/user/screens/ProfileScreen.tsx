@@ -22,7 +22,7 @@ export default function ProfileScreen(): React.JSX.Element {
     formRef,
     profileRef,
     updateUserProfile,
-    onReset, // ✅ 훅에서 가져옵니다.
+    onReset,
   } = useProfileScreen()
 
   return (
@@ -81,7 +81,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
       </ScrollView>
 
-      {/* 유저 도메인 전용 메뉴 컴포넌트 (초경량 프롭스 모드) */}
+      {/* 유저 도메인 전용 메뉴 컴포넌트 (초경량 자율 모드) */}
       <ProfileMenu
         onReset={onReset}
         anchorStyle={styles.menuAnchor}
