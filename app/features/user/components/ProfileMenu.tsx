@@ -1,9 +1,7 @@
-import React, {useMemo} from 'react'
-import {StyleProp, ViewStyle} from 'react-native'
-
 import {useProfileMenu} from '@app/features/user/hooks/useProfileMenu'
-import COLORS from '@app/shared/constants/color'
 import {CustomMenu} from '@app/shared/ui/menu/CustomMenu'
+import React from 'react'
+import {StyleProp, ViewStyle} from 'react-native'
 
 interface ProfileMenuProps {
   onReset: () => void

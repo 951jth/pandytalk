@@ -1,12 +1,12 @@
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import COLORS from '@app/shared/constants/color'
+import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
+import {useAppSelector} from '@app/store/reduxHooks'
 import auth from '@react-native-firebase/auth'
 import {useQueryClient} from '@tanstack/react-query'
-import {cloneDeep} from 'lodash' // ✅ 추가
-import {useCallback, useMemo, useState} from 'react' // ✅ useMemo 추가
+import {cloneDeep} from 'lodash'
+import {useCallback, useMemo, useState} from 'react'
 import {Alert} from 'react-native'
-import {useAppSelector} from '../../../store/reduxHooks' // ✅ 추가
-
-import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import COLORS from '@app/shared/constants/color' // ✅ 추가
 
 /**
  * 프로필 메뉴의 상태와 액션을 관리하는 도메인 전용 훅
@@ -65,8 +65,8 @@ export function useProfileMenu(onReset: () => void = () => {}) {
     ])
   }
 
-  // ✅ 메뉴 항목들을 훅 내부에서 동적으로 생산 (View Model 역할)
-  const menuItems = useMemo(
+  // ✅ 메뉴 항목들을 훅 내부에서 동적으로 생산 (명시적 타입 부여)
+  const menuItems: MenuItem[] = useMemo(
     () => [
       {
         title: '프로필 초기화',
@@ -82,7 +82,9 @@ export function useProfileMenu(onReset: () => void = () => {}) {
         title: '로그아웃',
         icon: 'logout',
         color: COLORS.error,
-        onPress: onLogout,
+        onPress: () => {
+          onLogout()
+        }, // ✅ 동기 래퍼로 감싸서 타입 안정성 확보
       },
       ...(userInfo?.authority !== 'ADMIN' && userInfo?.authority !== 'TEST'
         ? [
@@ -92,7 +94,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
               onPress: () => {
                 // Withdrawal logic...
               },
-            },
+            } as MenuItem, // 명시적 캐스팅으로 안전성 강화
           ]
         : []),
     ],
