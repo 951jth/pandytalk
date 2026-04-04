@@ -1,13 +1,12 @@
 import UserDetailModal from '@app/features/user/components/UserDetailModal'
 import UserManageItem from '@app/features/user/components/UserManageItem'
 import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
-import UserManageSkeleton from '@app/shared/ui/skeleton/UserManageSkeleton'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
+import UserManageSkeleton from '@app/shared/ui/skeleton/UserManageSkeleton'
 import React, {useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
-import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 
 const MemoizedUserManageItem = React.memo(UserManageItem)
@@ -41,7 +40,7 @@ export default function UsersManageScreen() {
 
   if (isLoading && !users?.length) {
     return (
-      <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
+      <View style={styles.container}>
         <AppHeader title="유저 관리" />
         <View style={styles.searchWrapper}>
           <SearchInput
@@ -51,12 +50,12 @@ export default function UsersManageScreen() {
           />
         </View>
         <UserManageSkeleton />
-      </SafeAreaView>
+      </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
+    <View style={styles.container}>
       <AppHeader title="유저 관리" />
       <View style={styles.searchWrapper}>
         <SearchInput
@@ -83,13 +82,13 @@ export default function UsersManageScreen() {
         onComplete={() => setModalProps({open: false, record: null})}
         onClose={() => setModalProps({open: false, record: null})}
       />
-    </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, 
+    flex: 1,
     backgroundColor: COLORS.background, // 배경 통일
   },
   searchWrapper: {

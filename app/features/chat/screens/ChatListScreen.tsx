@@ -40,8 +40,6 @@ export default function ChatListScreen() {
     },
     [moveToChatRoom],
   )
-  console.log('chats', chats)
-  console.log('isLoading', isLoading)
   if (isLoading && !chats?.length) {
     return (
       <SafeAreaView

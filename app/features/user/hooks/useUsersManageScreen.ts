@@ -1,5 +1,6 @@
 import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
 import type {User} from '@app/shared/types/auth'
+import {useAppSelector} from '@app/store/reduxHooks'
 import {debounce} from 'lodash'
 import {useEffect, useMemo, useState} from 'react'
 
@@ -12,9 +13,10 @@ export const useUsersManageScreen = () => {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('')
   const [modalProps, setModalProps] = useState<modalProps>({open: false})
+  const {data: user, loading: isUserLoading} = useAppSelector(state => state.user)
   const {
     data,
-    isLoading,
+    isLoading: isQueryLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -40,7 +42,7 @@ export const useUsersManageScreen = () => {
     input,
     setInput,
     users,
-    isLoading,
+    isLoading: isUserLoading || isQueryLoading || (!user?.uid),
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,

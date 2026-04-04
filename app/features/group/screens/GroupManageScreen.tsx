@@ -1,27 +1,31 @@
+import {useGroupManageScreen} from '@app/features/group/hooks/useGroupManageScreen'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
-import {Group} from '@app/shared/types/group'
-import React, {useState} from 'react'
+import GroupManageSkeleton from '@app/shared/ui/skeleton/GroupManageSkeleton'
+import React from 'react'
 import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {IconButton} from 'react-native-paper'
-import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import GroupModalForm from '../components/GroupFormModal'
 import GuestGroup from '../components/GuestGroup'
-import {useAllGroups} from '../hooks/useGroupQuery'
-
-type modalProps = {
-  open: boolean
-  record: Group | null
-}
 
 export default function GroupManageScreen() {
-  const [groupModalProps, setGroupModalProps] = useState<modalProps>({
-    open: false,
-    record: null,
-  })
-  const {data: groups = [], isLoading, refetch} = useAllGroups()
-  const insets = useSafeAreaInsets()
+  const {
+    groups,
+    isLoading,
+    refetch,
+    groupModalProps,
+    setGroupModalProps,
+  } = useGroupManageScreen()
+
+  if (isLoading && !groups?.length) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title="그룹 관리" />
+        <GroupManageSkeleton />
+      </View>
+    )
+  }
 
   return (
     <>
@@ -49,9 +53,9 @@ export default function GroupManageScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <EmptyData
-              text="나만의 멋진 그룹을 만들어보세요"
-              subText="대화의 장을 열고 재미있는 이야기를 나눠볼까요?"
-            />
+                text="나만의 멋진 그룹을 만들어보세요"
+                subText="대화의 장을 열고 재미있는 이야기를 나눠볼까요?"
+              />
             </View>
           }
           refreshing={isLoading}

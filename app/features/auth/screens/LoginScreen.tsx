@@ -181,5 +181,6 @@ const styles = StyleSheet.create({
   signUpHighlight: {
     color: COLORS.primary,
     textDecorationLine: 'underline',
+    fontFamily: 'BMDOHYEON',
   },
 })
