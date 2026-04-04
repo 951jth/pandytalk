@@ -44,7 +44,6 @@ export default function UsersScreen(): React.JSX.Element {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
-
       <FlatList
         data={filteredUsers}
         ListHeaderComponent={
