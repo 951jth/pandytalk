@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
   },
   chatTextContent: {
     paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   chatTextOutlined: {
-    borderRadius: 25, // 내부 필드도 캡슐형으로 복원
+    borderRadius: 25,
     borderWidth: 0,
     backgroundColor: 'rgba(242, 114, 73, 0.05)',
   },
@@ -117,11 +117,10 @@ const styles = StyleSheet.create({
     margin: 0,
     width: 44,
     height: 44,
-    borderRadius: 22, // ✅ 원형으로 복원
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.primary,
-    // 버튼 섀도우 복원
     shadowColor: COLORS.primary,
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
