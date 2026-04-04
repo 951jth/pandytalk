@@ -27,6 +27,11 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
   const viewByType = nameMaps?.[item?.type]
   const targetId = item?.findMember?.id
   const roomId = item?.id
+  const lastSeenAt = toMillisFromServerTime(findMember?.lastSeen)
+  const isOnline = !!(
+    findMember?.status === 'online' &&
+    (lastSeenAt ? dayjs().diff(dayjs(lastSeenAt), 'minute') < 15 : true)
+  )
 
   return (
     <PressableWrapper
@@ -44,7 +49,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
             <Icon source="account" size={32} color={COLORS.primary} />
           </View>
         )}
-        {findMember?.status === 'online' && <View style={styles.onlineStatus} />}
+        {isOnline && <View style={styles.onlineStatus} />}
       </View>
       
       <View style={styles.contents}>

@@ -44,10 +44,10 @@ export const userService = {
     }
     await userRemote.updateProfile(uid, payload)
   },
-  //마지막 읽음 날짜 갱신
-  updateLastSeen: async (uid: string) => {
+  //마지막 활동 기록 및 상태 갱신
+  updateLastSeen: async (uid: string, status: User['status'] = 'online') => {
     const lastSeen = serverTimestamp()
-    await userRemote.updateProfile(uid, {lastSeen})
+    await userRemote.updateProfile(uid, {lastSeen, status})
   },
   //프로필 가져오기
   getProfile: async (uid: string) => {

@@ -1,6 +1,7 @@
 import UserDetailModal from '@app/features/user/components/UserDetailModal'
-import UserListItem from '@app/features/user/components/UserListItem'
+import UserManageItem from '@app/features/user/components/UserManageItem'
 import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
+import UserManageSkeleton from '@app/shared/ui/skeleton/UserManageSkeleton'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
@@ -9,7 +10,7 @@ import {FlatList, StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 
-const MemoizedUserListItem = React.memo(UserListItem)
+const MemoizedUserManageItem = React.memo(UserManageItem)
 
 export default function UsersManageScreen() {
   const {
@@ -27,16 +28,32 @@ export default function UsersManageScreen() {
   const RenderItem = useCallback(
     ({item}: {item: User}) => {
       return (
-        <MemoizedUserListItem
+        <MemoizedUserManageItem
           item={item}
-          onPress={item => {
-            setModalProps({open: true, record: item})
+          onPress={selectedUser => {
+            setModalProps({open: true, record: selectedUser})
           }}
         />
       )
     },
     [setModalProps],
   )
+
+  if (isLoading && !users?.length) {
+    return (
+      <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
+        <AppHeader title="유저 관리" />
+        <View style={styles.searchWrapper}>
+          <SearchInput
+            placeholder="검색할 닉네임 시작 글자를 입력해주세요."
+            value={input}
+            onChangeText={setInput}
+          />
+        </View>
+        <UserManageSkeleton />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>

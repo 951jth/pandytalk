@@ -8,11 +8,12 @@ export {onGroupMembersUpdate} from './triggers/groups/onGroupMembersUpdate'
 export {onGroupMetaUpdate} from './triggers/groups/onGroupMetaUpdate'
 
 // --- 사용자 트리거 ---
+export {cleanupInactiveUsers} from './triggers/users/cleanupInactiveUsers'
 export {onUserApprove} from './triggers/users/onUserApprove'
 export {onAuthUserDeleted} from './triggers/users/onUserDelete'
 export {onUserGroupIdUpdated} from './triggers/users/onUserUpdate'
 
-// --- AI 하이브리드 스트리밍 엔드포인트 ---
+// --- AI 하이브리드 스트리밍 및 엔드포인트 ---
 export {onAiStream} from './triggers/chats/onAiStream'
 export {onAiStreamBackup} from './triggers/chats/onAiStreamBackup'
 

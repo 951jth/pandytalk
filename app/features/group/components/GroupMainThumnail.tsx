@@ -41,7 +41,8 @@ export default function GroupMainThumnail({
             <View style={styles.greetingContainer}>
               <Text style={styles.welcomeTag}>WELCOME BACK</Text>
               <Text style={styles.userNameText}>
-                {userInfo?.displayName || '사용자'} <Text style={styles.plainText}>님</Text>
+                {userInfo?.displayName || '사용자'}{' '}
+                <Text style={styles.plainText}>님</Text>
               </Text>
             </View>
             <View style={styles.avatarWrapper}>
@@ -53,7 +54,6 @@ export default function GroupMainThumnail({
               ) : (
                 <Image source={logo} style={styles.avatarImage} />
               )}
-              <View style={styles.onlineIndicator} />
             </View>
           </View>
 

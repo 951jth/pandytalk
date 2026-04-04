@@ -3,6 +3,7 @@ import type {ChatItemWithMemberInfo} from '@app/shared/types/chat'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
+import ChatListSkeleton from '@app/shared/ui/skeleton/ChatListSkeleton'
 import {useRoute, type RouteProp} from '@react-navigation/native'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
@@ -39,6 +40,16 @@ export default function ChatListScreen() {
     },
     [moveToChatRoom],
   )
+
+  if (isLoading && !chats?.length) {
+    return (
+      <SafeAreaView
+        style={styles.container}
+        edges={['right', 'left', 'bottom']}>
+        <ChatListSkeleton />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>

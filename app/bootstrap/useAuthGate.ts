@@ -1,4 +1,3 @@
-import {userService} from '@app/features/user/service/userService'
 import {auth} from '@app/shared/firebase/firestore'
 import {useLogout} from '@app/shared/hooks/useLogout'
 import {useAppSelector} from '@app/store/reduxHooks'
@@ -23,8 +22,6 @@ export function useAuthGate() {
   const fetchProfile = useCallback(
     async (uid: string) => {
       const profile = await dispatch(fetchUserById(uid)).unwrap()
-      await userService.updateLastSeen(uid)
-
       if (profile?.accountStatus !== 'confirm') {
         logout()
         Alert.alert(
@@ -57,7 +54,6 @@ export function useAuthGate() {
         }
       })()
     })
-
     return unsubscribe
   }, [fetchProfile])
 

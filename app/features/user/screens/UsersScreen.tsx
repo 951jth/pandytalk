@@ -1,12 +1,13 @@
 import {useUsersScreen} from '@app/features/user/hooks/useUsersScreen'
 import COLORS from '@app/shared/constants/color'
+import UserListSkeleton from '@app/shared/ui/skeleton/UserListSkeleton'
 import React, {useState} from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import SearchInput from '../../../shared/ui/input/SearchInput'
-import ChatMember from '../../chat/components/ChatMember'
 import GroupMainThumnail from '../../group/components/GroupMainThumnail'
+import UserListItem from '../components/UserListItem'
 
 export default function UsersScreen(): React.JSX.Element {
   const {
@@ -25,6 +26,16 @@ export default function UsersScreen(): React.JSX.Element {
   const filteredUsers = users?.filter(user =>
     user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  if (isLoading && !users?.length) {
+    return (
+      <SafeAreaView
+        style={styles.container}
+        edges={['right', 'left', 'bottom']}>
+        <UserListSkeleton />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
@@ -50,7 +61,7 @@ export default function UsersScreen(): React.JSX.Element {
         keyExtractor={item => item.uid}
         renderItem={({item}) => {
           return (
-            <ChatMember
+            <UserListItem
               item={item}
               onPress={() => {
                 moveToChatRoom(item.uid, item?.displayName)

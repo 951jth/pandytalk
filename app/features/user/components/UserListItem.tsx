@@ -1,136 +1,143 @@
-import COLORS from '@app/shared/constants/color'
-import {User} from '@app/shared/types/auth'
-import ColorChip from '@app/shared/ui/chip/ColorChip'
-import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 import {Timestamp} from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
 import React from 'react'
-import {Image, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  View,
+  ViewStyle,
+} from 'react-native'
+import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
 
-interface RequestMember {
+import OnlineBadge from '@app/shared/ui/badge/OnlineBadge'
+import COLORS from '@shared/constants/color'
+import {User} from '@shared/types/auth'
+import dayjs from '@shared/utils/dayjs'
+
+interface UserListItemProps {
   item: User
   style?: StyleProp<ViewStyle>
-  onPress: (uid: object) => void
+  onPress: (uid: string) => void
 }
 
-// const ButtonsByType = {
-//   pending: [
-//     {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
-//     {label: '거절', bgColor: '#F44336', onPress: () => {}},
-//   ],
-//   confirm: [
-//     {label: '수정', bgColor: '#2E7D32', onPress: () => {}},
-//     {label: '정지', bgColor: '#FF9800', onPress: () => {}},
-//   ],
-//   reject: [
-//     {label: '승인', bgColor: '#2E7D32', onPress: () => {}},
-//     {label: '삭제', bgColor: '#F44336', onPress: () => {}},
-//   ],
-// }
-
+/**
+ * 일반 유저 목록(친구, 대화 참여자 등)에 범용적으로 사용되는 아이템 컴포넌트
+ */
 export default function UserListItem({
   item,
   style,
   onPress = () => {},
-}: RequestMember) {
-  const formattedDate = item?.createdAt instanceof Timestamp
-    ? dayjs(item?.createdAt?.toDate()).format('YYYY.MM.DD')
-    : '-'
+}: UserListItemProps) {
+  const lastSeen =
+    item?.lastSeen instanceof Timestamp
+      ? item?.lastSeen?.toDate()
+      : item?.lastSeen
+
+  const isOnline = !!(
+    item?.status === 'online' &&
+    (lastSeen ? dayjs().diff(dayjs(Number(lastSeen)), 'minute') < 15 : true)
+  )
 
   return (
-    <PressableWrapper onPress={() => onPress(item)} style={[styles.cardWrapper, style]}>
-      <View style={styles.cardContainer}>
-        {/* 아바타 영역 */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarCircle}>
-            {item?.photoURL ? (
-              <Image
-                source={{uri: item?.photoURL}}
-                resizeMode="cover"
-                style={styles.avatarImage}
-              />
-            ) : (
-              <Icon source="account" size={32} color={COLORS.primary} />
-            )}
+    <Pressable
+      onPress={() => onPress(item.uid)}
+      style={({pressed}) => [
+        styles.card,
+        {
+          transform: [{scale: pressed ? 0.98 : 1}],
+          backgroundColor: pressed ? COLORS.deepGray : COLORS.surface,
+        },
+        style,
+      ]}>
+      <View style={styles.friend}>
+        <View style={styles.avatarContainer}>
+          {item?.photoURL ? (
+            <FastImage
+              source={{uri: item?.photoURL}}
+              resizeMode={FastImage.resizeMode.cover}
+              style={styles.image}
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Icon source="account" size={32} color={COLORS.textSecondary} />
+            </View>
+          )}
+          <OnlineBadge isOnline={isOnline} />
+        </View>
+        <View style={styles.contents}>
+          <View style={styles.contentsRow}>
+            <Text style={styles.name}>{item?.displayName}</Text>
+            <Text style={styles.lastSeen}>
+              {lastSeen ? dayjs(Number(lastSeen)).fromNow() : ''}
+            </Text>
           </View>
-        </View>
-
-        {/* 유저 정보 영역 */}
-        <View style={styles.infoSection}>
-          <Text style={styles.userName}>{item?.displayName || '이름 없음'}</Text>
-          <Text style={styles.userEmail} numberOfLines={1}>{item?.email || '-'}</Text>
-        </View>
-
-        {/* 상태 및 날짜 영역 (우측) */}
-        <View style={styles.statusSection}>
-          <ColorChip status={item.accountStatus} />
-          <Text style={styles.dateText}>{formattedDate}</Text>
+          <Text style={styles.introduce} numberOfLines={1} ellipsizeMode="tail">
+            {item?.intro || '멋진 소개글이 아직 없네요.'}
+          </Text>
         </View>
       </View>
-    </PressableWrapper>
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    marginVertical: 8,
-    marginHorizontal: 12,
-  },
-  cardContainer: {
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderRadius: 28, // 프리미엄 곡률
-    flexDirection: 'row',
-    alignItems: 'center',
-    // 프리미엄 소프트 디퓨전 섀도우
+  card: {
+    marginBottom: 10,
+    borderRadius: 16,
+    padding: 12,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 4,
   },
-  avatarSection: {
-    marginRight: 16,
+  friend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
-  avatarCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F9F9F9',
+  avatarContainer: {
+    position: 'relative',
+  },
+  image: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.gray,
+  },
+  avatarPlaceholder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.outerColor,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    overflow: 'hidden',
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  infoSection: {
+  contents: {
     flex: 1,
     justifyContent: 'center',
+    gap: 2,
   },
-  userName: {
-    fontSize: 16,
+  contentsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  name: {
+    fontSize: 15,
+    color: COLORS.text,
     fontFamily: 'BMDOHYEON',
-    color: '#2D2D2D',
-    marginBottom: 4,
   },
-  userEmail: {
-    fontSize: 12,
+  lastSeen: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontFamily: 'BMDOHYEON',
+  },
+  introduce: {
+    fontSize: 13,
     fontFamily: 'BMDOHYEON',
     color: COLORS.textSecondary,
-    opacity: 0.7,
-  },
-  statusSection: {
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  dateText: {
-    fontSize: 10,
-    fontFamily: 'BMDOHYEON',
-    color: '#ADB5BD',
   },
 })
