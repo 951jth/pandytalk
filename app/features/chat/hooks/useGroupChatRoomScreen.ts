@@ -9,11 +9,13 @@ type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
 
 export const useGroupChatRoomScreen = () => {
   const route = useRoute<GroupChatRoute>()
-  const {data: user, loading} = useAppSelector(data => data?.user)
+  const {data: user, loading: isUserLoading} = useAppSelector(data => data?.user)
   const groupId = route?.params?.roomId || user?.groupId || null
   //chatId는 groupId와 동일
-  const {data: group, isLoading, error} = useGroup(groupId)
-  const {data: roomInfo} = useChatRoomInfo(groupId)
+  const {data: group, isLoading: isGroupLoading} = useGroup(groupId)
+  const {data: roomInfo, isLoading: isRoomLoading} = useChatRoomInfo(groupId)
+
+  const isLoading = isUserLoading || isGroupLoading || isRoomLoading || (!!groupId && !roomInfo)
 
   const headerTitle = useMemo(() => {
     return group?.name
@@ -21,7 +23,7 @@ export const useGroupChatRoomScreen = () => {
 
   return {
     user,
-    loading: loading || isLoading,
+    isLoading,
     roomId: groupId,
     roomInfo,
     headerTitle,

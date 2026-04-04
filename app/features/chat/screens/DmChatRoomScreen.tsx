@@ -10,10 +10,10 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 
 export default function DmChatRoomScreen() {
-  const {user, loading, targetId, roomId, roomInfo, headerTitle} =
+  const {user, isLoading, targetId, roomId, roomInfo, headerTitle} =
     useDmChatRoomScreen()
 
-  if (loading || !user) {
+  if (isLoading || !user) {
     return (
       <EmptyData
         text="팬디톡이 소식을 불러오는 중이에요"

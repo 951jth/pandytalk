@@ -24,7 +24,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
   // 채팅 목록 쿼리
   const {
     data,
-    isLoading,
+    isLoading: isQueryLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -59,6 +59,11 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
       ),
     [chats, searchText],
   )
+
+  const isLoading =
+    !user?.uid ||
+    isQueryLoading ||
+    (rawChats.length > 0 && filteredChat.length === 0 && !input)
 
   const moveToChatRoom = useCallback(
     (targetId?: string | undefined, roomId?: string | undefined) => {

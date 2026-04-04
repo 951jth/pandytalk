@@ -10,10 +10,10 @@ import ChatInputBox from '../components/ChatMessageInput'
 import ChatMessageList from '../components/ChatMessageList'
 
 export default function GroupChatRoomScreen() {
-  const {user, loading, roomId, roomInfo, headerTitle} =
+  const {user, isLoading, roomId, roomInfo, headerTitle} =
     useGroupChatRoomScreen()
 
-  if (loading || !user) {
+  if (isLoading || !user) {
     return (
       <EmptyData
         text="팬디톡이 소식을 불러오는 중이에요"

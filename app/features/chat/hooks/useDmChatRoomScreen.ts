@@ -11,8 +11,10 @@ export const useDmChatRoomScreen = () => {
   const route = useRoute<DmChatRouteProp>()
   const {myId, targetId, title} = route.params //DM 채팅은 내아이디와 상대방 아이디 필수
   const roomId = route?.params?.roomId ?? getDMChatId(myId, targetId) //DM채팅은 aId_bId의 형식(사용자는 채팅방 아이디를 미리 알고있음.)
-  const {data: user, loading, error} = useAppSelector(state => state.user)
-  const {data: roomInfo} = useChatRoomInfo(roomId)
+  const {data: user, loading: isUserLoading} = useAppSelector(state => state.user)
+  const {data: roomInfo, isLoading: isRoomLoading} = useChatRoomInfo(roomId)
+
+  const isLoading = isUserLoading || isRoomLoading || (!!roomId && !roomInfo)
 
   const headerTitle = useMemo(() => {
     const findMember = roomInfo?.memberInfos?.find(
@@ -23,7 +25,7 @@ export const useDmChatRoomScreen = () => {
 
   return {
     user,
-    loading,
+    isLoading,
     targetId,
     roomId,
     roomInfo,
