@@ -11,7 +11,7 @@ description: 프로젝트 회고록(Retrospective) 문서를 일관된 형식으
 - **파일명 형식**: `[유형]_[주제]_[YYYYMMDD].md`
   - 유형 예: `feature`, `bugfix`, `hotfix`, `refactor`, `debug_resolve`
   - 주제 예: `chat_sync`, `ai_mention`
-  - 예시: `bugfix_chat_sync_20260328.md`
+  - 예시: `debug_resolve_chat_sync_20260328.md`
 
 ### 2. 문서 내부 구조 (Markdown Format)
 
