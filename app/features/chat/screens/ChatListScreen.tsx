@@ -42,16 +42,14 @@ export default function ChatListScreen() {
   )
   if (isLoading && !chats?.length) {
     return (
-      <SafeAreaView
-        style={styles.container}
-        edges={['right', 'left', 'bottom']}>
+      <View style={styles.container}>
         <ChatListSkeleton />
-      </SafeAreaView>
+      </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
+    <View style={styles.container}>
       <FlatList
         data={chats}
         keyExtractor={e => e?.id}
@@ -86,7 +84,7 @@ export default function ChatListScreen() {
         style={{flex: 1}}
         contentContainerStyle={styles.chatContents}
       />
-    </SafeAreaView>
+    </View>
   )
 }
 

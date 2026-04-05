@@ -29,16 +29,14 @@ export default function UsersScreen(): React.JSX.Element {
 
   if (isLoading && !users?.length) {
     return (
-      <SafeAreaView
-        style={styles.container}
-        edges={['right', 'left', 'bottom']}>
+      <View style={styles.container}>
         <UserListSkeleton />
-      </SafeAreaView>
+      </View>
     )
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['right', 'left', 'bottom']}>
+    <View style={styles.container}>
       <SearchInput
         placeholder="검색할 닉네임 시작 글자를 입력해주세요."
         value={searchQuery}
@@ -91,7 +89,7 @@ export default function UsersScreen(): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContainer}
       />
-    </SafeAreaView>
+    </View>
   )
 }
 

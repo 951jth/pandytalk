@@ -96,16 +96,18 @@ const styles = StyleSheet.create({
   },
   chatTextInput: {
     flex: 1,
-    minHeight: 45,
+    minHeight: 40,
     maxHeight: 120,
     backgroundColor: 'transparent',
     fontSize: 15,
-    fontFamily: 'BMDOHYEON',
   },
   chatTextContent: {
     paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    fontSize: 15,
   },
   chatTextOutlined: {
     borderRadius: 25,
@@ -115,8 +117,8 @@ const styles = StyleSheet.create({
   sendButton: {
     padding: 0,
     margin: 0,
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
