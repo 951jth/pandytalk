@@ -54,9 +54,7 @@ export function ActionTabButton({
           onPress?.({} as any)
         }
       }}>
-      <View style={{alignItems: 'center', justifyContent: 'center'}}>
-        {children}
-      </View>
+      {children}
       {BadgeComponent && (
         <View style={styles.badge}>
           <BadgeComponent />

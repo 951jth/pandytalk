@@ -3,7 +3,6 @@ import COLORS from '@app/shared/constants/color'
 import UserListSkeleton from '@app/shared/ui/skeleton/UserListSkeleton'
 import React, {useState} from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
-import {SafeAreaView} from 'react-native-safe-area-context'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import SearchInput from '../../../shared/ui/input/SearchInput'
 import GroupMainThumnail from '../../group/components/GroupMainThumnail'
@@ -100,7 +99,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flexGrow: 1,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',

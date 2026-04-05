@@ -8,21 +8,24 @@ import {db} from '../../core/firebase'
  */
 export const cleanupInactiveUsers = onSchedule(
   {
-    schedule: 'every 30 minutes',
+    schedule: 'every 60 minutes',
     region: 'asia-northeast3',
     timeZone: 'Asia/Seoul',
   },
   async event => {
     const currentTime = admin.firestore.Timestamp.now()
     // 1시간 전 타임스탬프 계산 (60분 * 60초 * 1000밀리초)
-    const thresholdMillis = currentTime.toMillis() - 60 * 60 * 1000 
+    const thresholdMillis = currentTime.toMillis() - 60 * 60 * 1000
     const thresholdDate = admin.firestore.Timestamp.fromMillis(thresholdMillis)
 
-    console.log(`🧹 비활성 유저 정리 배치 시작... 기준 시간: ${thresholdDate.toDate().toISOString()}`)
+    console.log(
+      `🧹 비활성 유저 정리 배치 시작... 기준 시간: ${thresholdDate.toDate().toISOString()}`,
+    )
 
     try {
       // 1시간 이상 lastSeen 업데이트가 없는 온라인 유저 검색
-      const snapshot = await db.collection('users')
+      const snapshot = await db
+        .collection('users')
         .where('status', '==', 'online')
         .where('lastSeen', '<', thresholdDate)
         .get()
@@ -36,7 +39,7 @@ export const cleanupInactiveUsers = onSchedule(
       snapshot.docs.forEach(doc => {
         batch.update(doc.ref, {
           status: 'offline',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         })
       })
 
@@ -45,5 +48,5 @@ export const cleanupInactiveUsers = onSchedule(
     } catch (error) {
       console.error('❌ 비활성 유저 정리 배치 오류:', error)
     }
-  }
+  },
 )
