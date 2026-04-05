@@ -38,44 +38,31 @@ export default function UsersManageScreen() {
     [setModalProps],
   )
 
-  if (isLoading && !users?.length) {
-    return (
-      <View style={styles.container}>
-        <AppHeader title="유저 관리" />
-        <View style={styles.searchWrapper}>
-          <SearchInput
-            placeholder="검색할 닉네임 시작 글자를 입력해주세요."
-            value={input}
-            onChangeText={setInput}
-          />
-        </View>
-        <UserManageSkeleton />
-      </View>
-    )
-  }
-
   return (
     <View style={styles.container}>
       <AppHeader title="유저 관리" />
-      <View style={styles.searchWrapper}>
-        <SearchInput
-          placeholder="검색할 닉네임 시작 글자를 입력해주세요."
-          value={input}
-          onChangeText={setInput}
-        />
-      </View>
-      <FlatList
-        data={users}
-        renderItem={({item}) => <RenderItem item={item} />}
-        refreshing={isLoading}
-        onRefresh={refetch}
-        onEndReached={() => {
-          if (hasNextPage) fetchNextPage()
-        }}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.friendsContainer}
-        showsVerticalScrollIndicator={false}
+      <SearchInput
+        placeholder="검색할 닉네임 시작 글자를 입력해주세요."
+        value={input}
+        onChangeText={setInput}
       />
+      {isLoading && !users?.length ? (
+        <UserManageSkeleton />
+      ) : (
+        <FlatList
+          data={users}
+          renderItem={({item}) => <RenderItem item={item} />}
+          refreshing={isLoading}
+          onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage()
+          }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.friendsContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
       <UserDetailModal
         open={!!modalProps?.open}
         record={modalProps?.record as User}

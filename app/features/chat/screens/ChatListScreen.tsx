@@ -8,7 +8,6 @@ import {useRoute, type RouteProp} from '@react-navigation/native'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
-import {SafeAreaView} from 'react-native-safe-area-context'
 import ChatListItemCard from '../components/ChatListItemCard'
 import {useChatListScreen} from '../hooks/useChatListScreen'
 
@@ -50,6 +49,11 @@ export default function ChatListScreen() {
 
   return (
     <View style={styles.container}>
+      <SearchInput
+        placeholder="검색할 닉네임을 입력해주세요."
+        value={input}
+        onChangeText={setInput}
+      />
       <FlatList
         data={chats}
         keyExtractor={e => e?.id}
@@ -57,13 +61,6 @@ export default function ChatListScreen() {
         onEndReached={() => {
           if (hasNextPage) fetchNextPage()
         }}
-        ListHeaderComponent={
-          <SearchInput
-            placeholder="검색할 닉네임을 입력해주세요."
-            value={input}
-            onChangeText={setInput}
-          />
-        }
         ListFooterComponent={
           isFetchingNextPage ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
@@ -91,11 +88,10 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexGrow: 1,
     backgroundColor: COLORS.background, // 앱 전체 테마 반영
   },
   chatContents: {
-    paddingBottom: 24, // 하단 탭바 여백 확보
+    paddingBottom: 16, // 하단 탭바 여백 확보
     flexGrow: 1, // ✅ 목록이 비었을 때 화면을 꽉 채우도록 설정
   },
   empty: {
