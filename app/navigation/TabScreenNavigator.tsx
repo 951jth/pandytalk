@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator<TabParamList>()
 const EmptyScreen: React.FC<any> = () => null
 
 /** 탭바 기본 높이 (인셋 제외) */
-const TAB_BAR_BASE_HEIGHT = 48
+const TAB_BAR_BASE_HEIGHT = 56
 
 export default function TabScreenNavigator(): React.JSX.Element {
   const tabs = tabScreens()
@@ -24,7 +24,7 @@ export default function TabScreenNavigator(): React.JSX.Element {
     return {
       tabBar: {
         height: totalHeight,
-        paddingTop: 8,
+        paddingTop: 10,
         paddingBottom: insets.bottom + 6,
       },
       screenWrapper: {
