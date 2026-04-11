@@ -1,7 +1,7 @@
+import COLORS from '@shared/constants/color'
 import React from 'react'
 import {StyleSheet, TouchableOpacity, View} from 'react-native'
 import {IconButton} from 'react-native-paper'
-import COLORS from '@shared/constants/color'
 
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
 
@@ -23,7 +23,7 @@ export default function ImagePreview({uri, onRemove}: ImagePreviewProps) {
           <IconButton
             icon="close-circle"
             iconColor={COLORS.error || '#FF0000'}
-            size={24}
+            size={20}
             style={styles.removeIcon}
           />
         </TouchableOpacity>
@@ -58,14 +58,20 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     position: 'absolute',
-    top: -12,
-    right: -12,
+    top: -8,
+    right: -8,
     zIndex: 1,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   removeIcon: {
     margin: 0,
     padding: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+    borderRadius: 12,
+    width: 20,
+    height: 20,
   },
 })
