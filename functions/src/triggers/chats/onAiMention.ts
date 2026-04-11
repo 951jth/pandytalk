@@ -46,6 +46,7 @@ export const onAiMention = onDocumentCreated(
         prompt,
         mentionerId: senderId,
         seq: 0, // 트랜잭션 내에서 업데이트됨
+        imageUrl: message.imageUrl || null,
       })
 
       await db.runTransaction(async tx => {
@@ -79,6 +80,7 @@ export const onAiMention = onDocumentCreated(
             chatId,
             messageId: aiMessageRef.id,
             prompt,
+            imageUrl: message.imageUrl || null, // 이미지가 있는 경우 포함
           },
           {
             scheduleDelaySeconds: 30, // 30초 대기 후 체크 (SSE 완료 여부 확인)

@@ -29,17 +29,49 @@ export const getPandibotTools =
 export const getPandibotMessages = (
   prompt: string,
   history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [],
-): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => [
-  {
-    role: 'system',
-    content: AI_BASE_PROMPT,
-  },
-  ...history,
-  {
-    role: 'user',
-    content: prompt,
-  },
-]
+  imageUrl?: string,
+): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => {
+  logger.info(
+    `🤖 [getPandibotMessages] Prompt: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''} | History: ${history.length}건 | Image: ${imageUrl ? '있음' : '없음'}`,
+  )
+  // 1. 히스토리 정제: 이전 메시지의 이미지들은 제거하고 텍스트만 남김 (토큰 절약 및 단건 분석)
+  const sanitizedHistory = history.map(msg => {
+    if (Array.isArray(msg.content)) {
+      const textPart = msg.content.find(p => p.type === 'text') as any
+      return {
+        ...msg,
+        content: textPart?.text || '',
+      }
+    }
+    return msg
+  })
+
+  // 2. 현재 질문 구성
+  const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
+    {type: 'text', text: prompt},
+  ]
+
+  if (imageUrl) {
+    userContent.push({
+      type: 'image_url',
+      image_url: {url: imageUrl},
+    })
+  }
+
+  const finalMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: 'system',
+      content: AI_BASE_PROMPT,
+    },
+    ...sanitizedHistory,
+    {
+      role: 'user',
+      content: userContent,
+    },
+  ]
+
+  return finalMessages
+}
 
 /**
  * OpenAI API를 통해 도구 호출을 포함한 AI 응답 스트림을 반환합니다.

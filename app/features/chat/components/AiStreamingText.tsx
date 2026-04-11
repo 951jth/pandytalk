@@ -28,6 +28,7 @@ export default function AiStreamingText({
     chatId,
     prompt,
     messageId,
+    imageUrl: item?.imageUrl, // 질문 기록에 저장된 이미지 URL 전달
     enabled: isStreamingStatus && isOwner,
   })
 

@@ -120,11 +120,21 @@ export const messageRemote = {
         const prevRecent = (chatData?.recentMessages as any[]) || []
         let updatedRecent = prevRecent
 
-        // 텍스트가 있는 경우에만 맥락에 추가
-        if (message.text?.trim()) {
+        // 텍스트나 이미지가 있는 경우 맥락에 추가
+        if (message.text?.trim() || message.imageUrl) {
+          let content: any = message.text || ''
+
+          // 이미지가 포함된 경우 멀티모달 포맷으로 저장
+          if (message.imageUrl) {
+            content = [
+              {type: 'text', text: message.text || ''},
+              {type: 'image_url', image_url: {url: message.imageUrl}},
+            ]
+          }
+
           const newContextItem = {
             role: 'user',
-            content: message.text,
+            content,
           }
           // 최신 10개만 유지
           updatedRecent = [...prevRecent, newContextItem].slice(-10)

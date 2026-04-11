@@ -13,6 +13,7 @@ export const aiService = {
     onDone: () => void,
     onError: (error: any) => void,
     messageId?: string,
+    imageUrl?: string,
   ) => {
     // 1. 필요한 경우 로컬 상태 기록 또는 전처리 진행 가능
 
@@ -21,6 +22,7 @@ export const aiService = {
       chatId,
       prompt,
       messageId,
+      imageUrl,
       onChunk,
       onDone,
       onError,

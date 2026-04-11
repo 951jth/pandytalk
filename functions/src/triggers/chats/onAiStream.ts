@@ -29,7 +29,7 @@ export const onAiStream = onRequest(
     res.setHeader('Connection', 'keep-alive')
 
     // prompt는 AI Mention에서 질문한 내용
-    const {chatId, prompt, messageId, createdAt} = req.body
+    const {chatId, prompt, messageId, createdAt, imageUrl} = req.body
 
     const controller = new AbortController()
     let aiReplyText = ''
@@ -63,11 +63,22 @@ export const onAiStream = onRequest(
       const history = (chatData?.recentMessages as any[]) || []
 
       // 현재 질문(prompt)과 중복되는 히스토리는 제외 (가장 마지막 대화와 중복일 확률이 큼)
-      const filteredHistory = history.filter(h => h.content !== prompt)
+      const filteredHistory = history.filter(h => {
+        // 단순 문자열인 경우
+        if (typeof h.content === 'string') {
+          return h.content !== prompt
+        }
+        // 객체 배열(멀티모달)인 경우 텍스트 부분만 비교
+        if (Array.isArray(h.content)) {
+          const textPart = h.content.find((p: any) => p.type === 'text')
+          return textPart?.text !== prompt
+        }
+        return true
+      })
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
-      const messages = getPandibotMessages(prompt, filteredHistory)
+      const messages = getPandibotMessages(prompt, filteredHistory, imageUrl)
 
       // 스트리밍 응답 생성
       const stream = await getAiResponseStream(

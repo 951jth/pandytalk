@@ -5,6 +5,7 @@ export interface UseAiStreamOptions {
   chatId?: string
   prompt?: string
   messageId?: string
+  imageUrl?: string
   enabled?: boolean
   // typingSpeed?: number // [비교용] 각 글자별 출력 간격 (ms)
   // skipTyping?: boolean // [비교용] 타이핑 효과 없이 즉시 출력할지 여부
@@ -15,7 +16,7 @@ export interface UseAiStreamOptions {
  * SSE로부터 수신된 텍스트를 즉시 화면에 출력합니다.
  */
 export const useAiStreamResponse = (params: UseAiStreamOptions) => {
-  const {chatId, prompt, messageId, enabled = true} = params
+  const {chatId, prompt, messageId, imageUrl, enabled = true} = params
 
   const [displayText, setDisplayText] = useState<string>('') // 화면에 실시간으로 보여줄 텍스트
   const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 중 여부
@@ -69,6 +70,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetChatId: string,
       targetPrompt: string,
       targetMessageId?: string,
+      targetImageUrl?: string,
     ) => {
       setDisplayText('')
       fullTextRef.current = ''
@@ -94,6 +96,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             setIsStreaming(false)
           },
           targetMessageId,
+          targetImageUrl,
         )
       } catch (err: any) {
         console.error('[useAiStreamResponse] Init Error:', err)
@@ -113,9 +116,9 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       !isStreaming &&
       fullTextRef.current === ''
     ) {
-      startStreaming(chatId, prompt, messageId)
+      startStreaming(chatId, prompt, messageId, imageUrl)
     }
-  }, [enabled, chatId, prompt, messageId, startStreaming, isStreaming])
+  }, [enabled, chatId, prompt, messageId, imageUrl, startStreaming, isStreaming])
 
   /**
    * 상태 완전 초기화

@@ -12,13 +12,15 @@ export function createAiInitialMessage(params: {
   prompt: string
   mentionerId: string
   seq: number
+  imageUrl?: string
 }) {
-  const {id, prompt, mentionerId, seq} = params
+  const {id, prompt, mentionerId, seq, imageUrl} = params
   return {
     id,
     text: '팬디봇이 답변을 생성 중입니다...',
     prompt,
     mentionerId,
+    imageUrl, // 질문에 포함된 이미지 URL 저장
     type: 'ai_text' as const,
     senderId: AI_BOT_ID,
     senderName: AI_BOT_NAME,

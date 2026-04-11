@@ -24,10 +24,11 @@ export const onAiStreamBackup = onTaskDispatched(
     region: 'asia-northeast3',
   },
   async event => {
-    const {chatId, messageId, prompt} = event.data as {
+    const {chatId, messageId, prompt, imageUrl} = event.data as {
       chatId: string
       messageId: string
       prompt: string
+      imageUrl?: string
     }
 
     // 큐에서 작업이 시작되었음을 가장 먼저 로깅으로 확인
@@ -66,7 +67,7 @@ export const onAiStreamBackup = onTaskDispatched(
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
-      const messages = getPandibotMessages(prompt)
+      const messages = getPandibotMessages(prompt, [], imageUrl)
 
       const aiReplyText = await getAiResponse(
         openai,
