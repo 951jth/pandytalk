@@ -67,13 +67,21 @@ export default function ChatMessageItem({
 
     if (type === 'image' && item?.imageUrl) {
       return (
-        <ImageViewer
-          images={[{uri: item?.imageUrl}]}
-          imageProps={{
-            resizeMode: 'cover',
-            style: styles.chatImage,
-          }}
-        />
+        <>
+          <ImageViewer
+            images={[{uri: item?.imageUrl}]}
+            imageProps={{
+              resizeMode: 'cover',
+              style: styles.chatImage,
+            }}
+          />
+          {item?.text && (
+            <CopyableText
+              textStyle={{color: textColor, marginTop: 5}}
+              value={item?.text ?? '-'}
+            />
+          )}
+        </>
       )
     }
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import {Alert, StyleSheet} from 'react-native'
+import {Alert, StyleSheet, type StyleProp, type ViewStyle} from 'react-native'
 import {
   ImageLibraryOptions,
   ImagePickerResponse,
@@ -14,12 +14,14 @@ interface propTypes {
   iconSize?: number
   onChange?: (result: ImagePickerResponse) => void
   options?: Omit<ImageLibraryOptions, 'mediaType'>
+  style?: StyleProp<ViewStyle>
 }
 
 export default function UploadButton({
   iconSize = 25,
   onChange,
   options,
+  style,
 }: propTypes) {
   const pickFile = async () => {
     try {
@@ -42,7 +44,7 @@ export default function UploadButton({
       <IconButton
         icon={'plus'}
         size={iconSize}
-        style={[styles.iconButton, {width: iconSize, height: iconSize}]}
+        style={[styles.iconButton, {width: iconSize, height: iconSize}, style]}
         contentStyle={{width: iconSize, height: iconSize}}
         onPress={pickFile}
       />

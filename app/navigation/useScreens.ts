@@ -4,6 +4,7 @@ import GroupChatRoomScreen from '@app/features/chat/screens/GroupChatRoomScreen'
 import GroupManageScreen from '@app/features/group/screens/GroupManageScreen'
 import UserJoinScreen from '@app/features/user/screens/UserJoinScreen'
 import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
+import HarnessScreen from '@app/features/harness/screens/HarnessScreen'
 import MainLayout from '@app/layout/MainLayout'
 import TabScreenNavigator from '@app/navigation/TabScreenNavigator'
 import type {NativeStackNavigationOptions} from '@react-navigation/native-stack'
@@ -50,6 +51,11 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-manage',
           title: '그룹 관리',
           component: GroupManageScreen,
+        },
+        {
+          name: 'harness',
+          title: '하네스',
+          component: HarnessScreen,
         },
       ],
     },

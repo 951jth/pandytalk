@@ -30,6 +30,7 @@ export const useChatMessageInput = ({
   chatType,
 }: ChatInputPropTypes) => {
   const [text, setText] = useState<string>('')
+  const [selectedImage, setSelectedImage] = useState<ImagePickerResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
@@ -101,6 +102,12 @@ export const useChatMessageInput = ({
     type: ChatMessage['type'],
     result?: ImagePickerResponse,
   ) => {
+    // 이미지를 선택한 경우, 즉시 보내지 않고 상태만 저장 (텍스트와 같이 보내기 위해)
+    if (type === 'image' && result) {
+      setSelectedImage(result)
+      return
+    }
+
     if (isDisabled) {
       Alert.alert('안내', '대화가 불가능한 상태입니다.')
       return
@@ -118,18 +125,23 @@ export const useChatMessageInput = ({
         type,
         imageUrl: '',
       }
-      // step 2. 이미지 타입이면 업로드 Url 생성
-      if (type == 'image') {
-        const image = result?.assets?.[0]
-        if (!image?.uri) throw new Error('이미지가 없습니다.')
-        if (image?.uri && result) {
-          const uploadProm = await fileService.uploadImageFromPicker(result, {
-            rootName: 'chat_images',
-            ext: 'jpg',
-          })
+      // step 2. 이미지 타입이거나 선택된 이미지가 있는 경우 업로드 Url 생성
+      if (type === 'image' || selectedImage) {
+        const imageResponse = result || selectedImage
+        const image = imageResponse?.assets?.[0]
+        if (!image?.uri) {
+          if (type === 'image') throw new Error('이미지가 없습니다.')
+        } else {
+          const uploadProm = await fileService.uploadImageFromPicker(
+            imageResponse!,
+            {
+              rootName: 'chat_images',
+              ext: 'jpg',
+            },
+          )
           if (uploadProm) {
             message.imageUrl = uploadProm?.downloadUrl
-            message.text = ''
+            message.type = 'image' // 이미지가 포함되면 타입을 image로 변경
           }
         }
       }
@@ -154,9 +166,10 @@ export const useChatMessageInput = ({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
       })
-      if (type == 'text') {
+      if (type === 'text' || selectedImage) {
         isMentionBlock.current = true
         setText('')
+        setSelectedImage(null) // 전송 후 이미지 비우기
         setTimeout(() => {
           isMentionBlock.current = false
         }, 500)
@@ -181,5 +194,7 @@ export const useChatMessageInput = ({
     onMentionPress,
     setIsFocused,
     mentionSuggestions,
+    selectedImage,
+    clearSelectedImage: () => setSelectedImage(null),
   }
 }

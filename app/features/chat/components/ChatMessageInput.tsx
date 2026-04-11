@@ -9,6 +9,7 @@ import {
 import COLORS from '@shared/constants/color'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
+import ImagePreview from './ImagePreview'
 import MentionSuggestion from './MentionSuggestion'
 
 export default function ChatMessageInput({
@@ -25,11 +26,15 @@ export default function ChatMessageInput({
     onMentionPress,
     setIsFocused,
     mentionSuggestions,
+    selectedImage,
+    clearSelectedImage,
   } = useChatMessageInput({
     roomInfo,
     targetIds,
     chatType,
   })
+
+  const selectedImageUri = selectedImage?.assets?.[0]?.uri
 
   return (
     <>
@@ -39,24 +44,37 @@ export default function ChatMessageInput({
           suggestions={mentionSuggestions}
           onPress={onMentionPress}
         />
+
         <View style={[styles.inputContents]}>
           <UploadButton
             onChange={res => onSendMessage('image', res)}
             options={{quality: 0.5}}
+            style={styles.uploadButton}
           />
-          <TextInput
-            style={styles.chatTextInput}
-            mode="outlined"
-            contentStyle={styles.chatTextContent}
-            outlineStyle={styles.chatTextOutlined}
-            value={text}
-            onChangeText={setText}
-            multiline={true}
-            dense={true}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onSubmitEditing={() => onSendMessage('text')}
-          />
+          <View style={styles.textInputContainer}>
+            {selectedImageUri && (
+              <ImagePreview
+                uri={selectedImageUri}
+                onRemove={clearSelectedImage}
+              />
+            )}
+            <TextInput
+              style={styles.chatTextInput}
+              mode="outlined"
+              contentStyle={styles.chatTextContent}
+              outlineStyle={styles.chatTextOutlined}
+              placeholder={
+                selectedImageUri ? '사진에 대해 설명해주세요...' : ''
+              }
+              value={text}
+              onChangeText={setText}
+              multiline={true}
+              dense={true}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onSubmitEditing={() => onSendMessage('text')}
+            />
+          </View>
           <IconButton
             icon="send"
             size={25}
@@ -76,30 +94,32 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
     backgroundColor: 'transparent',
-    paddingBottom: 20, // 최초 버전의 안정적인 여백
+    paddingBottom: 20,
     paddingHorizontal: 16,
   },
   inputContents: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 35, // ✅ 최초의 완벽한 캡슐형 복원
+    borderRadius: 35,
     flexDirection: 'row',
     gap: 8,
-    alignItems: 'center',
+    alignItems: 'flex-end', // 사진이 있을 때 버튼들을 아래로 정렬
     paddingVertical: 6,
     paddingHorizontal: 12,
-    // 최초의 부드러운 플로팅 섀도우
     shadowColor: '#2D241F',
     shadowOffset: {width: 0, height: 10},
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 8,
+    paddingBottom: 10,
+  },
+  textInputContainer: {
+    flex: 1,
   },
   chatTextInput: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 120,
     backgroundColor: 'transparent',
     fontSize: 15,
+    minHeight: 40,
+    maxHeight: 120, // ✅ 최대 높이 다시 적용
   },
   chatTextContent: {
     paddingHorizontal: 12,
@@ -113,6 +133,9 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 0,
     backgroundColor: 'rgba(242, 114, 73, 0.05)',
+  },
+  uploadButton: {
+    marginBottom: 10,
   },
   sendButton: {
     padding: 0,
