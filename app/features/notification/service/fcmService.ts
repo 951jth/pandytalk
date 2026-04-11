@@ -67,7 +67,7 @@ export const fcmService = {
       const token = await fcmRemote.getFcmToken()
 
       if (!token) return
-      await fcmRemote.reomveTokenToUser(uid, token)
+      await fcmRemote.removeTokenToUser(uid, token)
 
       console.log('로그아웃 시 FCM 토큰 제거 완료:', token)
     } catch (error) {

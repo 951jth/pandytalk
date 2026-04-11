@@ -25,8 +25,8 @@ export const fcmRemote = {
   },
 
   // 5. 서버(DB)에 토큰 삭제
-  async reomveTokenToUser(uid: string, token: string) {
-    return firebaseCall('fcmRemote,reomveTokenToUser', async () => {
+  async removeTokenToUser(uid: string, token: string) {
+    return firebaseCall('fcmRemote.removeTokenToUser', async () => {
       await setDoc(
         doc(firestore, 'users', uid),
         {fcmTokens: arrayRemove(token)},
