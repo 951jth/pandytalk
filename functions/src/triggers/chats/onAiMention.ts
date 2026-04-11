@@ -30,7 +30,10 @@ export const onAiMention = onDocumentCreated(
       if (!text.includes('@팬디')) return
 
       const prompt = text.replace('@팬디', '').trim()
-      if (!prompt) return
+      const imageUrl = message.imageUrl || null
+
+      // 텍스트와 이미지 둘 다 없으면 무시 (이미지만 있어도 진행되도록 수정)
+      if (!prompt && !imageUrl) return
 
       logger.info(`🤖 팬디봇 호출 감지: [${chatId}] ${prompt}`)
 

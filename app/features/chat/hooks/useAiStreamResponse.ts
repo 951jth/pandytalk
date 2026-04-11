@@ -68,7 +68,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const startStreaming = useCallback(
     async (
       targetChatId: string,
-      targetPrompt: string,
+      targetPrompt?: string,
       targetMessageId?: string,
       targetImageUrl?: string,
     ) => {
@@ -81,7 +81,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       try {
         await aiService.requestAiResponse(
           targetChatId,
-          targetPrompt,
+          targetPrompt || '',
           (chunk: string) => {
             fullTextRef.current += chunk
             // 서버로부터 온 데이터를 즉시 업데이트 (타이핑 효과 사용 시 이 줄을 주석 처리)
@@ -112,7 +112,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     if (
       enabled &&
       chatId &&
-      prompt &&
+      (prompt || imageUrl) &&
       !isStreaming &&
       fullTextRef.current === ''
     ) {

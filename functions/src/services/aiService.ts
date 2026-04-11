@@ -47,8 +47,11 @@ export const getPandibotMessages = (
   })
 
   // 2. 현재 질문 구성
+  // 텍스트는 없는데 이미지만 있는 경우 기본 요청 텍스트 추가
+  const finalPrompt = !prompt.trim() && imageUrl ? '이 사진에 대해 설명해줘.' : prompt
+
   const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
-    {type: 'text', text: prompt},
+    {type: 'text', text: finalPrompt},
   ]
 
   if (imageUrl) {
