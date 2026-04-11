@@ -110,7 +110,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 8,
-    paddingBottom: 10,
   },
   textInputContainer: {
     flex: 1,
@@ -140,6 +139,7 @@ const styles = StyleSheet.create({
   sendButton: {
     padding: 0,
     margin: 0,
+    marginBottom: 4,
     width: 40,
     height: 40,
     borderRadius: 22,
