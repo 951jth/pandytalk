@@ -66,7 +66,9 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
         
         <View style={styles.messageArea}>
           <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
-            {item?.lastMessage?.text || '새로운 대화를 시작해보세요'}
+            {item?.lastMessage?.type === 'image' && !item?.lastMessage?.text
+              ? '(사진)'
+              : item?.lastMessage?.text || '새로운 대화를 시작해보세요'}
           </Text>
           {!!item?.unreadCount && (
             <View style={styles.unreadBadge}>
