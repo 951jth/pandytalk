@@ -34,7 +34,7 @@ export default function ChatMessageItem({
 }: ChatMessageItemProps) {
   const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
   const {width} = useWindowDimensions()
-  const bubbleMaxWidth = width - 145 // 화면 너비의 70%를 최대 너비로 설정
+  const bubbleMaxWidth = width * 0.6 // 화면 너비의 70%를 최대 너비로 설정
   const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
   const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
   const {type} = item
@@ -142,6 +142,7 @@ export default function ChatMessageItem({
             <View
               style={{
                 marginLeft: hideProfile ? 53 : 0,
+                alignItems: 'flex-start', // 닉네임 길이에 맞춰 말풍선이 늘어나지 않도록 설정
               }}>
               {/* 닉네임 */}
               {!hideProfile && (
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     backgroundColor: COLORS.primary,
     position: 'relative',
+    alignSelf: 'flex-end', // 내용물에 맞게 너비 조절
     // 최초의 소프트 섀도우
     shadowColor: COLORS.primary,
     shadowOffset: {width: 0, height: 4},
@@ -202,6 +204,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     backgroundColor: '#FFFFFF', // 화이트 유지
     position: 'relative',
+    alignSelf: 'flex-start', // 내용물에 맞게 너비 조절
     // 최초의 소프트 섀도우
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
