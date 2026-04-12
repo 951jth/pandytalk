@@ -53,7 +53,7 @@ export default function ChatMentionSuggestion({
         items = items.filter(
           item => item.label.includes(query) || item.value.includes(query),
         )
-      }
+      } else return []
     }
 
     if (items.length === 0) return []
@@ -67,7 +67,7 @@ export default function ChatMentionSuggestion({
 
     // 3. 필터링된 결과 노출
     return [...fixedItems, ...randomItems].slice(0, 4)
-  }, [isMentionSuggested, text.replace('@팬디', '').replace(/\s/g, '')])
+  }, [isMentionSuggested, text])
 
   const onMentionPress = (mentionValue: string) => {
     // 1. @팬디가 이미 있는 경우, 해당 부분을 전체 mentionValue로 교체

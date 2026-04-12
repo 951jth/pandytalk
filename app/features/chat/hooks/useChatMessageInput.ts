@@ -123,7 +123,10 @@ export const useChatMessageInput = ({
       const message = e instanceof Error ? e.message : String(e)
       Alert.alert('안내', message)
     } finally {
-      setLoading(false)
+      setTimeout(() => {
+        //중복호출방지를위함
+        setLoading(false)
+      }, 300)
     }
   }
 
