@@ -1,6 +1,7 @@
 import {readStatusRemote} from '@app/features/chat/data/readStatusRemote.firebase'
 import {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useFocusEffect} from '@react-navigation/native'
+import {useQueryClient} from '@tanstack/react-query'
 import {useCallback, useEffect, useRef} from 'react'
 
 export const useUpdateLastReadOnBlur = (
@@ -8,6 +9,7 @@ export const useUpdateLastReadOnBlur = (
   roomInfo?: ChatRoom | null,
   messages?: ChatMessage[],
 ) => {
+  const queryClient = useQueryClient()
   const roomInfoRef = useRef(roomInfo) // 포커스 이벤트용 참조값.
   const messagesRef = useRef(messages) // 포커스 이벤트용 참조값.
 
@@ -36,8 +38,10 @@ export const useUpdateLastReadOnBlur = (
         if (currentReadSeq !== lastSeq) {
           //채팅방 벗어나면 seq, read time 설정
           readStatusRemote.updateChatLastReadByUser(room.id, userId, lastSeq)
+          // 채팅 목록 정보 갱신을 위해 쿼리 무효화
+          queryClient.invalidateQueries({queryKey: ['chats']})
         }
       }
-    }, [userId]),
+    }, [userId, queryClient]),
   )
 }
