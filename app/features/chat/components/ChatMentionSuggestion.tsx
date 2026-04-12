@@ -9,35 +9,37 @@ import MentionSuggestion, {
 type Props = {
   text: string
   setText: (text: string) => void
+  disabled?: boolean
 }
 
 export default function ChatMentionSuggestion({
   text,
   setText,
+  disabled,
 }: Props) {
   const {isKeyboardVisible} = useKeyboardFocus()
   const isMentionBlock = useRef<boolean>(false)
-  const lastText = useRef<string>(text)
 
-  // 텍스트가 외부에서 비워졌을 때(메시지 전송 등) 추천창이 즉시 뜨는 것을 방지
+  // 외부에서 disabled가 설정되었을 때도 차단 상태 유지
   useEffect(() => {
-    if (lastText.current !== '' && text === '') {
+    if (disabled) {
       isMentionBlock.current = true
+    } else {
       const timer = setTimeout(() => {
         isMentionBlock.current = false
       }, 500)
       return () => clearTimeout(timer)
     }
-    lastText.current = text
-  }, [text])
+  }, [disabled])
 
   const isMentionSuggested = useMemo(() => {
     return (
       isKeyboardVisible &&
+      !disabled &&
       !isMentionBlock.current &&
       (text === '' || text.endsWith('@') || text.includes('@팬'))
     )
-  }, [isKeyboardVisible, text])
+  }, [isKeyboardVisible, text, disabled])
 
   const mentionSuggestions = useMemo(() => {
     if (!isMentionSuggested) return []
@@ -59,11 +61,13 @@ export default function ChatMentionSuggestion({
     // 1. 고정 문구들(fixed: true) 추출
     const fixedItems = items.filter(item => item.fixed)
     // 2. 고정되지 않은 나머지 문구들 추출 및 랜덤 셔플
-    const randomItems = items.filter(item => !item.fixed).sort(() => 0.5 - Math.random())
+    const randomItems = items
+      .filter(item => !item.fixed)
+      .sort(() => 0.5 - Math.random())
 
     // 3. 필터링된 결과 노출
     return [...fixedItems, ...randomItems].slice(0, 4)
-  }, [isMentionSuggested, text])
+  }, [isMentionSuggested, text.replace('@팬디', '').replace(/\s/g, '')])
 
   const onMentionPress = (mentionValue: string) => {
     // 1. @팬디가 이미 있는 경우, 해당 부분을 전체 mentionValue로 교체

@@ -15,6 +15,7 @@ interface propTypes {
   onChange?: (result: ImagePickerResponse) => void
   options?: Omit<ImageLibraryOptions, 'mediaType'>
   style?: StyleProp<ViewStyle>
+  disabled?: boolean
 }
 
 export default function UploadButton({
@@ -22,8 +23,10 @@ export default function UploadButton({
   onChange,
   options,
   style,
+  disabled,
 }: propTypes) {
   const pickFile = async () => {
+    if (disabled) return
     try {
       const hasPermission = await requestPhotoPermission()
       if (hasPermission?.status == 'BLOCKED')
@@ -47,6 +50,7 @@ export default function UploadButton({
         style={[styles.iconButton, {width: iconSize, height: iconSize}, style]}
         contentStyle={{width: iconSize, height: iconSize}}
         onPress={pickFile}
+        disabled={disabled}
       />
     </>
   )

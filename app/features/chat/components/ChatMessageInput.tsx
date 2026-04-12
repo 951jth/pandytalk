@@ -38,13 +38,15 @@ export default function ChatMessageInput({
         <ChatMentionSuggestion
           text={text}
           setText={setText}
+          disabled={loading}
         />
 
         <View style={[styles.inputContents]}>
           <UploadButton
-            onChange={res => onSendMessage('image', res)}
+            onChange={res => !loading && onSendMessage('image', res)}
             options={{quality: 0.5}}
             style={styles.uploadButton}
+            disabled={loading}
           />
           <View style={styles.textInputContainer}>
             {selectedImageUri && (
@@ -54,7 +56,10 @@ export default function ChatMessageInput({
               />
             )}
             <TextInput
-              style={styles.chatTextInput}
+              style={[
+                styles.chatTextInput,
+                loading && {opacity: 0.6}, // 전송 중 흐릿하게 표시
+              ]}
               mode="outlined"
               contentStyle={styles.chatTextContent}
               outlineStyle={styles.chatTextOutlined}
@@ -65,7 +70,9 @@ export default function ChatMessageInput({
               onChangeText={setText}
               multiline={true}
               dense={true}
-              onSubmitEditing={() => onSendMessage('text')}
+              onSubmitEditing={() => !loading && onSendMessage('text')}
+              disabled={loading}
+              editable={!loading}
             />
           </View>
           <IconButton
