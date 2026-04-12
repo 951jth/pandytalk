@@ -9,8 +9,8 @@ import {
 import COLORS from '@shared/constants/color'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
+import ChatMentionSuggestion from './ChatMentionSuggestion'
 import ImagePreview from './ImagePreview'
-import MentionSuggestion from './MentionSuggestion'
 
 export default function ChatMessageInput({
   roomInfo,
@@ -19,14 +19,10 @@ export default function ChatMessageInput({
 }: ChatInputPropTypes) {
   const {
     text,
+    loading,
+    selectedImage,
     setText,
     onSendMessage,
-    loading,
-    isMentionSuggested,
-    onMentionPress,
-    setIsFocused,
-    mentionSuggestions,
-    selectedImage,
     clearSelectedImage,
   } = useChatMessageInput({
     roomInfo,
@@ -39,10 +35,9 @@ export default function ChatMessageInput({
   return (
     <>
       <View style={[styles.inputWrapper]}>
-        <MentionSuggestion
-          isVisible={isMentionSuggested}
-          suggestions={mentionSuggestions}
-          onPress={onMentionPress}
+        <ChatMentionSuggestion
+          text={text}
+          setText={setText}
         />
 
         <View style={[styles.inputContents]}>
@@ -70,8 +65,6 @@ export default function ChatMessageInput({
               onChangeText={setText}
               multiline={true}
               dense={true}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
               onSubmitEditing={() => onSendMessage('text')}
             />
           </View>
