@@ -2,14 +2,11 @@ import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMess
 import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
-import {MENTION_CHUNKS} from '@app/shared/constants/ai'
-import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useMemo, useRef, useState} from 'react'
+import {useMemo, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
-
 
 export type InputMessageParams = {
   text: string
@@ -30,15 +27,14 @@ export const useChatMessageInput = ({
   chatType,
 }: ChatInputPropTypes) => {
   const [text, setText] = useState<string>('')
-  const [selectedImage, setSelectedImage] = useState<ImagePickerResponse | null>(null)
+  const [selectedImage, setSelectedImage] =
+    useState<ImagePickerResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
     roomInfo?.id,
   )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
-
-
 
   const isDisabled = useMemo(() => {
     if (!roomInfo) return false
