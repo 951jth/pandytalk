@@ -70,6 +70,12 @@ export default function ChatMentionSuggestion({
   }, [isMentionSuggested, text])
 
   const onMentionPress = (mentionValue: string) => {
+    // 항목 선택 직후 500ms 동안 차단
+    isMentionBlock.current = true
+    setTimeout(() => {
+      isMentionBlock.current = false
+    }, 500)
+
     // 1. @팬디가 이미 있는 경우, 해당 부분을 전체 mentionValue로 교체
     if (text.includes('@팬디')) {
       const index = text.lastIndexOf('@팬디')
