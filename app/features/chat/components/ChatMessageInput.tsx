@@ -23,6 +23,7 @@ export default function ChatMessageInput({
     selectedImage,
     setText,
     onSendMessage,
+    isBlockRef,
     clearSelectedImage,
   } = useChatMessageInput({
     roomInfo,
@@ -39,6 +40,7 @@ export default function ChatMessageInput({
           text={text}
           setText={setText}
           disabled={loading}
+          isBlockRef={isBlockRef}
         />
 
         <View style={[styles.inputContents]}>
@@ -56,10 +58,7 @@ export default function ChatMessageInput({
               />
             )}
             <TextInput
-              style={[
-                styles.chatTextInput,
-                loading && {opacity: 0.6}, // 전송 중 흐릿하게 표시
-              ]}
+              style={[styles.chatTextInput]}
               mode="outlined"
               contentStyle={styles.chatTextContent}
               outlineStyle={styles.chatTextOutlined}
@@ -71,8 +70,6 @@ export default function ChatMessageInput({
               multiline={true}
               dense={true}
               onSubmitEditing={() => !loading && onSendMessage('text')}
-              disabled={loading}
-              editable={!loading}
             />
           </View>
           <IconButton

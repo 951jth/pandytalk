@@ -13,10 +13,14 @@ import {Provider} from 'react-redux'
 import {navigationRef, onNavReady} from './app/navigation/RootNavigation'
 import store from './app/store/store'
 import {RootNavigator} from './RootNavigator'
+import {useEASUpdateManager} from '@app/shared/hooks/useEASUpdateManager'
 
 const queryClient = new QueryClient()
 
 function App(): React.JSX.Element {
+  // EAS Update 진단 및 자동 업데이트 관리
+  useEASUpdateManager()
+
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>

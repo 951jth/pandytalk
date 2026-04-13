@@ -4,7 +4,7 @@ import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
 
@@ -30,6 +30,7 @@ export const useChatMessageInput = ({
   const [selectedImage, setSelectedImage] =
     useState<ImagePickerResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
+  const isBlockRef = useRef<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
     roomInfo?.id,
@@ -65,6 +66,12 @@ export const useChatMessageInput = ({
       if (type === 'text' && !trimmedText) return
       if (!user?.uid) throw new Error('유저정보 조회 실패')
       setLoading(true)
+      // 전송 중 멘션 추천 방지 및 낙관적 UI를 위한 입력창 초기화
+      if (type === 'text' || selectedImage) {
+        setText('')
+        setSelectedImage(null)
+        isBlockRef.current = true
+      }
       let fetchedRoomInfo = roomInfo
       //step 1. 기본 메세지 페이로드 생성
       let message: InputMessageParams = {
@@ -116,17 +123,16 @@ export const useChatMessageInput = ({
       if (type === 'text' || selectedImage) {
         setText('')
         setSelectedImage(null) // 전송 후 이미지 비우기
+        setTimeout(() => {
+          isBlockRef.current = false
+        }, 500)
       }
-      // isInitialVisit.current = false
     } catch (e) {
       console.log(e)
       const message = e instanceof Error ? e.message : String(e)
       Alert.alert('안내', message)
     } finally {
-      setTimeout(() => {
-        //중복호출방지를위함
-        setLoading(false)
-      }, 300)
+      setLoading(false)
     }
   }
 
@@ -137,6 +143,7 @@ export const useChatMessageInput = ({
     loading,
     isDisabled,
     selectedImage,
+    isBlockRef,
     clearSelectedImage: () => setSelectedImage(null),
   }
 }

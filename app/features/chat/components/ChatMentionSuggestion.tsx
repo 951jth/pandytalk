@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef} from 'react'
+import React, {useMemo, useRef} from 'react'
 
 import {MENTION_CHUNKS} from '@app/shared/constants/ai'
 import useKeyboardFocus from '@app/shared/hooks/useKeyboardFocus'
@@ -10,33 +10,24 @@ type Props = {
   text: string
   setText: (text: string) => void
   disabled?: boolean
+  isBlockRef?: React.RefObject<boolean>
 }
 
 export default function ChatMentionSuggestion({
   text,
   setText,
   disabled,
+  isBlockRef,
 }: Props) {
   const {isKeyboardVisible} = useKeyboardFocus()
   const isMentionBlock = useRef<boolean>(false)
-
-  // 외부에서 disabled가 설정되었을 때도 차단 상태 유지
-  useEffect(() => {
-    if (disabled) {
-      isMentionBlock.current = true
-    } else {
-      const timer = setTimeout(() => {
-        isMentionBlock.current = false
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [disabled])
 
   const isMentionSuggested = useMemo(() => {
     return (
       isKeyboardVisible &&
       !disabled &&
       !isMentionBlock.current &&
+      !isBlockRef?.current &&
       (text === '' || text.endsWith('@') || text.includes('@팬'))
     )
   }, [isKeyboardVisible, text, disabled])
