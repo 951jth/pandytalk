@@ -5,6 +5,7 @@ import {
   MESSAGES_COLUMNS,
   migrations,
 } from '@app/features/chat/data/messages.schema'
+import {logger} from '@app/shared/services/logger'
 import {db} from '@app/shared/sqlite/sqlite'
 import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
 import type {Transaction} from 'react-native-sqlite-storage'
@@ -22,7 +23,7 @@ export const messageMigrateLocal = {
               resolve(exists)
             },
             (_, error) => {
-              console.log('error', error)
+              logger.error('isMessagesTableExists check failed', error)
               reject(error)
               return true
             },
@@ -40,16 +41,20 @@ export const messageMigrateLocal = {
             (tx: Transaction) => {
               tx.executeSql('PRAGMA user_version;', [], (_, {rows}) => {
                 const currentVersion = rows.item(0).user_version ?? 0
-                console.log('📘 Current DB version:', currentVersion)
+                logger.info(`📘 Current DB version: ${currentVersion}`)
                 let nextVersion = currentVersion + 1 // 🔥 여기서 +1부터 시작
                 while (nextVersion <= LATEST_DB_VERSION) {
                   const migrate = migrations[nextVersion]
 
                   if (migrate) {
-                    console.log(`🚀 [Migration] Version ${nextVersion - 1} -> ${nextVersion} 시작...`)
+                    logger.info(
+                      `🚀 [Migration] Version ${nextVersion - 1} -> ${nextVersion} 시작...`,
+                    )
                     migrate(tx)
                   } else {
-                    console.warn(`⚠️ [Migration] v${nextVersion}에 대한 정의를 찾을 수 없습니다.`)
+                    logger.warn(
+                      `⚠️ [Migration] v${nextVersion}에 대한 정의를 찾을 수 없습니다.`,
+                    )
                   }
 
                   nextVersion++
@@ -60,18 +65,18 @@ export const messageMigrateLocal = {
                     `PRAGMA user_version = ${LATEST_DB_VERSION};`,
                     [],
                     () => {
-                      console.log(
+                      logger.info(
                         `✅ [Migration] DB updated to version ${LATEST_DB_VERSION}`,
                       )
                     },
                   )
                 } else {
-                  console.log('✅ [Migration] DB already up to date.')
+                  logger.info('✅ [Migration] DB already up to date.')
                 }
               })
             },
             err => {
-              console.error('❌ Migration transaction failed:', err)
+              logger.error('❌ Migration transaction failed', err)
               reject(err)
             },
             () => resolve(),
@@ -95,22 +100,17 @@ export const messageMigrateLocal = {
                   `PRAGMA user_version = ${LATEST_DB_VERSION};`,
                   [],
                   () => {
-                    if (__DEV__)
-                      console.log(
-                        `✅ messages table ready (v${LATEST_DB_VERSION})`,
-                      )
+                    logger.info(`✅ messages table ready (v${LATEST_DB_VERSION})`)
                   },
                   (_tx, error) => {
-                    if (__DEV__)
-                      console.error('❌ Failed to set user_version', error)
+                    logger.error('❌ Failed to set user_version', error)
                     reject(error)
                     return true
                   },
                 )
               },
               (_tx, error) => {
-                if (__DEV__)
-                  console.error('❌ Failed to create messages table', error)
+                logger.error('❌ Failed to create messages table', error)
                 reject(error)
                 return true
               },
