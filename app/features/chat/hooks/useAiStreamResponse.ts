@@ -29,13 +29,9 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
   // 실제 서버로부터 수신된 모든 텍스트 원본 (불변성 유지를 위해 ref 사용)
   const fullTextRef = useRef<string>('')
-
-  /* [비교용] 타이핑 애니메이션 관련 Refs 및 효과
-   */
-
   const cursorRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
+  console.log('stream item', item)
   useEffect(() => {
     // if (skipTyping) return
 

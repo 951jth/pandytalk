@@ -53,16 +53,26 @@ export const aiRemote = {
           return
         }
 
+        const rawData = event.data.trim()
+
+        // JSON 형식이 아닌 경우 (일반 텍스트가 바로 오는 경우 처리)
+        if (!rawData.startsWith('{')) {
+          onChunk(rawData)
+          return
+        }
+
         try {
-          const parsed = JSON.parse(event.data)
-          if (parsed.text) {
+          const parsed = JSON.parse(rawData)
+          if (parsed && typeof parsed.text === 'string') {
             onChunk(parsed.text)
-          } else if (parsed.error) {
+          } else if (parsed && parsed.error) {
             onError(new Error(parsed.error))
             es.close()
           }
         } catch (e) {
           console.warn('[aiRemote] JSON Parse Error:', e, 'data:', event.data)
+          // 파싱 실패 시 원본 데이터라도 보여줌
+          onChunk(rawData)
         }
       })
 

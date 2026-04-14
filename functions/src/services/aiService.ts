@@ -1,6 +1,6 @@
 import * as logger from 'firebase-functions/logger'
 import {OpenAI} from 'openai'
-import {AI_BASE_PROMPT} from '../constants/ai'
+import {AI_BASE_PROMPT, AI_IMAGE_LIMIT} from '../constants/ai'
 
 /**
  * 팬디봇이 사용할 수 있는 AI 도구(Function Calling) 목록을 반환합니다.
@@ -30,9 +30,10 @@ export const getPandibotMessages = (
   prompt: string,
   history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [],
   imageUrl?: string,
+  imageUrls?: string[],
 ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => {
   logger.info(
-    `🤖 [getPandibotMessages] Prompt: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''} | History: ${history.length}건 | Image: ${imageUrl ? '있음' : '없음'}`,
+    `🤖 [getPandibotMessages] Prompt: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''} | History: ${history.length}건 | Image: ${imageUrl ? '있음' : '없음'} | MultiImages: ${imageUrls?.length || 0}`,
   )
   // 1. 히스토리 정제: 이전 메시지의 이미지들은 제거하고 텍스트만 남김 (토큰 절약 및 단건 분석)
   const sanitizedHistory = history.map(msg => {
@@ -51,7 +52,16 @@ export const getPandibotMessages = (
     {type: 'text', text: prompt},
   ]
 
-  if (imageUrl) {
+  // 멀티 이미지 처리 (우선순위, 상수로 제한)
+  if (imageUrls && imageUrls.length > 0) {
+    imageUrls.slice(0, AI_IMAGE_LIMIT).forEach(url => {
+      userContent.push({
+        type: 'image_url',
+        image_url: {url},
+      })
+    })
+  } else if (imageUrl) {
+    // 단일 이미지 처리 (하위 호환)
     userContent.push({
       type: 'image_url',
       image_url: {url: imageUrl},

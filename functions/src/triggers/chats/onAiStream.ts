@@ -29,7 +29,7 @@ export const onAiStream = onRequest(
     res.setHeader('Connection', 'keep-alive')
 
     // prompt는 AI Mention에서 질문한 내용
-    const {chatId, prompt, messageId, createdAt, imageUrl} = req.body
+    const {chatId, prompt, messageId, createdAt, imageUrl, imageUrls} = req.body
 
     const controller = new AbortController()
     let aiReplyText = ''
@@ -78,7 +78,12 @@ export const onAiStream = onRequest(
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
-      const messages = getPandibotMessages(prompt, filteredHistory, imageUrl)
+      const messages = getPandibotMessages(
+        prompt,
+        filteredHistory,
+        imageUrl,
+        imageUrls,
+      )
 
       // 스트리밍 응답 생성
       const stream = await getAiResponseStream(

@@ -56,12 +56,25 @@ export function mergeMessages(
   const map = new Map<string, ChatMessage>()
   //map에 id 기준으로 중복제거
   ;[...existing, ...incoming].forEach(msg => map.set(msg.id, msg))
-  //map을 배열로 변환하고 최신순 정렬
-  return Array.from(map.values()).sort(
-    (a, b) =>
-      (toMillisFromServerTime(b.createdAt) || 0) -
-      (toMillisFromServerTime(a.createdAt) || 0),
-  )
+  //map을 배열로 변환하고 최신순 정렬 (seq 우선, 없으면 createdAt)
+  return Array.from(map.values()).sort((a, b) => {
+    const seqA = a.seq || 0
+    const seqB = b.seq || 0
+
+    if (seqA !== seqB) {
+      // 1. seq가 있는 것들끼리는 seq 중심 (낙관적 UI 제외)
+      if (seqA > 0 && seqB > 0) {
+        return seqB - seqA
+      }
+      // 2. seq가 없는(0인) 메시지는 나중에 보낸 것이므로 위쪽(앞쪽)으로
+      return seqA === 0 ? -1 : 1
+    }
+
+    // 3. seq가 같거나 없는 경우 createdAt로 비교
+    const timeA = toMillisFromServerTime(a.createdAt) || 0
+    const timeB = toMillisFromServerTime(b.createdAt) || 0
+    return timeB - timeA
+  })
 }
 //체팅 날짜순 정렬
 export const compareChat = (a: ChatRoom, b: ChatRoom) => {

@@ -1,5 +1,6 @@
 import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCreateMutation'
+import {MAX_CHAT_IMAGES} from '@app/shared/constants/chat'
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'

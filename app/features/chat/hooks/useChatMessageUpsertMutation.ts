@@ -28,6 +28,7 @@ export type InputMessageParams = {
   text: string
   type: ChatMessage['type']
   imageUrl?: string
+  imageUrls?: string[]
 }
 
 type SendChatParams = {

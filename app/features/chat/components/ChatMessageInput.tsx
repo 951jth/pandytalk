@@ -7,6 +7,7 @@ import {
   type ChatInputPropTypes,
 } from '@features/chat/hooks/useChatMessageInput'
 import COLORS from '@shared/constants/color'
+import {MAX_CHAT_IMAGES} from '@shared/constants/chat'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
 import ChatMentionSuggestion from './ChatMentionSuggestion'
@@ -58,7 +59,7 @@ export default function ChatMessageInput({
         <View style={[styles.inputContents]}>
           <UploadButton
             onChange={res => !loading && onSendMessage('image', res)}
-            options={{quality: 0.5, selectionLimit: 0}}
+            options={{quality: 0.5, selectionLimit: MAX_CHAT_IMAGES}}
             style={styles.uploadButton}
             disabled={loading}
           />

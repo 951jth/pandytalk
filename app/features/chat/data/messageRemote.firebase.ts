@@ -5,6 +5,7 @@ import {
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
 import type {ChatMessage} from '@app/shared/types/chat'
+import {AI_IMAGE_LIMIT} from '@shared/constants/chat'
 import {
   collection,
   doc,
@@ -124,11 +125,11 @@ export const messageRemote = {
         if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
           let content: any = message.text || ''
 
-          // 이미지가 포함된 경우 멀티모달 포맷으로 저장
+          // 이미지가 포함된 경우 멀티모달 포맷으로 저장 (최대 3장까지만 문맥에 포함)
           if (message.imageUrls && message.imageUrls.length > 0) {
             content = [
               {type: 'text', text: message.text || ''},
-              ...message.imageUrls.map(url => ({
+              ...message.imageUrls.slice(0, AI_IMAGE_LIMIT).map(url => ({
                 type: 'image_url',
                 image_url: {url},
               })),
