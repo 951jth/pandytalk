@@ -26,9 +26,7 @@ export default function AiStreamingText({
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
   const {streamedText} = useAiStreamResponse({
     chatId,
-    prompt,
-    messageId,
-    imageUrl: item?.imageUrl, // 질문 기록에 저장된 이미지 URL 전달
+    item,
     enabled: isStreamingStatus && isOwner,
   })
 

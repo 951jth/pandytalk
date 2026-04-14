@@ -54,39 +54,46 @@ export const fileService = {
     return await fileRemote.uploadFile(path, localUri)
   },
 
-  uploadImageFromPicker: async (
+  uploadImagesFromPicker: async (
     result: ImagePickerResponse,
     options: UploadImageOptions,
-  ): Promise<UploadResult | null> => {
-    const asset = pickFirstAsset(result)
-    const uri = asset?.uri
+  ): Promise<UploadResult[]> => {
+    const assets = result.assets || []
     const uid = auth.currentUser?.uid
-    if (!uri) return null
+    const results: UploadResult[] = []
 
-    // fileName은 picker가 항상 주지 않을 수 있어서 fallback 필요
-    const assetFileName = asset?.fileName
-    const ext = options.ext ?? 'jpg'
-    const resolvedFileName =
-      options.fileName ?? assetFileName ?? `${Date.now()}.${ext}`
-    // filePath가 있으면 그대로 쓰고, 없으면 정책으로 생성
-    const filePath =
-      options.filePath ??
-      (() => {
-        const root = options.rootName ?? 'uploads'
-        return `${root}/${uid}/${resolvedFileName}`
-      })()
+    if (!assets.length || !uid) return []
 
-    try {
-      const cleanedUri = normalizeLocalUri(uri)
-      const downloadUrl = await fileRemote.uploadFile(filePath, cleanedUri)
+    const uploadPromises = assets.map(async (asset, index) => {
+      const uri = asset.uri
+      if (!uri) return null
 
-      return {
-        downloadUrl,
-        fileName: resolvedFileName,
+      const assetFileName = asset.fileName
+      const ext = options.ext ?? 'jpg'
+      const resolvedFileName =
+        options.fileName ?? assetFileName ?? `${Date.now()}_${index}.${ext}`
+
+      const root = options.rootName ?? 'uploads'
+      const filePath =
+        options.filePath ?? `${root}/${uid}/${resolvedFileName}`
+
+      try {
+        const cleanedUri = normalizeLocalUri(uri)
+        const downloadUrl = await fileRemote.uploadFile(filePath, cleanedUri)
+        return {
+          downloadUrl,
+          fileName: resolvedFileName,
+        }
+      } catch (e) {
+        console.error(
+          `[fileService.uploadImagesFromPicker] index ${index} 실패:`,
+          e,
+        )
+        return null
       }
-    } catch (e) {
-      console.error('[fileService.uploadImageFromPicker] 업로드 실패:', e)
-      return null
-    }
+    })
+
+    const settledResults = await Promise.all(uploadPromises)
+    return settledResults.filter((r): r is UploadResult => r !== null)
   },
 }

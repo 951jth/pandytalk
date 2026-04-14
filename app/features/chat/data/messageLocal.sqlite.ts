@@ -34,6 +34,7 @@ export const messageLocal = {
                   msg.senderName ?? '',
                   msg.seq ?? 1,
                   msg.status ?? 'success',
+                  JSON.stringify(msg.imageUrls || []),
                 ]
                 tx.executeSql(query, values, undefined, (_tx, error) => {
                   console.error('[SQLite] saveMessagesToSQLite stmt fail', {
@@ -104,7 +105,15 @@ export const messageLocal = {
             (_, result) => {
               const messages: ChatMessage[] = []
               for (let i = 0; i < result.rows.length; i++) {
-                messages.push(result.rows.item(i))
+                const item = result.rows.item(i)
+                if (item.imageUrls) {
+                  try {
+                    item.imageUrls = JSON.parse(item.imageUrls)
+                  } catch (e) {
+                    item.imageUrls = []
+                  }
+                }
+                messages.push(item)
               }
               // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
               resolve(messages)
@@ -136,7 +145,15 @@ export const messageLocal = {
             (_, result) => {
               const messages: ChatMessage[] = []
               for (let i = 0; i < result.rows.length; i++) {
-                messages.push(result.rows.item(i))
+                const item = result.rows.item(i)
+                if (item.imageUrls) {
+                  try {
+                    item.imageUrls = JSON.parse(item.imageUrls)
+                  } catch (e) {
+                    item.imageUrls = []
+                  }
+                }
+                messages.push(item)
               }
               resolve(messages)
             },
@@ -193,7 +210,15 @@ export const messageLocal = {
             (_, result) => {
               const messages: ChatMessage[] = []
               for (let i = 0; i < result.rows.length; i++) {
-                messages.push(result.rows.item(i) as ChatMessage)
+                const item = result.rows.item(i) as ChatMessage
+                if ((item as any).imageUrls) {
+                  try {
+                    item.imageUrls = JSON.parse((item as any).imageUrls)
+                  } catch (e) {
+                    item.imageUrls = []
+                  }
+                }
+                messages.push(item)
               }
               resolve(messages)
             },

@@ -31,7 +31,19 @@ export default function ChatMessageInput({
     chatType,
   })
 
-  const selectedImageUri = selectedImage?.assets?.[0]?.uri
+  const selectedImages = selectedImage?.assets || []
+
+  const removeImage = (uri: string) => {
+    if (!selectedImage) return
+    const nextAssets = selectedImage.assets?.filter(a => a.uri !== uri) || []
+    if (nextAssets.length === 0) {
+      clearSelectedImage()
+    } else {
+      // ImagePickerResponse structure 유지하면서 assets 필터링
+      const nextResponse = {...selectedImage, assets: nextAssets}
+      onSendMessage('image', nextResponse) // hook의 setSelectedImage를 업데이트하기 위해 onSendMessage('image', ...) 활용
+    }
+  }
 
   return (
     <>
@@ -46,16 +58,21 @@ export default function ChatMessageInput({
         <View style={[styles.inputContents]}>
           <UploadButton
             onChange={res => !loading && onSendMessage('image', res)}
-            options={{quality: 0.5}}
+            options={{quality: 0.5, selectionLimit: 0}}
             style={styles.uploadButton}
             disabled={loading}
           />
           <View style={styles.textInputContainer}>
-            {selectedImageUri && (
-              <ImagePreview
-                uri={selectedImageUri}
-                onRemove={clearSelectedImage}
-              />
+            {selectedImages.length > 0 && (
+              <View style={styles.previewList}>
+                {selectedImages.map((asset, idx) => (
+                  <ImagePreview
+                    key={asset.uri || idx}
+                    uri={asset.uri!}
+                    onRemove={() => removeImage(asset.uri!)}
+                  />
+                ))}
+              </View>
             )}
             <TextInput
               style={[styles.chatTextInput]}
@@ -63,7 +80,7 @@ export default function ChatMessageInput({
               contentStyle={styles.chatTextContent}
               outlineStyle={styles.chatTextOutlined}
               placeholder={
-                selectedImageUri ? '사진에 대해 설명해주세요...' : ''
+                selectedImages.length > 0 ? '사진에 대해 설명해주세요...' : ''
               }
               value={text}
               onChangeText={setText}
@@ -110,6 +127,13 @@ const styles = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
+  },
+  previewList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 4,
   },
   chatTextInput: {
     backgroundColor: 'transparent',

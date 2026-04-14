@@ -47,22 +47,32 @@ export const setChatMessagePayload = ({
     }
   }
 
-  if (message.type === 'image' && !message.imageUrl) {
+  // 이미지 타입 검증: imageUrl 또는 imageUrls 중 하나는 있어야 함
+  if (
+    message.type === 'image' &&
+    !message.imageUrl &&
+    (!message.imageUrls || message.imageUrls.length === 0)
+  ) {
     throw new Error('이미지를 선택해주세요.')
   }
 
   const id = messageRemote.generateMessageId(roomId)
-  return {
+  const createdAt = Date.now()
+
+  const payload: ChatMessage = {
     ...message,
     id,
     text: message.type === 'text' ? text : message.text,
     senderId: user.uid,
     senderName: user.displayName ?? '',
     senderPicURL: user.photoURL ?? '',
-    createdAt: Date.now(), //서버타임으로 대체되지만, 로컬에 먼저표시용
+    createdAt,
     roomTitle: roomInfo?.name,
     roomUrl: roomInfo?.image,
+    imageUrls: message.imageUrls || [],
   }
+
+  return payload
 }
 
 //채팅 메세지 캐시 페이징 재처리

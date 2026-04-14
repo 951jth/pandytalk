@@ -14,6 +14,7 @@ export const aiService = {
     onError: (error: any) => void,
     messageId?: string,
     imageUrl?: string,
+    imageUrls?: string[],
   ) => {
     // 1. 필요한 경우 로컬 상태 기록 또는 전처리 진행 가능
 
@@ -23,6 +24,7 @@ export const aiService = {
       prompt,
       messageId,
       imageUrl,
+      imageUrls,
       onChunk,
       onDone,
       onError,

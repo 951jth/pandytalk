@@ -1,11 +1,10 @@
+import type {ChatMessage} from '@app/shared/types/chat'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {aiService} from '../service/aiService'
 
 export interface UseAiStreamOptions {
   chatId?: string
-  prompt?: string
-  messageId?: string
-  imageUrl?: string
+  item?: ChatMessage
   enabled?: boolean
   // typingSpeed?: number // [비교용] 각 글자별 출력 간격 (ms)
   // skipTyping?: boolean // [비교용] 타이핑 효과 없이 즉시 출력할지 여부
@@ -16,7 +15,13 @@ export interface UseAiStreamOptions {
  * SSE로부터 수신된 텍스트를 즉시 화면에 출력합니다.
  */
 export const useAiStreamResponse = (params: UseAiStreamOptions) => {
-  const {chatId, prompt, messageId, imageUrl, enabled = true} = params
+  const {chatId, item, enabled = true} = params
+
+  // 메시지 객체에서 필요한 정보 추출
+  const prompt = item?.prompt
+  const messageId = item?.id
+  const imageUrl = item?.imageUrl
+  const imageUrls = item?.imageUrls
 
   const [displayText, setDisplayText] = useState<string>('') // 화면에 실시간으로 보여줄 텍스트
   const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 중 여부
@@ -71,6 +76,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetPrompt?: string,
       targetMessageId?: string,
       targetImageUrl?: string,
+      targetImageUrls?: string[],
     ) => {
       setDisplayText('')
       fullTextRef.current = ''
@@ -97,6 +103,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           },
           targetMessageId,
           targetImageUrl,
+          targetImageUrls,
         )
       } catch (err: any) {
         console.error('[useAiStreamResponse] Init Error:', err)
@@ -112,13 +119,22 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     if (
       enabled &&
       chatId &&
-      (prompt || imageUrl) &&
+      (prompt || imageUrl || imageUrls?.length) &&
       !isStreaming &&
       fullTextRef.current === ''
     ) {
-      startStreaming(chatId, prompt, messageId, imageUrl)
+      startStreaming(chatId, prompt, messageId, imageUrl, imageUrls)
     }
-  }, [enabled, chatId, prompt, messageId, imageUrl, startStreaming, isStreaming])
+  }, [
+    enabled,
+    chatId,
+    prompt,
+    messageId,
+    imageUrl,
+    imageUrls,
+    startStreaming,
+    isStreaming,
+  ])
 
   /**
    * 상태 완전 초기화

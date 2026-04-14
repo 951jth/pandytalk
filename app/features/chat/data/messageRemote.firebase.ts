@@ -121,11 +121,19 @@ export const messageRemote = {
         let updatedRecent = prevRecent
 
         // 텍스트나 이미지가 있는 경우 맥락에 추가
-        if (message.text?.trim() || message.imageUrl) {
+        if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
           let content: any = message.text || ''
 
           // 이미지가 포함된 경우 멀티모달 포맷으로 저장
-          if (message.imageUrl) {
+          if (message.imageUrls && message.imageUrls.length > 0) {
+            content = [
+              {type: 'text', text: message.text || ''},
+              ...message.imageUrls.map(url => ({
+                type: 'image_url',
+                image_url: {url},
+              })),
+            ]
+          } else if (message.imageUrl) {
             content = [
               {type: 'text', text: message.text || ''},
               {type: 'image_url', image_url: {url: message.imageUrl}},
@@ -147,6 +155,7 @@ export const messageRemote = {
           text: message.text ?? '',
           type: message.type,
           imageUrl: message.imageUrl ?? '',
+          imageUrls: message.imageUrls ?? [],
           createdAt: now,
           senderPicURL: message?.senderPicURL ?? null,
           senderName: message?.senderName ?? null,
@@ -165,6 +174,7 @@ export const messageRemote = {
             createdAt: now,
             type: newMessage.type,
             imageUrl: newMessage.imageUrl,
+            imageUrls: newMessage.imageUrls,
           },
         })
       })

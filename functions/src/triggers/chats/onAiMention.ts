@@ -31,9 +31,10 @@ export const onAiMention = onDocumentCreated(
 
       const prompt = text.replace('@팬디', '').trim()
       const imageUrl = message.imageUrl || null
+      const imageUrls = message.imageUrls || []
 
-      // 텍스트와 이미지 둘 다 없으면 무시 (이미지만 있어도 진행되도록 수정)
-      if (!prompt && !imageUrl) return
+      // 텍스트와 이미지 둘 다 없으면 무시
+      if (!prompt && !imageUrl && imageUrls.length === 0) return
 
       logger.info(`🤖 팬디봇 호출 감지: [${chatId}] ${prompt}`)
 
@@ -50,6 +51,7 @@ export const onAiMention = onDocumentCreated(
         mentionerId: senderId,
         seq: 0, // 트랜잭션 내에서 업데이트됨
         imageUrl: message.imageUrl || null,
+        imageUrls: message.imageUrls || [],
       })
 
       await db.runTransaction(async tx => {
@@ -83,7 +85,8 @@ export const onAiMention = onDocumentCreated(
             chatId,
             messageId: aiMessageRef.id,
             prompt,
-            imageUrl: message.imageUrl || null, // 이미지가 있는 경우 포함
+            imageUrl: message.imageUrl || null,
+            imageUrls: message.imageUrls || [],
           },
           {
             scheduleDelaySeconds: 30, // 30초 대기 후 체크 (SSE 완료 여부 확인)

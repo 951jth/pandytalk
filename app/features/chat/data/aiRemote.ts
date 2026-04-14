@@ -6,6 +6,7 @@ export interface AiStreamParams {
   prompt: string
   messageId?: string
   imageUrl?: string
+  imageUrls?: string[]
   onChunk: (text: string) => void
   onDone: () => void
   onError: (error: any) => void
@@ -21,6 +22,7 @@ export const aiRemote = {
     prompt,
     messageId,
     imageUrl,
+    imageUrls,
     onChunk,
     onDone,
     onError,
@@ -37,6 +39,7 @@ export const aiRemote = {
           prompt,
           messageId,
           imageUrl,
+          imageUrls,
         }),
       })
 

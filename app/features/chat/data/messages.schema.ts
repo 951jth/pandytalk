@@ -30,6 +30,11 @@ const V3_COLUMNS: ColumnDef[] = [
   ...V2_COLUMNS,
   {name: 'status', sql: "status TEXT DEFAULT 'success'"},
 ]
+//V4 테이블 (imageUrls 추가)
+const V4_COLUMNS: ColumnDef[] = [
+  ...V3_COLUMNS,
+  {name: 'imageUrls', sql: 'imageUrls TEXT'},
+]
 
 // 🔥🔥TODO: 테이블 버전이 업될때마다 확인해야함🔥🔥
 //V1 테이블 (id, roomId, text, senderId, createdAt, type, imageUrl, senderPicURL, senderName)
@@ -52,6 +57,13 @@ export const CREATE_MESSAGE_TABLE_V3_SQL = makeCreateTableSql(
   V3_COLUMNS,
 )
 export const MESSAGE_COLUMNS_V3 = buildColumnsArray(V3_COLUMNS)
+
+//V4 테이블 (imageUrls 추가)
+export const CREATE_MESSAGE_TABLE_V4_SQL = makeCreateTableSql(
+  MESSAGE_TABLE,
+  V4_COLUMNS,
+)
+export const MESSAGE_COLUMNS_V4 = buildColumnsArray(V4_COLUMNS)
 
 // 🔥🔥TODO: 버전업될떄마다 확인🔥🔥
 // 최신 버전: 예) v2까지 존재한다면 2
@@ -105,11 +117,27 @@ export const migrations: Record<number, Migration> = {
       }
     })
   },
+  //v3 -> v4 : imageUrls 컬럼 추가
+  4: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
+
+      if (!columns.includes('imageUrls')) {
+        console.log('➕ [Migration] Adding "imageUrls" column...')
+        tx.executeSql(`ALTER TABLE messages ADD COLUMN imageUrls TEXT;`)
+      } else {
+        console.log('ℹ️ [Migration] "imageUrls" column already exists, skipping.')
+      }
+    })
+  },
 }
 
 //🔥🔥TODO: 중요 가장 최근 컬럼값으로 설정해야함 (초기화 할떄 사용함)🔥🔥
-export const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS_V3.map(() => '?').join(', ')
-export const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS_V3.join(', ')
-export const MESSAGES_COLUMNS = MESSAGE_COLUMNS_V3
-export const LATEST_DB_VERSION = 3
-export const CREATE_MESSAGE_TABLE_RECENT_SQL = CREATE_MESSAGE_TABLE_V3_SQL
+export const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS_V4.map(() => '?').join(', ')
+export const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS_V4.join(', ')
+export const MESSAGES_COLUMNS = MESSAGE_COLUMNS_V4
+export const LATEST_DB_VERSION = 4
+export const CREATE_MESSAGE_TABLE_RECENT_SQL = CREATE_MESSAGE_TABLE_V4_SQL

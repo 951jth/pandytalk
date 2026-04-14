@@ -11,6 +11,7 @@ import COLORS from '@shared/constants/color'
 import {User} from '@shared/types/auth'
 import type {ChatMessage} from '@shared/types/chat'
 import ImageViewer from '@shared/ui/common/ImageViewer'
+import MultiImageViewer from '@shared/ui/common/MultiImageViewer'
 import CopyableText from '@shared/ui/text/CopyableText'
 import {formatChatTime, formatServerDate} from '@shared/utils/firebase'
 
@@ -46,7 +47,7 @@ export default function ChatMessageItem({
     type === 'ai_text'
       ? botImageUri
       : member?.photoURL || item?.senderPicURL || ''
-
+  if (item.type == 'image') console.log('item', item)
   const renderMessageContent = () => {
     const textColor = isMine ? COLORS.onPrimary : COLORS.text
 
@@ -65,15 +66,13 @@ export default function ChatMessageItem({
       )
     }
 
-    if (type === 'image' && item?.imageUrl) {
+    if (type === 'image') {
+      const images = item.imageUrls || (item.imageUrl ? [item.imageUrl] : [])
       return (
         <>
-          <ImageViewer
-            images={[{uri: item?.imageUrl}]}
-            imageProps={{
-              resizeMode: 'cover',
-              style: styles.chatImage,
-            }}
+          <MultiImageViewer
+            images={images}
+            maxWidth={bubbleMaxWidth - 24} // 패딩 제외
           />
           {item?.text && (
             <CopyableText

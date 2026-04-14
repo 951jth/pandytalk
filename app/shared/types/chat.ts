@@ -19,6 +19,7 @@ export interface ChatMessage {
   mentionerId?: string // AI를 호출한 유저 UID (중복 스트리밍 방지용)
   type: 'text' | 'image' | 'file' | 'ai_text'
   imageUrl?: string
+  imageUrls?: string[]
   createdAt: number //sqlite에 저장하기 위해 number 타입으로 변환함
   senderPicURL?: string
   senderName?: string

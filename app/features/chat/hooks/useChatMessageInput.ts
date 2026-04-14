@@ -13,6 +13,7 @@ export type InputMessageParams = {
   type: ChatMessage['type']
   seq?: number
   imageUrl?: string
+  imageUrls?: string[]
 }
 
 export type ChatInputPropTypes = {
@@ -78,24 +79,26 @@ export const useChatMessageInput = ({
         text: text,
         type,
         imageUrl: '',
+        imageUrls: [],
       }
       // step 2. 이미지 타입이거나 선택된 이미지가 있는 경우 업로드 Url 생성
       if (type === 'image' || selectedImage) {
         const imageResponse = result || selectedImage
-        const image = imageResponse?.assets?.[0]
-        if (!image?.uri) {
+        if (!imageResponse?.assets || imageResponse.assets.length === 0) {
           if (type === 'image') throw new Error('이미지가 없습니다.')
         } else {
-          const uploadProm = await fileService.uploadImageFromPicker(
-            imageResponse!,
+          const uploadResults = await fileService.uploadImagesFromPicker(
+            imageResponse,
             {
               rootName: 'chat_images',
               ext: 'jpg',
             },
           )
-          if (uploadProm) {
-            message.imageUrl = uploadProm?.downloadUrl
-            message.type = 'image' // 이미지가 포함되면 타입을 image로 변경
+          if (uploadResults.length > 0) {
+            message.imageUrls = uploadResults.map(r => r.downloadUrl)
+            // 하위 호환성을 위해 첫 번째 이미지를 imageUrl에도 저장
+            message.imageUrl = uploadResults[0].downloadUrl
+            message.type = 'image'
           }
         }
       }

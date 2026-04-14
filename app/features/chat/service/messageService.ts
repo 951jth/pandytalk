@@ -79,7 +79,11 @@ export const messageService = {
     const trimmed = message.text?.trim() ?? ''
     if (message.type === 'text' && !trimmed)
       throw new Error('메시지를 입력해주세요.')
-    if (message.type === 'image' && !message.imageUrl)
+    if (
+      message.type === 'image' &&
+      !message.imageUrl &&
+      !message.imageUrls?.length
+    )
       throw new Error('이미지 업로드에 실패했습니다.')
     try {
       if (!fetchedRoomId) throw new Error('채팅방 정보가 없습니다.')
