@@ -52,13 +52,15 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     return () => debouncedSetSearchText.cancel()
   }, [input, debouncedSetSearchText])
 
-  const filteredChat = useMemo(
-    () =>
-      chats?.filter(chat =>
-        chat?.name?.toUpperCase().includes(searchText?.toUpperCase()),
-      ),
-    [chats, searchText],
-  )
+  const filteredChat = useMemo(() => {
+    let list = chats
+    if (user?.accountStatus === 'pending' && type === 'dm') {
+      list = list?.filter(chat => chat.findMember?.authority === 'ADMIN')
+    }
+    return list?.filter(chat =>
+      chat?.name?.toUpperCase().includes(searchText?.toUpperCase()),
+    )
+  }, [chats, searchText, user?.accountStatus, type])
 
   const isLoading =
     !user?.uid ||

@@ -22,11 +22,12 @@ export function useAuthGate() {
   const fetchProfile = useCallback(
     async (uid: string) => {
       const profile = await dispatch(fetchUserById(uid)).unwrap()
-      if (profile?.accountStatus !== 'confirm') {
+      const blockedStatuses = ['reject', 'stop']
+      if (blockedStatuses.includes(profile?.accountStatus)) {
         logout()
         Alert.alert(
-          '승인 대기 중',
-          '회원님의 가입 신청이 아직 승인되지 않았습니다.\n관리자가 확인 후 승인이 완료되면 다시 이용하실 수 있습니다.',
+          '접속 제한',
+          '회원님의 계정 상태로 인해 접속이 제한되었습니다.\n관리자에게 문의해주세요.',
         )
         return null
       }
@@ -60,7 +61,9 @@ export function useAuthGate() {
   //스플래시 스크린은 마운트 될떄만 뜨도록 설정함(isMounted)
   const shouldShowSplash = initializing
 
-  const canEnterApp = !!fbUser?.uid && userInfo?.accountStatus === 'confirm'
+  const allowedStatuses = ['confirm', 'pending']
+  const canEnterApp =
+    !!fbUser?.uid && allowedStatuses.includes(userInfo?.accountStatus ?? '')
 
   return {shouldShowSplash, canEnterApp}
 }

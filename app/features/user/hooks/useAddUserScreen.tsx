@@ -37,12 +37,11 @@ export default function useAddUserScreen() {
         const photoURL = await profileRef.current?.upload()
         let payload = {...formValues, photoURL}
         await userService.setProfile(cred, payload)
-        await authRemote.signOut() //토큰은 남겨두고 로그아웃시킴
+        // await authRemote.signOut() // 더 이상 가입 즉시 로그아웃하지 않음 (pending 상태로 진입 허용)
         Alert.alert(
-          '승인 대기 중',
-          '관리자가 확인 후 승인이 완료되면 이용하실 수 있습니다.',
+          '가입 신청 완료',
+          '승인 대기 중입니다. 승인 전까지는 일부 기능이 제한될 수 있습니다.',
         )
-        navigation.goBack()
       } else {
         Alert.alert(
           '실패',

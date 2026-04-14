@@ -1,4 +1,4 @@
-import {tabScreens} from '@app/navigation/tabScreens'
+import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
 import {AppRouteParamList, TabParamList} from '@app/shared/types/navigate'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
@@ -14,7 +14,7 @@ const EmptyScreen: React.FC<any> = () => null
 const TAB_BAR_HEIGHT = 64
 
 export default function TabScreenNavigator(): React.JSX.Element {
-  const tabs = tabScreens()
+  const tabs = useTabScreens()
 
   return (
     <Tab.Navigator
@@ -50,6 +50,8 @@ export default function TabScreenNavigator(): React.JSX.Element {
               tabBarButton: btnProps => (
                 <ActionTabButton
                   {...btnProps}
+                  name={route.name}
+                  disabled={route.disabled}
                   target={route.path as keyof AppRouteParamList}
                   params={route.getParams?.()}
                   BadgeComponent={route.badge}

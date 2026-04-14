@@ -51,7 +51,7 @@ export const userRemote = {
     return firebaseCall('userRemote.getProfile', async () => {
       const docRef = doc(firestore, 'users', uid)
       const snapshot = await getDoc(docRef)
-      if (!snapshot.exists()) throw new Error('User not found')
+      if (!snapshot.exists()) return null
       const data = snapshot.data()
       return data
     })
@@ -72,18 +72,26 @@ export const userRemote = {
     return firebaseCall('userRemote.getUsersPage', async () => {
       const usersRef = collection(firestore, 'users')
       let filters: any[] = []
-      if (typeof isConfirmed == 'boolean') {
+
+      const isAdmin = authority === 'ADMIN'
+
+      // 관리자가 아닐 때만 승인 여부 필터 적용 (관리자는 모두 볼 수 있음)
+      if (!isAdmin && typeof isConfirmed == 'boolean') {
         filters = [where('isConfirmed', '==', isConfirmed)]
       }
 
-      // 비관리자면: (내 그룹) OR (ADMIN) 만 조회
-      if (authority !== 'ADMIN') {
-        filters.push(
-          or(
-            where('authority', '==', 'ADMIN'),
-            where('groupId', '==', groupId ?? '__NONE__'),
-          ),
-        )
+      // 비관리자면: 그룹 아이디가 없으면 ADMIN만, 있으면 (내 그룹) OR (ADMIN) 조회
+      if (!isAdmin) {
+        if (!groupId) {
+          filters.push(where('authority', '==', 'ADMIN'))
+        } else {
+          filters.push(
+            or(
+              where('authority', '==', 'ADMIN'),
+              where('groupId', '==', groupId),
+            ),
+          )
+        }
       }
 
       let q = query(usersRef, ...filters)

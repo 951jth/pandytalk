@@ -1,5 +1,5 @@
-import {tabScreens} from '@app/navigation/tabScreens'
 import {appRoutes} from '@app/navigation/useScreens'
+import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
 import {useLogout} from '@app/shared/hooks/useLogout'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
@@ -29,7 +29,7 @@ export default function AppHeader({
   const canGoBack = navigation.canGoBack()
   const allRoutes =
     appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
-  const tabs = tabScreens()
+  const tabs = useTabScreens()
   const {confirmLogout} = useLogout()
 
   const currentTitle = useNavigationState(state => {

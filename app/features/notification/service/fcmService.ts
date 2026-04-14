@@ -17,15 +17,18 @@ export const fcmService = {
     if (!remoteMessage) return
 
     const data = remoteMessage.data
+    const actualChatId = (data?.chatId || data?.roomId) as string
 
     switch (data?.pushType) {
       case 'chat':
         console.log('🚀 [FCM] 채팅 화면으로 이동:', data)
-        navigateToChat(
-          data.chatId as string,
-          data.senderName as string,
-          (data.chatType as string) || 'dm',
-        )
+        if (actualChatId) {
+          navigateToChat(
+            actualChatId,
+            data.senderName as string,
+            (data.chatType as string) || 'dm',
+          )
+        }
         break
       case 'join-approve':
         console.log('🚀 [FCM] 가입 승인 알림 수신:', data)

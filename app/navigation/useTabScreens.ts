@@ -6,7 +6,7 @@ import ProfileScreen from '@app/features/user/screens/ProfileScreen'
 import UsersScreen from '@app/features/user/screens/UsersScreen'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {NativeStackNavigationOptions} from '@react-navigation/native-stack'
-import {useMemo} from 'react'
+import React, {useMemo} from 'react'
 import type {TabParamList} from '../shared/types/navigate'
 
 type RouteItem = {
@@ -17,6 +17,7 @@ type RouteItem = {
   icon?: string
   filtered?: boolean
   path?: string
+  disabled?: boolean // boolean only
 }
 
 export type TabRouteItem<K extends keyof TabParamList> = RouteItem & {
@@ -25,9 +26,11 @@ export type TabRouteItem<K extends keyof TabParamList> = RouteItem & {
   getParams?: () => TabParamList[K]
 }
 
-export const tabScreens = () => {
+export const useTabScreens = () => {
   const {data: user} = useAppSelector(state => state?.user)
   const isAdmin = user?.authority == 'ADMIN'
+  const isPending = user?.accountStatus === 'pending'
+
   return useMemo<TabRouteItem<keyof TabParamList>[]>(
     () =>
       [
@@ -52,6 +55,7 @@ export const tabScreens = () => {
           path: 'group-chat',
           badge: GroupChatUnreadCount,
           filtered: isAdmin,
+          disabled: isPending,
         },
         {
           name: 'group-chat-list',
@@ -61,6 +65,7 @@ export const tabScreens = () => {
           getParams: () => ({type: 'group'}),
           badge: () => ChatUnreadCount({type: 'group'}),
           filtered: !isAdmin,
+          disabled: isPending,
         },
         {
           name: 'profile',
@@ -76,6 +81,6 @@ export const tabScreens = () => {
           filtered: !isAdmin,
         },
       ].filter(e => !e.filtered),
-    [user?.authority ?? null],
+    [isAdmin, isPending],
   )
 }

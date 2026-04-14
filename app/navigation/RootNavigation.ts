@@ -20,19 +20,15 @@ export function navigateToChat(
   chatType?: string,
 ) {
   const task = () => {
-    if (chatType == 'group') {
-      // 1뎁스
-      navigationRef.navigate('app', {
-        screen: 'group-chat',
-        params: {roomId},
-      })
-    } else {
-      // 1뎁스
-      navigationRef.navigate('app', {
-        screen: 'dm-chat',
-        params: {roomId, title},
-      })
-    }
+    const screenName = chatType === 'group' ? 'group-chat' : 'dm-chat'
+
+    navigationRef.navigate('app', {
+      screen: screenName,
+      params: {roomId, title},
+      // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나 
+      // 파라미터를 강제 갱신하도록 key를 roomId로 설정
+      key: `${screenName}-${roomId}`,
+    })
   }
 
   if (!roomId) return console.warn('❗ roomId is required.')

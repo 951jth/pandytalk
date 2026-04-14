@@ -72,12 +72,24 @@ export default function GroupMainThumnail({
             />
           </View>
 
-          {/* 하단: 그룹 소개 */}
+          {/* 하단: 그룹 소개 또는 승인 대기 안내 */}
           <View style={styles.descriptionBox}>
-            <Text style={styles.introText} numberOfLines={2}>
-              {groupInfo?.memo ||
-                '소속된 그룹이 없어도 걱정 마세요.\nPANDY TALK에서 새로운 인연을 만날 수 있어요.'}
-            </Text>
+            {userInfo?.accountStatus === 'pending' ? (
+              <View style={styles.pendingContainer}>
+                <View style={styles.pendingBadge}>
+                  <Text style={styles.pendingBadgeText}>승인 대기 중</Text>
+                </View>
+                <Text style={styles.pendingIntroText}>
+                  팬디톡의 정식 멤버가 되기 위해{'\n'}관리자의 승인을 기다리고
+                  있어요! 조금만 기다려주세요 🐼
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.introText} numberOfLines={2}>
+                {groupInfo?.memo ||
+                  '소속된 그룹이 없어도 걱정 마세요.\nPANDY TALK에서 새로운 인연을 만날 수 있어요.'}
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -200,6 +212,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'BMDOHYEON',
     color: '#444444', // 더 진한 회색으로 가독성 확보
+    lineHeight: 20,
+  },
+  pendingContainer: {
+    gap: 8,
+  },
+  pendingBadge: {
+    backgroundColor: COLORS.warning + '20',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  pendingBadgeText: {
+    fontSize: 12,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.warning,
+  },
+  pendingIntroText: {
+    fontSize: 14,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
 })
