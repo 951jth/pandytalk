@@ -1,4 +1,5 @@
 import crashlytics from '@react-native-firebase/crashlytics'
+import * as Updates from 'expo-updates'
 
 /**
  * Common logging utility with support for:
@@ -8,6 +9,32 @@ import crashlytics from '@react-native-firebase/crashlytics'
 
 class Logger {
   private isDev = __DEV__
+
+  constructor() {
+    this.initCrashlytics()
+  }
+
+  private initCrashlytics() {
+    if (!this.isDev) {
+      // EAS Update 정보가 있으면 Crashlytics 커스텀 키로 설정
+      try {
+        const info = {
+          update_id: Updates.updateId || 'none',
+          update_created_at: Updates.createdAt?.toISOString() || 'none',
+          update_channel: Updates.channel || 'none',
+          is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
+        }
+        
+        // 타입 추론 오류 방지를 위해 any 캐스팅 후 호출
+        const crash = crashlytics() as any
+        Object.entries(info).forEach(([key, value]) => {
+          crash.setCustomKey(key, value)
+        })
+      } catch (e) {
+        console.warn('Failed to set Crashlytics custom keys', e)
+      }
+    }
+  }
 
   /**
    * Log debug message to console only in development
