@@ -107,13 +107,17 @@ export default function MultiImageViewer({
             </TouchableOpacity>
           </View>
         )}
-        FooterComponent={() => (
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {index + 1} / {images.length}
-            </Text>
-          </View>
-        )}
+        FooterComponent={
+          images.length > 1
+            ? () => (
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>
+                    {index + 1} / {images.length}
+                  </Text>
+                </View>
+              )
+            : undefined
+        }
       />
 
       {/* 전체 화면 내비게이션 화살표 (고정 오버레이) */}

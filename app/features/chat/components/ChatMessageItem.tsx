@@ -121,7 +121,7 @@ const ChatMessageContent = ({
   }
 
   if (type === 'image') {
-    const images = imageUrls || (imageUrl ? [imageUrl] : [])
+    const images = imageUrls?.length ? imageUrls : imageUrl ? [imageUrl] : []
     return (
       <>
         <MultiImageViewer images={images} maxWidth={bubbleMaxWidth - 24} />
