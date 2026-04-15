@@ -134,6 +134,42 @@ sequenceDiagram
 
 ---
 
+## ⚙️ Getting Started
+
+### Pre-requisites
+- [Node.js](https://nodejs.org/) (v18+)
+- [Yarn](https://yarnpkg.com/)
+- [Android Studio](https://developer.android.com/studio) & Android SDK (for Android Emulation)
+- [Firebase Project](https://console.firebase.google.com/) (Firestore, Auth, Functions 활성화 필요)
+
+### Installation
+```bash
+# Repository 클론
+git clone https://github.com/951jth/pandytalk.git
+cd pandytalk
+
+# 의존성 설치
+yarn install
+```
+
+### Environment Setup
+1. Firebase 프로젝트에서 `google-services.json` (Android) 파일을 다운로드하여 `android/app/` 경로에 배치합니다.
+2. `.env` 파일에 필요한 API Key들을 설정합니다. (OpenAI, Serper 등)
+
+### Execution
+```bash
+# Android 실행 (에뮬레이터 또는 기기 연결 필요)
+yarn android
+
+# 메트로 번들러만 실행할 경우
+yarn start
+
+# 캐시 초기화가 필요한 경우
+yarn start --reset-cache
+```
+
+---
+
 ## 🗂 Project Structure
 
 도메인(Feature) 단위로 로직을 캡슐화하여 유지보수성을 높인 **Feature-based Architecture**를 채택했습니다.
