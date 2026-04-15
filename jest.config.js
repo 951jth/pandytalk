@@ -9,7 +9,7 @@ module.exports = {
     '^@features/(.*)$': '<rootDir>/app/features/$1',
   },
   transformIgnorePatterns: [
-    //패키지 변환 무시
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@shopify/flash-list|react-redux|react-native-blob-util|react-native-fs|react-native-permissions|react-native-image-picker|react-native-image-viewing|react-native-fast-image|react-native-vector-icons|react-native-modal)/)',
+    //패키지 변환 무시 (ESM 모듈들을 변환 대상에 포함)
+    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@shopify/flash-list|react-redux|react-native-blob-util|react-native-fs|react-native-permissions|react-native-image-picker|react-native-image-viewing|react-native-fast-image|react-native-vector-icons|react-native-modal|expo|expo-updates|react-native-reanimated|react-native-bootsplash|react-native-safe-area-context|react-native-screens|react-native-gesture-handler|react-native-linear-gradient|react-native-sse)/)',
   ],
 }

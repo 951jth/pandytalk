@@ -15,8 +15,10 @@ describe('messageService.getChatMessages (통합 조회 오케스트레이션 �
   })
 
   it('Scenario 1: Offline-First (로컬 데이터가 충분하면 서버를 호출하지 않음)', async () => {
-    // 1. 로컬 DB에 20개(페이지 꽉 참)의 데이터가 있다고 가정
-    const mockLocalData = Array(20).fill({seq: 100})
+    // 1. 로컬 DB에 20개(페이지 꽉 참)의 연속된 데이터가 있다고 가정
+    const mockLocalData = Array(20)
+      .fill(null)
+      .map((_, i) => ({seq: 100 - i}))
     ;(messageLocal.getChatMessagesBySeq as jest.Mock).mockResolvedValue(
       mockLocalData,
     )
@@ -87,7 +89,9 @@ describe('messageService.getChatMessages (통합 조회 오케스트레이션 �
 
   it('Scenario 4: Fallback (서버 에러 시 로컬 데이터를 안전하게 반환)', async () => {
     // 1. 로컬에 데이터가 5개밖에 없어 서버 페치가 필요하지만 서버가 터진 상황
-    const mockLocalData = Array(5).fill({seq: 10})
+    const mockLocalData = Array(5)
+      .fill(null)
+      .map((_, i) => ({seq: 10 - i}))
     ;(messageLocal.getChatMessagesBySeq as jest.Mock).mockResolvedValue(
       mockLocalData,
     )

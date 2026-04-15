@@ -65,6 +65,19 @@ jest.mock('@react-native-firebase/storage', () => ({
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
 }))
+jest.mock('@react-native-firebase/remote-config', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    activate: jest.fn(() => Promise.resolve(true)),
+    fetch: jest.fn(() => Promise.resolve()),
+    fetchAndActivate: jest.fn(() => Promise.resolve(true)),
+    getValue: jest.fn(() => ({
+      asString: jest.fn(() => ''),
+      asNumber: jest.fn(() => 0),
+      asBoolean: jest.fn(() => false),
+    })),
+  })),
+}))
 jest.mock('@react-native-firebase/crashlytics', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -206,3 +219,20 @@ jest.mock('react-native-gesture-handler', () => {
     Direction: {},
   }
 })
+
+// Expo Mocks
+jest.mock('expo-updates', () => ({
+  reloadAsync: jest.fn(),
+  checkForUpdateAsync: jest.fn(),
+  fetchUpdateAsync: jest.fn(),
+  updateId: 'mock-update-id',
+  releaseChannel: 'default',
+  isReady: true,
+  isEmergencyLaunch: false,
+}))
+
+jest.mock('expo-font', () => ({
+  loadAsync: jest.fn(),
+  isLoaded: jest.fn(() => true),
+  isLoading: jest.fn(() => false),
+}))
