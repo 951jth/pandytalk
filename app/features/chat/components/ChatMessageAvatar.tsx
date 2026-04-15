@@ -1,11 +1,11 @@
-import React from 'react'
-import {Image, StyleSheet, View} from 'react-native'
-import {Icon} from 'react-native-paper'
 import {AI_BOT_IMAGE} from '@app/shared/constants/ai'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
+import React from 'react'
+import {Image, StyleSheet, View} from 'react-native'
+import {Icon} from 'react-native-paper'
 
 interface ChatMessageAvatarProps {
   item: ChatMessage
@@ -13,11 +13,11 @@ interface ChatMessageAvatarProps {
   isHidden?: boolean
 }
 
-const ChatMessageAvatar = ({
+export default function ChatMessageAvatar({
   item,
   member,
   isHidden = false,
-}: ChatMessageAvatarProps) => {
+}: ChatMessageAvatarProps) {
   if (isHidden) {
     return <View style={{width: 44}} />
   }
@@ -65,5 +65,3 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
 })
-
-export default ChatMessageAvatar
