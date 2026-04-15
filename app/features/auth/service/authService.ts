@@ -1,4 +1,5 @@
 import {authRemote} from '@app/features/auth/data/authRemote.firebase'
+import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {fcmService} from '@app/features/notification/service/fcmService'
 import {handleFirebaseAuthError} from '@app/shared/utils/logger'
 
@@ -16,6 +17,7 @@ export const authService = {
     try {
       await fcmService.removeFCMTokenOnLogout()
     } finally {
+      await messageLocal.clearAllMessages()
       await authRemote.signOut()
     }
   },

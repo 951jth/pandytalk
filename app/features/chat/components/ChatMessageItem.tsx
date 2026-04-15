@@ -1,19 +1,16 @@
-import React from 'react'
-import {Image, StyleSheet, View, useWindowDimensions} from 'react-native'
-import {Icon, Text} from 'react-native-paper'
+import React, {memo} from 'react'
+import {StyleSheet, View, useWindowDimensions} from 'react-native'
+import {Text} from 'react-native-paper'
 
-import AiStreamingText from '@features/chat/components/AiStreamingText'
-import ChatMessageStatusIcons from '@features/chat/components/ChatMessageStatusIcon'
-import {useChatMessageDeleteMutation} from '@features/chat/hooks/useChatMessageDeleteMutation'
-import {useChatMessageUpsertMutation} from '@features/chat/hooks/useChatMessageUpsertMutation'
-import {AI_BOT_IMAGE} from '@shared/constants/ai'
-import COLORS from '@shared/constants/color'
-import {User} from '@shared/types/auth'
-import type {ChatMessage} from '@shared/types/chat'
-import ImageViewer from '@shared/ui/common/ImageViewer'
-import MultiImageViewer from '@shared/ui/common/MultiImageViewer'
-import CopyableText from '@shared/ui/text/CopyableText'
-import {formatChatTime, formatServerDate} from '@shared/utils/firebase'
+import AiStreamingText from '@app/features/chat/components/AiStreamingText'
+import ChatDateSeparator from '@app/features/chat/components/ChatDateSeparator'
+import ChatMessageAvatar from '@app/features/chat/components/ChatMessageAvatar'
+import ChatMessageMeta from '@app/features/chat/components/ChatMessageMeta'
+import COLORS from '@app/shared/constants/color'
+import {User} from '@app/shared/types/auth'
+import type {ChatMessage} from '@app/shared/types/chat'
+import MultiImageViewer from '@app/shared/ui/common/MultiImageViewer'
+import CopyableText from '@app/shared/ui/text/CopyableText'
 
 export type ChatMessageItemProps = {
   item: ChatMessage
@@ -27,181 +24,149 @@ export type ChatMessageItemProps = {
   member?: User
 }
 
-export default function ChatMessageItem({
+// --- 메인 컴포넌트 ---
+const ChatMessageItem = ({
   item,
   uiConfig,
   roomId,
   member,
-}: ChatMessageItemProps) {
+}: ChatMessageItemProps) => {
   const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
   const {width} = useWindowDimensions()
-  const bubbleMaxWidth = width * 0.6 // 화면 너비의 70%를 최대 너비로 설정
-  const {mutate: deleteMessage} = useChatMessageDeleteMutation(roomId)
-  const {mutate: retrySendMessage} = useChatMessageUpsertMutation(roomId)
-  const {type} = item
-
-  // 로컬 에셋 이미지를 URI 형태로 변환하여 ImageViewer가 인식할 수 있게 합니다
-  const botImageUri = Image.resolveAssetSource(AI_BOT_IMAGE).uri
-
-  const profileUri =
-    type === 'ai_text'
-      ? botImageUri
-      : member?.photoURL || item?.senderPicURL || ''
-  if (item.type == 'image') console.log('item', item)
-  const renderMessageContent = () => {
-    const textColor = isMine ? COLORS.onPrimary : COLORS.text
-
-    if (type === 'ai_text') {
-      return (
-        <AiStreamingText chatId={roomId ?? ''} color={textColor} item={item} />
-      )
-    }
-
-    if (type === 'text') {
-      return (
-        <CopyableText
-          textStyle={{color: textColor}}
-          value={item?.text ?? '-'}
-        />
-      )
-    }
-
-    if (type === 'image') {
-      const images = item.imageUrls || (item.imageUrl ? [item.imageUrl] : [])
-      return (
-        <>
-          <MultiImageViewer
-            images={images}
-            maxWidth={bubbleMaxWidth - 24} // 패딩 제외
-          />
-          {item?.text && (
-            <CopyableText
-              textStyle={{color: textColor, marginTop: 5}}
-              value={item?.text ?? '-'}
-            />
-          )}
-        </>
-      )
-    }
-
-    return null
-  }
+  const bubbleMaxWidth = width * 0.7
 
   return (
-    <>
-      {!hideDate && (
-        <View style={styles.chatDateWrap}>
-          <Text style={styles.chatDateText}>
-            {formatServerDate(item?.createdAt, 'YYYY년 MM월 DD일 dddd')}
-          </Text>
-        </View>
-      )}
+    <View style={styles.container}>
+      {!hideDate && <ChatDateSeparator date={item.createdAt} />}
+
       <View
         style={[
           styles.chatRow,
-          {justifyContent: isMine ? 'flex-end' : 'flex-start'},
+          {flexDirection: isMine ? 'row-reverse' : 'row'},
+          isMine ? {paddingLeft: 40} : {paddingRight: 40},
         ]}>
-        {/* 내 채팅 */}
-        {isMine ? (
-          <>
-            <View
-              style={[styles.chatOptionsWrap, {justifyContent: 'flex-end'}]}>
-              {/* 재전송, 삭세 아이콘 */}
-              {!!item?.status && (
-                <ChatMessageStatusIcons
-                  item={item}
-                  onDelete={deleteMessage}
-                  onRetry={item => retrySendMessage({message: item})}
-                />
-              )}
-              {/* 시간 */}
-              {!hideMinute && item?.createdAt && (
-                <Text style={[styles.chatTime, {textAlign: 'right'}]}>
-                  {formatChatTime(item?.createdAt)}
-                </Text>
-              )}
-            </View>
-            {/* 채팅내용 */}
-            <View style={[styles.myChatBubble, {maxWidth: bubbleMaxWidth}]}>
-              {renderMessageContent()}
-            </View>
-          </>
-        ) : (
-          <>
-            {/* 상대 체팅 */}
-            {!hideProfile && (
-              //프로필
-              <View style={styles.frame}>
-                {profileUri ? (
-                  <ImageViewer
-                    images={[{uri: profileUri}]}
-                    useDownload={type !== 'ai_text'} // 봇 이미지 다운로드는 비활성화
-                    imageProps={{
-                      resizeMode: 'cover',
-                      style: styles.profile,
-                    }}
-                  />
-                ) : (
-                  <Icon source="account" size={35} color={COLORS.primary} />
-                )}
-              </View>
-            )}
-            <View
-              style={{
-                marginLeft: hideProfile ? 53 : 0,
-                alignItems: 'flex-start', // 닉네임 길이에 맞춰 말풍선이 늘어나지 않도록 설정
-              }}>
-              {/* 닉네임 */}
-              {!hideProfile && (
-                <Text style={styles.nickname}>
-                  {member?.displayName ?? item?.senderName ?? '알수없음'}
-                </Text>
-              )}
-              {/* 말풍선 */}
-              <View
-                style={[styles.otherChatBubble, {maxWidth: bubbleMaxWidth}]}>
-                {renderMessageContent()}
-              </View>
-            </View>
-            {/* 시간 */}
-            {!hideMinute && (
-              <View style={[styles.chatOptionsWrap]}>
-                <Text style={styles.chatTime}>
-                  {formatChatTime(item.createdAt)}
-                </Text>
-              </View>
-            )}
-          </>
+        {/* 프로필 이미지 (상대방일 때만) */}
+        {!isMine && (
+          <ChatMessageAvatar
+            item={item}
+            member={member}
+            isHidden={hideProfile}
+          />
         )}
+
+        <View
+          style={[
+            styles.messageContentSection,
+            isMine && {alignItems: 'flex-end'},
+          ]}>
+          {/* 닉네임 (상대방 첫 메시지일 때만) */}
+          {!isMine && !hideProfile && (
+            <Text style={styles.nickname}>
+              {member?.displayName ?? item?.senderName ?? '알수없음'}
+            </Text>
+          )}
+
+          <View
+            style={[
+              styles.chatContentWrap,
+              isMine && {flexDirection: 'row-reverse'},
+            ]}>
+            {/* 말풍선 */}
+            <View
+              style={[
+                isMine ? styles.myChatBubble : styles.otherChatBubble,
+                {maxWidth: bubbleMaxWidth},
+              ]}>
+              <ChatMessageContent
+                item={item}
+                isMine={isMine}
+                bubbleMaxWidth={bubbleMaxWidth}
+                roomId={roomId}
+              />
+            </View>
+
+            {/* 시간 및 상태 표기 (메타 정보) */}
+            <ChatMessageMeta
+              item={item}
+              roomId={roomId}
+              isMine={isMine}
+              hideMinute={hideMinute}
+            />
+          </View>
+        </View>
       </View>
-    </>
+    </View>
   )
 }
 
+// --- 보조 컴포넌트: 본문 내용 (Bubble Content) ---
+const ChatMessageContent = ({
+  item,
+  isMine,
+  bubbleMaxWidth,
+  roomId,
+}: {
+  item: ChatMessage
+  isMine: boolean
+  bubbleMaxWidth: number
+  roomId?: string | null
+}) => {
+  const textColor = isMine ? COLORS.onPrimary : COLORS.text
+  const {type, text, imageUrls, imageUrl} = item
+
+  if (type === 'ai_text') {
+    return (
+      <AiStreamingText chatId={roomId ?? ''} color={textColor} item={item} />
+    )
+  }
+
+  if (type === 'image') {
+    const images = imageUrls || (imageUrl ? [imageUrl] : [])
+    return (
+      <>
+        <MultiImageViewer images={images} maxWidth={bubbleMaxWidth - 24} />
+        {text && (
+          <CopyableText
+            textStyle={{color: textColor, marginTop: 5}}
+            value={text}
+          />
+        )}
+      </>
+    )
+  }
+
+  return <CopyableText textStyle={{color: textColor}} value={text ?? '-'} />
+}
+
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
+  container: {
+    width: '100%',
   },
   chatRow: {
+    marginBottom: 16,
+    gap: 8,
+  },
+  messageContentSection: {
+    flex: 1,
+    gap: 4,
+  },
+  chatContentWrap: {
     flexDirection: 'row',
-    marginBottom: 16, // 간격을 조금 더 넓게
-    gap: 10,
+    alignItems: 'flex-end',
+    gap: 8,
   },
   myChatBubble: {
     padding: 12,
-    borderTopLeftRadius: 16, // ✅ 최초의 부드러운 24px 곡률로 복원
+    borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderBottomRightRadius: 0,
     borderBottomLeftRadius: 16,
     backgroundColor: COLORS.primary,
-    position: 'relative',
-    alignSelf: 'flex-end', // 내용물에 맞게 너비 조절
-    // 최초의 소프트 섀도우
+    elevation: 2,
     shadowColor: COLORS.primary,
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 2,
   },
   otherChatBubble: {
     padding: 12,
@@ -209,74 +174,18 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     borderBottomRightRadius: 16,
     borderBottomLeftRadius: 0,
-    backgroundColor: '#FFFFFF', // 화이트 유지
-    position: 'relative',
-    alignSelf: 'flex-start', // 내용물에 맞게 너비 조절
-    // 최초의 소프트 섀도우
+    backgroundColor: '#FFFFFF',
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.05,
     shadowRadius: 10,
-    elevation: 2,
-  },
-  chatDateWrap: {
-    alignSelf: 'center',
-    backgroundColor: 'rgba(45, 36, 31, 0.08)', // 은은한 다크 베이지
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginVertical: 16,
-  },
-  chatDateText: {
-    fontSize: 11,
-    fontFamily: 'BMDOHYEON',
-    color: '#8D7D77',
-  },
-  chatOptionsWrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    alignSelf: 'flex-end',
-    marginBottom: 4,
-  },
-  chatTime: {
-    fontSize: 10,
-    fontFamily: 'BMDOHYEON',
-    color: '#BDBDBD',
-  },
-  statusIcon: {
-    margin: 0,
-    padding: 0,
-    width: 18,
-    height: 18,
-  },
-  frame: {
-    width: 44,
-    height: 44,
-    borderRadius: 15, // ✅ 모던한 라운드 스퀘어
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFF',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  profile: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
   },
   nickname: {
-    marginBottom: 4,
     fontSize: 13,
     fontFamily: 'BMDOHYEON',
-    color: '#4B3F39', // 부드러운 다크 브라운
-  },
-  chatImage: {
-    width: 180, // 이미지를 조금 더 시원하게
-    height: 180,
-    borderRadius: 20,
+    color: '#4B3F39',
   },
 })
+
+export default memo(ChatMessageItem)
