@@ -16,23 +16,47 @@ class Logger {
 
   private initCrashlytics() {
     if (!this.isDev) {
-      // EAS Update 정보가 있으면 Crashlytics 커스텀 키로 설정
-      try {
-        const info = {
-          update_id: Updates.updateId || 'none',
-          update_created_at: Updates.createdAt?.toISOString() || 'none',
-          update_channel: Updates.channel || 'none',
-          is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
-        }
-        
-        // 타입 추론 오류 방지를 위해 any 캐스팅 후 호출
-        const crash = crashlytics() as any
-        Object.entries(info).forEach(([key, value]) => {
-          crash.setCustomKey(key, value)
-        })
-      } catch (e) {
-        console.warn('Failed to set Crashlytics custom keys', e)
+      this.refreshUpdateInfo()
+    }
+  }
+
+  /**
+   * EAS Update 정보를 Crashlytics 커스텀 키에 최신화
+   */
+  refreshUpdateInfo() {
+    try {
+      const info = {
+        update_id: Updates.updateId || 'none',
+        update_created_at: Updates.createdAt?.toISOString() || 'none',
+        update_channel: Updates.channel || 'none',
+        runtime_version: Updates.runtimeVersion || 'none',
+        is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
       }
+      
+      const crash = crashlytics() as any
+      Object.entries(info).forEach(([key, value]) => {
+        crash.setCustomKey(key, value)
+      })
+    } catch (e) {
+      console.warn('Failed to set Crashlytics custom keys', e)
+    }
+  }
+
+  /**
+   * 업데이트 체크 결과를 상세히 로깅 (Crashlytics 로그에 포함)
+   */
+  logUpdateCheck(event: Updates.UpdateEvent) {
+    if (this.isDev) {
+      console.log(`[UPDATE EVENT] ${event.type}`, event)
+      return
+    }
+
+    const logMsg = `[EAS Update Event] Type: ${event.type}`
+    crashlytics().log(logMsg)
+
+    if (event.type === Updates.UpdateEventType.ERROR) {
+      crashlytics().recordError(new Error(`EAS Update Error: ${event.message}`))
+      crashlytics().setCustomKey('last_update_error', event.message || 'unknown')
     }
   }
 

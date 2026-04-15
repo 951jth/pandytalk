@@ -1,3 +1,4 @@
+import * as Updates from 'expo-updates'
 import {getFirestore} from '@react-native-firebase/firestore'
 import {useQueryClient} from '@tanstack/react-query'
 import {cloneDeep} from 'lodash'
@@ -71,10 +72,22 @@ export function useProfileScreen() {
     }
   }
 
-  // ✅ 폼과 프로필을 동시에 초기화하는 통합 액션
   const onReset = useCallback(() => {
     formRef.current?.resetValues()
     profileRef.current?.onReset()
+  }, [])
+
+  const showDebugInfo = useCallback(() => {
+    Alert.alert(
+      '🛠️ Debug Information',
+      `Update ID: ${Updates.updateId || 'None (Local Build)'}\n` +
+        `Runtime Version: ${Updates.runtimeVersion || 'N/A'}\n` +
+        `Channel: ${Updates.channel || 'N/A'}\n` +
+        `Created At: ${
+          Updates.createdAt ? Updates.createdAt.toLocaleString() : 'N/A'
+        }\n` +
+        `Is Embedded: ${Updates.isEmbeddedLaunch ? 'Yes' : 'No'}`,
+    )
   }, [])
 
   return {
@@ -85,6 +98,7 @@ export function useProfileScreen() {
     formRef,
     profileRef,
     updateUserProfile,
-    onReset, // ✅ 추가
+    onReset,
+    showDebugInfo,
   }
 }
