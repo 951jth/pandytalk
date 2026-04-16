@@ -55,6 +55,7 @@ export default function EditInput({
 }: EditInputProps) {
   const [focused, setFocused] = useState(false)
   const inputRef = useRef<RNTextInput>(null)
+  const [show, setShow] = useState(false)
 
   // 부모가 paper 전용 props를 실수로 넘겨도 RN TextInput에 전달되지 않게 필터링
   const {
@@ -67,9 +68,18 @@ export default function EditInput({
     underlineColor,
     activeUnderlineColor,
     // outlineStyle 필터링 (부모로부터 rest로 올 수 있음)
-    outlineStyle: _, 
+    outlineStyle: _,
     ...inputProps
   } = rest as any
+
+  const isOutlined = type === 'outlined'
+  const isPasswordField = !!inputProps.secureTextEntry
+
+  // 토글 사용 시 오른쪽 아이콘 공간만큼 패딩 확보
+  const inputPaddingRight = useMemo(() => {
+    if (!isPasswordField || !showPasswordToggle) return 0
+    return 36 // 아이콘 + 여백
+  }, [isPasswordField, showPasswordToggle])
 
   if (!edit) {
     return (
@@ -86,16 +96,6 @@ export default function EditInput({
   // 값은 항상 문자열로 보장
   const v =
     typeof value === 'string' ? value : value == null ? '' : String(value)
-
-  const isOutlined = type === 'outlined'
-  const isPasswordField = !!inputProps.secureTextEntry
-  const [show, setShow] = useState(false)
-
-  // 토글 사용 시 오른쪽 아이콘 공간만큼 패딩 확보
-  const inputPaddingRight = useMemo(() => {
-    if (!isPasswordField || !showPasswordToggle) return 0
-    return 36 // 아이콘 + 여백
-  }, [isPasswordField, showPasswordToggle])
 
   const hasLeftAddon = !!leftElement || !!leftIcon
 

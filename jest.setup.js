@@ -225,6 +225,9 @@ jest.mock('expo-updates', () => ({
   reloadAsync: jest.fn(),
   checkForUpdateAsync: jest.fn(),
   fetchUpdateAsync: jest.fn(),
+  addUpdatesStateChangeListener: jest.fn(() => ({
+    remove: jest.fn(),
+  })),
   updateId: 'mock-update-id',
   releaseChannel: 'default',
   isReady: true,
@@ -235,4 +238,8 @@ jest.mock('expo-font', () => ({
   loadAsync: jest.fn(),
   isLoaded: jest.fn(() => true),
   isLoading: jest.fn(() => false),
+}))
+
+jest.mock('@app/bootstrap/useFontFaceSetup', () => ({
+  useFontFaceSetup: jest.fn(() => true),
 }))

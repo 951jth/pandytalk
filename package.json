@@ -8,7 +8,7 @@
     "android:custom": "react-native run-android --deviceId emulator-5554",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "lint": "eslint .",
+    "lint": "eslint \"app/**/*.{js,jsx,ts,tsx}\"",
     "test": "jest",
     "bundle-android": "react-native bundle --platform android --dev false --entry-file index.tsx --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
     "release-android": "cd android && ./gradlew assembleRelease && cd ..",
@@ -16,7 +16,8 @@
     "build:aab": "cd android && ./gradlew bundleRelease && cd ..",
     "update": "npx -y eas-cli update",
     "eas-build-pre-install": "cp $GOOGLE_SERVICES_JSON ./android/app/google-services.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "yarn lint --quiet && yarn typecheck && yarn test"
   },
   "dependencies": {
     "@react-native-camera-roll/camera-roll": "^7.10.2",

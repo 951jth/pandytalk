@@ -39,7 +39,7 @@ export function useAuthGate() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
-      ;(async () => {
+      (async () => {
         setFbUser(user)
         if (!user?.uid) {
           setInitializing(false)

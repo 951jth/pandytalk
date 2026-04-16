@@ -24,7 +24,7 @@ export const groupRemote = {
   getGroupsPaging: ({pageSize, pageParam}: GetGroupsPagingParams) => {
     return firebaseCall('groupRemote.getGroupsPage', async () => {
       const groupRef = collection(firestore, 'groups')
-      let constaints = [
+      const constaints = [
         orderBy('createdAt', 'desc'),
         limit(pageSize || DEFAULT_SIZE),
       ]

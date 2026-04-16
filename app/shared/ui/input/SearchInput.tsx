@@ -29,11 +29,11 @@ export default function SearchInput({
           cursorColor={COLORS.primary}
         />
         {value ? (
-          <Icon 
-            source="close-circle" 
-            size={20} 
+          <Icon
+            source="close-circle"
+            size={20}
             color={COLORS.textSecondary}
-            // TextInput 밖의 아이콘이므로 직접 클릭 처리가 안 될 수 있어 
+            // TextInput 밖의 아이콘이므로 직접 클릭 처리가 안 될 수 있어
             // 실제 구현에서는 Touchable로 감싸는 것이 좋으나 스타일 우선 유지
           />
         ) : null}

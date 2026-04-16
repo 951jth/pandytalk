@@ -41,7 +41,7 @@ export default function AdminMenuScreen() {
     item: MenuItem
   }) => {
     return (
-      <PressableWrapper 
+      <PressableWrapper
         onPress={() => item?.path && navigation.navigate(item?.path as any)}
         style={styles.cardWrapper}
       >

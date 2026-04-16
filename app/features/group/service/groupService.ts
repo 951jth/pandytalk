@@ -5,6 +5,7 @@ export const groupService = {
     const results: any[] = []
     let last: any = null
     if (batchSize)
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const {items} = await groupRemote.getGroupsPaging({
           pageSize: batchSize,

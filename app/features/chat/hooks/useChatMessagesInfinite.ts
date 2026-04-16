@@ -1,6 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
-import {usePerformanceMeasure} from '@app/shared/hooks/usePerformanceMeasure'
 import {ChatMessage} from '@app/shared/types/chat'
 import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query'
 
@@ -79,18 +78,19 @@ export const useChatMessagesInfinite = (
 }
 
 // Firebase + SQLite 조회 성능 측정할떄 쓰기
-const fetchMessageWithMeasure = async (
-  roomId: string,
-  pageParam: number | undefined,
-) => {
-  // CRUD 작업이나 비동기 함수의 성능(Latency)을 측정하기 위한 커스텀 훅
-  const {measureAsync} = usePerformanceMeasure()
-  const seq = pageParam
+// const fetchMessageWithMeasure = async (
+//   roomId: string,
+//   pageParam: number | undefined,
+// ) => {
+//   // CRUD 작업이나 비동기 함수의 성능(Latency)을 측정하기 위한 커스텀 훅
+//   // const {measureAsync} = usePerformanceMeasure()
+//   const {measureAsync} = {measureAsync: async (_k: string, fn: any) => await fn()} as any // 임시 우회
+//   const seq = pageParam
 
-  // 1. 통합 조회 로직 수행 (성능 측정 포함)
-  const messages = await measureAsync('FETCH_CHAT_MESSAGES_TOTAL', async () => {
-    return await messageService.getChatMessages(roomId, seq, PAGE_SIZE)
-  })
+//   // 1. 통합 조회 로직 수행 (성능 측정 포함)
+//   const messages = await measureAsync('FETCH_CHAT_MESSAGES_TOTAL', async () => {
+//     return await messageService.getChatMessages(roomId, seq, PAGE_SIZE)
+//   })
 
-  return createPageResult(messages)
-}
+//   return createPageResult(messages)
+// }

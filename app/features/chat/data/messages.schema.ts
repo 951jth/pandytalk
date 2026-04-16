@@ -74,7 +74,7 @@ export const migrations: Record<number, Migration> = {
   1: tx => {
     tx.executeSql(CREATE_MESSAGE_TABLE_V1_SQL)
     tx.executeSql(
-      `CREATE INDEX IF NOT EXISTS idx_messages_room_created ON messages (roomId, createdAt DESC);`,
+      'CREATE INDEX IF NOT EXISTS idx_messages_room_created ON messages (roomId, createdAt DESC);',
     )
   },
 
@@ -88,14 +88,14 @@ export const migrations: Record<number, Migration> = {
 
       if (!columns.includes('seq')) {
         console.log('➕ [Migration] Adding "seq" column...')
-        tx.executeSql(`ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;`)
+        tx.executeSql('ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;')
       } else {
         console.log('ℹ️ [Migration] "seq" column already exists, skipping.')
       }
 
       // 인덱스는 IF NOT EXISTS가 있으므로 안전하게 호출 가능
       tx.executeSql(
-        `CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);`,
+        'CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);',
       )
     })
   },
@@ -110,7 +110,7 @@ export const migrations: Record<number, Migration> = {
       if (!columns.includes('status')) {
         console.log('➕ [Migration] Adding "status" column...')
         tx.executeSql(
-          `ALTER TABLE messages ADD COLUMN status TEXT DEFAULT 'success';`,
+          'ALTER TABLE messages ADD COLUMN status TEXT DEFAULT \'success\';',
         )
       } else {
         console.log('ℹ️ [Migration] "status" column already exists, skipping.')
@@ -127,7 +127,7 @@ export const migrations: Record<number, Migration> = {
 
       if (!columns.includes('imageUrls')) {
         console.log('➕ [Migration] Adding "imageUrls" column...')
-        tx.executeSql(`ALTER TABLE messages ADD COLUMN imageUrls TEXT;`)
+        tx.executeSql('ALTER TABLE messages ADD COLUMN imageUrls TEXT;')
       } else {
         console.log('ℹ️ [Migration] "imageUrls" column already exists, skipping.')
       }

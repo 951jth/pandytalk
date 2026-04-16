@@ -51,7 +51,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
         )}
         {isOnline && <View style={styles.onlineStatus} />}
       </View>
-      
+
       <View style={styles.contents}>
         <View style={styles.headerArea}>
           <Text style={styles.name} numberOfLines={1}>
@@ -63,7 +63,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
               : ''}
           </Text>
         </View>
-        
+
         <View style={styles.messageArea}>
           <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
             {item?.lastMessage?.type === 'image' && !item?.lastMessage?.text

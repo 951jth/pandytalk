@@ -21,13 +21,13 @@ export default function ChatListSkeleton() {
             <View style={styles.avatarFrame}>
               <Skeleton width={60} height={60} borderRadius={20} />
             </View>
-            
+
             <View style={styles.contents}>
               <View style={styles.headerArea}>
                 <Skeleton width="50%" height={18} />
                 <Skeleton width="15%" height={12} />
               </View>
-              
+
               <View style={styles.messageArea}>
                 <Skeleton width="80%" height={14} style={{marginTop: 6}} />
                 <Skeleton width={20} height={20} borderRadius={10} style={{marginTop: 6}} />

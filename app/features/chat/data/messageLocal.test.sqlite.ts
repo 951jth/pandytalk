@@ -64,7 +64,7 @@ export const messageLocalTest = {
 
               // 3) user_version = 1
               tx.executeSql(
-                `PRAGMA user_version = 1;`,
+                'PRAGMA user_version = 1;',
                 [],
                 undefined,
                 onSqlError,
@@ -102,7 +102,7 @@ export const messageLocalTest = {
 
               // 3) user_version = 2
               tx.executeSql(
-                `PRAGMA user_version = 2;`,
+                'PRAGMA user_version = 2;',
                 [],
                 undefined,
                 onSqlError,

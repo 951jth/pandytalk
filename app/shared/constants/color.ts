@@ -18,12 +18,12 @@ const COLORS = {
   surface: '#FFFFFF', // White for cards
   text: '#4A3B32', // Dark Brown
   textSecondary: '#8B7E74', // Muted Brown
-  error: '#EF4444', 
+  error: '#EF4444',
   success: '#2CC069', // Status Green
   warning: '#FF9800', // Status Orange
-  gray: '#EDEBE7', 
-  deepGray: '#E5E2DB', 
-  onPrimary: '#FDFCF0', 
+  gray: '#EDEBE7',
+  deepGray: '#E5E2DB',
+  onPrimary: '#FDFCF0',
   white: '#FFFFFF',
   accentDeep: '#BA4A00', // 선명한 포인트 테라코타
   accentLight: '#FADCD0', // 부드러운 포인트 배경

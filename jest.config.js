@@ -3,6 +3,8 @@ module.exports = {
   preset: 'react-native', //환경정의
   setupFilesAfterEnv: ['./jest.setup.js'], //테스트 시작전 실행할 파일
   moduleNameMapper: {
+    // 폰트 및 자산 파일Mock 처리
+    '^.+\\.(ttf|otf|png|jpg|jpeg|gif|svg)$': '<rootDir>/__mocks__/fileMock.js',
     //경로 매핑
     '^@app/(.*)$': '<rootDir>/app/$1',
     '^@shared/(.*)$': '<rootDir>/app/shared/$1',

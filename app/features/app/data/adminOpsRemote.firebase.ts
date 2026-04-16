@@ -31,7 +31,7 @@ const toOp = (
 export async function fetchRemoteCacheResetOp(
   uid: string,
 ): Promise<CacheResetOp | null> {
-  return firebaseCall(`adminOpsRemote.fetchRemoteCacheResetOp`, async () => {
+  return firebaseCall('adminOpsRemote.fetchRemoteCacheResetOp', async () => {
     const snap = await cacheResetRef(uid).get()
     return toOp(snap.data())
   })
@@ -44,7 +44,7 @@ export function observeRemoteCacheResetOp(
 ) {
   const ref = cacheResetRef(uid)
   return firebaseRefObserver(
-    `adminOpsRemote.observeRemoteCacheResetOp`,
+    'adminOpsRemote.observeRemoteCacheResetOp',
     ref,
     snap => onOp(toOp(snap.data())),
     onError,

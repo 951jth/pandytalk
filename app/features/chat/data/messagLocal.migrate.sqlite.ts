@@ -16,7 +16,7 @@ export const messageMigrateLocal = {
       return new Promise((resolve, reject) => {
         db.transaction(tx => {
           tx.executeSql(
-            `SELECT name FROM sqlite_master WHERE type='table' AND name='messages';`,
+            'SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'messages\';',
             [],
             (_, result) => {
               const exists = result.rows.length > 0

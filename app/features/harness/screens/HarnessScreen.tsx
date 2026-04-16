@@ -20,14 +20,14 @@ const HarnessScreen = () => {
           <View style={[styles.testSection, { marginTop: 20 }]}>
             <Text variant="labelLarge" style={{ marginBottom: 10 }}>Logger & Updates Test</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
-              <Button 
-                mode="outlined" 
+              <Button
+                mode="outlined"
                 onPress={() => logger.logUpdateCheck({ type: 'downloaded', message: 'Harness Test Success' })}
               >
                 성공 로그
               </Button>
-              <Button 
-                mode="contained" 
+              <Button
+                mode="contained"
                 buttonColor="#B00020"
                 onPress={() => logger.logUpdateCheck({ type: 'error_check', message: 'Harness Simulated Error' })}
               >
@@ -35,14 +35,14 @@ const HarnessScreen = () => {
               </Button>
             </View>
           </View>
-          
+
           <Divider style={styles.divider} />
-          
+
           {/* 실험하고 싶은 컴포넌트를 여기에 추가하세요 */}
           <View style={styles.testSection}>
             <Text variant="labelLarge">기타 테스트 영역</Text>
-            <Button 
-              mode="contained" 
+            <Button
+              mode="contained"
               onPress={() => console.log('Harness Test Clicked!')}
               style={styles.button}
             >

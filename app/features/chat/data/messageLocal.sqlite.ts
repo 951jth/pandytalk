@@ -93,8 +93,8 @@ export const messageLocal = {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           const query = cursorCreatedAt
-            ? `SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?`
-            : `SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?`
+            ? 'SELECT * FROM messages WHERE roomId = ? AND createdAt < ? ORDER BY createdAt DESC LIMIT ?'
+            : 'SELECT * FROM messages WHERE roomId = ? ORDER BY createdAt DESC LIMIT ?'
           const params = cursorCreatedAt
             ? [roomId, cursorCreatedAt, pageSize]
             : [roomId, pageSize]
@@ -133,8 +133,8 @@ export const messageLocal = {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           const query = cursorSeq
-            ? `SELECT * FROM messages WHERE roomId = ? AND seq < ? ORDER BY seq DESC LIMIT ?`
-            : `SELECT * FROM messages WHERE roomId = ? ORDER BY seq DESC LIMIT ?`
+            ? 'SELECT * FROM messages WHERE roomId = ? AND seq < ? ORDER BY seq DESC LIMIT ?'
+            : 'SELECT * FROM messages WHERE roomId = ? ORDER BY seq DESC LIMIT ?'
           const params = cursorSeq
             ? [roomId, cursorSeq, pageSize]
             : [roomId, pageSize]
@@ -168,7 +168,7 @@ export const messageLocal = {
       return new Promise<void>((resolve, reject) => {
         db.transaction(
           (tx: Transaction) => {
-            tx.executeSql(`DELETE FROM messages`)
+            tx.executeSql('DELETE FROM messages')
           },
           reject,
           resolve,
@@ -180,7 +180,7 @@ export const messageLocal = {
     return sqliteCall('messageLocal.getMaxLocalSeq', async () => {
       return new Promise<number>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
-          const query = `SELECT MAX(seq) as maxSeq FROM messages WHERE roomId = ?`
+          const query = 'SELECT MAX(seq) as maxSeq FROM messages WHERE roomId = ?'
           tx.executeSql(
             query,
             [roomId],
@@ -202,7 +202,7 @@ export const messageLocal = {
       return new Promise<ChatMessage[]>((resolve, reject) => {
         db.transaction((tx: Transaction) => {
           // ✅ 오타 수정 + 정렬(필요한 컬럼명으로 바꿔)
-          const query = `SELECT * FROM messages ORDER BY createdAt ASC`
+          const query = 'SELECT * FROM messages ORDER BY createdAt ASC'
 
           tx.executeSql(
             query,

@@ -15,8 +15,6 @@ export default function PasswordInput({
   outlineStyle,
   ...others
 }: PasswordInputProps) {
-  const [show, setShow] = useState(false)
-
   return (
     <EditInput
       style={[style, styles.input]}
@@ -24,20 +22,11 @@ export default function PasswordInput({
       type={type}
       outlineStyle={outlineStyle}
       // password 동작
-      secureTextEntry={secureTextEntry ?? !show}
+      secureTextEntry={secureTextEntry}
       autoCapitalize="none"
       autoCorrect={false}
       textContentType="password"
       placeholder="비밀번호를 입력해주세요."
-      // right={
-      //   <TextInput.Icon
-      //     icon={show ? 'eye-off' : 'eye'}
-      //     onPress={() => setShow(v => !v)}
-      //     // 포커스 유지
-      //     forceTextInputFocus
-      //     accessibilityLabel={show ? '비밀번호 숨기기' : '비밀번호 보기'}
-      //   />
-      // }
       {...others}
     />
   )

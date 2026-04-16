@@ -55,7 +55,7 @@ export const addUserItems: FormItem[] = [
   },
   {
     key: 'passwordCheck',
-    label: `비밀번호\n확인`,
+    label: '비밀번호\n확인',
     required: true,
     validation: {
       pattern: /^.{8,32}$/, // 길이 8~32자

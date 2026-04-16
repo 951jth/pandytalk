@@ -76,7 +76,7 @@ export const useChatMessageInput = ({
       }
       let fetchedRoomInfo = roomInfo
       //step 1. 기본 메세지 페이로드 생성
-      let message: InputMessageParams = {
+      const message: InputMessageParams = {
         text: text,
         type,
         imageUrl: '',

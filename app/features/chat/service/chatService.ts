@@ -77,11 +77,11 @@ export const chatService = {
     return chatRoomRes
   },
   getChatRoom: async (roomId: string) => {
-    let chatRoom = await chatRemote.getChatRoomById(roomId)
+    const chatRoom = await chatRemote.getChatRoomById(roomId)
     return chatRoom
   },
   getChatRoomWithMemberInfo: async (roomId: string) => {
-    let chatRoom = await chatRemote.getChatRoomById(roomId)
+    const chatRoom = await chatRemote.getChatRoomById(roomId)
     const uids = chatRoom?.members ?? []
     if (chatRoom && uids?.length > 0) {
       chatRoom.memberInfos = (await userService.getUsersByIds(uids)) ?? []

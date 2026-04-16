@@ -36,7 +36,7 @@ export const execSql = (tx: Transaction, sql: string, params: any[] = []) =>
 export const getUserVersionTx = (tx: Transaction) =>
   new Promise<number>((resolve, reject) => {
     tx.executeSql(
-      `PRAGMA user_version;`,
+      'PRAGMA user_version;',
       [],
       (_tx, res) => resolve(res.rows.item(0).user_version as number),
       (_tx, err) => {

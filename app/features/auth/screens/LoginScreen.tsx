@@ -75,7 +75,7 @@ export default function LoginScreen() {
 
           {/* 하단 보조 액션 */}
           <View style={styles.addOnRow}>
-            <View style={styles.line}></View>
+            <View style={styles.line} />
             <TouchableOpacity
               style={styles.addGuestButton}
               onPress={moveJoinPage}>
@@ -84,7 +84,7 @@ export default function LoginScreen() {
                 <Text style={styles.signUpHighlight}>회원가입</Text>
               </Text>
             </TouchableOpacity>
-            <View style={styles.line}></View>
+            <View style={styles.line} />
           </View>
         </LinearGradient>
       </KeyboardViewWrapper>

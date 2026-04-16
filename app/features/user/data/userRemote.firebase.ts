@@ -76,7 +76,7 @@ export const userRemote = {
       const isAdmin = authority === 'ADMIN'
 
       // 관리자가 아닐 때만 승인 여부 필터 적용 (관리자는 모두 볼 수 있음)
-      if (!isAdmin && typeof isConfirmed == 'boolean') {
+      if (!isAdmin && typeof isConfirmed === 'boolean') {
         filters = [where('isConfirmed', '==', isConfirmed)]
       }
 

@@ -74,8 +74,8 @@ export const messageService = {
 
   //메세지 전송 (신규채팅생성)
   sendChatMessage: async ({roomId, message}: SendMessageParams) => {
-    let fetchedRoomId: string = roomId ?? ''
-    let newMessageId: string = message?.id ?? ''
+    const fetchedRoomId: string = roomId ?? ''
+    const newMessageId: string = message?.id ?? ''
     const trimmed = message.text?.trim() ?? ''
     if (message.type === 'text' && !trimmed)
       throw new Error('메시지를 입력해주세요.')

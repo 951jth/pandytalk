@@ -18,7 +18,7 @@ export const handleFirebaseAuthError = (error: any): string => {
       break
     case 'auth/invalid-credential':
       // 잘못된 이메일/비밀번호
-      message = `잘못된 이메일/비밀번호 입니다.`
+      message = '잘못된 이메일/비밀번호 입니다.'
       break
     // 필요시 추가
   }

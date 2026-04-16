@@ -25,7 +25,7 @@ export function navigateToChat(
     navigationRef.navigate('app', {
       screen: screenName,
       params: {roomId, title},
-      // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나 
+      // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나
       // 파라미터를 강제 갱신하도록 key를 roomId로 설정
       key: `${screenName}-${roomId}`,
     })

@@ -35,7 +35,7 @@ export default function UserJoinScreen() {
     <SafeAreaView style={styles.container}>
       {/* 투명 배경 AppHeader로 배경색 노출 */}
       <AppHeader title="팬디톡 가입하기" style={styles.header} />
-      
+
       <KeyboardUtilitiesWrapper useTouchable={false}>
         {/* 몰입형 프리미엄 그라데이션 배경 */}
         <LinearGradient
@@ -43,8 +43,8 @@ export default function UserJoinScreen() {
           start={{x: 0, y: 0}}
           end={{x: 0, y: 1}}
           style={styles.gradientBg}>
-          
-          <ScrollView 
+
+          <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
@@ -59,7 +59,7 @@ export default function UserJoinScreen() {
                   ref={profileRef}
                 />
                 <Text style={styles.notiText}>
-                  {`나만의 특별한 프로필을 꾸며주세요.\n관리자 승인 후 게스트로 입장할 수 있습니다.`}
+                  {'나만의 특별한 프로필을 꾸며주세요.\n관리자 승인 후 게스트로 입장할 수 있습니다.'}
                 </Text>
               </View>
 

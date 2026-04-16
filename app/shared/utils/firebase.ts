@@ -136,7 +136,7 @@ export const formatServerDate = (
   ts: ServerTime | number | null | undefined,
   fmt = 'YYYY년 MM월 DD일 dddd',
 ): string => {
-  let ms = typeof ts == 'number' ? ts : toMillisFromServerTime(ts)
+  const ms = typeof ts === 'number' ? ts : toMillisFromServerTime(ts)
   if (ms == null) return '' // 미확정이면 빈 문자열
   return dayjs(ms).format(fmt)
 }
