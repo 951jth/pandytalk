@@ -1,10 +1,12 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
+import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
 import {useAppSelector} from '@app/store/reduxHooks'
 import auth from '@react-native-firebase/auth'
 import {useNavigation} from '@react-navigation/native'
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useQueryClient} from '@tanstack/react-query'
 import {cloneDeep} from 'lodash'
 import {useCallback, useMemo, useState} from 'react'
@@ -15,7 +17,8 @@ import {Alert} from 'react-native'
  * @param onReset 프로필 초기화 액션 (부모로부터 주입)
  */
 export function useProfileMenu(onReset: () => void = () => {}) {
-  const navigation = useNavigation()
+  type AppNav = NativeStackNavigationProp<AppRouteParamList>
+  const navigation = useNavigation<AppNav>()
   const {data: user} = useAppSelector(state => state.user)
   const userInfo = useMemo(() => cloneDeep(user), [user])
   const [menuVisible, setMenuVisible] = useState(false)

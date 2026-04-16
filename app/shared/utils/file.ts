@@ -33,11 +33,11 @@ export const firebaseImageUpload = async (
   const image = result?.assets?.[0]
   if (!image?.uri || !image.fileName) return null
   try {
-    const uploadRes = await fileService.uploadImageFromPicker(result, {
+    const uploadRes = await fileService.uploadImagesFromPicker(result, {
       rootName: rootName ?? 'common',
       ext: 'jpg',
     })
-    return uploadRes
+    return uploadRes?.[0] || null
   } catch (error) {
     console.error('[firebaseImageUpload] 업로드 실패:', error)
     return null
