@@ -238,12 +238,8 @@ jest.mock('expo-font', () => ({
   loadAsync: jest.fn(),
   isLoaded: jest.fn(() => true),
   isLoading: jest.fn(() => false),
-<<<<<<< HEAD
 }))
 
 jest.mock('@app/bootstrap/useFontFaceSetup', () => ({
   useFontFaceSetup: jest.fn(() => true),
 }))
-=======
-}));
->>>>>>> 4d3da5af20aa369bad321089f7deedf2f92d13de
