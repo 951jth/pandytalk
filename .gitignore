@@ -108,6 +108,7 @@ node_modules/
 *.dSYM.zip
 
 # 키/서명(실수 방지)
+*.json
 *.keystore
 *.jks
 *.p12
