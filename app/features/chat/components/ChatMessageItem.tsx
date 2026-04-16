@@ -33,7 +33,7 @@ const ChatMessageItem = ({
 }: ChatMessageItemProps) => {
   const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
   const {width} = useWindowDimensions()
-  const bubbleMaxWidth = width * 0.7
+  const bubbleMaxWidth = width * 0.6
 
   return (
     <View style={styles.container}>

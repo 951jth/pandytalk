@@ -1,0 +1,50 @@
+# GitHub Actions 탭에 표시될 워크플로우의 이름입니다.
+name: CI (Code Quality & Testing)
+
+# 워크플로우가 언제 실행될지 트리거(조건)를 정의합니다.
+on:
+  # main 브랜치에 코드가 푸시(push)되었을 때 실행됩니다.
+  push:
+    branches:
+      - main
+  # main 브랜치를 목표로 Pull Request(PR)가 생성되거나 업데이트되었을 때 실행됩니다.
+  pull_request:
+    branches:
+      - main
+
+# 실행할 개별 작업(Job)들을 정의합니다.
+jobs:
+  build_and_test:
+    name: Lint, Typecheck and Test # 작업에 표시될 가독성 좋은 이름
+    # GitHub이 제공하는 최신 우분투 기반 가상 환경(Runner)을 대여하여 실행합니다.
+    runs-on: ubuntu-latest
+
+    # 워크플로우에서 차례대로 실행될 단계(Step)들입니다.
+    steps:
+      # 1. GitHub 원격 저장소에 있는 현재 코드를 가상 환경으로 가져옵니다 (다운로드).
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # 2. 가상 머신에 Node.js 실행 환경을 설치 및 세팅합니다.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.15.0 # 프로젝트에 알맞은 Node 버전 (18 이상)
+          cache: 'yarn' # 다음 빌드 때 더 빠르게 설치할 수 있도록 종속성 캐싱을 활성화합니다.
+
+      # 3. yarn 을 통해 필요한 패키지들(node_modules)을 설치합니다.
+      #    --frozen-lockfile: yarn.lock 에 저장된 버전을 엄격히 보장하여 설치
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # 4. 타입스크립트의 문법 오류나 타입 불일치가 없는지 검사합니다.
+      - name: Check TypeScript types
+        run: yarn typecheck
+
+      # 5. ESLint 규칙을 위반한 코드가 있는지 코드 품질을 검사합니다.
+      - name: Run ESLint
+        run: yarn lint
+
+      # 6. 작성된 단위(Unit) 테스트 코드를 실행하여 기능이 깨지지 않았는지 확인합니다.
+      - name: Run Unit Tests
+        run: yarn test
