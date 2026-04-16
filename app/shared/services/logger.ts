@@ -32,7 +32,7 @@ class Logger {
         runtime_version: Updates.runtimeVersion || 'none',
         is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
       }
-      
+
       const crash = crashlytics() as any
       Object.entries(info).forEach(([key, value]) => {
         crash.setCustomKey(key, value)
@@ -45,18 +45,29 @@ class Logger {
   /**
    * 업데이트 체크 결과를 상세히 로깅 (Crashlytics 로그에 포함)
    */
-  logUpdateCheck(event: Updates.UpdateEvent) {
+  logUpdateCheck(event: {type: string; message?: string}) {
     if (this.isDev) {
       console.log(`[UPDATE EVENT] ${event.type}`, event)
       return
     }
 
     const logMsg = `[EAS Update Event] Type: ${event.type}`
-    crashlytics().log(logMsg)
+    const crash = crashlytics() as any
+    crash.log(logMsg)
 
-    if (event.type === Updates.UpdateEventType.ERROR) {
-      crashlytics().recordError(new Error(`EAS Update Error: ${event.message}`))
-      crashlytics().setCustomKey('last_update_error', event.message || 'unknown')
+    // 성공 케이스: 업데이트가 다운로드되었거나 사용 가능한 상태
+    if (event.type === 'downloaded' || event.type === 'updateAvailable') {
+      crash.log(`🚀 EAS Update Success: ${event.type}`)
+      crash.setCustomKey('last_update_status', 'success')
+      crash.setCustomKey('last_update_error', 'none')
+    }
+
+    // 에러 케이스
+    if (event.type === 'error' || event.type === 'error_check') {
+      const errorMsg = event.message || 'unknown'
+      crash.recordError(new Error(`EAS Update Error: ${errorMsg}`))
+      crash.setCustomKey('last_update_status', 'failed')
+      crash.setCustomKey('last_update_error', errorMsg)
     }
   }
 

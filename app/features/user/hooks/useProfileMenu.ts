@@ -4,6 +4,7 @@ import COLORS from '@app/shared/constants/color'
 import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
 import {useAppSelector} from '@app/store/reduxHooks'
 import auth from '@react-native-firebase/auth'
+import {useNavigation} from '@react-navigation/native'
 import {useQueryClient} from '@tanstack/react-query'
 import {cloneDeep} from 'lodash'
 import {useCallback, useMemo, useState} from 'react'
@@ -14,6 +15,7 @@ import {Alert} from 'react-native'
  * @param onReset 프로필 초기화 액션 (부모로부터 주입)
  */
 export function useProfileMenu(onReset: () => void = () => {}) {
+  const navigation = useNavigation()
   const {data: user} = useAppSelector(state => state.user)
   const userInfo = useMemo(() => cloneDeep(user), [user])
   const [menuVisible, setMenuVisible] = useState(false)
@@ -103,6 +105,15 @@ export function useProfileMenu(onReset: () => void = () => {}) {
           onPress: () => {
             onLogout()
           }, // ✅ 동기 래퍼로 감싸서 타입 안정성 확보
+        },
+        {
+          title: '실험실 (Harness)',
+          icon: 'flask-outline',
+          onPress: () => {
+            navigation.navigate('harness' as any)
+            closeMenu()
+          },
+          filtered: !__DEV__, // 개발 모드일 때만 표시
         },
         {
           title: '회원 탈퇴',

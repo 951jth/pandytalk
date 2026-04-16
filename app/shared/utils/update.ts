@@ -1,6 +1,7 @@
 import remoteConfig from '@react-native-firebase/remote-config'
 import {Alert, Linking, Platform} from 'react-native'
 import {expo as appConfig} from '../../../app.json'
+import {logger} from '../services/logger'
 
 /**
  * 스토어 주소 설정
@@ -100,6 +101,7 @@ export const checkForceUpdate = async () => {
     return false
   } catch (error) {
     console.error('[UpdateCheck] Failed to fetch remote config:', error)
+    logger.error('Failed to fetch remote config for force update check', error)
     return false
   }
 }
