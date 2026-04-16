@@ -1,40 +1,17 @@
 {
-  // 💾 저장 시 자동 포맷
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.formatOnSave": true,
-
-  // 🧹 기본 포맷터: Prettier
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-
-  // 📦 파일별 Prettier 지정
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-
-  // 🔄 저장 시 import 정리 및 자동 fix
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll": "explicit"
+    "source.fixAll.eslint": "explicit"
   },
-
-  // ✨ 자동 임포트 활성화
-  "javascript.suggest.autoImports": true,
-  "typescript.suggest.autoImports": true,
-
-  // 📁 상대 경로로 import
-  "javascript.preferences.importModuleSpecifier": "non-relative",
-  "typescript.preferences.importModuleSpecifier": "non-relative",
-
-  // 🔁 파일 이동 시 import 경로 업데이트
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "java.configuration.updateBuildConfiguration": "interactive",
-  "java.compile.nullAnalysis.mode": "automatic"
-}
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ] ,  
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  // 에디터 자체의 자동 구문 수정 방지 (ESLint가 주도권을 갖도록 함)
+  "javascript.format.enable": false,
+  "typescript.format.enable": false
+} 
