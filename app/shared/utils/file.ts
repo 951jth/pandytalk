@@ -138,14 +138,14 @@ export const downloadUrl = async (
   //  ANDROID: DownloadManager
   // ===========================
   if (Platform.OS === 'android') {
-    const {fs, config} = ReactNativeBlobUtil
+    const {config} = ReactNativeBlobUtil
     // ✅ 공개 Download 경로 직접 지정
     const downloadsRoot = '/storage/emulated/0/Download'
     const targetDir = `${downloadsRoot}/PandyTalk` // 원하면 서브폴더
     const path = `${targetDir}/${fileName}`
 
     try {
-      const res = await config({
+      await config({
         addAndroidDownloads: {
           useDownloadManager: true, // ✅ 시스템 DownloadManager 사용
           notification: true, // ✅ 알림 표시

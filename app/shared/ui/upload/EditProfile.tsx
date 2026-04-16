@@ -52,6 +52,7 @@ const EditProfile = forwardRef(function EditProfile(
 
   const pickImage = async () => {
     try {
+      setLoading(true)
       const hasPermission = await requestPhotoPermission()
       console.log('hasPermission', hasPermission)
 
@@ -76,6 +77,8 @@ const EditProfile = forwardRef(function EditProfile(
       setPreviewUrl(asset.uri)
     } catch (error) {
       console.error('이미지 선택 중 오류:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
