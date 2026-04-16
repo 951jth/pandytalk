@@ -1,4 +1,5 @@
-import 'react-native-gesture-handler/jestSetup'
+/* global jest */
+import 'react-native-gesture-handler/jestSetup';
 
 // 라이브러리들에 대한 Mock설정들
 // SQLite Mock
@@ -6,23 +7,23 @@ jest.mock('react-native-sqlite-storage', () => {
   const mockDB = {
     transaction: jest.fn(cb => cb({executeSql: jest.fn()})),
     executeSql: jest.fn(),
-  }
+  };
   return {
     openDatabase: jest.fn(() => mockDB),
     default: {
       openDatabase: jest.fn(() => mockDB),
     },
-  }
-})
+  };
+});
 
 // Firebase Mock (Modular Style)
 jest.mock('@react-native-firebase/app', () => ({
   getApp: jest.fn(() => ({})),
-}))
+}));
 jest.mock('@react-native-firebase/auth', () => ({
   getAuth: jest.fn(() => ({})),
   onAuthStateChanged: jest.fn(() => jest.fn()),
-}))
+}));
 jest.mock('@react-native-firebase/firestore', () => ({
   getFirestore: jest.fn(() => ({})),
   collection: jest.fn(),
@@ -31,7 +32,7 @@ jest.mock('@react-native-firebase/firestore', () => ({
   query: jest.fn(),
   where: jest.fn(),
   orderBy: jest.fn(),
-}))
+}));
 jest.mock('@react-native-firebase/messaging', () => {
   const messagingObj = {
     getToken: jest.fn(() => Promise.resolve('mock-token')),
@@ -43,7 +44,7 @@ jest.mock('@react-native-firebase/messaging', () => {
     setBackgroundMessageHandler: jest.fn(),
     subscribeToTopic: jest.fn(() => Promise.resolve()),
     unsubscribeFromTopic: jest.fn(() => Promise.resolve()),
-  }
+  };
   return {
     getMessaging: jest.fn(() => messagingObj),
     default: jest.fn(() => messagingObj),
@@ -55,8 +56,8 @@ jest.mock('@react-native-firebase/messaging', () => {
       AUTHORIZED: 1,
       PROVISIONAL: 2,
     },
-  }
-})
+  };
+});
 jest.mock('@react-native-firebase/storage', () => ({
   __esModule: true,
   default: jest.fn(),
@@ -64,7 +65,7 @@ jest.mock('@react-native-firebase/storage', () => ({
   ref: jest.fn(),
   uploadBytes: jest.fn(),
   getDownloadURL: jest.fn(),
-}))
+}));
 jest.mock('@react-native-firebase/remote-config', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -77,7 +78,7 @@ jest.mock('@react-native-firebase/remote-config', () => ({
       asBoolean: jest.fn(() => false),
     })),
   })),
-}))
+}));
 jest.mock('@react-native-firebase/crashlytics', () => ({
   __esModule: true,
   default: jest.fn(() => ({
@@ -86,11 +87,11 @@ jest.mock('@react-native-firebase/crashlytics', () => ({
     setAttributes: jest.fn(),
     setUserId: jest.fn(),
   })),
-}))
+}));
 
 // React Native Mocks
 jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native')
+  const RN = jest.requireActual('react-native');
   RN.NativeModules.RNBootSplash = {
     hide: jest.fn().mockResolvedValue(undefined),
     isVisible: jest.fn().mockResolvedValue(false),
@@ -99,29 +100,29 @@ jest.mock('react-native', () => {
       logo: {},
       background: {},
     })),
-  }
-  return RN
-})
+  };
+  return RN;
+});
 
 jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn().mockResolvedValue(undefined),
   isVisible: jest.fn().mockResolvedValue(false),
   useHideAnimation: jest.fn(() => ({container: {}, logo: {}, background: {}})),
-}))
+}));
 
 // Reanimated mock
 jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock')
-  Reanimated.default.call = () => {}
-  return Reanimated
-})
+  const Reanimated = require('react-native-reanimated/mock');
+  Reanimated.default.call = () => {};
+  return Reanimated;
+});
 
 // Other Native Modules
 jest.mock('react-native-blob-util', () => ({
   fs: {
     dirs: {CacheDir: 'cache'},
   },
-}))
+}));
 
 jest.mock('react-native-fs', () => ({
   mkdir: jest.fn(),
@@ -131,7 +132,7 @@ jest.mock('react-native-fs', () => ({
   exists: jest.fn(),
   CachesDirectoryPath: 'caches',
   DocumentDirectoryPath: 'documents',
-}))
+}));
 
 jest.mock('react-native-permissions', () => ({
   check: jest.fn(),
@@ -142,11 +143,11 @@ jest.mock('react-native-permissions', () => ({
     },
   },
   RESULTS: {GRANTED: 'granted'},
-}))
+}));
 
 jest.mock('react-native-safe-area-context', () => {
-  const React = require('react')
-  const inset = {top: 0, right: 0, bottom: 0, left: 0}
+  const React = require('react');
+  const inset = {top: 0, right: 0, bottom: 0, left: 0};
   return {
     SafeAreaProvider: jest.fn(({children}) => children),
     SafeAreaView: jest.fn(({children}) => children),
@@ -154,8 +155,8 @@ jest.mock('react-native-safe-area-context', () => {
     SafeAreaConsumer: jest.fn(({children}) => children(inset)),
     SafeAreaContext: React.createContext(inset),
     SafeAreaInsetsContext: React.createContext(inset),
-  }
-})
+  };
+});
 
 jest.mock('@react-native-clipboard/clipboard', () => ({
   setString: jest.fn(),
@@ -163,28 +164,27 @@ jest.mock('@react-native-clipboard/clipboard', () => ({
   hasString: jest.fn(),
   addListener: jest.fn(),
   removeListeners: jest.fn(),
-}))
+}));
 
 jest.mock('react-native-modal', () => {
-  const React = require('react')
-  return jest.fn(({children, isVisible}) => (isVisible ? children : null))
-})
+  return jest.fn(({children, isVisible}) => (isVisible ? children : null));
+});
 
-jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
-jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
+jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon');
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
   launchCamera: jest.fn(),
-}))
+}));
 
 jest.mock('react-native-image-viewing', () => ({
   default: jest.fn(),
-}))
+}));
 
 jest.mock('react-native-fast-image', () => {
-  const React = require('react')
-  const {View} = require('react-native')
+  const React = require('react');
+  const {View} = require('react-native');
   return {
     default: jest
       .fn()
@@ -192,8 +192,8 @@ jest.mock('react-native-fast-image', () => {
         React.createElement(View, {}, children),
       ),
     preload: jest.fn(),
-  }
-})
+  };
+});
 
 jest.mock('react-native-screens', () => ({
   enableScreens: jest.fn(),
@@ -205,10 +205,10 @@ jest.mock('react-native-screens', () => ({
   ScreenStackHeaderConfig: jest.requireActual('react-native').View,
   ScreenStackHeaderSubview: jest.requireActual('react-native').View,
   shouldUseActivityState: jest.fn(),
-}))
+}));
 
 jest.mock('react-native-gesture-handler', () => {
-  const RN = jest.requireActual('react-native')
+  const RN = jest.requireActual('react-native');
   return {
     State: {},
     PanGestureHandler: RN.View,
@@ -217,8 +217,8 @@ jest.mock('react-native-gesture-handler', () => {
     BorderlessButton: RN.View,
     GestureHandlerRootView: RN.View,
     Direction: {},
-  }
-})
+  };
+});
 
 // Expo Mocks
 jest.mock('expo-updates', () => ({
@@ -232,14 +232,18 @@ jest.mock('expo-updates', () => ({
   releaseChannel: 'default',
   isReady: true,
   isEmergencyLaunch: false,
-}))
+}));
 
 jest.mock('expo-font', () => ({
   loadAsync: jest.fn(),
   isLoaded: jest.fn(() => true),
   isLoading: jest.fn(() => false),
+<<<<<<< HEAD
 }))
 
 jest.mock('@app/bootstrap/useFontFaceSetup', () => ({
   useFontFaceSetup: jest.fn(() => true),
 }))
+=======
+}));
+>>>>>>> 4d3da5af20aa369bad321089f7deedf2f92d13de

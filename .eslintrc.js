@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+<<<<<<< HEAD
   extends: [
     '@react-native',
     'eslint:recommended',
@@ -38,3 +39,10 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off', // require() 문법 사용 허용 (설정 파일 대응)
   },
 }
+=======
+  extends: '@react-native',
+  env: {
+    jest: true,
+  },
+};
+>>>>>>> 4d3da5af20aa369bad321089f7deedf2f92d13de

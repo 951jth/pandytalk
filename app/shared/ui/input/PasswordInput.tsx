@@ -1,5 +1,5 @@
 // components/inputs/PasswordInput.tsx
-import React, {useState} from 'react'
+import React from 'react'
 import {StyleSheet} from 'react-native'
 import EditInput, {type EditInputProps} from './EditInput'
 
