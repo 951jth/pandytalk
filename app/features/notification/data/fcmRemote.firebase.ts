@@ -8,14 +8,14 @@ import {
 } from '@react-native-firebase/firestore'
 
 export const fcmRemote = {
-  // 3. FCM 토큰 가져오기
+  // FCM 토큰 가져오기
   async getFcmToken(): Promise<string | undefined> {
     return await firebaseCall('fcmRemote.getFcmToken', () =>
       messaging.getToken(),
     )
   },
 
-  // 4. 서버(DB)에 토큰 저장
+  // 서버(DB)에 토큰 저장
   async saveTokenToUser(uid: string, token: string): Promise<void> {
     const userRef = doc(firestore, 'users', uid)
 
@@ -24,7 +24,7 @@ export const fcmRemote = {
     )
   },
 
-  // 5. 서버(DB)에 토큰 삭제
+  // 서버(DB)에 토큰 삭제
   async removeTokenToUser(uid: string, token: string) {
     return firebaseCall('fcmRemote.removeTokenToUser', async () => {
       await setDoc(
