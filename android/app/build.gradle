@@ -63,7 +63,6 @@ android {
 
     buildTypes {
         debug {
-            // applicationIdSuffix ".debug" // Removed for EAS support
             minifyEnabled false
             shrinkResources false
             ndk {

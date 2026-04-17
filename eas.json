@@ -30,6 +30,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "applicationId": "com.cshchatapp",
+        "track": "production"
+      }
+    }
   }
 }
