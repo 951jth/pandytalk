@@ -1,7 +1,9 @@
 // features/notification/service/fcmService.ts
 import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
+import {userService} from '@app/features/user/service/userService'
 import {auth} from '@app/shared/firebase/firestore'
+import {logger} from '@app/shared/services/logger'
 import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 import {
   navigateByPush,
@@ -62,19 +64,32 @@ export const fcmService = {
     try {
       const currentUser = auth.currentUser
       if (!currentUser?.uid) {
-        console.warn('로그아웃 시도 중: 사용자 정보 없음')
+        logger.warn('📌 [FCM] 로그아웃 시도 중: 사용자 정보(auth.currentUser) 없음')
         return
       }
       const uid = currentUser.uid
 
+      // 디버깅을 위해 현재 DB의 토큰 상태 조회 (읽기 비용 1회 발생)
+      const profile = await userService.getProfile(uid)
+      const existingTokens = (profile as any)?.fcmTokens || []
       const token = await fcmRemote.getFcmToken()
 
-      if (!token) return
-      await fcmRemote.removeTokenToUser(uid, token)
+      // Crashlytics 로깅
+      logger.info(`📌 [FCM] 토큰 삭제 시도 - UID: ${uid}`, {
+        existingTokensCount: existingTokens.length,
+        tokenToRemove: token || 'null',
+        allTokensAtMoment: existingTokens,
+      })
 
-      console.log('로그아웃 시 FCM 토큰 제거 완료:', token)
+      if (!token) {
+        logger.warn('📌 [FCM] 삭제할 현재 기기 토큰을 가져오지 못함')
+        return
+      }
+
+      await fcmRemote.removeTokenToUser(uid, token)
+      logger.info(`📌 [FCM] 유저(${uid})의 토큰 제거 성공`)
     } catch (error) {
-      console.error('FCM 토큰 제거 중 오류 발생:', error)
+      logger.error('🚨 [FCM] 토큰 제거 중 오류 발생:', error)
     }
   },
 }

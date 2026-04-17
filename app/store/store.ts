@@ -1,17 +1,37 @@
-// app/store/store.ts
+/**
+ * [Redux Store 설정 파일]
+ * 앱의 모든 상태(State)를 관리하는 중앙 창고 역할을 합니다.
+ * 
+ * [새로운 Slice 추가 방법]
+ * 1. 새로운 슬라이스 파일(예: searchSlice.ts)을 만듭니다.
+ * 2. 해당 파일의 reducer를 export default로 내보냅니다.
+ * 3. 아래 configureStore의 'reducer' 객체 안에 추가합니다. (예: search: searchReducer)
+ */
 import {configureStore} from '@reduxjs/toolkit'
-import timeReducer from './timeSlice' // ✅ default export → 이름 자유롭게 지정 가능
+import timeReducer from './timeSlice'
 import unreadReducer from './unreadCountSlice'
 import userReducer from './userSlice'
 
+// 1. 저장소(Store) 생성 및 설정
+// - configureStore는 리듀서 통합, 미들웨어 설정, DevTools 연결을 자동으로 처리합니다.
 const store = configureStore({
   reducer: {
-    user: userReducer,
-    time: timeReducer, // ✅ time slice 등록
-    unreadCount: unreadReducer,
+    user: userReducer,         // 유저 정보 관리 칸
+    time: timeReducer,         // 시간 정보 관리 칸
+    unreadCount: unreadReducer, // 안 읽은 개수 관리 칸
   },
 })
 
+/**
+ * [TypeScript 전용 타입 추출]
+ * 이 두 줄은 스토어에서 자동으로 타입을 뽑아내어, 
+ * 나중에 개발할 때 자동 완성 지원을 완벽하게 받기 위해 사용합니다.
+ */
+
+// [설계도] 창고 전체의 데이터 구조 타입 (state.user, state.time 등이 들어있는 지도 역할)
 export type RootState = ReturnType<typeof store.getState>
+
+// [자격증] 주문서를 보내는 함수(dispatch)의 타입 (비동기 주문 등 모든 주문을 처리할 수 있는 권한)
 export type AppDispatch = typeof store.dispatch
+
 export default store

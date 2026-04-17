@@ -8,4 +8,48 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
--keep class com.facebook.react.devsupport.** { *; }
+
+# React Native Core
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.proguard.annotations.** { *; }
+-keep class com.facebook.react.bridge.CatalystInstanceImpl { *; }
+-keep class com.facebook.react.bridge.JavaScriptExecutor { *; }
+-keep class com.facebook.react.bridge.NativeModule { *; }
+-keep class com.facebook.react.uimanager.UIImplementation { *; }
+-keep class com.facebook.react.uimanager.ViewManager { *; }
+
+# SoLoader (Native library loader)
+-keep class com.facebook.soloader.** { *; }
+-keep class com.facebook.common.soloader.** { *; }
+
+# Yoga (Layout engine)
+-keep class com.facebook.yoga.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Expo modules and Compatibility layers
+-keep class expo.modules.** { *; }
+-keep class expo.modules.rncompatibility.** { *; }
+
+# Bridgeless and New Architecture flags (Needed even if disabled in gradle)
+-keep class com.facebook.react.common.build.ReactBuildConfig { *; }
+-keep class com.facebook.react.fabric.** { *; }
+
+# Firebase and other third party native components
+-keep class com.google.firebase.** { *; }
+
+# Support for Hermes
+-keep class com.facebook.hermes.** { *; }
+
+# Reanimated 3
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.core.** { *; }
+
+# Shopify FlashList
+-keep class com.shopify.reactnative.flash_list.** { *; }
+
+# Gesture Handler, Screens
+-keep class com.swmansion.gesturehandler.** { *; }
+-keep class com.swmansion.rnscreens.** { *; }
+
+# BootSplash
+-keep class com.zoontek.rnbootsplash.** { *; }

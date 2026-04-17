@@ -9,9 +9,9 @@ description: 프로젝트 회고록(Retrospective) 문서를 일관된 형식으
 ### 1. 파일명 및 위치 규칙
 - **저장 위치**: `retrospectives/` 디렉토리
 - **파일명 형식**: `[유형]_[주제]_[YYYYMMDD].md`
-  - 유형 예: `feature`, `bugfix`, `hotfix`, `refactor`, `debug_resolve`
-  - 주제 예: `chat_sync`, `ai_mention`
-  - 예시: `debug_resolve_chat_sync_20260328.md`
+  - 유형 예: `fix` (버그 수정), `feat` (기능), `perf` (성능), `refactor` (리팩토링)
+  - 주제 예: `chat_sync`, `ai_mention`, `sqlite_migration`
+  - 예시: `fix_chat_sync_20260328.md`, `feat_ai_mention_20260326.md`
 
 ### 2. 문서 내부 구조 (Markdown Format)
 
