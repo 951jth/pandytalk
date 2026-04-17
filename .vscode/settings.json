@@ -14,5 +14,5 @@
   // 에디터 자체의 자동 구문 수정 방지 (ESLint가 주도권을 갖도록 함)
   "javascript.format.enable": false,
   "typescript.format.enable": false,
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "disabled"
 } 
