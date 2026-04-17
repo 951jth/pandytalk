@@ -28,8 +28,20 @@ android {
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode 36
         versionName "1.3.5"
-       ndk {
+        ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
+        }
+    }
+
+    flavorDimensions "default"
+    productFlavors {
+        production {
+            dimension "default"
+            applicationId "com.cshchatapp"
+        }
+        development {
+            dimension "default"
+            applicationId "com.cshchatapp.debug"
         }
     }
 
@@ -51,8 +63,7 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"      // 👉 com.cshchatapp.debug 로 됨
-            // 기본 디버그 서명 사용(명시 안 해도 OK)
+            // applicationIdSuffix ".debug" // Removed for EAS support
             minifyEnabled false
             shrinkResources false
             ndk {
