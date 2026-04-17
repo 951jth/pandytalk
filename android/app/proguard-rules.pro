@@ -39,3 +39,17 @@
 
 # Support for Hermes
 -keep class com.facebook.hermes.** { *; }
+
+# Reanimated 3
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.react.turbomodule.core.** { *; }
+
+# Shopify FlashList
+-keep class com.shopify.reactnative.flash_list.** { *; }
+
+# Gesture Handler, Screens
+-keep class com.swmansion.gesturehandler.** { *; }
+-keep class com.swmansion.rnscreens.** { *; }
+
+# BootSplash
+-keep class com.zoontek.rnbootsplash.** { *; }
