@@ -10,7 +10,7 @@
 
 | 작업 유형 | 참조할 워크플로우 파일 |
 | :--- | :--- |
-| **커밋 및 푸시 (Push/Commit)** | [.agent/workflows/push.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/push.md) |
+| **커밋 및 푸시 (Push/Commit)** | [.agent/workflows/pushAndCommit.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/pushAndCommit.md) |
 | **앱 버전업 (Version Bump)** | [.agent/workflows/release-versioning.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/release-versioning.md) |
 | **EAS Update (CodePush)** | [.agent/workflows/eas-update.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/eas-update.md) |
 | **프로젝트 회고록 작성** | [.agent/workflows/retrospective.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/retrospective.md) |
