@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.tsx",
   "scripts": {
-    "android": "react-native run-android --mode developmentDebug",
+    "android": "react-native run-android --mode developmentDebug --appId com.cshchatapp.debug",
     "android:custom": "react-native run-android --deviceId emulator-5554",
     "ios": "react-native run-ios",
     "start": "react-native start",

@@ -6,6 +6,7 @@ import COLORS from '@app/shared/constants/color'
 import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 
+import {useLogout} from '@app/shared/hooks/useLogout'
 import {useAppSelector} from '@app/store/reduxHooks'
 
 type propTypes = {
@@ -14,13 +15,10 @@ type propTypes = {
   onCancel?: () => void
 }
 
-export default function WithdrawalButton({
-  label = '회원 탈퇴',
-  onConfirm,
-  onCancel,
-}: propTypes) {
+export default function WithdrawalButton({label = '회원 탈퇴'}: propTypes) {
   const {data: user} = useAppSelector(state => state.user)
   const [visible, setVisible] = useState<boolean>(false)
+  const {logout} = useLogout()
 
   if (user?.authority === 'TEST') {
     return null
@@ -32,6 +30,7 @@ export default function WithdrawalButton({
       setVisible(false)
       await userService.deleteMyAccount()
       Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
+      logout()
     } catch (e) {}
   }
 

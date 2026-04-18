@@ -10,6 +10,10 @@ export interface UseAiStreamOptions {
   // skipTyping?: boolean // [비교용] 타이핑 효과 없이 즉시 출력할지 여부
 }
 
+// 특정 메시지 ID가 이번 세션에서 이미 스트리밍되었는지 추적하기 위한 전역 상태
+// 컴포넌트가 언마운트 후 재마운트되어도 중복 요청을 방지합니다.
+const processedMessageIds = new Set<string>()
+
 /**
  * AI 응답 스트리밍 및 동적 렌더링을 위한 커스텀 훅
  * SSE로부터 수신된 텍스트를 즉시 화면에 출력합니다.
@@ -31,9 +35,15 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const fullTextRef = useRef<string>('')
   const cursorRef = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  console.log('stream item', item)
+
+  // 이미 처리된 적이 있는 메시지인지 확인하기 위한 Ref
+  const isPreviouslyProcessed = useRef<boolean>(
+    !!messageId && processedMessageIds.has(messageId),
+  )
+
   useEffect(() => {
-    // if (skipTyping) return
+    // 이미 처리된 메시지는 타이핑 효과를 돌리지 않음
+    if (isPreviouslyProcessed.current) return
 
     const startTyping = () => {
       if (timerRef.current) return
@@ -74,9 +84,18 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetImageUrl?: string,
       targetImageUrls?: string[],
     ) => {
+      // 중복 요청 방지 가드
+      if (targetMessageId && processedMessageIds.has(targetMessageId)) {
+        console.log('[useAiStreamResponse] 중복 요청 차단:', targetMessageId)
+        return
+      }
+
+      if (targetMessageId) {
+        processedMessageIds.add(targetMessageId)
+      }
+
       setDisplayText('')
       fullTextRef.current = ''
-      // cursorRef.current = 0 // [비교용]
       setIsStreaming(true)
       setError(null)
 
@@ -121,16 +140,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     ) {
       startStreaming(chatId, prompt, messageId, imageUrl, imageUrls)
     }
-  }, [
-    enabled,
-    chatId,
-    prompt,
-    messageId,
-    imageUrl,
-    imageUrls,
-    startStreaming,
-    isStreaming,
-  ])
+  }, [enabled, chatId, item, startStreaming, isStreaming])
 
   /**
    * 상태 완전 초기화

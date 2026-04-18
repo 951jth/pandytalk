@@ -8,6 +8,7 @@ import type {UpdateInput} from '@app/shared/types/firebase'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import type {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {serverTimestamp} from '@react-native-firebase/firestore'
+import {Alert} from 'react-native'
 
 export const userService = {
   //프로필 생성
@@ -91,21 +92,31 @@ export const userService = {
   },
   deleteMyAccount: async () => {
     const user = auth.currentUser
+    if (!user) return
+
     try {
-      if (!user) return
-      const profile = await userService.getProfile(user.uid)
+      const uid = user.uid
+      const profile = await userService.getProfile(uid)
+
       if (profile.authority === 'TEST') {
         throw new Error('TEST 계정은 탈퇴할 수 없습니다.')
       }
+
+      // 1. Firestore 프로필 먼저 삭제 (데이터 정리)
+      await userRemote.deleteProfile(uid)
+
+      // 2. Firebase Auth 계정 삭제
       await userRemote.deleteUser(user)
-      // 여기서부터는 계정이 Auth에서 삭제된 상태
-      // 추가로 Firestore/Storage 데이터도 정리해주면 좋음
     } catch (err: any) {
       if (err.code === 'auth/requires-recent-login') {
-        // 비밀번호 다시 입력시키거나, 소셜 로그인 다시 유도 필요
-        console.log('재인증 필요')
+        Alert.alert(
+          '보안 인증 필요',
+          '개인정보 보호를 위해 다시 로그인하신 후 탈퇴를 진행해 주세요.',
+          [{text: '확인'}],
+        )
       } else {
-        console.error(err)
+        console.error('탈퇴 처리 중 오류:', err)
+        throw err
       }
     }
   },
