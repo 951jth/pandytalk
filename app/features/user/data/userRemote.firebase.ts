@@ -19,6 +19,7 @@ import {
   startAt,
   updateDoc,
   where,
+  deleteDoc,
 } from '@react-native-firebase/firestore'
 
 // ✅ updateDoc 전용
@@ -59,6 +60,12 @@ export const userRemote = {
   deleteUser: (user: FirebaseAuthTypes.User) => {
     return firebaseCall('userRemote.deleteUser', async () => {
       await deleteUser(user)
+    })
+  },
+  deleteProfile: (uid: string) => {
+    return firebaseCall('userRemote.deleteProfile', async () => {
+      const userRef = doc(firestore, 'users', uid)
+      await deleteDoc(userRef)
     })
   },
   getUsersPage: ({

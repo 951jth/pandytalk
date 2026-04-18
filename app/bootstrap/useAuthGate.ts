@@ -22,6 +22,7 @@ export function useAuthGate() {
   const fetchProfile = useCallback(
     async (uid: string) => {
       const profile = await dispatch(fetchUserById(uid)).unwrap()
+      console.log('profile', profile)
       const blockedStatuses = ['reject', 'stop']
       if (blockedStatuses.includes(profile?.accountStatus)) {
         logout()
@@ -39,7 +40,8 @@ export function useAuthGate() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
-      (async () => {
+      ;(async () => {
+        console.log('user', user)
         setFbUser(user)
         if (!user?.uid) {
           setInitializing(false)

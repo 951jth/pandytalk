@@ -29,6 +29,7 @@ export const fcmService = {
             actualChatId,
             data.senderName as string,
             (data.chatType as string) || 'dm',
+            data.senderId as string, // targetId 추가
           )
         }
         break

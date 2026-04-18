@@ -5,28 +5,27 @@ import {
   checkRequiredTerm,
   defaultTermsRecord,
 } from '@app/shared/constants/terms'
-import {useLogout} from '@app/shared/hooks/useLogout'
 import type {UserJoinRequest} from '@app/shared/types/auth'
 import {InputFormRef} from '@app/shared/ui/form/InputForm'
 import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {handleFirebaseJoinError} from '@app/shared/utils/logger'
-import {useNavigation} from '@react-navigation/native'
+import type {AppDispatch} from '@app/store/store'
+import {fetchUserById} from '@app/store/userSlice'
 import type {FirebaseError} from 'firebase-admin'
 import {useRef, useState} from 'react'
 import {Alert} from 'react-native'
-const debug = true
+import {useDispatch} from 'react-redux'
 
-export default function useAddUserScreen() {
+export default function useUserJoinScreen() {
+  const dispatch = useDispatch<AppDispatch>()
   const formRef = useRef<InputFormRef>(null)
   const profileRef = useRef<ProfileInputRef>(null)
   const [loading, setLoading] = useState(false)
   const [checkedRecord, setCheckedRecord] =
     useState<CheckedRecordType>(defaultTermsRecord)
   const btnDisable = checkRequiredTerm(checkedRecord)
-  const {logout} = useLogout() //로그아웃 공용 훅
-  const navigation = useNavigation()
 
-  async function handleAddGuest(formValues: UserJoinRequest) {
+  async function handleAddUser(formValues: UserJoinRequest) {
     try {
       setLoading(true)
       const {email, password} = formValues
@@ -37,7 +36,9 @@ export default function useAddUserScreen() {
         const photoURL = await profileRef.current?.upload()
         const payload = {...formValues, photoURL}
         await userService.setProfile(cred, payload)
-        // await authRemote.signOut() // 더 이상 가입 즉시 로그아웃하지 않음 (pending 상태로 진입 허용)
+        //3. 가입 즉시 로그인이 유지되므로, 리덕스 상태를 강제로 갱신하여 AuthGate 통과 유도
+        await dispatch(fetchUserById(cred.user.uid))
+
         Alert.alert(
           '가입 신청 완료',
           '승인 대기 중입니다. 승인 전까지는 일부 기능이 제한될 수 있습니다.',
@@ -63,6 +64,6 @@ export default function useAddUserScreen() {
     checkedRecord,
     setCheckedRecord,
     btnDisable,
-    handleAddGuest,
+    handleAddUser,
   }
 }

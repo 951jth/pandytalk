@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useMemo, useState} from 'react'
 import {
   StyleSheet,
   TouchableOpacity,
@@ -27,7 +27,8 @@ export default function MultiImageViewer({
 
   if (!images || images.length === 0) return null
 
-  const imageSources = images.map(uri => ({uri}))
+  // useMemo를 사용하여 이미지 소스 배열의 참조값을 고정함 (깜빡임 방지 핵심)
+  const imageSources = useMemo(() => images.map(uri => ({uri})), [images])
 
   const handleOpen = (idx: number) => {
     setIndex(idx)

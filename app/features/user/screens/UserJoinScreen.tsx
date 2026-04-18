@@ -1,4 +1,4 @@
-import useAddUserScreen from '@app/features/user/hooks/useAddUserScreen'
+import useUserJoinScreen from '@app/features/user/hooks/useUserJoinScreen'
 import {addUserItems} from '@app/features/user/screens/addUser.form'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
@@ -6,9 +6,9 @@ import InputForm from '@app/shared/ui/form/InputForm'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 import React from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
+import LinearGradient from 'react-native-linear-gradient'
 import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
-import LinearGradient from 'react-native-linear-gradient'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
 import TermAgreementList from '../../auth/components/TermAgreementList'
 
@@ -28,8 +28,8 @@ export default function UserJoinScreen() {
     checkedRecord,
     setCheckedRecord,
     btnDisable,
-    handleAddGuest,
-  } = useAddUserScreen()
+    handleAddUser,
+  } = useUserJoinScreen()
 
   return (
     <SafeAreaView style={styles.container}>
@@ -43,11 +43,9 @@ export default function UserJoinScreen() {
           start={{x: 0, y: 0}}
           end={{x: 0, y: 1}}
           style={styles.gradientBg}>
-
           <ScrollView
             contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
+            showsVerticalScrollIndicator={false}>
             {/* 프리미엄 웰컴 카드 */}
             <View style={styles.card}>
               <View style={styles.profileWrap}>
@@ -59,7 +57,9 @@ export default function UserJoinScreen() {
                   ref={profileRef}
                 />
                 <Text style={styles.notiText}>
-                  {'나만의 특별한 프로필을 꾸며주세요.\n관리자 승인 후 게스트로 입장할 수 있습니다.'}
+                  {
+                    '나만의 특별한 프로필을 꾸며주세요.\n관리자 승인 후 게스트로 입장할 수 있습니다.'
+                  }
                 </Text>
               </View>
 
@@ -68,7 +68,7 @@ export default function UserJoinScreen() {
                 items={addUserItems}
                 buttonLabel="팬디톡 시작하기"
                 formData={initialData}
-                onSubmit={handleAddGuest}
+                onSubmit={handleAddUser}
                 loading={loading}
                 btnDisable={btnDisable}
                 bottomElement={

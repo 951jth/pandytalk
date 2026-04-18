@@ -66,7 +66,6 @@ export const messageRemote = {
     callback: (docs: ChatMessage[]) => void,
   ) => {
     if (!roomId) return () => {}
-    console.log('현재 앱 채널:', Updates.channel)
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     const messageQuery = query(
       messagesRef,
@@ -86,6 +85,36 @@ export const messageRemote = {
       },
       error => {
         console.warn(`subscribeChatMessages_error: ${roomId}`, error)
+      },
+    )
+  },
+  subscribeChatMessagesByTime: (
+    roomId: string,
+    lastMessageAt: any, // Timestamp or Date
+    callback: (docs: ChatMessage[]) => void,
+  ) => {
+    if (!roomId) return () => {}
+    const messagesRef = collection(firestore, 'chats', roomId, 'messages')
+    
+    // createdAt 기준 필터링 시에는 해당 필드에 대한 orderBy가 필수임
+    const messageQuery = query(
+      messagesRef,
+      orderBy('createdAt', 'asc'),
+      where('createdAt', '>', lastMessageAt || new Date(0)),
+    )
+
+    return firebaseObserver(
+      `messageRemote.subscribeChatMessagesByTime_${roomId}`,
+      messageQuery,
+      snapshot => {
+        const newMessages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as ChatMessage[]
+        callback(newMessages)
+      },
+      error => {
+        console.warn(`subscribeChatMessagesByTime_error: ${roomId}`, error)
       },
     )
   },
