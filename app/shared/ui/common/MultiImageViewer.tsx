@@ -25,10 +25,11 @@ export default function MultiImageViewer({
   const [index, setIndex] = useState(0)
   const {width: windowWidth} = useWindowDimensions()
 
-  if (!images || images.length === 0) return null
-
   // useMemo를 사용하여 이미지 소스 배열의 참조값을 고정함 (깜빡임 방지 핵심)
+  // 훅은 반드시 모든 리턴문보다 위에 있어야 합니다.
   const imageSources = useMemo(() => images.map(uri => ({uri})), [images])
+
+  if (!images || images.length === 0) return null
 
   const handleOpen = (idx: number) => {
     setIndex(idx)
