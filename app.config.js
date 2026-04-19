@@ -1,18 +1,14 @@
-export default {
+module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
   slug: 'cshchatapp', // Expo 프로젝트의 고유 식별자 (URL 등에 사용)
   version: '1.3.8', // 앱의 외부 버전 (Store 표시용)
 
   // 2. 중요: 코드푸시(EAS Update) 설정
-  // runtimeVersion은 코드푸시 성공의 핵심입니다.
-  // 이 값이 네이티브 빌드(안드로이드/iOS)와 업데이트 번들과 정확히 일치해야 합니다.
   runtimeVersion: '39',
 
   // 3. 자산(Assets) 설정
-  // 아이콘과 스플래시 화면은 프리빌드 시 네이티브 폴더로 자동 생성됩니다.
-  // 고화질 원본(최소 1024x1024)을 지정하는 것이 좋습니다.
-  icon: './app/shared/assets/images/PandyTalkIcon.png',
+  icon: './app/shared/assets/images/pandy_icon_resize.png',
   orientation: 'portrait',
   userInterfaceStyle: 'light',
   assetBundlePatterns: ['**/*'],
@@ -36,7 +32,7 @@ export default {
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {
-      foregroundImage: './app/shared/assets/images/PandyTalkIcon.png',
+      foregroundImage: './app/shared/assets/images/pandy_icon_resize.png',
       backgroundColor: '#FDFCF0', // 상수의 COLORS.background 값과 일치시킴
     },
   },
@@ -50,5 +46,6 @@ export default {
 
   // 8. 기타 설정
   owner: 'sehooncho',
-  plugins: ['expo-font'], // 폰트 등 네이티브 플러그인 설정
+  plugins: ['expo-font'], 
 };
+
