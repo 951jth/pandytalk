@@ -1,6 +1,7 @@
 import remoteConfig from '@react-native-firebase/remote-config'
 import {Alert, Linking, Platform} from 'react-native'
 import {expo as appConfig} from '../../../app.json'
+import Constants from 'expo-constants'
 import {logger} from '../services/logger'
 
 /**
@@ -11,11 +12,6 @@ const STORE_URL = Platform.select({
   android: 'market://details?id=com.cshchatapp', // 실제 패키지 명 확인
 })
 
-/**
- * 테스트 모드 설정 (true인 경우 항상 업데이트 알림 발생)
- */
-const IS_TEST_MODE = false
-const TEST_VERSION = '2.0.0'
 
 /**
  * 앱의 버전을 비교하는 함수 (단순 문자열 비교)
@@ -44,12 +40,8 @@ const isUpdateRequired = (current: string, required: string) => {
  * Firebase Remote Config를 사용하여 강제 업데이트 여부를 체크합니다.
  */
 export const checkForceUpdate = async () => {
-  // 🚀 1순위: 테스트 모드가 true면 무조건 진행
-  if (IS_TEST_MODE) {
-    console.log('[UpdateCheck] Forced testing mode: ON')
-  }
-  // 🚀 2순위: 테스트 모드가 아니고, 개발 환경(__DEV__)이면 건너뜀
-  else if (__DEV__) {
+  // 🚀 개발 환경(__DEV__)이면 건너뜀
+  if (__DEV__) {
     console.log('[UpdateCheck] Skipping update check in DEV mode')
     return false
   }
@@ -59,15 +51,15 @@ export const checkForceUpdate = async () => {
     await remoteConfig().setConfigSettings({minimumFetchIntervalMillis: 0})
     await remoteConfig().fetchAndActivate()
 
-    // 2. 버전 결정 (테스트 모드일 때는 더미 버전, 아니면 실제 서버 버전)
-    const minRequiredVersion = IS_TEST_MODE
-      ? TEST_VERSION
-      : remoteConfig().getValue('min_required_version').asString() ||
-        appConfig.version
-    const currentVersion = appConfig.version
+    // 2. 버전 결정 (Firebase 서버 버전)
+    const minRequiredVersion =
+      remoteConfig().getValue('min_required_version').asString() ||
+      Constants.expoConfig?.version ||
+      appConfig.version
+    const currentVersion = Constants.expoConfig?.version || appConfig.version
 
     console.log(
-      `[UpdateCheck] Mode: ${IS_TEST_MODE ? 'TEST' : 'REAL'}, Current: ${currentVersion}, Required: ${minRequiredVersion}`,
+      `[UpdateCheck] Current: ${currentVersion}, Required: ${minRequiredVersion}`,
     )
 
     // 3. 버전 비교 후 업데이트 유도
