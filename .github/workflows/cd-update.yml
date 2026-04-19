@@ -4,29 +4,44 @@ on:
   push:
     branches:
       - main
+    # 🎯 특정 경로의 파일이 변경되었을 때만 워크플로우를 실행합니다. (Selective Update)
+    paths:
+      - 'app/**'       # 소스 코드 변경 시
+      - 'App.tsx'      # 메인 진입점 변경 시
+      - 'index.tsx'    # 엔트리 파일 변경 시
+      - 'app.json'     # 프로젝트 설정 변경 시
+      - 'package.json' # 의존성 변경 시
+      - 'yarn.lock'    # 패키지 잠금 파일 변경 시
+      # ⚠️ 아래 경로는 변경되어도 업데이트를 트리거하지 않습니다.
+      - '!android/**' # 네이티브 안드로이드 코드 (별도 빌드 필요)
+      - '!ios/**'     # 네이티브 iOS 코드 (별도 빌드 필요)
+      - '!**/*.md'    # 문서 파일
+  # 🚀 GitHub Actions 탭에서 수동으로 실행할 수 있는 버튼을 활성화합니다.
+  workflow_dispatch:
 
 jobs:
   update:
     name: EAS Update
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: 📦 저장소 체크아웃
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: 🟢 Node.js 설정
         uses: actions/setup-node@v4
         with:
           node-version: 22.15.0
-          cache: 'yarn'
+          cache: 'yarn' # yarn 캐시를 사용하여 설치 속도를 향상합니다.
 
-      - name: Setup EAS
+      - name: 🏗️ EAS CLI 설정
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          token: ${{ secrets.EXPO_TOKEN }} # Expo Access Token (GitHub Secrets에 등록됨)
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: 📥 의존성 패키지 설치
+        run: yarn install --frozen-lockfile # yarn.lock과 일치하게 설치
 
-      - name: Publish EAS Update
+      - name: 🚀 EAS Update 발행 (CodePush)
+        # main 브랜치를 대상으로 무인 모드로 업데이트를 실행하며, 커밋 해시를 메시지에 포함합니다.
         run: eas update --branch main --non-interactive --message "Deploy from GitHub Actions (${{ github.sha }})"

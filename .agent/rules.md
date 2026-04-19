@@ -1,55 +1,47 @@
-# Pandytalk Development Rules
+# 🤖 AI Agent Master Rules & Guidelines
 
-이 파일은 프로젝트의 개발 규칙과 AI 어시스턴트(Antigravity)의 행동 지침을 정의합니다.
+이 문서는 에이전트(AI)가 작업을 시작하기 전 반드시 준수해야 하는 **최상위 원칙**입니다. 모든 요청에 대해 이 규칙이 우선 적용됩니다.
 
-## 1. 언어 및 커뮤니케이션
+---
 
-- **모든 계획, 설명 및 커밋 메시지는 한국어로 작성합니다.**
-- 개발 환경이나 기술 용어는 필요에 따라 영문을 혼용할 수 있으나, 전체적인 문맥과 설명은 한국어를 원칙으로 합니다.
-- **커밋 메시지**는 Conventional Commits 형식을 따르되, 설명 부분은 한국어로 작성합니다. (예: `fix: 로그인 오류 수정`)
-- 답변은 간결하고 명확하게 유지합니다.
+## 🛑 1. 워크플로우 우선 원칙 (Mandatory Workflows)
 
-## 2. 하네스(Harness) 기반 개발 프로세스
+특정 작업 시 반드시 지정된 워크플로우 문서(.md)를 먼저 읽고 그 절차를 따릅니다. **절대 워크플로우를 건너뛰거나 임의로 단축하지 마십시오.**
 
-- **신규 기능 및 컴포넌트 검증**: 복잡한 로직이나 새로운 UI 컴포넌트는 `app/features/harness/screens/HarnessScreen.tsx`에서 먼저 구현하고 검증합니다.
-- **격리된 테스트**: 메인 화면에 반영하기 전, 하네스에서 독립적인 테스트를 거쳐 사이드 이펙트를 최소화합니다.
+| 작업 유형 | 참조할 워크플로우 파일 |
+| :--- | :--- |
+| **커밋 및 푸시 (Push/Commit)** | [.agent/workflows/pushAndCommit.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/pushAndCommit.md) |
+| **앱 버전업 (Version Bump)** | [.agent/workflows/release-versioning.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/release-versioning.md) |
+| **EAS Update (CodePush)** | [.agent/workflows/eas-update.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/eas-update.md) |
+| **프로젝트 회고록 작성** | [.agent/workflows/retrospective.md](file:///d:/Coding/workspace/pandytalk/.agent/workflows/retrospective.md) |
 
-## 3. 기술 스택 및 코드 스타일
+---
 
-- **Core**: React Native (Expo 환경일 경우 포함), TypeScript.
-- **Styling**: Vanilla CSS (StyleSheet.create) 기반 스타일링을 선호합니다.
-- **UI Framework**: React Native Paper를 주요 UI 컴포넌트로 사용합니다.
-- **State Management**: Redux Toolkit (Rtk Query)를 사용합니다.
+## 🗣️ 2. 소통 및 언어 규칙 (Communication Standards)
 
-## 3. 프로젝트 구조 및 분석
+*   **한국어 우선**: 사용자와의 모든 대화, 제안, 설명은 **한국어**로 진행합니다.
+*   **코드 주석**: 새로운 기능을 추가하거나 복잡한 로직을 수정할 때, 핵심 설명은 한국어 주석을 포함합니다.
+*   **커밋 메시지**: **Conventional Commits** 형식을 준수하며, 내용은 한국어로 작성합니다.
+    *   형식: `type: 한국어 설명 (필요시 상세설명)`
+    *   예: `feat: 그룹 채팅 생성 시 멤버 초대 기능 추가`
 
-- **컴포넌트 및 로직 구현 전 분석**: 새로운 컴포넌트나 기능을 작성하기 전에 반드시 `app/shared` 폴더와 관련 도메인 폴더(`app/features/[domain]`)를 먼저 분석합니다.
-  - 기존 UI 컴포넌트, Hook, 서비스 중 재사용 가능한 것이 있는지 확인합니다.
-  - 프로젝트의 기존 코드 작성 스타일과 패턴을 일관성 있게 따릅니다.
+---
 
-## 4. UI/UX 및 디자인 가이드
+## 🛡️ 3. 안전 및 실행 가드레일 (Safety Guardrails)
 
-- **Premium UI 유지**: 모든 화면은 현대적이고 세련된 디자인을 지향합니다. 적절한 여백, 일관된 색상 테마, 부드러운 애니메이션을 고려합니다.
-- **컴포넌트 재사용**: `app/shared/ui`에 정의된 공통 컴포넌트를 우선적으로 사용하며, 필요한 경우에만 신규 컴포넌트를 정의합니다.
+*   **파괴적 명령어**: `rm`, `git reset`, `git push -f`, `npm publish` 등 시스템에 돌이키기 힘든 변화를 주는 명령어는 반드시 사용자에게 **명시적 승인**을 얻은 후 실행합니다.
+*   **네이티브 변경 알림**: `android/`, `ios/` 폴더 또는 `app.json`의 네이티브 설정을 변경할 때는 실행 전 **"네이티브 빌드가 필요한 변경"**임을 강력하게 경고해야 합니다.
+*   **명령어 제안**: 복잡한 명령어는 사용자가 직접 복사해서 쓸 수 있도록 마크다운 코드 블록으로 먼저 제안합니다.
 
-## 5. 워크플로우 및 자동화
+---
 
-- **슬래시 커맨드 활용**: 커밋/푸쉬(`/push`), 빌드(`/eas-build`), 업데이트(`/eas-update`) 등 정의된 워크플로우를 적극 활용합니다.
+## 🏗️ 4. 기술 스택 및 품질 (Technical Excellence)
 
-## 6. 어시스턴트 코드 작업 지침
+*   **React Native / Expo**: Expo Bare Workflow의 구조를 이해하고, 네이티브 모듈 연결 시 일관성을 유지합니다.
+*   **코드 스타일**: 기존 프로젝트의 코드 컨벤션(Prettier, ESLint)을 존중하며, 일관된 코딩 스타일을 유지합니다.
+*   **계획 기반 작업**: 대규모 수정이나 아키텍처 변경 시 반드시 `implementation_plan.md`를 통해 승인을 먼저 받습니다.
 
-- **네이티브 빌드 안내 (필수)**: `android/`, `ios/` 폴더 내 파일이나 `package.json`, `app.json` 등 네이티브 설정에 영향을 주는 파일을 수정할 경우, 커밋이나 배포 안내 시 반드시 **"새로운 바이너리 빌드(EAS Build 등)가 필요함"**을 명시적으로 안내해야 합니다.
-- **사용자의 사전 승인 없는 코드 수정 금지**: 사용자의 질문이나 물음을 요구하는 것에 대해서는 계획을 먼저 제시하고, 사용자의 명시적인 승인(예: "진행해", "수정해줘" 등)을 받은 후에만 실제 코드 수정 도구(write_to_file, replace_file_content 등)를 사용합니다. "멋대로" 코드를 변경하여 사용자의 의도와 다른 작업이 수행되지 않도록 주의합니다.
+---
 
-
-
-## 7. 회고록(Retrospective) 관리
-
-- **명명 규칙**: 모든 회고록은 `retrospectives/` 폴더에 `[유형]_[주제]_[YYYYMMDD].md` 형식으로 저장합니다.
-- **유형(Prefix)**: 
-  - `fix`: 버그 수정, 이슈 해결 (기존 debug_resolve 대체)
-  - `feat`: 신규 기능 추가
-  - `perf`: 성능 개선
-  - `refactor`: 코드 리팩토링
-- **주제**: 해당 작업의 핵심 내용을 나타내는 영문 스네이크 케이스(snake_case)로 작성합니다.
-- **작성 시점**: 주요 마일스톤 완료 또는 복잡한 이슈 해결 직후 사용자의 요청에 따라 작성합니다.
+> [!IMPORTANT]
+> 에이전트는 사용자가 "알아서 해줘"라고 말하더라도, 위의 **워크플로우 절차를 생략해서는 안 됩니다.**
