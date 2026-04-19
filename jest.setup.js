@@ -234,6 +234,12 @@ jest.mock('expo-updates', () => ({
   isEmergencyLaunch: false,
 }));
 
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    version: '1.3.5',
+  },
+}));
+
 jest.mock('expo-font', () => ({
   loadAsync: jest.fn(),
   isLoaded: jest.fn(() => true),
