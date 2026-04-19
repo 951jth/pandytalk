@@ -43,5 +43,6 @@ description: 프로젝트 배포 및 버전 관리 규칙 (EAS Update, Native Bu
 #### 시나리오 B: 네이티브 패키지 추가 또는 대규모 릴리스로 인해 빌드를 새로 해야 할 때
 - **액션**: 
   1. `app.json`, `build.gradle`, `strings.xml`의 버전 정보(`versionCode`, `runtimeVersion` 등)를 한 단계 상승시킴. **(3개 파일 동기화 필수!!)**
-  2. 새로운 바이너리로 안드로이드/iOS를 빌드 (`eas build` 또는 로컬 빌드).
-  3. 이후 변경된 `runtimeVersion`을 대상으로 다음 릴리스부터 EAS Update 진행 가능.
+  2. **`npm run prebuild` 실행**: `app.json`의 변경 사항을 네이티브 폴더로 동기화합니다.
+  3. 새로운 바이너리로 안드로이드/iOS를 빌드 (`eas build` 또는 로컬 빌드).
+  4. 이후 변경된 `runtimeVersion`을 대상으로 다음 릴리스부터 EAS Update 진행 가능.

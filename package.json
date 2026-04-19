@@ -1,6 +1,6 @@
 {
   "name": "cshchatapp",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "private": true,
   "main": "index.tsx",
   "scripts": {
@@ -13,10 +13,11 @@
     "bundle-android": "react-native bundle --platform android --dev false --entry-file index.tsx --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
     "release-android": "cd android && ./gradlew assembleRelease && cd ..",
     "clean-android": "cd android && ./gradlew clean && cd ..",
-    "build:aab": "cd android && ./gradlew bundleProductionRelease && cd ..",
+    "build:aab": "npm run prebuild && cd android && ./gradlew bundleProductionRelease && cd ..",
     "submit:aab": "npx -y eas-cli submit --platform android --path ./android/app/build/outputs/bundle/productionRelease/app-production-release.aab",
     "build:submit": "npm run build:aab && npm run submit:aab",
-    "update": "npx -y eas-cli update",
+    "update": "npm run prebuild && npx -y eas-cli update",
+    "prebuild": "npx expo prebuild --no-install",
     "eas-build-pre-install": "cp $GOOGLE_SERVICES_JSON ./android/app/google-services.json",
     "typecheck": "tsc --noEmit",
     "verify": "yarn lint --quiet && yarn typecheck && yarn test"

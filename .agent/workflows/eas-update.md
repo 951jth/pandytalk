@@ -24,7 +24,7 @@ description: EAS Update (CodePush) 사용 방법
 
 ### 1. 업데이트 배포 (JS 수정 시)
 
-수정한 코드를 사용자 기기에 즉시 반영하려면 위 자동화 명령을 사용하거나 직접 아래 명령어를 실행하세요.
+수정한 코드를 사용자 기기에 즉시 반영하려면 아래 명령어를 실행하세요. 이제 `prebuild`가 자동으로 먼저 실행되어 `app.json` 설정이 네이티브 폴더와 동기화됩니다.
 
 ```bash
 npm run update
@@ -44,7 +44,7 @@ eas update --branch production --message "업데이트 내용 입력"
 - `android` 또는 `ios` 폴더 내의 네이티브 코드 수정
 - `app.json`의 네이티브 설정 변경
 
-⚠️ **주의**: 버전을 올리거나 빌드를 새로 해야 할 경우, `/release` 명령어를 사용하여 `release-versioning.md` 워크플로우에 따라 `app.json`, `build.gradle`, `strings.xml` 세 곳의 버전을 반드시 동기화해야 합니다.
+⚠️ **주의**: 버전을 올리거나 빌드를 새로 해야 할 경우, `/release` 명령어를 사용하여 `release-versioning.md` 워크플로우에 따라 `app.json`, `build.gradle`, `strings.xml` 세 곳의 버전을 반드시 동기화해야 합니다. **네이티브 빌드 전에는 반드시 `npm run prebuild`를 실행하여 설정이 반영되었는지 확인하세요.**
 
 ### 3. 현재 설정 정보
 
