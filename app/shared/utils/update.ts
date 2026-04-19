@@ -1,6 +1,5 @@
 import remoteConfig from '@react-native-firebase/remote-config'
 import {Alert, Linking, Platform} from 'react-native'
-import {expo as appConfig} from '../../../app.json'
 import Constants from 'expo-constants'
 import {logger} from '../services/logger'
 
@@ -55,8 +54,8 @@ export const checkForceUpdate = async () => {
     const minRequiredVersion =
       remoteConfig().getValue('min_required_version').asString() ||
       Constants.expoConfig?.version ||
-      appConfig.version
-    const currentVersion = Constants.expoConfig?.version || appConfig.version
+      '1.0.0'
+    const currentVersion = Constants.expoConfig?.version || '1.0.0'
 
     console.log(
       `[UpdateCheck] Current: ${currentVersion}, Required: ${minRequiredVersion}`,

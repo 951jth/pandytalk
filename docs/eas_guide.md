@@ -24,7 +24,7 @@
 | **production** | `main` | 실제 운영용 배포 | 현재는 테스트와 동일하게 `main` 채널을 바라봄 |
 | **apk** | `main` | 안드로이드 설치 파일(APK) 생성 | 배포된 APK는 `main` 채널의 업데이트를 감지함 |
 
-> **[중요]** 현재 `preview`, `production`, `apk` 모두 `main` 채널을 바라보고 있어, `main` 브랜치에 `yarn update`를 실행하면 모든 기기에 동시에 반영됩니다.
+> **[필독 - 운영 주의사항]** 현재 `preview`, `production`, `apk` 프로필이 모두 **`main` 채널**을 바라보고 있습니다. 따라서 `npm run update`를 실행하는 순간, **실제 운영 중인 모든 앱에 즉시 코드가 반영**됩니다. 배포 전 엄격한 테스트가 필수입니다.
 
 ---
 
@@ -33,31 +33,32 @@
 ### 시나리오 A: 단순 UI 수정이나 로직 변경 시
 - **방법**: 명령어를 통한 업데이트 배포
 - **명령어**: `npm run update` (또는 `eas update --branch main`)
-- **특징**: 현재 프로젝트는 `npm run update` 실행 시 자동으로 `prebuild`가 선행되어 `app.json` 설정이 네이티브 코드에 동기화된 상태로 배포됩니다.
+- **특징**: 현재 프로젝트는 `npm run update` 실행 시 자동으로 `prebuild`가 선행되어 `app.config.js` 설정이 네이티브 코드에 동기화된 상태로 배포됩니다.
 - **결과**: 이미 배포된 앱을 재설치할 필요 없이, 앱을 재실행하면 자동으로 반영됨.
 
 ### 시나리오 B: 새로운 라이브러리 추가나 네이티브 설정 변경 시
 - **방법**: 프리빌드 후 새로운 네이티브 빌드 생성
 - **명령어**: 
-  1. `npm run prebuild` (또는 `npx expo prebuild`) : `app.json` 설정을 네이티브 폴더로 동기화
+  1. `npm run prebuild` (또는 `npx expo prebuild`) : `app.config.js` 설정을 네이티브 폴더로 동기화
   2. 로컬 빌드 혹은 `npx eas build --profile apk` (또는 production)
 - **결과**: 네이티브 레이어의 변경 사항(새 라이브러리, 앱 버전 등)이 포함된 새 설치 파일이 생성됨. 기존 사용자들은 새 파일을 설치받아야 함.
 
 ---
 
-## 4. 나중에 개발/운영 환경을 분리하려면?
+## 4. 현재 운영 방식 (Single Channel Production)
 
-정식 런칭 시점에는 다음과 같이 환경을 분리하는 것이 좋습니다.
+현재 본 프로젝트는 빠른 배포를 위해 채널을 하나(`main`)로 통합하여 운영하고 있습니다. 
 
-1. **설정 변경**: `eas.json`에서 `production` 프로필의 채널을 `production`으로 변경.
-2. **새 빌드**: 분리된 채널을 가진 운영용 앱을 새로 빌드하여 배포.
-3. **업데이트 구분**:
-   - 개발용 테스트: `npx eas update --branch main`
-   - 운영용 배포: `npx eas update --branch production`
+- **장점**: 개발 기기와 운영 기기 구별 없이 `npm run update` 한 방으로 모든 환경을 최신화할 수 있습니다.
+- **단점/리스크**: 테스트 코드가 섞인 채로 배포할 경우 모든 사용자에게 즉시 전파될 위험이 있습니다.
 
----
+### 향후 개발/운영 환경 분리가 필요할 때:
+정식 대규모 런칭 시점에는 사고 방지를 위해 다음과 같이 분리하는 것을 권장합니다.
+1. `eas.json`에서 `production` 프로필 전용 채널(`production`) 생성.
+2. 운영용 앱을 해당 채널로 새로 빌드하여 배포.
+3. `/eas-update` 시 `--branch production` 명령어로 배포 대상 구분.
 
 ## 5. 관리 팁
-- **runtimeVersion**: `app.json`에 정의된 이 버전이 다르면 업데이트를 받지 않습니다. 네이티브 코드가 크게 바뀌었을 때는 이 버전을 올리고 새 빌드(Build)를 해야 합니다.
-- **Prebuild의 중요성**: `app.json`을 수정했다면 반드시 `npm run prebuild`를 통해 `android/`, `ios/` 폴더를 최신화해야 합니다. 이를 거치지 않고 빌드하면 `app.json`의 변경 사항이 빌드 결과물에 포함되지 않습니다.
+- **runtimeVersion**: `app.config.js`에 정의된 이 버전이 다르면 업데이트를 받지 않습니다. 네이티브 코드가 크게 바뀌었을 때는 이 버전을 올리고 새 빌드(Build)를 해야 합니다.
+- **Prebuild의 중요성**: `app.config.js`를 수정했다면 반드시 `npm run prebuild`를 통해 `android/`, `ios/` 폴더를 최신화해야 합니다. 이를 거치지 않고 빌드하면 `app.config.js`의 변경 사항이 빌드 결과물에 포함되지 않습니다.
 - **Fingerprint**: EAS 5.0 이상에서는 네이티브 코드 변경 시 자동으로 감지하여 업데이트 전 경고를 줍니다.
