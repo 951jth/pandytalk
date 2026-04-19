@@ -1,26 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- 앱 기본 테마 (스플래시 이미지 포함) -->
-    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
-        <!-- 기존 설정 유지 -->
-        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
-
-        <!-- 앱 전체 기본 배경을 스플래시 이미지로 통일 -->
-        <!--        <item name="android:windowBackground">@drawable/launch_screen</item>-->
-        <item name="android:windowBackground">@color/splash_bg</item>
-    </style>
-
-    <!-- BootSplash에서 쓸 테마 -->
-    <style name="BootTheme" parent="Theme.BootSplash">
-        <!-- 부츠스플래시 배경 색 (이미 있는 splash_bg 사용) -->
-        <item name="bootSplashBackground">@color/splash_bg</item>
-
-        <!-- 가운데 로고로 쓸 이미지 -->
-        <item name="bootSplashLogo">@drawable/pandy_splash</item>
-
-        <!-- 스플래시가 끝난 뒤 적용할 앱 기본 테마 -->
-        <item name="postBootSplashTheme">@style/AppTheme</item>
-    </style>
-
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="android:statusBarColor">#ffffff</item>
+    <item name="android:windowOptOutEdgeToEdgeEnforcement" tools:targetApi="35">true</item>
+  </style>
+  <style name="BootTheme" parent="Theme.BootSplash">
+    <item name="bootSplashBackground">@color/splash_bg</item>
+    <item name="bootSplashLogo">@drawable/pandy_splash</item>
+    <item name="postBootSplashTheme">@style/AppTheme</item>
+  </style>
+  <style name="Theme.App.SplashScreen" parent="AppTheme">
+    <item name="android:windowBackground">@drawable/ic_launcher_background</item>
+  </style>
 </resources>

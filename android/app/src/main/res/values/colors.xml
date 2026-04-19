@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_bg">#FDFCF0</color>
-    <color name="ic_launcher_background">#FDFCF0</color>
+  <color name="splash_bg">#FDFCF0</color>
+  <color name="ic_launcher_background">#FDFCF0</color>
+  <color name="iconBackground">#FDFCF0</color>
+  <color name="colorPrimary">#023c69</color>
+  <color name="colorPrimaryDark">#ffffff</color>
 </resources>
-

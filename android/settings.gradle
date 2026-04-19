@@ -12,7 +12,7 @@ plugins { id("com.facebook.react.settings")
 id("expo-autolinking-settings")
 }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand) }
-rootProject.name = 'cshchatapp'
+rootProject.name = '팬디톡'
 include ':app'
 expoAutolinking.useExpoModules()
 expoAutolinking.useExpoVersionCatalog()

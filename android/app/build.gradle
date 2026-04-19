@@ -20,10 +20,10 @@ android {
     buildToolsVersion = rootProject.ext.buildToolsVersion
     compileSdk = rootProject.ext.compileSdkVersion
 
-    namespace "com.cshchatapp"
+    namespace 'com.cshchatapp'
 
     defaultConfig {
-        applicationId "com.cshchatapp"
+        applicationId 'com.cshchatapp'
         minSdk = 24
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode 39
@@ -37,11 +37,11 @@ android {
     productFlavors {
         production {
             dimension "default"
-            applicationId "com.cshchatapp"
+            applicationId 'com.cshchatapp'
         }
         development {
             dimension "default"
-            applicationId "com.cshchatapp.debug"
+            applicationId 'com.cshchatapp'
         }
     }
 

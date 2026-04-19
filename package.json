@@ -6,7 +6,7 @@
   "scripts": {
     "android": "react-native run-android --mode developmentDebug --appId com.cshchatapp.debug",
     "android:custom": "react-native run-android --deviceId emulator-5554",
-    "ios": "react-native run-ios",
+    "ios": "expo run:ios",
     "start": "react-native start",
     "lint": "eslint \"app/**/*.{js,jsx,ts,tsx}\"",
     "test": "jest",
@@ -16,7 +16,7 @@
     "build:aab": "npm run prebuild && cd android && ./gradlew bundleProductionRelease && cd ..",
     "submit:aab": "npx -y eas-cli submit --platform android --path ./android/app/build/outputs/bundle/productionRelease/app-production-release.aab",
     "build:submit": "npm run build:aab && npm run submit:aab",
-    "update": "npm run prebuild && npx -y eas-cli update",
+    "update": "npx -y eas-cli update",
     "prebuild": "npx expo prebuild --no-install",
     "eas-build-pre-install": "cp $GOOGLE_SERVICES_JSON ./android/app/google-services.json",
     "typecheck": "tsc --noEmit",
