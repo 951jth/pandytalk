@@ -49,7 +49,7 @@ export const useTabScreens = () => {
           badge: ChatUnreadCount,
         },
         {
-          name: 'group-chat',
+          name: 'group-chat-tab',
           title: '그룹 채팅',
           icon: 'account-multiple',
           path: 'group-chat',

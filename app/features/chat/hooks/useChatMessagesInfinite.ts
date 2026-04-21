@@ -20,10 +20,7 @@ const createPageResult = (messages: ChatMessage[]) => {
   }
 }
 
-export const useChatMessagesInfinite = (
-  roomId: string | null | undefined,
-  serverLastSeq?: number,
-) => {
+export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]
 
@@ -33,12 +30,10 @@ export const useChatMessagesInfinite = (
     queryFn: async ({pageParam}: {pageParam?: number}) => {
       try {
         if (!roomId) return initChatPage
-        const seq = pageParam
         const messages = await messageService.getChatMessages(
           roomId,
-          seq,
+          pageParam, // cursorSeq
           PAGE_SIZE,
-          serverLastSeq,
         )
 
         return createPageResult(messages)
@@ -51,7 +46,7 @@ export const useChatMessagesInfinite = (
       return lastPage?.isLastPage ? undefined : lastPage?.lastVisible
     },
     initialPageParam: undefined,
-    staleTime: 5000,
+    staleTime: Infinity, // 싱크 엔진이 데이터 갱신 후 알려줄 때까지 캐시 유지
   })
 
   const resetChatMessages = async () => {

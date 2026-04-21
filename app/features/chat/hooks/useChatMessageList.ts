@@ -1,6 +1,7 @@
 import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
 import {useChatScroll} from '@app/features/chat/hooks/useChatScroll'
 import {useSubscribeChatMessages} from '@app/features/chat/hooks/useSubscribeChatMessages'
+import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages' // 신규 추가
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
 import type {ChatRoom} from '@app/shared/types/chat'
@@ -20,9 +21,12 @@ export const useChatMessageList = ({
 }: Props) => {
   const serverLastSeq = roomInfo?.lastSeq
 
-  // 채팅 목록 무한 스크롤
+  // 1. 최신 메시지 동기화 엔진 (포커스 시 작동)
+  useSyncChatMessages(roomId, serverLastSeq)
+
+  // 2. 채팅 목록 무한 스크롤 (로컬 우선 뷰어)
   const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
-    useChatMessagesInfinite(roomId, serverLastSeq)
+    useChatMessagesInfinite(roomId)
   const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
 
   // 멤버들 정보 map

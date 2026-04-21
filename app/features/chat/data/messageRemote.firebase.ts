@@ -47,10 +47,18 @@ export const messageRemote = {
       return result
     })
   },
-  getAllChatMessagesFromSeq: async (roomId: string, seq: number) => {
+  getAllChatMessagesFromSeq: async (
+    roomId: string,
+    seq: number,
+    limitCount: number = 100,
+  ) => {
     return firebaseCall('messageRemote.getAllChatMessagesFromSeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-      const constraints = [where('seq', '>', seq), orderBy('seq', 'asc')]
+      const constraints = [
+        where('seq', '>', seq),
+        orderBy('seq', 'asc'),
+        limit(limitCount),
+      ]
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
       const newMessages = snapshot.docs.map(doc => ({

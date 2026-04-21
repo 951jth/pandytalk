@@ -3,7 +3,6 @@ import ChatMessageList from '@app/features/chat/components/ChatMessageList'
 import {useDmChatRoomScreen} from '@app/features/chat/hooks/useDmChatRoomScreen'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
-import EmptyData from '@app/shared/ui/common/EmptyData'
 import KeyboardUtilitiesWrapper from '@app/shared/ui/container/KeyboardUtilitiesWrapper'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -13,14 +12,14 @@ export default function DmChatRoomScreen() {
   const {user, isLoading, targetId, roomId, roomInfo, headerTitle} =
     useDmChatRoomScreen()
 
-  if (isLoading || !user) {
-    return (
-      <EmptyData
-        text="팬디톡이 소식을 불러오는 중이에요"
-        subText="잠시만 기다려주세요. 곧 대화가 시작됩니다!"
-      />
-    )
-  }
+  // if (isLoading || !user) {
+  //   return (
+  //     <EmptyData
+  //       text="팬디톡이 소식을 불러오는 중이에요"
+  //       subText="잠시만 기다려주세요. 곧 대화가 시작됩니다!"
+  //     />
+  //   )
+  // }
 
   return (
     <>

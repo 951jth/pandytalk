@@ -63,7 +63,7 @@ export function navigateToChat(
      * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
      */
     navigationRef.dispatch(
-      StackActions.replace(screenName, {
+      StackActions.push(screenName, {
         roomId,
         title,
         targetId,

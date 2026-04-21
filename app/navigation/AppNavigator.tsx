@@ -1,4 +1,4 @@
-import {appRoutes} from '@app/navigation/useScreens'
+import {appRoutes, initialRouteName} from '@app/navigation/useScreens'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 // import {navigate} from '../components/navigation/RootNavigation'
@@ -9,7 +9,7 @@ export default function AppNavigator() {
   const routes = appRoutes()
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName={initialRouteName}>
       {routes.flatMap(layoutGroup =>
         layoutGroup.children.map(route => (
           <Stack.Screen

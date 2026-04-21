@@ -1,5 +1,4 @@
 import {useGroupChatRoomScreen} from '@app/features/chat/hooks/useGroupChatRoomScreen'
-import EmptyData from '@app/shared/ui/common/EmptyData'
 import COLORS from '@shared/constants/color'
 import React from 'react'
 import {StyleSheet} from 'react-native'
@@ -12,15 +11,6 @@ import ChatMessageList from '../components/ChatMessageList'
 export default function GroupChatRoomScreen() {
   const {user, isLoading, roomId, roomInfo, headerTitle} =
     useGroupChatRoomScreen()
-
-  if (isLoading || !user) {
-    return (
-      <EmptyData
-        text="팬디톡이 소식을 불러오는 중이에요"
-        subText="잠시만 기다려주세요. 곧 대화가 시작됩니다!"
-      />
-    )
-  }
 
   return (
     <SafeAreaView style={styles.container}>

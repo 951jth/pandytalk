@@ -50,7 +50,51 @@ export const messageService = {
     return unsub
   },
 
-  //최신 채팅과 동기화
+  //최신 채팅과 동기화 (고도화된 버전)
+  syncMessages: async (
+    roomId: string,
+    serverLastSeq: number,
+  ): Promise<boolean> => {
+    if (!roomId) return false
+
+    // 1. 로컬 SQLite에서 최신 시퀀스 확인
+    const localLastSeq = await messageLocal.getMaxLocalSeq(roomId)
+
+    // 2. 서버와 로컬의 차이(Gap) 계산
+    const gap = serverLastSeq - localLastSeq
+    if (gap <= 0) return false // 이미 최신 상태
+
+    console.log(`🚀 [Sync] 동기화 시작 (${roomId}): Gap ${gap}개`)
+
+    let messagesToSave: ChatMessage[] = []
+
+    // 3. 갭 크기에 따른 전략적 대응
+    if (gap > 100) {
+      // 갭이 너무 크면 중간을 다 채우기보다 최신 50개만 가져와서 스택을 맞춤
+      const {items} = await messageService.getChatMessagesFromSeq(
+        roomId,
+        undefined,
+        50,
+      )
+      messagesToSave = items
+    } else {
+      // 갭이 적당하면 누락된 전체 메시지 fetch (limit 100 적용됨)
+      messagesToSave = await messageRemote.getAllChatMessagesFromSeq(
+        roomId,
+        localLastSeq,
+      )
+    }
+
+    // 4. SQLite 저장
+    if (messagesToSave.length > 0) {
+      await messageLocal.saveMessagesToSQLite(roomId, messagesToSave)
+      return true
+    }
+
+    return false
+  },
+
+  // (기존 syncNewMessages는 하위 호환성을 위해 유지하거나 제거 가능)
   syncNewMessages: async (
     roomId: string,
     seq: number,
@@ -118,13 +162,14 @@ export const messageService = {
   },
 
   /**
-   * 채팅 메시지를 통합 조회하는 로직 (Local-First + Sync)
+   * 채팅 메시지 통합 조회 (Local-First + History Fetch)
+   * 최신 메시지 동기화(Sync)는 전용 함수로 분리되었으므로,
+   * 여기서는 로컬 조회와 과거 스크롤 시의 서버 조충만 담당함.
    */
   getChatMessages: async (
     roomId: string,
     cursorSeq?: number,
     pageSize: number = 20,
-    serverLastSeq?: number,
   ) => {
     // 1. 로컬 SQLite에서 먼저 조회
     const localMessages = (await messageLocal.getChatMessagesBySeq(
@@ -133,56 +178,30 @@ export const messageService = {
       pageSize,
     )) as ChatMessage[]
 
-    // 2. 서버 데이터와 비교하여 동기화가 필요한지 판단
-    // (1) 첫 페이지 조회 시: 로컬 최신 데이터가 서버 최신보다 낮으면 Stale
-    const isLocalStale =
-      !cursorSeq &&
-      serverLastSeq !== undefined &&
-      (localMessages[0]?.seq ?? 0) < serverLastSeq
+    // 2. 서버 데이터 보충이 필요한지 판단 (과거 데이터 스크롤 시)
+    // - 데이터 개수가 부족하거나
+    // - 내부 시퀀스에 간극(Gap)이 있거나
+    // - 커서 시작점에 데이터가 없는 경우
 
-    // (2) 데이터 연속성 검증 (배열 내의 seq 번호들이 하나라도 비어있는지 체크)
     let hasGapInRange = false
     if (localMessages.length > 1) {
       const firstSeq = localMessages[0].seq || 0
       const lastSeq = localMessages[localMessages.length - 1].seq || 0
-      // DESC 정렬이므로 (첫 번호 - 마지막 번호)가 (길이 - 1)과 같아야 연속적임
       if (firstSeq - lastSeq !== localMessages.length - 1) {
         hasGapInRange = true
       }
     }
 
-    // (3) 커서(cursorSeq)와 조회된 첫 데이터 사이의 간극 체크
     const hasCursorGap =
       cursorSeq !== undefined &&
       (localMessages.length === 0 ||
         (localMessages[0]?.seq || 0) < cursorSeq - 1)
 
-    // (4) 데이터 개수가 부족하거나, Stale하거나, 내부에 Gap이 있거나, 커서와 차이가 나면 서버 호출
     const shouldFetchFromServer =
-      (localMessages?.length || 0) < pageSize ||
-      isLocalStale ||
-      hasGapInRange ||
-      hasCursorGap
-
-    if (__DEV__ && shouldFetchFromServer) {
-      const reasons = [
-        isLocalStale && '로컬 최신화 필요(Stale)',
-        hasGapInRange && '중간 데이터 누락(Gap)',
-        hasCursorGap && '커서 시작점 누락',
-        (localMessages?.length || 0) < pageSize && '데이터 개수 부족',
-      ].filter(Boolean)
-
-      console.log(`[messageService] 🚀 서버 조회 시도 (${roomId}):`, {
-        reasons,
-        localRange: `${localMessages[localMessages.length - 1]?.seq ?? 0} ~ ${localMessages[0]?.seq ?? 0}`,
-        serverLast: serverLastSeq,
-        cursor: cursorSeq,
-      })
-    }
+      (localMessages?.length || 0) < pageSize || hasGapInRange || hasCursorGap
 
     if (shouldFetchFromServer) {
       try {
-        // 서버에서 데이터 가져오기 (reformat된 데이터 반환)
         const {items: serverMessages} =
           await messageService.getChatMessagesFromSeq(
             roomId,
@@ -191,22 +210,15 @@ export const messageService = {
           )
 
         if (serverMessages?.length > 0) {
-          // 서버 데이터를 SQLite에 저장 (INSERT OR REPLACE)
           await messageLocal.saveMessagesToSQLite(roomId, serverMessages)
+          return await messageLocal.getChatMessagesBySeq(
+            roomId,
+            cursorSeq,
+            pageSize,
+          )
         }
-
-        // 저장 후 가장 정확한 상태인 SQLite에서 다시 조회하여 반환
-        const updatedMessages = await messageLocal.getChatMessagesBySeq(
-          roomId,
-          cursorSeq,
-          pageSize,
-        )
-        return updatedMessages
       } catch (e) {
-        console.error(
-          '[getChatMessages] Server fetch failed, fallback to local',
-          e,
-        )
+        console.error('[getChatMessages] History fetch failed', e)
         return localMessages
       }
     }
