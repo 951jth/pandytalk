@@ -2,7 +2,7 @@ module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
   slug: 'cshchatapp', // Expo 프로젝트의 고유 식별자 (URL 등에 사용)
-  version: '1.3.8', // 앱의 외부 버전 (Store 표시용)
+  version: '1.3.9', // 앱의 외부 버전 (Store 표시용)
 
   // 2. 중요: 코드푸시(EAS Update) 설정
   runtimeVersion: '39',
@@ -22,13 +22,13 @@ module.exports = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.cshchatapp', // iOS 앱 고유 ID
-    buildNumber: '14', // 빌드 회차 (업로드 시마다 올려야 함)
+    buildNumber: '15', // 빌드 회차 (업로드 시마다 올려야 함)
   },
 
   // 6. 안드로이드 섹션 (프리빌드 시 매우 중요)
   android: {
     package: 'com.cshchatapp', // 안드로이드 앱 고유 ID (패키지명)
-    versionCode: 39, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
+    versionCode: 40, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {
