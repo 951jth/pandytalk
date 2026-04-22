@@ -32,7 +32,7 @@ module.exports = {
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {
-      foregroundImage: './app/shared/assets/images/pandy_icon_padding.png',
+      foregroundImage: './app/shared/assets/images/pandy_icon_small.png',
       backgroundColor: '#FDFCF0', // 상수의 COLORS.background 값과 일치시킴
     },
   },
@@ -46,6 +46,5 @@ module.exports = {
 
   // 8. 기타 설정
   owner: 'sehooncho',
-  plugins: ['expo-font'], 
-};
-
+  plugins: ['expo-font'],
+}
