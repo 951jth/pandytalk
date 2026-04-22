@@ -1,66 +1,78 @@
-import type {ChatMessage} from '@app/shared/types/chat'
-import {useCallback, useEffect, useRef, useState} from 'react'
-import {aiService} from '../service/aiService'
+import type { ChatMessage } from '@app/shared/types/chat'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { aiService } from '../service/aiService'
 
 export interface UseAiStreamOptions {
   chatId?: string
   item?: ChatMessage
   enabled?: boolean
-  // typingSpeed?: number // [비교용] 각 글자별 출력 간격 (ms)
-  // skipTyping?: boolean // [비교용] 타이핑 효과 없이 즉시 출력할지 여부
 }
 
-// 특정 메시지 ID가 이번 세션에서 이미 스트리밍되었는지 추적하기 위한 전역 상태
-// 컴포넌트가 언마운트 후 재마운트되어도 중복 요청을 방지합니다.
+/**
+ * [Interview Point]
+ * 컴포넌트 라이프사이클과 독립적인 중복 요청 방지 처리를 위해 전역 Set 사용.
+ * 화면 전환이나 재마운트 시 이미 진행 중인 스트리밍이 다시 시작되는 현상을 원천 차단합니다.
+ */
 const processedMessageIds = new Set<string>()
 
 /**
- * AI 응답 스트리밍 및 동적 렌더링을 위한 커스텀 훅
- * SSE로부터 수신된 텍스트를 즉시 화면에 출력합니다.
+ * AI 응답 스트리밍 및 자연스러운 타이핑 효과를 위한 커스텀 훅
+ * 단순히 수신 데이터를 출력하는 것을 넘어, 데이터 수신 속도와 출력 속도 간의 차이를 
+ * 'Buffer(Backlog)' 개념으로 제어하여 사용자에게 부드러운 읽기 경험을 제공합니다.
  */
 export const useAiStreamResponse = (params: UseAiStreamOptions) => {
-  const {chatId, item, enabled = true} = params
+  const { chatId, item, enabled = true } = params
 
-  // 메시지 객체에서 필요한 정보 추출
   const prompt = item?.prompt
   const messageId = item?.id
   const imageUrl = item?.imageUrl
   const imageUrls = item?.imageUrls
 
-  const [displayText, setDisplayText] = useState<string>('') // 화면에 실시간으로 보여줄 텍스트
-  const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 중 여부
+  const [displayText, setDisplayText] = useState<string>('')     // 화면에 렌더링될 '가공된' 텍스트
+  const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 상태
   const [error, setError] = useState<Error | null>(null)
 
-  // 실제 서버로부터 수신된 모든 텍스트 원본 (불변성 유지를 위해 ref 사용)
-  const fullTextRef = useRef<string>('')
-  const cursorRef = useRef<number>(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  /**
+   * [UX Optimization] Ref를 활용한 데이터 관리
+   * 렌더링에 즉시 영향을 주지 않아도 되는 원본 데이터와 커서 위치는 
+   * Ref로 관리하여 불필요한 리렌더링 오버헤드를 줄입니다.
+   */
+  const fullTextRef = useRef<string>('') // 서버로부터 수신된 실제 전체 텍스트 원본
+  const cursorRef = useRef<number>(0)    // 타이핑 효과가 현재 진행 중인 글자 위치
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null) // 애니메이션 타이머
 
-  // 이미 처리된 적이 있는 메시지인지 확인하기 위한 Ref
+  // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
   const isPreviouslyProcessed = useRef<boolean>(
     !!messageId && processedMessageIds.has(messageId),
   )
 
+  /**
+   * [Core Logic] 자연스러운 타이핑 효과 (Smooth Typing Effect)
+   * 서버로부터 들어오는 데이터(Backlog)가 많을 때는 더 빠르게, 
+   * 적을 때는 한 글자씩 천천히 출력되도록 유동적으로 가속도를 조절합니다.
+   */
   useEffect(() => {
-    // 이미 처리된 메시지는 타이핑 효과를 돌리지 않음
     if (isPreviouslyProcessed.current) return
 
     const startTyping = () => {
       if (timerRef.current) return
 
       timerRef.current = setInterval(() => {
-        const backlog = fullTextRef.current.length - cursorRef.current
+        const backlog = fullTextRef.current.length - cursorRef.current // 아직 화면에 그려지지 않은 텍스트 양
+        
         if (backlog > 0) {
+          // 데이터가 쌓여있을 경우(Backlog 발생 시) 가변 속도 적용 (1~5자 사이)
           const charsToAdd = Math.max(1, Math.min(5, Math.ceil(backlog / 10)))
           cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
         } else if (!isStreaming) {
+          // 모든 데이터가 수신되었고 출력이 완료되었으면 타이머 종료
           if (timerRef.current) {
             clearInterval(timerRef.current)
             timerRef.current = null
           }
         }
-      }, 20) // typingSpeed 대용
+      }, 20) // 20ms 간격으로 업데이트하여 인간의 가독 효율에 최적화
     }
 
     startTyping()
@@ -74,7 +86,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   }, [isStreaming])
 
   /**
-   * 스트리밍을 수동으로 시작합니다.
+   * SSE(Server-Sent Events) 스트리밍 시작 함수
    */
   const startStreaming = useCallback(
     async (
@@ -84,9 +96,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       targetImageUrl?: string,
       targetImageUrls?: string[],
     ) => {
-      // 중복 요청 방지 가드
+      // 1. 멱등성 검사: 동일 메시지 ID에 대한 중복 스트리밍 차단
       if (targetMessageId && processedMessageIds.has(targetMessageId)) {
-        console.log('[useAiStreamResponse] 중복 요청 차단:', targetMessageId)
         return
       }
 
@@ -100,19 +111,19 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       setError(null)
 
       try {
+        // 2. aiService를 통한 SSE 통신 호출
         await aiService.requestAiResponse(
           targetChatId,
           targetPrompt || '',
           (chunk: string) => {
+            // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고, 
+            // 타이핑 타이머가 이를 감지하여 화면에 순차적으로 노출함
             fullTextRef.current += chunk
-            // 서버로부터 온 데이터를 즉시 업데이트 (타이핑 효과 사용 시 이 줄을 주석 처리)
-            // setDisplayText(fullTextRef.current)
           },
           () => {
-            setIsStreaming(false)
+            setIsStreaming(false) // 스트리밍 완료 핸들러
           },
           (err: any) => {
-            console.error('[useAiStreamResponse] Stream Error:', err)
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
           },
@@ -121,7 +132,6 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           targetImageUrls,
         )
       } catch (err: any) {
-        console.error('[useAiStreamResponse] Init Error:', err)
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
       }
@@ -129,7 +139,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     [],
   )
 
-  // 파라미터가 모두 존재하고 enabled가 true일 때 자동 시작
+  // 컴포넌트 마운트 시 조건에 따른 자동 시작 전략
   useEffect(() => {
     if (
       enabled &&
@@ -142,9 +152,6 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     }
   }, [enabled, chatId, item, startStreaming, isStreaming])
 
-  /**
-   * 상태 완전 초기화
-   */
   const resetStream = useCallback(() => {
     setDisplayText('')
     fullTextRef.current = ''
@@ -153,8 +160,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   }, [])
 
   return {
-    streamedText: displayText,
-    isStreaming,
+    streamedText: displayText, // 화면에 그려질 실시간 텍스트
+    isStreaming,              // 현재 진행 중 여부 (스피너 제어용)
     error,
     startStreaming,
     resetStream,

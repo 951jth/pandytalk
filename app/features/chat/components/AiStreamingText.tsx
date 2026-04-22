@@ -12,14 +12,21 @@ interface AiStreamingTextProps {
   item?: ChatMessage
 }
 
+/**
+ * [AI 스트리밍 처리 흐름도]
+ * 1. 유저가 AI 멘션 전송 -> Firestore에 'streaming' 상태의 메시지가 먼저 생성됨
+ * 2. 모든 클라이언트가 이 메시지를 수신
+ * 3. [본인인 경우]: useAiStreamResponse 훅이 서버와 SSE 연결을 맺고 실시간 글자 수신
+ * 4. [타인인 경우]: 서버 부하 및 중복 요청 방지를 위해 "답변 생성 중" 메시지만 표시
+ * 5. 서버 완료 시: 최종 결과가 Firestore에 저장되고 모든 유저의 화면이 일반 텍스트로 전환
+ */
+
 export default function AiStreamingText({
   chatId,
   color,
   item,
 }: AiStreamingTextProps) {
   const isStreamingStatus = item?.status === 'streaming'
-  const prompt = item?.prompt ?? '' // onAiMention에서 넣어준 원본 질문 사용
-  const messageId = item?.id
   const currentUid = auth.currentUser?.uid
   const isOwner = item?.mentionerId === currentUid
 
