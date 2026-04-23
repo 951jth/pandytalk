@@ -42,6 +42,7 @@ module.exports = {
     eas: {
       projectId: '713adbab-1d3b-4992-9aab-396e9557bd0f',
     },
+    channel: 'main', // 여기에 추가
   },
 
   // 8. 기타 설정
