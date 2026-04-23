@@ -18,7 +18,7 @@ export const onAiStreamBackup = onTaskDispatched(
   {
     retryConfig: {
       maxAttempts: 3,
-      minBackoffSeconds: 60,
+      minBackoffSeconds: 15,
     },
     secrets: ['OPENAI_API_SECRET', 'SERPER_API_SECRET'],
     region: 'asia-northeast3',

@@ -28,14 +28,22 @@ export const onAiStream = onRequest(
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
 
-    // prompt는 AI Mention에서 질문한 내용
-    const {chatId, prompt, messageId, createdAt, imageUrl, imageUrls} = req.body
+    // prompt는 AI Mention에서 질문한 내용 (id는 messageId로 하위 호환성 유지)
+    const {
+      chatId,
+      prompt,
+      messageId: bodyMessageId,
+      id: bodyId,
+      createdAt,
+      imageUrl,
+      imageUrls,
+    } = req.body
+    const messageId = bodyMessageId || bodyId
 
     const controller = new AbortController()
     let aiReplyText = ''
     let isResponseSaved = false // 중복 저장 방지용 플래그
 
-    // 클라이언트 연결 종료 감지 (임시 주석 처리)
     req.on('close', () => {
       if (!res.writableEnded) {
         logger.info(`🔌 [onAiStream] Client disconnected: ${chatId}`)

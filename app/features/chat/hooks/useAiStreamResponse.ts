@@ -23,11 +23,6 @@ const processedMessageIds = new Set<string>()
 export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const { chatId, item, enabled = true } = params
 
-  const prompt = item?.prompt
-  const messageId = item?.id
-  const imageUrl = item?.imageUrl
-  const imageUrls = item?.imageUrls
-
   const [displayText, setDisplayText] = useState<string>('')     // 화면에 렌더링될 '가공된' 텍스트
   const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 상태
   const [error, setError] = useState<Error | null>(null)
@@ -43,7 +38,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
   // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
   const isPreviouslyProcessed = useRef<boolean>(
-    !!messageId && processedMessageIds.has(messageId),
+    !!item?.id && processedMessageIds.has(item.id),
   )
 
   /**
@@ -89,13 +84,9 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
    * SSE(Server-Sent Events) 스트리밍 시작 함수
    */
   const startStreaming = useCallback(
-    async (
-      targetChatId: string,
-      targetPrompt?: string,
-      targetMessageId?: string,
-      targetImageUrl?: string,
-      targetImageUrls?: string[],
-    ) => {
+    async (targetChatId: string, targetItem: ChatMessage) => {
+      const targetMessageId = targetItem.id
+
       // 1. 멱등성 검사: 동일 메시지 ID에 대한 중복 스트리밍 차단
       if (targetMessageId && processedMessageIds.has(targetMessageId)) {
         return
@@ -112,25 +103,22 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
-        await aiService.requestAiResponse(
-          targetChatId,
-          targetPrompt || '',
-          (chunk: string) => {
-            // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고, 
+        await aiService.requestAiResponse({
+          chatId: targetChatId,
+          item: targetItem,
+          onChunk: (chunk: string) => {
+            // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고,
             // 타이핑 타이머가 이를 감지하여 화면에 순차적으로 노출함
             fullTextRef.current += chunk
           },
-          () => {
+          onDone: () => {
             setIsStreaming(false) // 스트리밍 완료 핸들러
           },
-          (err: any) => {
+          onError: (err: any) => {
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
           },
-          targetMessageId,
-          targetImageUrl,
-          targetImageUrls,
-        )
+        })
       } catch (err: any) {
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
@@ -144,11 +132,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     if (
       enabled &&
       chatId &&
-      (prompt || imageUrl || imageUrls?.length) &&
+      item &&
+      (item.prompt || item.imageUrl || item.imageUrls?.length) &&
       !isStreaming &&
       fullTextRef.current === ''
     ) {
-      startStreaming(chatId, prompt, messageId, imageUrl, imageUrls)
+      startStreaming(chatId, item)
     }
   }, [enabled, chatId, item, startStreaming, isStreaming])
 

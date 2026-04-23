@@ -3,10 +3,7 @@ import EventSource from 'react-native-sse'
 
 export interface AiStreamParams {
   chatId: string
-  prompt: string
-  messageId?: string
-  imageUrl?: string
-  imageUrls?: string[]
+  item: import('@app/shared/types/chat').ChatMessage
   onChunk: (text: string) => void
   onDone: () => void
   onError: (error: any) => void
@@ -19,10 +16,7 @@ export const aiRemote = {
    */
   streamAiResponse: async ({
     chatId,
-    prompt,
-    messageId,
-    imageUrl,
-    imageUrls,
+    item,
     onChunk,
     onDone,
     onError,
@@ -36,10 +30,8 @@ export const aiRemote = {
         },
         body: JSON.stringify({
           chatId,
-          prompt,
-          messageId,
-          imageUrl,
-          imageUrls,
+          ...item,
+          messageId: item.id, // 서버 하위 호환성 유지
         }),
       })
 

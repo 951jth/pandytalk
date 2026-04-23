@@ -2,7 +2,7 @@ import {chatService} from '@app/features/chat/service/chatService'
 import {userService} from '@app/features/user/service/userService'
 import {useFocusEffect} from '@react-navigation/native'
 import {useQuery} from '@tanstack/react-query'
-import {useCallback, useMemo} from 'react'
+import {useCallback, useEffect, useMemo, useRef} from 'react'
 
 /**
  * 채팅방 정보 및 멤버 정보 관리 훅
@@ -10,6 +10,7 @@ import {useCallback, useMemo} from 'react'
  * - 유저 프로필 등 멤버 정보는 캐시 적극 활용 (staleTime: 1시간)
  */
 export const useChatRoomInfo = (roomId?: string | null) => {
+  const isFetchingRef = useRef<boolean>(false)
   // 1. 방 기본 정보 쿼리 (가벼운 메타 데이터 전용)
   const roomQuery = useQuery({
     queryKey: ['chatRoom', roomId],
@@ -18,7 +19,7 @@ export const useChatRoomInfo = (roomId?: string | null) => {
       if (!roomId) return null
       return await chatService.getChatRoom(roomId)
     },
-    staleTime: 0,
+    staleTime: 5,
   })
 
   // 2. 멤버 프로필 정보 쿼리 (무거운 데이터, 캐싱 필요)
@@ -46,10 +47,16 @@ export const useChatRoomInfo = (roomId?: string | null) => {
     }
   }, [roomQuery.data, membersQuery.data])
 
+  // isFetching 상태를 Ref에 동기화 (useFocusEffect 무한 루프 방지)
+  useEffect(() => {
+    isFetchingRef.current = roomQuery.isFetching
+  }, [roomQuery.isFetching])
+
   // 화면 포커스 시에는 '방 기본 정보'만 가볍게 갱신 (lastSeq 체크용)
   useFocusEffect(
     useCallback(() => {
-      if (roomId) {
+      // 이미 데이터를 가져오는 중이 아닐 때만 refetch 실행 (중복 호출 방지)
+      if (roomId && !isFetchingRef.current) {
         roomQuery.refetch()
       }
     }, [roomId, roomQuery.refetch]),
@@ -58,7 +65,8 @@ export const useChatRoomInfo = (roomId?: string | null) => {
   return {
     ...roomQuery,
     data: combinedData,
-    isLoading: roomQuery.isLoading || (roomQuery.data && membersQuery.isLoading),
+    isLoading:
+      roomQuery.isLoading || (roomQuery.data && membersQuery.isLoading),
     isMembersLoading: membersQuery.isLoading,
   }
 }
