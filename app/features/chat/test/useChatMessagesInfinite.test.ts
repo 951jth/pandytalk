@@ -43,7 +43,6 @@ describe('useChatMessagesInfinite - 스마트 데이터 로딩 로직 테스트'
       mockRoomId,
       undefined,
       20,
-      undefined,
     )
   })
 
