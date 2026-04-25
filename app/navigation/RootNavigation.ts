@@ -13,7 +13,6 @@
  */
 import {
   createNavigationContainerRef,
-  StackActions,
 } from '@react-navigation/native'
 import BootSplash from 'react-native-bootsplash'
 
@@ -62,13 +61,13 @@ export function navigateToChat(
      * - "이전 화면이 무엇이든 상관없이" 새로운 채팅방 화면을 현재 스택 맨 위에 강제로 얹습니다.
      * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
      */
-    navigationRef.dispatch(
-      StackActions.push(screenName, {
-        roomId,
-        title,
-        targetId,
-      }),
-    )
+    navigationRef.navigate('app', {
+      screen: screenName,
+      params: {roomId, title, targetId},
+      // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나
+      // 파라미터를 강제 갱신하도록 key를 roomId로 설정
+      key: `${screenName}-${roomId}`,
+    })
   }
 
   if (!roomId) return console.warn('❗ roomId is required.')
