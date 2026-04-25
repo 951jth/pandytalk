@@ -11,10 +11,10 @@ description: 프로젝트 배포 및 버전 관리 규칙 (EAS Update, Native Bu
 업데이트 시 사용자가 원하는 대상(앱 버전, 런타임 버전 등)에 맞게 아래 모든 항목을 검토 및 수정하고, 수정 결과를 요약해서 사용자에게 보고하세요.
 
 #### 1. `app.config.js` (또는 `app.json`)
-- `expo.version`: 앱 스토어에 표시될 앱 버전 (예: "1.3.3")
-- `expo.runtimeVersion`: EAS Update의 타겟팅 기준이 되는 버전 (예: "34")
-- `expo.android.versionCode`: 안드로이드 빌드용 정수 버전 (예: 34)
-- `expo.ios.buildNumber`: iOS 빌드용 번호 (예: "9")
+- **`version`**: 앱 스토어 및 기기에 표시될 앱 외부 버전 (예: "1.3.3") - **가장 먼저 필수로 올려야 하는 표기 버전입니다.**
+- `runtimeVersion`: EAS Update의 타겟팅 기준이 되는 버전 (예: "34")
+- `android.versionCode`: 안드로이드 빌드용 정수 버전 (예: 34)
+- `ios.buildNumber`: iOS 빌드용 번호 (예: "9")
 
 #### 2. 안드로이드 빌드 설정: `android/app/build.gradle`
 - `defaultConfig.versionCode`: `app.config.js`의 `versionCode`와 일치해야 함 (예: 34)
