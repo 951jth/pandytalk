@@ -5,7 +5,7 @@ module.exports = {
   version: '1.4.1', // 앱의 외부 버전 (Store 표시용)
 
   // 2. 중요: 코드푸시(EAS Update) 설정
-  runtimeVersion: '41',
+  runtimeVersion: '43',
 
   // 3. 자산(Assets) 설정
   icon: './app/shared/assets/images/pandy_icon_padding.png',
