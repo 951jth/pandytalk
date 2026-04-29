@@ -16,6 +16,8 @@ description: 프로젝트 배포 및 버전 관리 규칙 (EAS Update, Native Bu
   - ⚠️ **관례**: `android.versionCode`와 동일한 숫자로 유지할 것. 다르면 "어떤 빌드에 어떤 업데이트를 쐈는지" 추적이 불가능해짐.
 - `android.versionCode`: 안드로이드 빌드용 정수 버전 (예: 43)
 - `ios.buildNumber`: iOS 빌드용 번호 (예: "19")
+- `updates.requestHeaders['expo-channel-name']`: EAS Update 채널 지정 (예: `'main'`) - **반드시 있어야 함!**
+  - ⚠️ `prebuild` 실행 시 이 값이 `AndroidManifest.xml`의 `UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY`로 자동 주입됨. 없으면 `Channel: N/A`가 되어 코드푸쉬 완전 불가.
 
 #### 2. 안드로이드 빌드 설정: `android/app/build.gradle`
 - `defaultConfig.versionCode`: `app.config.js`의 `android.versionCode`와 일치해야 함 (예: 43)
@@ -40,13 +42,15 @@ description: 프로젝트 배포 및 버전 관리 규칙 (EAS Update, Native Bu
 
 빌드(AAB/IPA)를 뽑기 전에 아래 항목을 **모두** 확인하세요. 단 하나라도 불일치하면 코드푸쉬가 작동하지 않습니다.
 
-#### Android 점검 항목 (6개)
+#### Android 점검 항목 (8개)
 - [ ] `app.config.js` `runtimeVersion` 확인
-- [ ] `app.config.js` `android.versionCode` 확인
+- [ ] `app.config.js` `android.versionCode` 확인 (`runtimeVersion`과 동일한지)
 - [ ] `app.config.js` `version` 확인
+- [ ] `app.config.js` `updates.requestHeaders['expo-channel-name']` = `'main'` 인지 확인 ⭐ **(없으면 Channel: N/A → 코드푸쉬 불가)**
 - [ ] `build.gradle` `defaultConfig.versionCode` = `app.config.js`의 `versionCode` 와 일치 여부
 - [ ] `build.gradle` `defaultConfig.versionName` = `app.config.js`의 `version` 과 일치 여부
 - [ ] `strings.xml` `expo_runtime_version` = `app.config.js`의 `runtimeVersion` 과 일치 여부 ⭐ **(이게 달라서 코드푸쉬 안 됨)**
+- [ ] `AndroidManifest.xml` `UPDATES_CONFIGURATION_REQUEST_HEADERS_KEY` = `{"expo-channel-name":"main"}` 인지 확인 (prebuild 후 자동생성되나 수동 확인 권장)
 - [ ] `package.json` `version` = `app.config.js`의 `version` 과 일치 여부
 
 #### iOS 점검 항목 (3개)

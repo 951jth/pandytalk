@@ -2,10 +2,10 @@ module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
   slug: 'cshchatapp', // Expo 프로젝트의 고유 식별자 (URL 등에 사용)
-  version: '1.4.1', // 앱의 외부 버전 (Store 표시용)
+  version: '1.4.2', // 앱의 외부 버전 (Store 표시용)
 
   // 2. 중요: 코드푸시(EAS Update) 설정
-  runtimeVersion: '43',
+  runtimeVersion: '44',
 
   // 3. 자산(Assets) 설정
   icon: './app/shared/assets/images/pandy_icon_padding.png',
@@ -18,6 +18,9 @@ module.exports = {
     url: 'https://u.expo.dev/713adbab-1d3b-4992-9aab-396e9557bd0f',
     enabled: true,
     checkOnLaunch: 'ALWAYS',
+    requestHeaders: {
+      'expo-channel-name': 'main',
+    },
   },
 
   // 5. iOS 섹션
@@ -44,7 +47,6 @@ module.exports = {
     eas: {
       projectId: '713adbab-1d3b-4992-9aab-396e9557bd0f',
     },
-    channel: 'main', // 여기에 추가
   },
 
   // 8. 기타 설정
