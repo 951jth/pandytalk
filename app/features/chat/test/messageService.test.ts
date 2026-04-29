@@ -53,7 +53,6 @@ describe('messageService.getChatMessages (통합 조회 오케스트레이션 �
       mockRoomId,
       undefined,
       PAGE_SIZE,
-      60, // serverLastSeq
     )
 
     // 검증: 서버 페치가 발생함
