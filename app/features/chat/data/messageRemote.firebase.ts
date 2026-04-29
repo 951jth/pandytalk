@@ -160,12 +160,13 @@ export const messageRemote = {
 
         // 텍스트나 이미지가 있는 경우 맥락에 추가
         if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
+          const namePrefix = message.senderName ? `[${message.senderName}]: ` : ''
           let content: any = message.text || ''
 
           // 이미지가 포함된 경우 멀티모달 포맷으로 저장 (최대 3장까지만 문맥에 포함)
           if (message.imageUrls && message.imageUrls.length > 0) {
             content = [
-              {type: 'text', text: message.text || ''},
+              {type: 'text', text: `${namePrefix}${message.text || ''}`},
               ...message.imageUrls.slice(0, AI_IMAGE_LIMIT).map(url => ({
                 type: 'image_url',
                 image_url: {url},
@@ -173,9 +174,12 @@ export const messageRemote = {
             ]
           } else if (message.imageUrl) {
             content = [
-              {type: 'text', text: message.text || ''},
+              {type: 'text', text: `${namePrefix}${message.text || ''}`},
               {type: 'image_url', image_url: {url: message.imageUrl}},
             ]
+          } else {
+            // 일반 텍스트인 경우
+            content = `${namePrefix}${content}`
           }
 
           const newContextItem = {

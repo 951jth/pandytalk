@@ -8,6 +8,7 @@ import {
   getPandibotMessages,
   getPandibotTools,
 } from '../../services/aiService'
+import {ChatMessage} from '../../types/chat'
 
 /**
  * 질문자가 10~15초 이내에 스트리밍을 시작하지 않았을 경우,
@@ -24,12 +25,9 @@ export const onAiStreamBackup = onTaskDispatched(
     region: 'asia-northeast3',
   },
   async event => {
-    const {chatId, messageId, prompt, imageUrl, imageUrls} = event.data as {
+    const {chatId, messageId} = event.data as {
       chatId: string
       messageId: string
-      prompt: string
-      imageUrl?: string
-      imageUrls?: string[]
     }
 
     // 큐에서 작업이 시작되었음을 가장 먼저 로깅으로 확인
@@ -44,19 +42,23 @@ export const onAiStreamBackup = onTaskDispatched(
 
       if (!messageSnap.exists) return
 
-      const messageData = messageSnap.data()
+      const messageData = messageSnap.data() as ChatMessage
       const currentStatus = messageData?.status || 'unknown'
 
       // 이미 성공했거나 실패 처리되었다면 종료
+      // [Interview Point] 스트리밍 중인 경우에도 SSE 트리거가 작동 중이므로 백업 로직을 실행하지 않음 (Race Condition 방지)
       if (
         messageData?.status === 'success' ||
         messageData?.status === 'failed'
       ) {
         logger.info(
-          `[onAiStreamBackup] ✅ Already completed: ${messageId} (status=${currentStatus})`,
+          `[onAiStreamBackup] ✅ Skipping backup: SSE is active or already done. ${messageId} (status=${currentStatus})`,
         )
         return
       }
+
+      // DB에서 AI 생성을 위한 정보 추출
+      const {prompt, imageUrl, imageUrls} = messageData
 
       // 🚨 가시성 및 필터링을 위한 로그 강화: SSE가 완료되지 않아 백업이 개입하는 시점
       logger.warn(
@@ -68,6 +70,7 @@ export const onAiStreamBackup = onTaskDispatched(
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
+      if (!prompt) return
       const messages = getPandibotMessages(prompt, [], imageUrl, imageUrls)
 
       const aiReplyText = await getAiResponse(

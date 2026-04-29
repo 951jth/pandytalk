@@ -84,9 +84,6 @@ export const onAiMention = onDocumentCreated(
           {
             chatId,
             messageId: aiMessageRef.id,
-            prompt,
-            imageUrl: message.imageUrl || null,
-            imageUrls: message.imageUrls || [],
           },
           {
             scheduleDelaySeconds: 30, // 30초 대기 후 체크 (SSE 완료 여부 확인)

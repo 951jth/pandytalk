@@ -8,6 +8,7 @@ import {
   getPandibotMessages,
   getPandibotTools,
 } from '../../services/aiService'
+import {filterDuplicatePrompt} from '../../utils/aiUtils'
 
 /**
  * HTTP SSE 스트리밍을 통해 AI 응답을 즉시 반환하고 Firestore에 저장하는 하이브리드 함수
@@ -71,18 +72,7 @@ export const onAiStream = onRequest(
       const history = (chatData?.recentMessages as any[]) || []
 
       // 현재 질문(prompt)과 중복되는 히스토리는 제외 (가장 마지막 대화와 중복일 확률이 큼)
-      const filteredHistory = history.filter(h => {
-        // 단순 문자열인 경우
-        if (typeof h.content === 'string') {
-          return h.content !== prompt
-        }
-        // 객체 배열(멀티모달)인 경우 텍스트 부분만 비교
-        if (Array.isArray(h.content)) {
-          const textPart = h.content.find((p: any) => p.type === 'text')
-          return textPart?.text !== prompt
-        }
-        return true
-      })
+      const filteredHistory = filterDuplicatePrompt(history, prompt)
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()

@@ -1,4 +1,5 @@
 import {aiRemote} from '@app/features/chat/data/aiRemote'
+import type {ChatMessage} from '@app/shared/types/chat'
 
 export const aiService = {
   /**
@@ -14,7 +15,7 @@ export const aiService = {
     onError,
   }: {
     chatId: string
-    item: import('@app/shared/types/chat').ChatMessage
+    item: ChatMessage
     onChunk: (text: string) => void
     onDone: () => void
     onError: (error: any) => void

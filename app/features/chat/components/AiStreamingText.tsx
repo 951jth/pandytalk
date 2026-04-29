@@ -41,13 +41,7 @@ export default function AiStreamingText({
   let displayValue = item?.text || ''
 
   if (isStreamingStatus) {
-    if (isOwner) {
-      // 본인: 스트리밍 중인 텍스트 표시
-      displayValue = streamedText || '팬디봇이 답변을 생성 중입니다...'
-    } else {
-      // 타인: 동적 대기 메시지 표시 (., .., ...)
-      displayValue = '팬디봇이 답변을 생성 중입니다...'
-    }
+    displayValue = streamedText || '팬디봇이 답변을 생성 중입니다...'
   }
 
   return (
