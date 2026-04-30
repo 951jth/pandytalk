@@ -7,8 +7,8 @@ import {
   type TextStyle,
 } from 'react-native'
 
-type TouchableOpacity = React.ComponentProps<typeof TouchableOpacity>
-type propTyeps = TouchableOpacity & {
+type RNTouchableOpacityProps = React.ComponentProps<typeof TouchableOpacity>
+type ColorButtonProps = RNTouchableOpacityProps & {
   label: string
   bgColor?: string
   textColor?: string
@@ -24,12 +24,14 @@ export default function ColorButton({
   style,
   textStyle,
   ...props
-}: propTyeps) {
+}: ColorButtonProps) {
   return (
     <TouchableOpacity
       style={[styles.buttonWrap, {backgroundColor: bgColor, padding}, style]}
       {...props}>
-      <Text style={[styles.buttonText, {color: textColor}]}>{label}</Text>
+      <Text style={[styles.buttonText, {color: textColor}, textStyle]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   )
 }

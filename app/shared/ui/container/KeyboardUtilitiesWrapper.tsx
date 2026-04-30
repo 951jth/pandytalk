@@ -8,7 +8,7 @@ import {
   TouchableWithoutFeedbackProps,
   View,
 } from 'react-native'
-interface propTypes {
+interface KeyboardUtilitiesWrapperProps {
   children: React.ReactNode
   keyboardAvoidingViewProps?: KeyboardAvoidingViewProps
   touchableWithoutFeedbackProps?: TouchableWithoutFeedbackProps
@@ -21,7 +21,7 @@ export default function KeyboardUtilitiesWrapper({
   touchableWithoutFeedbackProps,
   useTouchable = true,
   useAvoiding = true,
-}: propTypes) {
+}: KeyboardUtilitiesWrapperProps) {
   const [keyboardHeight, setKeyboardHeight] = useState(0)
 
   useEffect(() => {
@@ -38,35 +38,35 @@ export default function KeyboardUtilitiesWrapper({
     }
   }, [])
 
-  const wrapChildren = (children: React.ReactNode) => {
-    let WrappedChildren = children
+  const wrapChildren = (content: React.ReactNode) => {
+    let result = content
     if (useAvoiding) {
-      WrappedChildren =
+      result =
         Platform.OS === 'ios' ? (
           <KeyboardAvoidingView
             behavior="padding"
             keyboardVerticalOffset={50} // Header 높이 고려
             style={{flex: 1}}
             {...keyboardAvoidingViewProps}>
-            {WrappedChildren}
+            {result}
           </KeyboardAvoidingView>
         ) : (
           <View style={{flex: 1, paddingBottom: keyboardHeight}}>
-            {WrappedChildren}
+            {result}
           </View>
         )
     }
     if (useTouchable) {
-      WrappedChildren = (
+      result = (
         <TouchableWithoutFeedback
           onPress={Keyboard.dismiss}
           accessible={false}
           {...touchableWithoutFeedbackProps}>
-          {WrappedChildren}
+          <View style={{flex: 1}}>{result}</View>
         </TouchableWithoutFeedback>
       )
     }
-    return WrappedChildren
+    return result
   }
 
   return wrapChildren(children)
