@@ -31,44 +31,55 @@ const menuItems: MenuItem[] = [
   },
 ]
 
+function AdminMenuItem({
+  item,
+  onPress,
+}: {
+  item: MenuItem
+  onPress: (item: MenuItem) => void
+}) {
+  return (
+    <PressableWrapper
+      onPress={() => onPress(item)}
+      style={styles.cardWrapper}>
+      <View style={styles.cardContainer}>
+        {/* 아이콘 영역 */}
+        <View style={styles.iconSection}>
+          <View style={styles.iconCircle}>
+            <Icon source={item.icon} size={28} color={COLORS.primary} />
+          </View>
+        </View>
+
+        {/* 정보 영역 */}
+        <View style={styles.infoSection}>
+          <View style={styles.titleRow}>
+            <Text style={styles.menuTitle}>{item?.title}</Text>
+            <Text style={styles.menuPath}>{item?.path}</Text>
+          </View>
+          <Text style={styles.menuDescription}>{item?.description}</Text>
+        </View>
+
+        {/* 화살표 영역 */}
+        <View style={styles.arrowSection}>
+          <Icon source="chevron-right" size={24} color="#ADB5BD" />
+        </View>
+      </View>
+    </PressableWrapper>
+  )
+}
+
 export default function AdminMenuScreen() {
   type AppNav = NativeStackNavigationProp<AppRouteParamList>
   const navigation = useNavigation<AppNav>()
 
-  const MenuRenderer = ({
-    item,
-  }: {
-    item: MenuItem
-  }) => {
-    return (
-      <PressableWrapper
-        onPress={() => item?.path && navigation.navigate(item?.path as any)}
-        style={styles.cardWrapper}
-      >
-        <View style={styles.cardContainer}>
-          {/* 아이콘 영역 */}
-          <View style={styles.iconSection}>
-            <View style={styles.iconCircle}>
-              <Icon source={item.icon} size={28} color={COLORS.primary} />
-            </View>
-          </View>
-
-          {/* 정보 영역 */}
-          <View style={styles.infoSection}>
-            <View style={styles.titleRow}>
-              <Text style={styles.menuTitle}>{item?.title}</Text>
-              <Text style={styles.menuPath}>{item?.path}</Text>
-            </View>
-            <Text style={styles.menuDescription}>{item?.description}</Text>
-          </View>
-
-          {/* 화살표 영역 */}
-          <View style={styles.arrowSection}>
-            <Icon source="chevron-right" size={24} color="#ADB5BD" />
-          </View>
-        </View>
-      </PressableWrapper>
-    )
+  const onPressMenu = (item: MenuItem) => {
+    if (item.path === 'guest-manage') {
+      navigation.navigate('guest-manage')
+      return
+    }
+    if (item.path === 'group-manage') {
+      navigation.navigate('group-manage')
+    }
   }
 
   return (
@@ -77,7 +88,9 @@ export default function AdminMenuScreen() {
       data={menuItems}
       keyExtractor={e => e?.path}
       keyboardShouldPersistTaps="handled"
-      renderItem={MenuRenderer}
+      renderItem={({item}) => (
+        <AdminMenuItem item={item} onPress={onPressMenu} />
+      )}
       contentContainerStyle={styles.menuItemContents}
       showsVerticalScrollIndicator={false}
     />

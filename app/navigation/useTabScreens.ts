@@ -12,7 +12,7 @@ import type {TabParamList} from '../shared/types/navigate'
 type RouteItem = {
   name: string
   title?: string
-  component?: React.ComponentType<any>
+  component?: React.ComponentType
   options?: NativeStackNavigationOptions
   icon?: string
   filtered?: boolean
@@ -22,7 +22,7 @@ type RouteItem = {
 
 export type TabRouteItem<K extends keyof TabParamList> = RouteItem & {
   name: K
-  badge?: React.ComponentType<any>
+  badge?: React.ComponentType
   getParams?: () => TabParamList[K]
 }
 

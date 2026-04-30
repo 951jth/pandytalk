@@ -6,7 +6,7 @@ import {ChatRoom} from '@shared/types/chat'
 import PandyBadge from '@shared/ui/badge/PandyBadge'
 
 type propTypes = {
-  type: ChatRoom['type']
+  type?: ChatRoom['type']
 }
 
 export default function ChatUnreadCount({type = 'dm'}: propTypes) {

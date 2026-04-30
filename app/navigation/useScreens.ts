@@ -13,7 +13,7 @@ import React from 'react'
 type RouteItem = {
   name: string
   title?: string
-  component?: React.ComponentType<any>
+  component?: React.ComponentType
   options?: NativeStackNavigationOptions
   icon?: string
   filtered?: boolean
@@ -22,7 +22,7 @@ type RouteItem = {
 
 type LayoutItem = {
   key: string
-  layout?: React.ComponentType<any>
+  layout?: React.ComponentType<{children: React.ReactNode}>
   options?: NativeStackNavigationOptions
   children: RouteItem[]
 }

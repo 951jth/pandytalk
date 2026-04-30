@@ -45,8 +45,9 @@ export function useProfileMenu(onReset: () => void = () => {}) {
               const allMessages = await messageLocal.getAllMessages()
               console.log('all messages: ', allMessages)
               Alert.alert('완료', '메시지를 초기화했습니다.')
-            } catch (e: any) {
-              Alert.alert('초기화 실패', e?.message ?? '초기화 실패!')
+            } catch (e) {
+              const message = e instanceof Error ? e.message : '초기화 실패!'
+              Alert.alert('초기화 실패', message)
             }
           },
         },
@@ -55,7 +56,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
   }, [queryClient])
 
   // 🚪 로그아웃 로직
-  const onLogout = async () => {
+  const onLogout = useCallback(async () => {
     Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
       {text: '취소', style: 'cancel'},
       {
@@ -70,7 +71,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
         },
       },
     ])
-  }
+  }, [])
 
   // 🗑️ 회원 탈퇴 로직 (실제 처리)
   const onDelete = useCallback(async () => {
@@ -78,11 +79,13 @@ export function useProfileMenu(onReset: () => void = () => {}) {
       await userService.deleteMyAccount()
       setWithdrawalVisible(false) // 성공 시 모달 닫기
       Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
-    } catch (e: any) {
+    } catch (e) {
       console.error('Withdrawal error:', e)
+      const message =
+        e instanceof Error ? e.message : '탈퇴 처리 중 문제가 발생했습니다.'
       Alert.alert(
         '초기화 실패',
-        e?.message ?? '탈퇴 처리 중 문제가 발생했습니다.',
+        message,
       )
     }
   }, [])
@@ -113,7 +116,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
           title: '실험실 (Harness)',
           icon: 'flask-outline',
           onPress: () => {
-            navigation.navigate('harness' as any)
+            navigation.navigate('harness')
             closeMenu()
           },
           filtered: !__DEV__, // 개발 모드일 때만 표시

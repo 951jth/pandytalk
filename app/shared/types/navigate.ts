@@ -18,6 +18,7 @@ export type AppRouteParamList = {
   'group-chat': {roomId: string; type?: ChatRoom['type']} | undefined
   'guest-manage': undefined
   'group-manage': undefined
+  harness: undefined
   'user-select': undefined
   chats: {type?: ChatRoom['type']}
 }

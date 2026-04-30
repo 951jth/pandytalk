@@ -3,7 +3,7 @@ import {AuthStackParamList} from '@app/shared/types/navigate'
 import {validateField} from '@app/shared/utils/validation'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import {useEffect, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {Alert} from 'react-native'
 
 const validationMap = {
@@ -49,33 +49,38 @@ export function useLoginScreen() {
       // const {email, password} = formValues
       if (!email || !password) return
       await authService.login(email, password)
-    } catch (error: any) {
-      Alert.alert(error)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '로그인 중 오류가 발생했습니다.'
+      Alert.alert('로그인 실패', message)
     } finally {
       setLoading(false)
     }
   }
 
-  const validateCheck = (key: 'email' | 'password', value: string) => {
-    if (!key) return
-    if (!value || value == '') {
-      return setErrors(null)
-    }
-    const item = validationMap?.[key] || null
-    if (!item) return
-    const msg = validateField(item, value, {email, password})
-    setErrors(msg || null)
-  }
+  const validateCheck = useCallback(
+    (key: 'email' | 'password', value: string) => {
+      if (!key) return
+      if (!value || value === '') {
+        return setErrors(null)
+      }
+      const item = validationMap?.[key] || null
+      if (!item) return
+      const msg = validateField(item, value, {email, password})
+      setErrors(msg || null)
+    },
+    [email, password],
+  )
 
   const moveJoinPage = () => navigation.push('user-join')
 
   useEffect(() => {
     if (email) validateCheck('email', email)
-  }, [email])
+  }, [email, validateCheck])
 
   useEffect(() => {
     if (password) validateCheck('password', password)
-  }, [password])
+  }, [password, validateCheck])
 
   return {
     email,
