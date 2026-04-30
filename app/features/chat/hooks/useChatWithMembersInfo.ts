@@ -41,7 +41,9 @@ export const useChatWithMembersInfo = (
         }
         return next
       })
-    } catch (e) {}
+    } catch (e) {
+      console.error('채팅 멤버 정보 조회 중 오류:', e)
+    }
   }, [])
 
   useEffect(() => {

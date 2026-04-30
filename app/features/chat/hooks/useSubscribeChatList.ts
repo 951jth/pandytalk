@@ -90,5 +90,5 @@ export function useSubscribeChatList(
     )
 
     return () => unsub()
-  }, [uid, type, queryClient, dispatch])
+  }, [uid, type, disabled, queryClient, dispatch])
 }

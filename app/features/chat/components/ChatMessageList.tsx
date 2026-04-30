@@ -45,7 +45,6 @@ export default function ChatMessageList({
   roomId,
   userId,
   roomInfo,
-  chatType,
 }: Props) {
   const {
     messagesWithUi, // 훅에서 가공된 데이터 받아옴(멤버 정보도 포함)
@@ -69,7 +68,7 @@ export default function ChatMessageList({
         />
       )
     },
-    [roomId, chatType],
+    [roomId],
   )
 
   return (

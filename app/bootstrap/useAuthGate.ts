@@ -16,7 +16,7 @@ export function useAuthGate() {
   const [initializing, setInitializing] = useState(true) //앱이 로드 되었는지 유무
 
   const dispatch = useDispatch<AppDispatch>()
-  const {data: userInfo, loading} = useAppSelector(state => state.user)
+  const {data: userInfo} = useAppSelector(state => state.user)
   const {logout} = useLogout()
 
   const fetchProfile = useCallback(

@@ -19,7 +19,7 @@ export const useLogout = () => {
     } catch (e) {
       console.log('로그아웃 실패:', e)
     }
-  }, [dispatch])
+  }, [dispatch, queryClient])
 
   const confirmLogout = () => {
     Alert.alert(

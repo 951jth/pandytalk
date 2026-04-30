@@ -5,17 +5,6 @@ import {ReactQueryPageType} from '@app/shared/types/react-query'
 import {InfiniteData, useMutation, useQueryClient} from '@tanstack/react-query'
 type MessagesInfiniteData = InfiniteData<ReactQueryPageType<ChatMessage>>
 
-const init: MessagesInfiniteData = {
-  pages: [
-    {
-      data: [] as ChatMessage[],
-      lastVisible: null, // 쓰지 않으면 null
-      isLastPage: true, // 초기엔 true로 둬도 무방
-    },
-  ],
-  pageParams: [undefined],
-}
-
 export const useChatMessageDeleteMutation = (roomId?: string | null) => {
   const queryClient = useQueryClient()
   const queryKey = ['chatMessages', roomId]

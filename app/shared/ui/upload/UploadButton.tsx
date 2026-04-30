@@ -29,7 +29,7 @@ export default function UploadButton({
     if (disabled) return
     try {
       const hasPermission = await requestPhotoPermission()
-      if (hasPermission?.status == 'BLOCKED')
+      if (hasPermission?.status === 'BLOCKED')
         return showPermissionBlockedAlert({})
       if (!hasPermission?.ok)
         return Alert.alert('권한 확인', hasPermission?.reason)

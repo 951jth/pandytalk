@@ -36,7 +36,7 @@ export const useUsersManageScreen = () => {
     debouncedSetSearchText(input)
     // cleanup 함수로 debounce 취소
     return () => debouncedSetSearchText.cancel()
-  }, [input])
+  }, [debouncedSetSearchText, input])
 
   return {
     input,

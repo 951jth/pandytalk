@@ -60,8 +60,8 @@ export const addUserItems: FormItem[] = [
     validation: {
       pattern: /^.{8,32}$/, // 길이 8~32자
       message: '현재 입력한 비밀번호와 다릅니다.',
-      customFn: (v: string, allValues: any) => {
-        return allValues?.password == v
+      customFn: (v: string, allValues: {password?: string}) => {
+        return allValues?.password === v
       },
     },
     render: (value, onChange) => (

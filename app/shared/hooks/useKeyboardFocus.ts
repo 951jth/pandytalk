@@ -21,7 +21,7 @@ export default function useKeyboardFocus() {
       showSub.remove()
       hideSub.remove()
     }
-  }, [])
+  }, [bottom])
 
   const dismissKeyboard = () => Keyboard.dismiss() //키보드 포커싱 해제제
 

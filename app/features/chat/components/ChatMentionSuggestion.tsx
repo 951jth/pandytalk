@@ -30,7 +30,7 @@ export default function ChatMentionSuggestion({
       !isBlockRef?.current &&
       (text === '' || text.endsWith('@') || text.includes('@팬'))
     )
-  }, [isKeyboardVisible, text, disabled])
+  }, [isKeyboardVisible, text, disabled, isBlockRef])
 
   const mentionSuggestions = useMemo(() => {
     if (!isMentionSuggested) return []

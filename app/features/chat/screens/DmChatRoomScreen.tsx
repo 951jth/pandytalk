@@ -9,8 +9,7 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 
 export default function DmChatRoomScreen() {
-  const {user, isLoading, targetId, roomId, roomInfo, headerTitle} =
-    useDmChatRoomScreen()
+  const {user, targetId, roomId, roomInfo, headerTitle} = useDmChatRoomScreen()
 
   // if (isLoading || !user) {
   //   return (

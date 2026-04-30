@@ -17,7 +17,7 @@ export const readStatusRemote = {
           [`lastReadSeqs.${userId}`]: lastReadSeq,
           [`lastReadTimestamps.${userId}`]: serverTimestamp(),
         }
-        const snap = await updateDoc(chatRef, params)
+        await updateDoc(chatRef, params)
       },
     )
   },

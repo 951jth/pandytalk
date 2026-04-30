@@ -25,7 +25,7 @@ export const useDmChatRoomScreen = () => {
       member => member?.id !== myId,
     )
     return `${findMember?.displayName || roomInfo?.name || title || '채팅방'}`
-  }, [title, roomInfo])
+  }, [myId, title, roomInfo])
 
   return {
     user,

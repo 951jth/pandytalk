@@ -15,25 +15,26 @@ export function useUsersScreen() {
     isFetchingNextPage,
     refetch,
   } = useUsersInfinite(searchText, true)
-  const {data: userInfo, loading, error} = useAppSelector(state => state.user)
+  const {data: userInfo} = useAppSelector(state => state.user)
+  const currentUid = userInfo?.uid
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
 
   const others = useMemo(() => {
     const users = data?.pages.flatMap(page => page.users) ?? []
-    return users?.filter(e => e?.uid !== userInfo?.uid)
-  }, [data])
+    return users?.filter(e => e?.uid !== currentUid)
+  }, [data, currentUid])
 
   const moveToChatRoom = useCallback(
     (targetId: string, title: string) => {
-      if (!userInfo) return
+      if (!currentUid) return
       navigation.navigate('dm-chat', {
-        myId: userInfo.uid,
+        myId: currentUid,
         targetId,
         title,
       })
     },
-    [navigation, userInfo?.uid],
+    [currentUid, navigation],
   )
   // TODO 필터링 기능 필요하면 사용.
   // const debouncedSetSearchText = useMemo(

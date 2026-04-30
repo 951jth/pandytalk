@@ -72,7 +72,7 @@ export const chatService = {
     }
     const chatRoomRes = await chatRemote.createChatRoom(
       baseRoom,
-      type == 'dm' ? dmRoomId : undefined, //그룹채팅은 autoId
+      type === 'dm' ? dmRoomId : undefined, //그룹채팅은 autoId
     )
     return chatRoomRes
   },

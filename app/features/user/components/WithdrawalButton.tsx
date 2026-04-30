@@ -1,8 +1,7 @@
 import React, {useState} from 'react'
-import {Alert, StyleSheet} from 'react-native'
+import {Alert} from 'react-native'
 
 import {userService} from '@app/features/user/service/userService'
-import COLORS from '@app/shared/constants/color'
 import {CustomButton} from '@app/shared/ui/button/CustomButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 
@@ -31,7 +30,10 @@ export default function WithdrawalButton({label = '회원 탈퇴'}: propTypes) {
       await userService.deleteMyAccount()
       Alert.alert('탈퇴 성공', '회원 탈퇴에 성공하였습니다.')
       logout()
-    } catch (e) {}
+    } catch (e) {
+      console.error('회원 탈퇴 중 오류:', e)
+      Alert.alert('탈퇴 실패', '회원 탈퇴 처리 중 문제가 발생했습니다.')
+    }
   }
 
   return (
@@ -51,13 +53,3 @@ export default function WithdrawalButton({label = '회원 탈퇴'}: propTypes) {
     </>
   )
 }
-
-const styles = StyleSheet.create({
-  confirmContainer: {
-    flex: 1,
-    height: 500,
-  },
-  confirmText: {
-    color: COLORS.error,
-  },
-})

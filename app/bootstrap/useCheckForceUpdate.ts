@@ -1,8 +1,8 @@
 import {checkForceUpdate} from '@app/shared/utils/update'
 import {focusManager} from '@tanstack/react-query'
+import {addUpdatesStateChangeListener} from 'expo-updates'
 import {useEffect} from 'react'
-import {AppState, Platform} from 'react-native'
-import { addUpdatesStateChangeListener } from 'expo-updates'
+import {AppState} from 'react-native'
 import {logger} from '../shared/services/logger'
 
 /**
@@ -11,8 +11,27 @@ import {logger} from '../shared/services/logger'
 export function useCheckForceUpdate() {
   useEffect(() => {
     // 1. EAS Update 이벤트 리스너 등록
-    const updateSubscription = addUpdatesStateChangeListener((event) => {
-      logger.logUpdateCheck(event as any)
+    const updateSubscription = addUpdatesStateChangeListener(event => {
+      const {context} = event
+      logger.logUpdateCheck({
+        type: context.isChecking
+          ? 'checking'
+          : context.isDownloading
+            ? 'downloading'
+            : context.isRestarting
+              ? 'restarting'
+              : context.downloadError
+                ? 'error'
+                : context.checkError
+                  ? 'error_check'
+                  : context.downloadedManifest
+                    ? 'downloaded'
+                    : context.latestManifest
+                      ? 'updateAvailable'
+                      : 'idle',
+        message:
+          context.downloadError?.message ?? context.checkError?.message,
+      })
     })
 
     // 2. 앱 최초 진입 시 체크

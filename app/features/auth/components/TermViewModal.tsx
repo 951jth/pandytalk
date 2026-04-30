@@ -14,7 +14,7 @@ type propTypes = {
 
 export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
   const visible = !!code
-  const termContent = terms.find(term => term?.id == code) as termType
+  const termContent = terms.find(term => term?.id === code) as termType
 
   return (
     <CustomModal visible={visible} onClose={onClose}>

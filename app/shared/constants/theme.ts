@@ -55,16 +55,6 @@ const fonts = {
   },
 }
 
-const fontConfig = {
-  default: {
-    fontFamily: 'BMDOHYEON',
-    fontWeight: 'normal' as const,
-    letterSpacing: 0.5,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-}
-
 const theme = {
   ...MD3LightTheme,
   // fonts: configureFonts({config: fontConfig}),

@@ -7,7 +7,7 @@ import Select from '../../../shared/ui/select/Select'
 export default function UserSelect(props: Omit<SelectProps, 'options'>) {
   const [input, setInput] = useState<string>('')
   const [searchText, setSearchText] = useState<string>('') //유저는 직접 검색해서 찾도록
-  const {data, refetch} = useUsersInfinite(searchText)
+  const {data} = useUsersInfinite(searchText)
 
   const users = data?.pages.flatMap(page => page.users) ?? []
   const options = users?.map(user => ({
@@ -26,7 +26,7 @@ export default function UserSelect(props: Omit<SelectProps, 'options'>) {
     debouncedSetSearchText(input)
     // cleanup 함수로 debounce 취소
     return () => debouncedSetSearchText.cancel()
-  }, [input])
+  }, [debouncedSetSearchText, input])
 
   return (
     <Select

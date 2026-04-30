@@ -12,7 +12,7 @@ export const createUserProfileItems = (user?: User | null): FormItem[] => {
     {
       label: '닉네임',
       key: 'displayName',
-      render: (value, onChange, edit) => (
+      render: (value, onChange, _edit) => (
         <EditInput value={value} onChangeText={onChange} edit={!isTest} />
       ),
       validation: {

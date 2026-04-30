@@ -18,7 +18,7 @@ export default function ChatMessageStatusIcons({
 }: ChatMessageStatusIconsProps) {
   return (
     <>
-      {item?.status == 'failed' && (
+      {item?.status === 'failed' && (
         <View style={styles.icons}>
           <IconButton
             icon="reload"
@@ -36,7 +36,7 @@ export default function ChatMessageStatusIcons({
           />
         </View>
       )}
-      {item?.status == 'pending' && <ActivityIndicator animating size={12} />}
+      {item?.status === 'pending' && <ActivityIndicator animating size={12} />}
     </>
   )
 }

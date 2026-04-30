@@ -14,7 +14,6 @@ export default function UsersScreen(): React.JSX.Element {
     isLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
     refetch,
     moveToChatRoom,
   } = useUsersScreen()

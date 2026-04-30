@@ -28,7 +28,7 @@ export type TabRouteItem<K extends keyof TabParamList> = RouteItem & {
 
 export const useTabScreens = () => {
   const {data: user} = useAppSelector(state => state?.user)
-  const isAdmin = user?.authority == 'ADMIN'
+  const isAdmin = user?.authority === 'ADMIN'
   const isPending = user?.accountStatus === 'pending'
 
   return useMemo<TabRouteItem<keyof TabParamList>[]>(

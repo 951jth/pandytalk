@@ -8,6 +8,8 @@ import {useDispatch} from 'react-redux'
 
 import {createUserProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
+import {type User} from '@app/shared/types/auth'
+import {type UpdateInput} from '@app/shared/types/firebase'
 import {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import {InputFormRef} from '../../../shared/ui/form/InputForm'
@@ -28,7 +30,7 @@ export function useProfileScreen() {
   const uid = userInfo?.uid
   const profileRef = useRef<ProfileInputRef | null>(null)
   const formRef = useRef<InputFormRef>(null)
-  const {keyboardHeight, setKeyboardHeight} = useKeyboardFocus()
+  const {keyboardHeight} = useKeyboardFocus()
   const formItems = useMemo(() => createUserProfileItems(userInfo), [userInfo])
 
   const updateUserProfile = async () => {
@@ -48,7 +50,7 @@ export function useProfileScreen() {
       const firestore = getFirestore()
       const newPhotoURL = await profileRef?.current?.upload()
 
-      const payload: any = {
+      const payload: UpdateInput<User> = {
         displayName: formValues.displayName
           ? String(formValues.displayName).trim()
           : (user?.displayName ?? ''),

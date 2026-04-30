@@ -3,7 +3,7 @@ import Select, {type SelectProps} from '../../../shared/ui/select/Select'
 import {useAllGroups} from '../hooks/useGroupQuery'
 
 export default function GroupSelect(props: Omit<SelectProps, 'options'>) {
-  const {data: groups = [], isLoading, refetch} = useAllGroups()
+  const {data: groups = []} = useAllGroups()
   const groupOptions = groups?.map(group => ({
     label: group?.name,
     value: group.id,

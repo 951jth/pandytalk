@@ -2,8 +2,6 @@ import {
   serverTimestamp,
   type FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore'
-import {useNavigation} from '@react-navigation/native'
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useMemo, useRef, useState} from 'react'
 import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native'
@@ -15,18 +13,10 @@ import COLORS from '@app/shared/constants/color'
 import {ServerTime} from '@app/shared/types/chat'
 import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/shared/types/group'
-import {AppRouteParamList} from '@app/shared/types/navigate'
 import EditInput from '@app/shared/ui/input/EditInput'
 import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {formatServerDate} from '../../../shared/utils/firebase'
 import UserSelect from '../../user/components/UserSelect'
-
-const initialValues = {
-  name: '',
-  memo: '',
-  created: '',
-  ownerId: auth.currentUser?.uid || null,
-}
 
 type propTypes = {
   record?: Group | null
@@ -42,8 +32,6 @@ type GroupCreateInput = {
 export default function GroupForm({record, onRefresh, onClose}: propTypes) {
   const [loading, setLoading] = useState(false)
   const profileRef = useRef<ProfileInputRef | null>(null)
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AppRouteParamList>>()
   const queryClient = useQueryClient()
 
   const items: FormItem[] = useMemo(
@@ -84,7 +72,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         render: value => <Text>{formatServerDate(value as ServerTime)}</Text>,
       },
     ],
-    [navigation],
+    [],
   )
 
   const handleSubmit = async (formValues: GroupCreateInput) => {

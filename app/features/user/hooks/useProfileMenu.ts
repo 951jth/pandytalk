@@ -125,10 +125,10 @@ export function useProfileMenu(onReset: () => void = () => {}) {
             setWithdrawalVisible(true) // ✅ 모달 열기 명령
           },
           filtered:
-            userInfo?.authority == 'ADMIN' || userInfo?.authority == 'TEST',
+            userInfo?.authority === 'ADMIN' || userInfo?.authority === 'TEST',
         },
       ].filter(item => !item.filtered),
-    [userInfo, onClear, onLogout, onReset],
+    [navigation, onClear, onLogout, onReset, userInfo],
   )
 
   return {

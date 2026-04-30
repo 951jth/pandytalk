@@ -1,6 +1,6 @@
 import {fileRemote} from '@app/features/media/data/fileRemote.firebase'
 import {auth} from '@app/shared/firebase/firestore'
-import {normalizeLocalUri, pickFirstAsset} from '@app/shared/utils/file'
+import {normalizeLocalUri} from '@app/shared/utils/file'
 import {ImagePickerResponse} from 'react-native-image-picker'
 
 export type UploadResult = {
@@ -60,7 +60,6 @@ export const fileService = {
   ): Promise<UploadResult[]> => {
     const assets = result.assets || []
     const uid = auth.currentUser?.uid
-    const results: UploadResult[] = []
 
     if (!assets.length || !uid) return []
 

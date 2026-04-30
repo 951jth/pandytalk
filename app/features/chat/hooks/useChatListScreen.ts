@@ -75,7 +75,7 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
         navigation.navigate('group-chat', {roomId})
       }
     },
-    [navigation, user?.uid],
+    [navigation, type, user?.uid],
   )
 
   return {

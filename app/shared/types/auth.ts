@@ -8,7 +8,7 @@ export interface User {
   email: string
   authority: 'ADMIN' | 'MANAGER' | 'USER' | 'TEST'
   status: 'online' | 'offline'
-  photoURL?: string
+  photoURL?: string | null
   lastSeen?: Timestamp | number | FieldValue | null // RN Firebase 기준 차후 Timestamp로 변경예정
   isGuest?: boolean // 현재는 무조건 TRUE
   note: string // 신청 메모(사용자 입력)

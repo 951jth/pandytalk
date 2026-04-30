@@ -9,8 +9,7 @@ import ChatInputBox from '../components/ChatMessageInput'
 import ChatMessageList from '../components/ChatMessageList'
 
 export default function GroupChatRoomScreen() {
-  const {user, isLoading, roomId, roomInfo, headerTitle} =
-    useGroupChatRoomScreen()
+  const {user, roomId, roomInfo, headerTitle} = useGroupChatRoomScreen()
 
   return (
     <SafeAreaView style={styles.container}>

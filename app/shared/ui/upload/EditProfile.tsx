@@ -2,6 +2,7 @@ import {fileService} from '@app/features/media/service/fileService'
 import COLORS from '@app/shared/constants/color'
 import React, {
   forwardRef,
+  useCallback,
   useImperativeHandle,
   useState,
   type ForwardedRef,
@@ -39,6 +40,19 @@ const EditProfile = forwardRef(function EditProfile(
 ) {
   const [previewUrl, setPreviewUrl] = useState(defaultUrl)
   const [loading, setLoading] = useState<boolean>(false)
+  const upload = useCallback(async (): Promise<string | null> => {
+    try {
+      if (!previewUrl) return null
+      const newPhotoURL = await fileService.uploadFile({
+        localUri: previewUrl,
+        rootName: 'profiles',
+      })
+      return newPhotoURL
+    } catch {
+      return null
+    }
+  }, [previewUrl])
+
   useImperativeHandle(
     ref,
     () => ({
@@ -47,7 +61,7 @@ const EditProfile = forwardRef(function EditProfile(
       setImage: (url: string) => setPreviewUrl(url),
       onReset: () => setPreviewUrl(defaultUrl),
     }),
-    [previewUrl, upload],
+    [defaultUrl, previewUrl, upload],
   )
 
   const pickImage = async () => {
@@ -56,7 +70,7 @@ const EditProfile = forwardRef(function EditProfile(
       const hasPermission = await requestPhotoPermission()
       console.log('hasPermission', hasPermission)
 
-      if (hasPermission?.status == 'BLOCKED')
+      if (hasPermission?.status === 'BLOCKED')
         return showPermissionBlockedAlert({})
       if (!hasPermission?.ok)
         return Alert.alert('권한 확인', hasPermission?.reason)
@@ -79,19 +93,6 @@ const EditProfile = forwardRef(function EditProfile(
       console.error('이미지 선택 중 오류:', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function upload(): Promise<string | null> {
-    try {
-      if (!previewUrl) return null
-      const newPhotoURL = await fileService.uploadFile({
-        localUri: previewUrl,
-        rootName: 'profiles',
-      })
-      return newPhotoURL
-    } catch (e) {
-      return null
     }
   }
 

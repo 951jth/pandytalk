@@ -1,4 +1,3 @@
-import {createUserProfileItems} from '@app/features/user/screens/setProfiles.form'
 import {userService} from '@app/features/user/service/userService'
 import type {User} from '@app/shared/types/auth'
 import type {InputFormRef} from '@app/shared/ui/form/InputForm'
@@ -12,14 +11,13 @@ export const useUserDetail = (onComplete: () => void) => {
   const formRef = useRef<InputFormRef>(null)
   const profileRef = useRef<ProfileInputRef>(null)
   const currentAdminUid = user?.uid
-  const formItems = createUserProfileItems(user)
 
   const handleMemberStatusUpdate = async (
     status: User['accountStatus'] & 'delete',
   ) => {
     try {
       if (!status) return
-      if (status == 'delete') {
+      if (status === 'delete') {
         return
       } else {
         const formValues = formRef?.current?.getValues() as User
@@ -32,7 +30,9 @@ export const useUserDetail = (onComplete: () => void) => {
         Alert.alert('수정 완료', '유저 멤버 정보 수정 완료')
         onComplete?.()
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('유저 멤버 정보 수정 중 오류:', e)
+    }
   }
 
   return {

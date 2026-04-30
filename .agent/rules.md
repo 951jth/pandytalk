@@ -49,6 +49,9 @@ Known workflow files:
 - Do not run destructive commands such as `rm`, `git reset`, `git push -f`, or `npm publish` without explicit user approval.
 - If native files change, especially `android/`, `ios/`, `app.json`, `app.config.js`, or `package.json`, clearly warn that a native build or EAS build/update may be required.
 - For commit and push requests, show `git status` first or summarize its result before suggesting final commands.
+- When reading files that may contain Korean, use UTF-8-aware commands such as `Get-Content -Encoding UTF8` and set PowerShell output encoding to UTF-8 before judging text.
+- Do not conclude that Korean comments or strings are corrupted based only on mojibake shown in terminal output. Prefer the IDE view or a UTF-8 re-read.
+- Do not rewrite Korean comments or strings unless explicitly requested.
 
 ## 5. Technical Rules
 
