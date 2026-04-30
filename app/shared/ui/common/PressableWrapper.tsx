@@ -26,11 +26,16 @@ export default function PressableWrapper({
     <Pressable
       {...rest}
       accessibilityRole="button"
+      android_ripple={{
+        color: 'rgba(0, 0, 0, 0.05)',
+        borderless: false,
+        foreground: true,
+      }}
       style={({pressed}) => [
         {
           borderRadius, // 전달된 곡률과 동일하게 터치 영역 설정
-          transform: [{scale: pressed ? 0.99 : 1}], // 아주 미세하고 고급스러운 눌림 효과
-          opacity: pressed ? 0.9 : 1, // 부드러운 투명도 변화
+          transform: [{scale: pressed ? 0.98 : 1}], // 눌림 효과 소폭 강화
+          opacity: pressed ? 0.8 : 1, // 투명도 변화 소폭 강화
         },
         style,
       ]}>

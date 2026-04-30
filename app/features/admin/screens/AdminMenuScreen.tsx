@@ -108,20 +108,20 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   cardWrapper: {
-    marginBottom: 12, // 카드 간 간격
-  },
-  cardContainer: {
     backgroundColor: COLORS.white,
-    padding: 16,
-    borderRadius: 32, // 프리미엄 곡률
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderRadius: 32,
+    marginBottom: 12, // 카드 간 간격
     // 프리미엄 소프트 디퓨전 섀도우
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 4,
+  },
+  cardContainer: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconSection: {
     marginRight: 16,
