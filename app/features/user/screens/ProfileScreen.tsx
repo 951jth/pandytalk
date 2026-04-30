@@ -5,7 +5,7 @@ import LinearGradient from 'react-native-linear-gradient'
 import ProfileMenu from '@app/features/user/components/ProfileMenu'
 import {useProfileScreen} from '@app/features/user/hooks/useProfileScreen'
 import COLORS from '@app/shared/constants/color'
-import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import {AppButton} from '@app/shared/ui/button/AppButton'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 import InputForm from '../../../shared/ui/form/InputForm'
 
@@ -74,12 +74,12 @@ export default function ProfileScreen(): React.JSX.Element {
         {/* 하단 메인 액션 버튼 */}
         <View style={styles.buttons}>
           {userInfo?.authority !== 'TEST' && (
-            <CustomButton
+            <AppButton
               loading={submitting}
               style={styles.saveBtn}
               onTouchEnd={updateUserProfile}>
               내 정보 저장하기
-            </CustomButton>
+            </AppButton>
           )}
         </View>
       </ScrollView>

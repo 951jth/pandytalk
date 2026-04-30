@@ -13,7 +13,7 @@ import COLORS from '@app/shared/constants/color'
 import {ServerTime} from '@app/shared/types/chat'
 import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/shared/types/group'
-import EditInput from '@app/shared/ui/input/EditInput'
+import AppInput from '@app/shared/ui/input/AppInput'
 import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {formatServerDate} from '../../../shared/utils/firebase'
 import UserSelect from '../../user/components/UserSelect'
@@ -41,7 +41,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         label: '그룹명',
         required: true,
         render: (value, onChange) => (
-          <EditInput value={value} onChangeText={onChange} />
+          <AppInput value={value} onChangeText={onChange} />
         ),
       },
       {
@@ -57,7 +57,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         label: '메모',
         required: true,
         render: (value, onChange) => (
-          <EditInput
+          <AppInput
             value={value}
             onChangeText={onChange}
             multiline={true}

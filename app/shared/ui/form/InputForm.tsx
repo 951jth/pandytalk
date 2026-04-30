@@ -14,7 +14,7 @@ import React, {
 import {StyleProp, StyleSheet, TextStyle, View, ViewStyle} from 'react-native'
 import {IconButton} from 'react-native-paper'
 import {type FormItem} from '../../types/form'
-import {CustomButton} from '../button/CustomButton'
+import {AppButton} from '../button/AppButton'
 
 export type layoutType = {
   style?: StyleProp<ViewStyle>
@@ -198,7 +198,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
         </View>
 
         {useBotton && (
-          <CustomButton
+          <AppButton
             mode="contained"
             onPress={() => {
               const isOk = validateAll(items)
@@ -211,7 +211,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
             labelStyle={memoizedLayout.buttonLabelStyle} // ✅ 텍스트 커스텀 스타일 연동
           >
             {buttonLabel}
-          </CustomButton>
+          </AppButton>
         )}
       </View>
     </>

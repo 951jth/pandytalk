@@ -1,7 +1,7 @@
 import COLORS from '@app/shared/constants/color'
 import {terms} from '@app/shared/constants/terms'
 import {termType} from '@app/shared/types/auth'
-import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import {AppButton} from '@app/shared/ui/button/AppButton'
 import CustomModal from '@app/shared/ui/modal/CustomModal'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
@@ -22,14 +22,14 @@ export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
         <Text style={styles.termTitle}>{termContent?.title}</Text>
         <Text style={styles.termContent}>{termContent?.content}</Text>
         <View style={styles.buttons}>
-          <CustomButton
+          <AppButton
             fullWidth={true}
             shape="normal"
             colorType="danger"
             onPress={onClose}>
             닫기
-          </CustomButton>
-          <CustomButton
+          </AppButton>
+          <AppButton
             fullWidth={true}
             shape="normal"
             colorType="secondary"
@@ -37,7 +37,7 @@ export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
               if (termContent) onConfirm?.(termContent)
             }}>
             동의하기
-          </CustomButton>
+          </AppButton>
         </View>
       </View>
     </CustomModal>

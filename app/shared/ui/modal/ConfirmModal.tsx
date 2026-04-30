@@ -1,7 +1,7 @@
 import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {Modal, StyleSheet, Text, View} from 'react-native'
-import {CustomButton} from '../button/CustomButton'
+import {AppButton} from '../button/AppButton'
 
 interface ConfirmModalProps {
   visible: boolean
@@ -41,15 +41,15 @@ export default function ConfirmModal({
           {!!message && <Text style={styles.message}>{message}</Text>}
 
           <View style={styles.buttonRow}>
-            <CustomButton
+            <AppButton
               colorType="danger"
               onTouchEnd={onCancel}
               fullWidth={true}>
               {cancelText}
-            </CustomButton>
-            <CustomButton onTouchEnd={onConfirm} fullWidth={true}>
+            </AppButton>
+            <AppButton onTouchEnd={onConfirm} fullWidth={true}>
               {confirmText}
-            </CustomButton>
+            </AppButton>
           </View>
         </View>
       </View>

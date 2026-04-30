@@ -7,7 +7,7 @@ import {useUserDetail} from '@app/features/user/hooks/useUserDetail'
 import {updateUserItems} from '@app/features/user/screens/updateUser.form'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
-import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import {AppButton} from '@app/shared/ui/button/AppButton'
 import CustomModal from '@app/shared/ui/modal/CustomModal'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 
@@ -108,7 +108,7 @@ export default function UserDetailModal({
                 <View style={styles.buttons}>
                   {(ButtonsByType?.[user?.accountStatus] || [])?.map(button => {
                     return (
-                      <CustomButton
+                      <AppButton
                         key={button?.label}
                         onPress={() =>
                           handleMemberStatusUpdate?.(
@@ -118,7 +118,7 @@ export default function UserDetailModal({
                         style={{backgroundColor: button?.bgColor, flex: 1}}
                         labelStyle={{color: button?.textColor || '#FFF'}}>
                         {button?.label}
-                      </CustomButton>
+                      </AppButton>
                     )
                   })}
                 </View>

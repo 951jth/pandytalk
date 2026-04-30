@@ -2,7 +2,7 @@ import React, {useState} from 'react'
 import {Alert} from 'react-native'
 
 import {userService} from '@app/features/user/service/userService'
-import {CustomButton} from '@app/shared/ui/button/CustomButton'
+import {AppButton} from '@app/shared/ui/button/AppButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 
 import {useLogout} from '@app/shared/hooks/useLogout'
@@ -38,9 +38,9 @@ export default function WithdrawalButton({label = '회원 탈퇴'}: propTypes) {
 
   return (
     <>
-      <CustomButton colorType="danger" onTouchEnd={() => setVisible(true)}>
+      <AppButton colorType="danger" onTouchEnd={() => setVisible(true)}>
         {label}
-      </CustomButton>
+      </AppButton>
       <ConfirmModal
         visible={visible}
         title="회원탈퇴"

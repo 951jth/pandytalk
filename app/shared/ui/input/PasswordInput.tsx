@@ -1,9 +1,9 @@
 // components/inputs/PasswordInput.tsx
 import React from 'react'
 import {StyleSheet} from 'react-native'
-import EditInput, {type EditInputProps} from './EditInput'
+import AppInput, {type AppInputProps} from './AppInput'
 
-export type PasswordInputProps = EditInputProps & {
+export type PasswordInputProps = AppInputProps & {
   label?: string
   type?: 'outlined' | 'borderless'
 }
@@ -16,9 +16,9 @@ export default function PasswordInput({
   ...others
 }: PasswordInputProps) {
   return (
-    <EditInput
+    <AppInput
       style={[style, styles.input]}
-      // EditInput과 동일한 룩앤필
+      // AppInput과 동일한 룩앤필
       type={type}
       outlineStyle={outlineStyle}
       // password 동작

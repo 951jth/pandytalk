@@ -1,8 +1,8 @@
 import {authority} from '@app/shared/constants/korean'
 import type {User} from '@app/shared/types/auth'
 import type {FormItem} from '@app/shared/types/form'
-import EditInput from '@app/shared/ui/input/EditInput'
-import EditTextArea from '@app/shared/ui/input/EditTextarea'
+import AppInput from '@app/shared/ui/input/AppInput'
+import AppTextArea from '@app/shared/ui/input/AppTextArea'
 import dayjs from 'dayjs'
 import React from 'react'
 
@@ -13,7 +13,7 @@ export const createUserProfileItems = (user?: User | null): FormItem[] => {
       label: '닉네임',
       key: 'displayName',
       render: (value, onChange, _edit) => (
-        <EditInput value={value} onChangeText={onChange} edit={!isTest} />
+        <AppInput value={value} onChangeText={onChange} edit={!isTest} />
       ),
       validation: {
         // 2~20자, 한글/영문/숫자/공백/언더스코어/_-/만 허용
@@ -45,7 +45,7 @@ export const createUserProfileItems = (user?: User | null): FormItem[] => {
         message: '소개는 최대 200자입니다.',
       },
       render: (value, onChange) => (
-        <EditTextArea
+        <AppTextArea
           value={value}
           onChangeText={onChange}
           minRows={1}

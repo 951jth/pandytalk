@@ -1,6 +1,6 @@
 import {useLoginScreen} from '@app/features/auth/hooks/useLoginScreen'
 import COLORS from '@app/shared/constants/color'
-import EditInput from '@app/shared/ui/input/EditInput'
+import AppInput from '@app/shared/ui/input/AppInput'
 import PasswordInput from '@app/shared/ui/input/PasswordInput'
 import pandy from '@shared/assets/images/hello_Pandy.png'
 import React from 'react'
@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
           {/* 프리미엄 로그인 카드 */}
           <View style={styles.card}>
-            <EditInput
+            <AppInput
               leftIcon="email-outline"
               type="outlined"
               value={email}
