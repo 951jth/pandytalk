@@ -53,13 +53,15 @@ export const useChatRoomInfo = (roomId?: string | null) => {
   }, [roomQuery.isFetching])
 
   // 화면 포커스 시에는 '방 기본 정보'만 가볍게 갱신 (lastSeq 체크용)
+  const refetchRoom = roomQuery.refetch
+
   useFocusEffect(
     useCallback(() => {
       // 이미 데이터를 가져오는 중이 아닐 때만 refetch 실행 (중복 호출 방지)
       if (roomId && !isFetchingRef.current) {
-        roomQuery.refetch()
+        refetchRoom()
       }
-    }, [roomId, roomQuery.refetch]),
+    }, [roomId, refetchRoom]),
   )
 
   return {

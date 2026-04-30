@@ -18,7 +18,16 @@ export const toMillis = (
 export const toTimestamp = (ms: number) =>
   FirebaseFirestoreTypes.Timestamp.fromMillis(ms)
 
-export function convertTimestampsToMillis<T = any>(obj: T): T {
+type TimestampLike = {
+  toMillis?: () => number
+  toDate?: () => Date
+  seconds?: number | string
+  nanoseconds?: number | string
+  _seconds?: number | string
+  _nanoseconds?: number | string
+}
+
+export function convertTimestampsToMillis<T = unknown>(obj: T): T {
   if (obj == null) return obj
 
   // Timestamp -> number
@@ -33,7 +42,7 @@ export function convertTimestampsToMillis<T = any>(obj: T): T {
 
   // Object -> key/value 재귀
   if (typeof obj === 'object') {
-    const result: Record<string, any> = {}
+    const result: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(obj)) {
       result[key] = convertTimestampsToMillis(value)
     }
@@ -58,29 +67,38 @@ export const toMillisFromServerTime = (v: unknown): number | null => {
     return v.getTime()
   }
 
-  const anyV = v as any
+  const timestampLike = v as TimestampLike
 
   // Firestore Timestamp 인스턴스
-  if (typeof anyV?.toMillis === 'function') {
+  if (typeof timestampLike.toMillis === 'function') {
     try {
-      return anyV.toMillis()
-    } catch {}
+      return timestampLike.toMillis()
+    } catch (error) {
+      console.warn('Failed to convert timestamp with toMillis', error)
+    }
   }
-  if (typeof anyV?.toDate === 'function') {
+  if (typeof timestampLike.toDate === 'function') {
     try {
-      const d = anyV.toDate()
+      const d = timestampLike.toDate()
       if (d instanceof Date) return d.getTime()
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to convert timestamp with toDate', error)
+    }
   }
 
   // {seconds, nanoseconds} 또는 {_seconds, _nanoseconds}
   {
-    const s = anyV?.seconds ?? anyV?._seconds
-    const ns = anyV?.nanoseconds ?? anyV?._nanoseconds ?? 0
+    const s = timestampLike.seconds ?? timestampLike._seconds
+    const ns = timestampLike.nanoseconds ?? timestampLike._nanoseconds ?? 0
     const sNum = typeof s === 'string' ? Number.parseInt(s, 10) : s
     const nsNum = typeof ns === 'string' ? Number.parseInt(ns, 10) : ns
 
-    if (Number.isFinite(sNum) && Number.isFinite(nsNum)) {
+    if (
+      typeof sNum === 'number' &&
+      typeof nsNum === 'number' &&
+      Number.isFinite(sNum) &&
+      Number.isFinite(nsNum)
+    ) {
       return sNum * 1000 + Math.floor(nsNum / 1e6)
     }
   }
@@ -127,8 +145,8 @@ export const formatChatTime = (
 
 export function sortKey(item: ChatRoom): number {
   // lastMessageAt을 쓰는 경우(권장) 여기에 넣어두면 됨.
-  const lmAt = (item as any).lastMessageAt // 선택 필드라 any로 접근
-  return toMillis(lmAt ?? item.lastMessage?.createdAt ?? item.createdAt)
+  const roomTime = toMillisFromServerTime(item.lastMessageAt ?? item.createdAt)
+  return roomTime ?? toMillis(item.lastMessage?.createdAt)
 }
 
 /** 서버타임스탬프를 원하는 포맷으로 ('YYYY년 MM월 DD일 dddd') */
@@ -143,22 +161,25 @@ export const formatServerDate = (
 
 // any → RNFirebase Timestamp 로 정규화
 export const toRNFTimestamp = (
-  v: any,
+  v: unknown,
 ): FirebaseFirestoreTypes.Timestamp | null => {
   if (v == null) return null
+  const timestampLike = v as TimestampLike
 
   // 1) Timestamp 유사체(다른 SDK 포함): toMillis()로 환산 후 RN Timestamp로 재생성
   try {
-    if (typeof v?.toMillis === 'function') {
-      const ms = v.toMillis()
+    if (typeof timestampLike.toMillis === 'function') {
+      const ms = timestampLike.toMillis()
       if (Number.isFinite(ms)) return Timestamp.fromMillis(ms)
     }
-  } catch {}
+  } catch (error) {
+    console.warn('Failed to normalize timestamp with toMillis', error)
+  }
 
   // 2) {seconds, nanoseconds} / {_seconds, _nanoseconds}
   {
-    const sRaw = v?.seconds ?? v?._seconds
-    const nsRaw = v?.nanoseconds ?? v?._nanoseconds
+    const sRaw = timestampLike.seconds ?? timestampLike._seconds
+    const nsRaw = timestampLike.nanoseconds ?? timestampLike._nanoseconds
     const s = typeof sRaw === 'string' ? Number.parseInt(sRaw, 10) : sRaw
     const ns = typeof nsRaw === 'string' ? Number.parseInt(nsRaw, 10) : nsRaw
     if (Number.isFinite(s) && Number.isFinite(ns)) {

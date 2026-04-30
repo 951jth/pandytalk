@@ -1,6 +1,19 @@
-export const handleFirebaseAuthError = (error: any): string => {
+type ErrorWithCode = {
+  code?: string
+  message?: string
+}
+
+const toErrorWithCode = (error: unknown): ErrorWithCode => {
+  if (error && typeof error === 'object') {
+    return error as ErrorWithCode
+  }
+  return {}
+}
+
+export const handleFirebaseAuthError = (error: unknown): string => {
+  const firebaseError = toErrorWithCode(error)
   let message = '알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
-  switch (error?.code) {
+  switch (firebaseError.code) {
     case 'auth/invalid-email':
       message = '이메일 형식이 올바르지 않습니다.'
       break
@@ -26,8 +39,10 @@ export const handleFirebaseAuthError = (error: any): string => {
   // setError(message)
 }
 
-export const handleFirebaseJoinError = (error: any): string => {
-  switch (error?.code) {
+export const handleFirebaseJoinError = (error: unknown): string => {
+  const firebaseError = toErrorWithCode(error)
+
+  switch (firebaseError.code) {
     // 인증/권한 관련
     case 'auth/email-already-in-use':
       return '이미 사용 중인 이메일입니다.'
@@ -58,9 +73,11 @@ export const handleFirebaseJoinError = (error: any): string => {
   }
 }
 
-export const isExpectedError = (error: any) => {
+export const isExpectedError = (error: unknown) => {
+  const firebaseError = toErrorWithCode(error)
+
   return (
-    error.code === 'firestore/permission-denied' ||
-    error.message.includes('permission-denied')
+    firebaseError.code === 'firestore/permission-denied' ||
+    firebaseError.message?.includes('permission-denied') === true
   )
 }

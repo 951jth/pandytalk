@@ -2,7 +2,7 @@ import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
-import {UpdateInput} from '@app/shared/types/firebase'
+import {type FsSnapshot, UpdateInput} from '@app/shared/types/firebase'
 import {deleteUser, FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {
   collection,
@@ -31,7 +31,7 @@ export type GetUsersParams = {
   authority?: User['authority']
   searchText?: string
   pageSize?: number
-  pageParam?: any // React Query의 pageParam (보통 DocumentSnapshot)
+  pageParam?: FsSnapshot // React Query의 pageParam (보통 DocumentSnapshot)
   isConfirmed?: boolean | null
 }
 
@@ -136,7 +136,10 @@ export const userRemote = {
     return firebaseCall('userRemote.getUsersByUidChunk', async () => {
       const q = query(collection(firestore, 'users'), where('uid', 'in', uids))
       const snap = await getDocs(q)
-      return snap.docs?.map(doc => ({id: doc.id, ...doc.data()}) as User)
+      return snap.docs?.map(userDoc => ({
+        id: userDoc.id,
+        ...userDoc.data(),
+      }) as User)
     })
   },
 }

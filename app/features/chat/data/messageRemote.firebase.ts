@@ -4,7 +4,7 @@ import {
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
-import type {ChatMessage} from '@app/shared/types/chat'
+import type {ChatMessage, ServerTime} from '@app/shared/types/chat'
 import {AI_IMAGE_LIMIT} from '@shared/constants/chat'
 import {
   collection,
@@ -17,7 +17,6 @@ import {
   serverTimestamp,
   where,
 } from '@react-native-firebase/firestore'
-import * as Updates from 'expo-updates'
 
 export const messageRemote = {
   getLatestSeq: async (roomId: string): Promise<number> => {
@@ -61,9 +60,9 @@ export const messageRemote = {
       ]
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
-      const newMessages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
+      const newMessages = snapshot.docs.map(messageDoc => ({
+        id: messageDoc.id,
+        ...messageDoc.data(),
       })) as ChatMessage[]
       return newMessages
     })
@@ -85,9 +84,9 @@ export const messageRemote = {
       `messageRemote.subscribeChatMessages_${roomId}`,
       messageQuery,
       snapshot => {
-        const newMessages = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
+      const newMessages = snapshot.docs.map(messageDoc => ({
+          id: messageDoc.id,
+          ...messageDoc.data(),
         })) as ChatMessage[]
         callback(newMessages)
       },
@@ -98,12 +97,12 @@ export const messageRemote = {
   },
   subscribeChatMessagesByTime: (
     roomId: string,
-    lastMessageAt: any, // Timestamp or Date
+    lastMessageAt: ServerTime | Date | number | null | undefined,
     callback: (docs: ChatMessage[]) => void,
   ) => {
     if (!roomId) return () => {}
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
-    
+
     // createdAt 기준 필터링 시에는 해당 필드에 대한 orderBy가 필수임
     const messageQuery = query(
       messagesRef,
@@ -115,9 +114,9 @@ export const messageRemote = {
       `messageRemote.subscribeChatMessagesByTime_${roomId}`,
       messageQuery,
       snapshot => {
-        const newMessages = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
+        const newMessages = snapshot.docs.map(messageDoc => ({
+          id: messageDoc.id,
+          ...messageDoc.data(),
         })) as ChatMessage[]
         callback(newMessages)
       },
@@ -155,20 +154,25 @@ export const messageRemote = {
         const now = serverTimestamp()
 
         // 2) AI 맥락(Context) 업데이트 로직 추가
-        const prevRecent = (chatData?.recentMessages as any[]) || []
+        const prevRecent = (chatData?.recentMessages as unknown[]) || []
         let updatedRecent = prevRecent
 
         // 텍스트나 이미지가 있는 경우 맥락에 추가
         if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
           const namePrefix = message.senderName ? `[${message.senderName}]: ` : ''
-          let content: any = message.text || ''
+          let content:
+            | string
+            | Array<
+                | {type: 'text'; text: string}
+                | {type: 'image_url'; image_url: {url: string}}
+              > = message.text || ''
 
           // 이미지가 포함된 경우 멀티모달 포맷으로 저장 (최대 3장까지만 문맥에 포함)
           if (message.imageUrls && message.imageUrls.length > 0) {
             content = [
               {type: 'text', text: `${namePrefix}${message.text || ''}`},
               ...message.imageUrls.slice(0, AI_IMAGE_LIMIT).map(url => ({
-                type: 'image_url',
+                type: 'image_url' as const,
                 image_url: {url},
               })),
             ]

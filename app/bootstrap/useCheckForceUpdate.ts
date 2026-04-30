@@ -5,6 +5,15 @@ import {useEffect} from 'react'
 import {AppState} from 'react-native'
 import {logger} from '../shared/services/logger'
 
+type UpdateStateContext = {
+  downloadError?: Error
+  checkError?: Error
+  downloadedManifest?: unknown
+  latestManifest?: unknown
+}
+
+type UpdateLogEvent = Parameters<typeof logger.logUpdateCheck>[0]
+
 /**
  * 앱 실행 시 및 백그라운드에서 포그라운드로 복귀 시 강제 업데이트 여부를 체크하는 전용 훅
  */
@@ -12,26 +21,7 @@ export function useCheckForceUpdate() {
   useEffect(() => {
     // 1. EAS Update 이벤트 리스너 등록
     const updateSubscription = addUpdatesStateChangeListener(event => {
-      const {context} = event
-      logger.logUpdateCheck({
-        type: context.isChecking
-          ? 'checking'
-          : context.isDownloading
-            ? 'downloading'
-            : context.isRestarting
-              ? 'restarting'
-              : context.downloadError
-                ? 'error'
-                : context.checkError
-                  ? 'error_check'
-                  : context.downloadedManifest
-                    ? 'downloaded'
-                    : context.latestManifest
-                      ? 'updateAvailable'
-                      : 'idle',
-        message:
-          context.downloadError?.message ?? context.checkError?.message,
-      })
+      logger.logUpdateCheck(toUpdateLogEvent(event.context))
     })
 
     // 2. 앱 최초 진입 시 체크
@@ -52,4 +42,17 @@ export function useCheckForceUpdate() {
       subscription.remove()
     }
   }, [])
+}
+
+function toUpdateLogEvent(context: UpdateStateContext): UpdateLogEvent {
+  if (context.downloadError) {
+    return {type: 'error', message: context.downloadError.message}
+  }
+  if (context.checkError) {
+    return {type: 'error_check', message: context.checkError.message}
+  }
+  if (context.downloadedManifest) return {type: 'downloaded'}
+  if (context.latestManifest) return {type: 'updateAvailable'}
+
+  return {type: 'idle'}
 }

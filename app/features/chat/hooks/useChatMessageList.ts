@@ -27,7 +27,10 @@ export const useChatMessageList = ({
   // 2. 채팅 목록 무한 스크롤 (로컬 우선 뷰어)
   const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
     useChatMessagesInfinite(roomId)
-  const messages = data?.pages?.flatMap(page => page?.data ?? []) ?? []
+  const messages = useMemo(
+    () => data?.pages?.flatMap(page => page?.data ?? []) ?? [],
+    [data?.pages],
+  )
 
   // 멤버들 정보 map
   const membersMap = useMemo(() => {

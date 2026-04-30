@@ -15,8 +15,8 @@ export function useFCMSetup() {
   useEffect(() => {
     const unsub = onAuthStateChanged(
       auth,
-      (user: FirebaseAuthTypes.User | null) => {
-        setUser(user)
+      (nextUser: FirebaseAuthTypes.User | null) => {
+        setUser(nextUser)
       },
     )
     return unsub

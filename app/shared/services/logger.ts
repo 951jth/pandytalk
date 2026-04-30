@@ -1,6 +1,14 @@
 import crashlytics from '@react-native-firebase/crashlytics'
 import * as Updates from 'expo-updates'
 
+type CrashReporter = {
+  log: (message: string) => void
+  recordError: (error: Error) => void
+  setCustomKey: (key: string, value: string) => void
+}
+
+const getCrashReporter = () => crashlytics() as unknown as CrashReporter
+
 /**
  * Common logging utility with support for:
  * - Console logging in development
@@ -33,7 +41,7 @@ class Logger {
         is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
       }
 
-      const crash = crashlytics() as any
+      const crash = getCrashReporter()
       Object.entries(info).forEach(([key, value]) => {
         crash.setCustomKey(key, value)
       })
@@ -52,7 +60,7 @@ class Logger {
     }
 
     const logMsg = `[EAS Update Event] Type: ${event.type}`
-    const crash = crashlytics() as any
+    const crash = getCrashReporter()
     crash.log(logMsg)
 
     // 성공 케이스: 업데이트가 다운로드되었거나 사용 가능한 상태
@@ -74,7 +82,7 @@ class Logger {
   /**
    * Log debug message to console only in development
    */
-  debug(message: string, context?: any) {
+  debug(message: string, context?: unknown) {
     if (this.isDev) {
       console.debug(`[DEBUG] ${message}`, context || '')
     }
@@ -83,12 +91,12 @@ class Logger {
   /**
    * Log info message to console
    */
-  info(message: string, context?: any) {
+  info(message: string, context?: unknown) {
     if (this.isDev) {
       console.info(`[INFO] ${message}`, context || '')
     } else {
       // In production, we can use crashlytics().log() for breadcrumbs
-      crashlytics().log(
+      getCrashReporter().log(
         `[INFO] ${message} ${context ? JSON.stringify(context) : ''}`,
       )
     }
@@ -97,13 +105,14 @@ class Logger {
   /**
    * Log warning message to console and Crashlytics
    */
-  warn(message: string, error?: any) {
+  warn(message: string, error?: unknown) {
     if (this.isDev) {
       console.warn(`[WARN] ${message}`, error || '')
     } else {
-      crashlytics().log(`[WARN] ${message}`)
+      const crash = getCrashReporter()
+      crash.log(`[WARN] ${message}`)
       if (error) {
-        crashlytics().recordError(
+        crash.recordError(
           error instanceof Error ? error : new Error(JSON.stringify(error)),
         )
       }
@@ -113,17 +122,18 @@ class Logger {
   /**
    * Log error message to console and Crashlytics
    */
-  error(message: string, error?: any) {
+  error(message: string, error?: unknown) {
     if (this.isDev) {
       console.error(`[ERROR] ${message}`, error || '')
     } else {
-      crashlytics().log(`[ERROR] ${message}`)
+      const crash = getCrashReporter()
+      crash.log(`[ERROR] ${message}`)
       if (error) {
-        crashlytics().recordError(
+        crash.recordError(
           error instanceof Error ? error : new Error(JSON.stringify(error)),
         )
       } else {
-        crashlytics().recordError(new Error(message))
+        crash.recordError(new Error(message))
       }
     }
   }

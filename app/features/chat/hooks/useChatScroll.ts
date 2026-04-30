@@ -1,6 +1,7 @@
 import {FlashList} from '@shopify/flash-list'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {NativeScrollEvent, NativeSyntheticEvent} from 'react-native'
+import type {ChatMessageItemProps} from '../components/ChatMessageItem'
 
 interface UseChatScrollProps {
   userId: string | null | undefined
@@ -9,11 +10,11 @@ interface UseChatScrollProps {
 }
 
 export const useChatScroll = ({
-  userId,
+  userId: _userId,
   latestMessageId,
   isMine,
 }: UseChatScrollProps) => {
-  const flatListRef = useRef<FlashList<any>>(null)
+  const flatListRef = useRef<FlashList<ChatMessageItemProps>>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
   const lastMessageIdRef = useRef<string | null>(null)
 

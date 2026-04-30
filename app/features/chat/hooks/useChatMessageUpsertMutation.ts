@@ -63,7 +63,7 @@ export const useChatMessageUpsertMutation = (
         console.warn('[sqlite] saveMessages failed', e)
       }
     },
-    [roomId],
+    [queryClient, roomId],
   )
 
   // 메시지 상태 업데이트 (pending -> success / fail)
@@ -116,7 +116,8 @@ export const useChatMessageUpsertMutation = (
     //   updateMessageStatus(ctx.key, ctx.optimistic, 'success')
     // },
 
-    onError: (err, message, ctx) => {
+    onError: (err, _message, ctx) => {
+      console.warn('[chat] send message failed', err)
       if (ctx?.optimistic?.id)
         updateMessageStatus(ctx.key, ctx.optimistic, 'failed')
     },

@@ -45,8 +45,8 @@ export default function GroupManageScreen() {
           renderItem={({item}) => (
             <GuestGroup
               item={item}
-              onPress={item => {
-                setGroupModalProps({open: true, record: item})
+              onPress={selectedGroup => {
+                setGroupModalProps({open: true, record: selectedGroup})
               }}
             />
           )}

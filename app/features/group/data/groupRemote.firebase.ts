@@ -1,6 +1,7 @@
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
+import type {FsSnapshot} from '@app/shared/types/firebase'
 import type {Group} from '@app/shared/types/group'
 import {
   collection,
@@ -17,7 +18,7 @@ const DEFAULT_SIZE = 20
 
 export type GetGroupsPagingParams = {
   pageSize?: number
-  pageParam?: any // React Query의 pageParam (보통 DocumentSnapshot)
+  pageParam?: FsSnapshot
 }
 
 export const groupRemote = {
@@ -35,9 +36,9 @@ export const groupRemote = {
       return toPageResult<Group>(
         snapshot.docs,
         pageSize || DEFAULT_SIZE,
-        doc => ({
-          id: doc.id,
-          ...doc.data(),
+        groupDoc => ({
+          id: groupDoc.id,
+          ...groupDoc.data(),
         }),
       )
     })

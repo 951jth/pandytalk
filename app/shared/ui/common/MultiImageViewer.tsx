@@ -1,10 +1,5 @@
-import React, {useMemo, useState} from 'react'
-import {
-  StyleSheet,
-  TouchableOpacity,
-  View,
-  useWindowDimensions,
-} from 'react-native'
+import React, {useCallback, useMemo, useState} from 'react'
+import {StyleSheet, TouchableOpacity, View} from 'react-native'
 import FastImage from 'react-native-fast-image'
 import EnhancedImageViewing from 'react-native-image-viewing'
 import {Icon, Text} from 'react-native-paper'
@@ -23,23 +18,51 @@ export default function MultiImageViewer({
 }: propTypes) {
   const [visible, setVisible] = useState(false)
   const [index, setIndex] = useState(0)
-  const {width: windowWidth} = useWindowDimensions()
 
   // useMemo를 사용하여 이미지 소스 배열의 참조값을 고정함 (깜빡임 방지 핵심)
   // 훅은 반드시 모든 리턴문보다 위에 있어야 합니다.
   const imageSources = useMemo(() => images.map(uri => ({uri})), [images])
-
-  if (!images || images.length === 0) return null
 
   const handleOpen = (idx: number) => {
     setIndex(idx)
     setVisible(true)
   }
 
-  const handleDownload = (idx: number) => {
+  const handleDownload = useCallback((idx: number) => {
     const fileUrl = images[idx]
     downloadUrl(fileUrl)
-  }
+  }, [images])
+
+  const HeaderComponent = useCallback(
+    ({imageIndex}: {imageIndex: number}) => (
+      <View style={styles.header}>
+        {useDownload && (
+          <TouchableOpacity onPress={() => handleDownload(imageIndex)}>
+            <Icon source="arrow-collapse-down" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={() => setVisible(false)}
+          style={styles.closeBtn}>
+          <Icon source="close" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    ),
+    [handleDownload, useDownload],
+  )
+
+  const FooterComponent = useCallback(
+    () => (
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>
+          {index + 1} / {images.length}
+        </Text>
+      </View>
+    ),
+    [images.length, index],
+  )
+
+  if (!images || images.length === 0) return null
 
   // 그리드 레이아웃 계산
   const renderGrid = () => {
@@ -95,31 +118,8 @@ export default function MultiImageViewer({
         visible={visible}
         onImageIndexChange={setIndex}
         onRequestClose={() => setVisible(false)}
-        HeaderComponent={({imageIndex}) => (
-          <View style={styles.header}>
-            {useDownload && (
-              <TouchableOpacity onPress={() => handleDownload(imageIndex)}>
-                <Icon source="arrow-collapse-down" size={24} color="#fff" />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={() => setVisible(false)}
-              style={styles.closeBtn}>
-              <Icon source="close" size={28} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        )}
-        FooterComponent={
-          images.length > 1
-            ? () => (
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>
-                    {index + 1} / {images.length}
-                  </Text>
-                </View>
-              )
-            : undefined
-        }
+        HeaderComponent={HeaderComponent}
+        FooterComponent={images.length > 1 ? FooterComponent : undefined}
       />
 
       {/* 전체 화면 내비게이션 화살표 (고정 오버레이) */}

@@ -1,5 +1,5 @@
 import COLORS from '@app/shared/constants/color'
-import React, {useState} from 'react'
+import React, {useCallback, useState} from 'react'
 import {
   StyleSheet,
   TouchableOpacity,
@@ -10,7 +10,6 @@ import {
 import FastImage, {FastImageProps} from 'react-native-fast-image'
 import EnhancedImageViewing from 'react-native-image-viewing'
 import {Icon} from 'react-native-paper'
-import {useAppSelector} from '../../../store/reduxHooks'
 import {downloadUrl} from '../../utils/file'
 
 interface ImageSource {
@@ -30,18 +29,38 @@ export default function ImageViewer({
   images,
   index = 0,
   imageProps,
-  setIndex,
+  setIndex: _setIndex,
   useDownload = true,
   style,
 }: propTypes) {
   const [visible, setVisible] = useState(false)
-  const {data: userInfo} = useAppSelector(state => state.user)
-  if (!images?.[0]?.uri) return null
 
-  const handleDownload = (idx: number) => {
+  const handleDownload = useCallback((idx: number) => {
     const fileUrl = images?.[idx]?.uri
     downloadUrl(fileUrl)
-  }
+  }, [images])
+
+  const HeaderComponent = useCallback(
+    ({imageIndex}: {imageIndex: number}) => {
+      return (
+        <View style={styles.header}>
+          {useDownload && (
+            <TouchableOpacity onPress={() => handleDownload(imageIndex)}>
+              <Icon source="arrow-collapse-down" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => setVisible(false)}
+            style={styles.closeBtn}>
+            <Icon source="close" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )
+    },
+    [handleDownload, useDownload],
+  )
+
+  if (!images?.[0]?.uri) return null
 
   return (
     <>
@@ -60,22 +79,7 @@ export default function ImageViewer({
         imageIndex={index}
         visible={visible}
         onRequestClose={() => setVisible(false)}
-        HeaderComponent={({imageIndex}) => {
-          return (
-            <View style={styles.header}>
-              {useDownload && (
-                <TouchableOpacity onPress={() => handleDownload(imageIndex)}>
-                  <Icon source="arrow-collapse-down" size={20} color="#fff" />
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                onPress={() => setVisible(false)}
-                style={styles.closeBtn}>
-                <Icon source="close" size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          )
-        }}
+        HeaderComponent={HeaderComponent}
       />
     </>
   )
