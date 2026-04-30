@@ -20,7 +20,7 @@
 
 ## ✨ Core Features & Key Logic
 
-### 1. 스마트 데이터 동기화
+### 1. 데이터 동기화
 
 서버와 로컬의 데이터를 비교하여 누락된 메시지만 골라 빠르게 동기화합니다. 불필요한 데이터 전송을 줄여 성능을 최적화했습니다.
 
@@ -34,27 +34,20 @@
 - [🔗 messageLocal.sqlite.ts (SQLite CRUD)](app/features/chat/data/messageLocal.sqlite.ts)
 - [🔗 messageRemote.firebase.ts (Firestore 연동)](app/features/chat/data/messageRemote.firebase.ts)
 
-### 3. 공용 폼 엔진 (InputForm)
-
-JSON 설정 기반으로 복잡한 폼을 선언적으로 관리하며, 유효성 검사 및 데이터 바인딩을 자동화하여 공통 UI의 생산성을 높였습니다.
-
-- [🔗 InputForm.tsx (선언적 폼 엔진)](app/shared/ui/form/InputForm.tsx)
-- [🔗 useInputForm (폼 상태 및 검증 훅)](app/shared/ui/form/hooks/useInputForm.ts)
-
-### 4. 커스텀 채팅 훅 (Chat Hooks)
-
-복잡한 채팅 비즈니스 로직(메시지 전송, 이미지 업로드, 방 생성 등)을 훅으로 분리하여 관리합니다.
-
-- [🔗 useChatMessageInput (메시지 입력 및 전송 로직)](app/features/chat/hooks/useChatMessageInput.ts)
-- [🔗 MentionSuggestion (AI 봇 멘션 추천)](app/features/chat/components/MentionSuggestion.tsx)
-
-### 5. 하이브리드 AI 스트리밍
+### 3. 하이브리드 AI 스트리밍
 
 AI 봇(@팬디)과의 대화에서 즉각적인 반응(SSE)과 영구적인 기록(Firestore)을 동시에 제공하는 하이브리드 방식을 채택했습니다.
 
 - [🔗 onAiMention (봇 응답 및 데이터 수명 주기 관리)](functions/src/triggers/chats/onAiMention.ts)
 - [🔗 onAiStream (실시간 SSE 스트리밍)](functions/src/triggers/chats/onAiStream.ts)
 - [🔗 AiStreamingText (스트리밍 통합 UI 컴포넌트)](app/features/chat/components/AiStreamingText.tsx)
+
+### 4. 공용 폼 엔진 (InputForm)
+
+JSON 설정 기반으로 복잡한 폼을 선언적으로 관리하며, 유효성 검사 및 데이터 바인딩을 자동화하여 공통 UI의 생산성을 높였습니다.
+
+- [🔗 InputForm.tsx (선언적 폼 엔진)](app/shared/ui/form/InputForm.tsx)
+- [🔗 useInputForm (폼 상태 및 검증 훅)](app/shared/ui/form/hooks/useInputForm.ts)
 
 ---
 
@@ -93,7 +86,7 @@ React Native의 비동기 환경에서 SQLite 데이터가 꼬이는 것을 방�
 
 - [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
 
-### 3. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
+### 4. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
 
 단순한 요청-응답 방식이 아니라, 사용자 경험을 극대화하기 위해 **실시간 스트리밍(SSE)**과 **데이터베이스 영속성(Trigger)**을 분리하여 처리합니다.
 
@@ -127,10 +120,18 @@ sequenceDiagram
 
 ## 🧰 Tech Stack
 
-- **Frontend**: React Native, TypeScript, UI-Kit (Paper)
-- **State**: React Query, Redux
-- **Database**: SQLite (Local), Firebase Firestore (Remote)
-- **AI/Backend**: OpenAI (GPT-4o), Serper (Search), Firebase Cloud Functions, FCM
+| 분류 | 기술 | 용도 |
+|---|---|---|
+| **Frontend** | React Native, TypeScript | 크로스플랫폼 앱 |
+| **UI** | React Native Paper | 디자인 시스템 |
+| **Server State** | React Query | 캐싱, 인피니트 쿼리 |
+| **Client State** | Redux Toolkit | 인증 세션 등 전역 상태 최소화 |
+| **Local DB** | SQLite (SSOT) | 오프라인 우선, 빠른 조회 |
+| **Remote DB** | Firebase Firestore | 실시간 동기화 |
+| **AI** | OpenAI GPT-4o, Serper API | AI 봇 응답 + 웹 검색 |
+| **Backend** | Firebase Cloud Functions | AI 트리거, 푸시 알림 |
+| **Push** | FCM | 메시지 알림 |
+| **배포** | EAS Build + EAS Update | CI/CD, OTA 업데이트 |
 
 ---
 
