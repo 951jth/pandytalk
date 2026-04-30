@@ -78,8 +78,14 @@ export function mergeMessages(
 }
 //체팅 날짜순 정렬
 export const compareChat = (a: ChatRoom, b: ChatRoom) => {
-  const aLast = toMillisFromServerTime(a.lastMessage?.createdAt) ?? 0
-  const bLast = toMillisFromServerTime(b.lastMessage?.createdAt) ?? 0
+  const aLast =
+    toMillisFromServerTime(a.lastMessageAt) ??
+    toMillisFromServerTime(a.lastMessage?.createdAt) ??
+    0
+  const bLast =
+    toMillisFromServerTime(b.lastMessageAt) ??
+    toMillisFromServerTime(b.lastMessage?.createdAt) ??
+    0
   if (aLast !== bLast) return bLast - aLast // desc
   const aCreated = toMillisFromServerTime(a.createdAt) ?? 0
   const bCreated = toMillisFromServerTime(b.createdAt) ?? 0

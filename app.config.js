@@ -33,7 +33,7 @@ module.exports = {
   // 6. 안드로이드 섹션 (프리빌드 시 매우 중요)
   android: {
     package: 'com.cshchatapp', // 안드로이드 앱 고유 ID (패키지명)
-    versionCode: 43, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
+    versionCode: 44, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {

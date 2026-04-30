@@ -84,7 +84,19 @@ export const getPandibotMessages = (
 }
 
 /**
- * OpenAI API를 통해 도구 호출을 포함한 AI 응답 스트림을 반환합니다.
+ * OpenAI API를 통해 AI 응답 스트림을 생성합니다.
+ *
+ * 이 함수는 바로 스트리밍 응답을 만들지 않고, 먼저 non-streaming 요청을 한 번 보내
+ * 모델이 검색 도구(search_web)를 호출해야 하는지 판단하게 합니다.
+ * 검색이 필요하면 Serper 검색 결과를 tool 메시지로 대화 기록에 추가한 뒤,
+ * 그 보강된 메시지 목록으로 최종 streaming 요청을 다시 보냅니다.
+ * 검색이 필요하지 않으면 원본 메시지 목록으로 바로 streaming 요청을 보냅니다.
+ *
+ * @param openai OpenAI SDK 클라이언트 인스턴스
+ * @param messages system/user/history가 포함된 Chat Completions 메시지 목록
+ * @param tools 모델이 사용할 수 있는 function calling 도구 목록
+ * @param searchApiKey search_web 도구 실행에 사용할 Serper API 키
+ * @returns OpenAI Chat Completions 스트림. 호출부에서 for-await로 chunk를 읽어 SSE로 전달합니다.
  */
 export const getAiResponseStream = async (
   openai: OpenAI,
@@ -92,7 +104,9 @@ export const getAiResponseStream = async (
   tools: OpenAI.Chat.Completions.ChatCompletionTool[],
   searchApiKey: string, // 이제 Google(Serper) 키를 전달받음
 ) => {
-  // 1단계: 검색 도구 사용 여부 확인
+  // 1단계: 스트리밍 없이 모델을 한 번 호출해 도구 호출 여부만 먼저 확인합니다.
+  // tool_choice: 'auto'이므로 모델은 현재 메시지만으로 답할 수 있으면 일반 답변을,
+  // 최신 정보가 필요하다고 판단하면 tools에 정의된 search_web 호출을 반환합니다.
   const initialResponse = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages,
@@ -102,18 +116,27 @@ export const getAiResponseStream = async (
 
   const responseMessage = initialResponse.choices[0].message
 
+  // 모델이 function calling을 요청한 경우입니다.
+  // OpenAI 규격상 assistant의 tool_calls 메시지를 먼저 대화 기록에 넣고,
+  // 각 tool_call_id에 대응되는 role: 'tool' 메시지를 이어서 추가해야 합니다.
   if (responseMessage.tool_calls) {
     const nextMessages = [...messages, responseMessage]
 
     for (const toolCall of responseMessage.tool_calls) {
+      // 현재 서비스에서 실제로 실행 가능한 도구는 search_web 하나입니다.
+      // 다른 이름의 도구 호출이 들어오면 실행하지 않고 무시합니다.
       if (
         toolCall.type === 'function' &&
         toolCall.function.name === 'search_web'
       ) {
+        // 모델이 JSON 문자열로 넘긴 function arguments에서 검색어를 꺼냅니다.
+        // getPandibotTools에서 query를 required로 선언했기 때문에 정상 호출이면 query가 존재합니다.
         const queryParam = JSON.parse(toolCall.function.arguments).query
         // 구글(Serper) 검색 엔진 사용
         const searchContent = await searchGoogle(queryParam, searchApiKey)
         logger.info(`🔍 [onAiStream] 검색 결과: ${searchContent}`)
+        // 검색 결과를 같은 tool_call_id에 연결해 모델에게 되돌려줍니다.
+        // 이렇게 해야 다음 OpenAI 호출에서 모델이 "검색 결과를 본 뒤" 최종 답변을 생성할 수 있습니다.
         nextMessages.push({
           role: 'tool',
           tool_call_id: toolCall.id,
@@ -122,7 +145,8 @@ export const getAiResponseStream = async (
       }
     }
     logger.info(`🔍 도구 호출 결과: ${JSON.stringify(nextMessages)}`)
-    // 도구 호출 결과가 포함된 상태로 최종 스트림 생성
+    // 2단계: 도구 실행 결과가 포함된 대화 기록으로 최종 답변 스트림을 생성합니다.
+    // 이 호출의 반환값이 실제 사용자에게 SSE로 전달되는 chunk stream입니다.
     return await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: nextMessages,
@@ -130,7 +154,8 @@ export const getAiResponseStream = async (
     })
   }
 
-  // 도구 호출이 없는 경우 스트림 반환
+  // 도구 호출이 없으면 초기 응답 내용은 사용하지 않습니다.
+  // 대신 같은 messages로 streaming 요청을 다시 보내 호출부가 동일한 방식으로 chunk를 처리하게 합니다.
   return await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages,

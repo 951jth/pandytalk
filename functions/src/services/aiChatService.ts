@@ -76,7 +76,7 @@ export async function updateAiResponse(params: {
       const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
       const updatedRecent = [
         ...prevRecent,
-        {role: 'assistant' as const, content: `[${AI_BOT_NAME}]: ${text}`},
+        {role: 'assistant' as const, content: text},
       ].slice(-10)
 
       // 메시지 문서 업데이트
