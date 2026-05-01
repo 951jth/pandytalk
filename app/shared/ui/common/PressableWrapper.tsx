@@ -2,17 +2,29 @@ import type {ReactNode} from 'react'
 import React from 'react'
 import {
   Pressable,
+  StyleSheet,
+  View,
   type PressableProps,
+  type PressableStateCallbackType,
   type StyleProp,
   type ViewStyle,
-  StyleSheet,
 } from 'react-native'
 
 type propTyps = {
   children: ReactNode
   borderRadius?: number
-  style?: StyleProp<ViewStyle>
-} & PressableProps
+  style?: PressableProps['style']
+} & Omit<PressableProps, 'style'>
+
+const getResolvedStyle = (
+  style: PressableProps['style'],
+  state: PressableStateCallbackType,
+) => (typeof style === 'function' ? style(state) : style)
+
+const getBorderRadius = (style: StyleProp<ViewStyle>) => {
+  const flattenedStyle = (StyleSheet.flatten(style) || {}) as ViewStyle
+  return flattenedStyle.borderRadius ?? 0
+}
 
 export default function PressableWrapper({
   borderRadius,
@@ -20,28 +32,52 @@ export default function PressableWrapper({
   style,
   ...rest
 }: propTyps) {
-  // style에서 borderRadius를 추출하여 Pressable의 터치 영역 곡률에 반영 (안드로이드 리플 대응)
-  const flattenedStyle = (StyleSheet.flatten(style) || {}) as ViewStyle
-  const resolvedBorderRadius = borderRadius ?? flattenedStyle.borderRadius ?? 0
-
   return (
     <Pressable
       {...rest}
       accessibilityRole="button"
-      android_ripple={{
-        color: 'rgba(0, 0, 0, 0.05)',
-        borderless: false,
-        foreground: true,
+      style={state => {
+        const resolvedStyle = getResolvedStyle(style, state)
+        const resolvedBorderRadius =
+          borderRadius ?? getBorderRadius(resolvedStyle as StyleProp<ViewStyle>)
+
+        return [
+          {
+            borderRadius: resolvedBorderRadius,
+            transform: [{scale: state.pressed ? 0.99 : 1}],
+            opacity: state.pressed ? 0.9 : 1,
+          },
+          resolvedStyle,
+        ]
+      }}>
+      {state => {
+        const resolvedStyle = getResolvedStyle(style, state)
+        const resolvedBorderRadius =
+          borderRadius ?? getBorderRadius(resolvedStyle as StyleProp<ViewStyle>)
+
+        return (
+          <>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.pressedOverlay,
+                {
+                  borderRadius: resolvedBorderRadius,
+                  opacity: state.pressed ? 1 : 0,
+                },
+              ]}
+            />
+            {children}
+          </>
+        )
       }}
-      style={({pressed}) => [
-        {
-          borderRadius: resolvedBorderRadius, // 전달된 곡률과 동일하게 터치 영역 설정
-          transform: [{scale: pressed ? 0.98 : 1}], // 눌림 효과 소폭 강화
-          opacity: pressed ? 0.8 : 1, // 투명도 변화 소폭 강화
-        },
-        style,
-      ]}>
-      {children}
     </Pressable>
   )
 }
+
+const styles = StyleSheet.create({
+  pressedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+  },
+})

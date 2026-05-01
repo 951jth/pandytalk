@@ -28,7 +28,10 @@ export default function UserManageItem({
     : '-'
 
   return (
-    <PressableWrapper onPress={() => onPress(item)} style={[styles.cardWrapper, style]}>
+    <PressableWrapper
+      borderRadius={28}
+      onPress={() => onPress(item)}
+      style={[styles.cardWrapper, style]}>
       <View style={styles.cardContainer}>
         {/* 아바타 영역 */}
         <View style={styles.avatarSection}>

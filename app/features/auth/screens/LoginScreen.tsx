@@ -1,12 +1,13 @@
 import {useLoginScreen} from '@app/features/auth/hooks/useLoginScreen'
 import COLORS from '@app/shared/constants/color'
+import {AppButton} from '@app/shared/ui/button/AppButton'
 import AppInput from '@app/shared/ui/input/AppInput'
 import PasswordInput from '@app/shared/ui/input/PasswordInput'
 import pandy from '@shared/assets/images/hello_Pandy.png'
 import React from 'react'
 import {Image, StyleSheet, TouchableOpacity, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
-import {Button, Text} from 'react-native-paper'
+import {Text} from 'react-native-paper'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import KeyboardViewWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
 
@@ -18,6 +19,8 @@ export default function LoginScreen() {
     setPassword,
     errors,
     loading,
+    onEmailBlur,
+    onPasswordBlur,
     onSubmit,
     moveJoinPage,
   } = useLoginScreen()
@@ -47,6 +50,7 @@ export default function LoginScreen() {
               type="outlined"
               value={email}
               onChangeText={setEmail}
+              onBlur={onEmailBlur}
               placeholder="이메일을 입력해주세요."
               keyboardType="email-address"
               outlineStyle={styles.inputOutline}
@@ -56,21 +60,19 @@ export default function LoginScreen() {
               type="outlined"
               value={password}
               onChangeText={setPassword}
+              onBlur={onPasswordBlur}
               outlineStyle={styles.inputOutline}
             />
 
             {errors && <Text style={styles.errorText}>{errors}</Text>}
 
-            <Button
+            <AppButton
               onPress={onSubmit}
               mode="contained"
-              style={styles.submitBtn}
-              contentStyle={styles.submitBtnContent}
-              labelStyle={styles.submitBtnLabel}
               loading={loading}
-              disabled={!!errors}>
+              loadingText="로그인 중">
               로그인하기
-            </Button>
+            </AppButton>
           </View>
 
           {/* 하단 보조 액션 */}
@@ -136,19 +138,6 @@ const styles = StyleSheet.create({
   inputOutline: {
     borderRadius: 14,
     borderColor: '#EFEFEF',
-  },
-  submitBtn: {
-    width: '100%',
-    borderRadius: 16,
-    marginTop: 8,
-    backgroundColor: COLORS.primary,
-  },
-  submitBtnContent: {
-    height: 54,
-  },
-  submitBtnLabel: {
-    fontSize: 16,
-    fontFamily: 'BMDOHYEON',
   },
   errorText: {
     color: '#E74C3C',

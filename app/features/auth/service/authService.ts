@@ -1,7 +1,7 @@
 import {authRemote} from '@app/features/auth/data/authRemote.firebase'
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {fcmService} from '@app/features/notification/service/fcmService'
-import {handleFirebaseAuthError} from '@app/shared/utils/logger'
+import {createFirebaseAuthError} from '@app/shared/utils/logger'
 
 export const authService = {
   login: async (email: string, password: string) => {
@@ -9,7 +9,7 @@ export const authService = {
     try {
       await authRemote.signIn(email, password)
     } catch (e) {
-      throw handleFirebaseAuthError(e)
+      throw createFirebaseAuthError(e)
     }
   },
 
