@@ -41,6 +41,15 @@ export const onAiStream = onRequest(
     } = req.body
     const messageId = bodyMessageId || bodyId
 
+    const perfStartedAt = Date.now()
+    const perfElapsed = () => `${Date.now() - perfStartedAt}ms`
+    let perfFirstChunkLogged = false
+    let perfChunkCount = 0
+
+    logger.info(
+      `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] requestStart chatId=${chatId || 'unknown'}`,
+    )
+
     const controller = new AbortController()
     let aiReplyText = ''
     let isResponseSaved = false // 중복 저장 방지용 플래그
@@ -90,15 +99,29 @@ export const onAiStream = onRequest(
         tools,
         process.env.SERPER_API_SECRET || '',
       )
+      logger.info(
+        `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] openAiStreamReady=${perfElapsed()}`,
+      )
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content || ''
         if (content) {
           aiReplyText += content
+          perfChunkCount += 1
+          if (!perfFirstChunkLogged) {
+            perfFirstChunkLogged = true
+            logger.info(
+              `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] firstChunk=${perfElapsed()}`,
+            )
+          }
           // 클라이언트가 끊겼을 때 write에서 에러가 발생하면 catch로 이동
           res.write(`data: ${JSON.stringify({text: content})}\n\n`)
         }
       }
+
+      logger.info(
+        `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] streamDone=${perfElapsed()} chunks=${perfChunkCount} chars=${aiReplyText.length}`,
+      )
 
       // 스트림 정상 종료 알림
       if (!res.writableEnded) {
@@ -109,8 +132,14 @@ export const onAiStream = onRequest(
         error.name === 'AbortError' || error.code === 'ERR_CANCELED'
       if (isAbortError) {
         logger.info(`🔌 [onAiStream] Stream aborted: ${chatId}`)
+        logger.info(
+          `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] streamAborted=${perfElapsed()} chunks=${perfChunkCount} chars=${aiReplyText.length}`,
+        )
       } else {
         logger.error('❌ SSE 스트리밍 에러', error)
+        logger.info(
+          `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] streamError=${perfElapsed()} chunks=${perfChunkCount} chars=${aiReplyText.length}`,
+        )
 
         if (!res.writableEnded) {
           res.write(
@@ -135,6 +164,9 @@ export const onAiStream = onRequest(
             isResponseSaved = true
             logger.info(
               `✅ [onAiStream] Response finalized and saved: ${chatId}`,
+            )
+            logger.info(
+              `[AI_PERF][server][stream][messageId=${messageId || 'unknown'}] firestoreSaved=${perfElapsed()}`,
             )
           } catch (saveError) {
             logger.error('❌ Final response save failed', saveError)

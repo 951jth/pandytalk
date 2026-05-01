@@ -8,7 +8,7 @@ import ChatMessageItem, {
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
 
-interface Props {
+type Props = {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: ChatRoom | null | undefined
@@ -41,11 +41,7 @@ const maintainVisibleContentPosition = {
   autoscrollToTopThreshold: 10,
 }
 
-export default function ChatMessageList({
-  roomId,
-  userId,
-  roomInfo,
-}: Props) {
+export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
     messagesWithUi, // 훅에서 가공된 데이터 받아옴(멤버 정보도 포함)
     isLoading,

@@ -15,6 +15,8 @@ export interface UseAiStreamOptions {
  */
 const processedMessageIds = new Set<string>()
 
+const AI_PERF_LOG_PREFIX = '[AI_PERF][client][stream]'
+
 /**
  * AI 응답 스트리밍 및 자연스러운 타이핑 효과를 위한 커스텀 훅
  * 단순히 수신 데이터를 출력하는 것을 넘어, 데이터 수신 속도와 출력 속도 간의 차이를
@@ -35,6 +37,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const fullTextRef = useRef<string>('') // 서버로부터 수신된 실제 전체 텍스트 원본
   const cursorRef = useRef<number>(0) // 타이핑 효과가 현재 진행 중인 글자 위치
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null) // 애니메이션 타이머
+  const perfRef = useRef({
+    startAt: 0,
+    firstChunkAt: 0,
+    firstRenderAt: 0,
+    chunkCount: 0,
+  })
 
   // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
   const isPreviouslyProcessed = useRef<boolean>(
@@ -60,6 +68,15 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           const charsToAdd = Math.max(1, Math.min(5, Math.ceil(backlog / 10)))
           cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
+
+          if (__DEV__ && !perfRef.current.firstRenderAt) {
+            perfRef.current.firstRenderAt = performance.now()
+            console.info(
+              `${AI_PERF_LOG_PREFIX}[messageId=${item?.id || 'unknown'}] firstTextRendered=${(
+                perfRef.current.firstRenderAt - perfRef.current.startAt
+              ).toFixed(2)}ms`,
+            )
+          }
         } else if (!isStreaming) {
           // 모든 데이터가 수신되었고 출력이 완료되었으면 타이머 종료
           if (timerRef.current) {
@@ -98,8 +115,21 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
       setDisplayText('')
       fullTextRef.current = ''
+      cursorRef.current = 0
       setIsStreaming(true)
       setError(null)
+      perfRef.current = {
+        startAt: performance.now(),
+        firstChunkAt: 0,
+        firstRenderAt: 0,
+        chunkCount: 0,
+      }
+
+      if (__DEV__) {
+        console.info(
+          `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] requestStart`,
+        )
+      }
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
@@ -110,17 +140,53 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고,
             // 타이핑 타이머가 이를 감지하여 화면에 순차적으로 노출함
             fullTextRef.current += chunk
+            perfRef.current.chunkCount += 1
+
+            if (__DEV__ && !perfRef.current.firstChunkAt) {
+              perfRef.current.firstChunkAt = performance.now()
+              console.info(
+                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] firstChunkBuffered=${(
+                  perfRef.current.firstChunkAt - perfRef.current.startAt
+                ).toFixed(2)}ms`,
+              )
+            }
           },
           onDone: () => {
             setIsStreaming(false) // 스트리밍 완료 핸들러
+            if (__DEV__) {
+              const doneAt = performance.now()
+              console.info(
+                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] streamDone=${(
+                  doneAt - perfRef.current.startAt
+                ).toFixed(2)}ms chunks=${perfRef.current.chunkCount} chars=${
+                  fullTextRef.current.length
+                }`,
+              )
+            }
             if (targetMessageId) processedMessageIds.delete(targetMessageId)
           },
           onError: (err: any) => {
+            if (__DEV__) {
+              const errorAt = performance.now()
+              console.info(
+                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] streamError=${(
+                  errorAt - perfRef.current.startAt
+                ).toFixed(2)}ms`,
+              )
+            }
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
           },
         })
       } catch (err: any) {
+        if (__DEV__) {
+          const errorAt = performance.now()
+          console.info(
+            `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] requestError=${(
+              errorAt - perfRef.current.startAt
+            ).toFixed(2)}ms`,
+          )
+        }
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
       }

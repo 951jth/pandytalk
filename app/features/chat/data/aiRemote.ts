@@ -1,6 +1,8 @@
 import {AI_STREAM_URL} from '@shared/constants/ai'
 import EventSource from 'react-native-sse'
 
+const AI_PERF_LOG_PREFIX = '[AI_PERF][client][sse]'
+
 export interface AiStreamParams {
   chatId: string
   item: import('@app/shared/types/chat').ChatMessage
@@ -22,6 +24,16 @@ export const aiRemote = {
     onError,
   }: AiStreamParams) => {
     try {
+      const startedAt = performance.now()
+      let firstChunkAt = 0
+      let chunkCount = 0
+      let receivedChars = 0
+      const messageId = item.id || 'unknown'
+
+      if (__DEV__) {
+        console.info(`${AI_PERF_LOG_PREFIX}[messageId=${messageId}] connect`)
+      }
+
       // 1. SSE 연결 시작 (POST 방식 지원)
       const es = new EventSource<any>(AI_STREAM_URL, {
         method: 'POST',
@@ -40,6 +52,14 @@ export const aiRemote = {
         if (!event.data) return
 
         if (event.data === '[DONE]') {
+          if (__DEV__) {
+            const doneAt = performance.now()
+            console.info(
+              `${AI_PERF_LOG_PREFIX}[messageId=${messageId}] done=${(
+                doneAt - startedAt
+              ).toFixed(2)}ms chunks=${chunkCount} chars=${receivedChars}`,
+            )
+          }
           es.close()
           onDone()
           return
@@ -49,6 +69,16 @@ export const aiRemote = {
 
         // JSON 형식이 아닌 경우 (일반 텍스트가 바로 오는 경우 처리)
         if (!rawData.startsWith('{')) {
+          chunkCount += 1
+          receivedChars += rawData.length
+          if (__DEV__ && !firstChunkAt) {
+            firstChunkAt = performance.now()
+            console.info(
+              `${AI_PERF_LOG_PREFIX}[messageId=${messageId}] firstChunkReceived=${(
+                firstChunkAt - startedAt
+              ).toFixed(2)}ms`,
+            )
+          }
           onChunk(rawData)
           return
         }
@@ -56,6 +86,16 @@ export const aiRemote = {
         try {
           const parsed = JSON.parse(rawData)
           if (parsed && typeof parsed.text === 'string') {
+            chunkCount += 1
+            receivedChars += parsed.text.length
+            if (__DEV__ && !firstChunkAt) {
+              firstChunkAt = performance.now()
+              console.info(
+                `${AI_PERF_LOG_PREFIX}[messageId=${messageId}] firstChunkReceived=${(
+                  firstChunkAt - startedAt
+                ).toFixed(2)}ms`,
+              )
+            }
             onChunk(parsed.text)
           } else if (parsed && parsed.error) {
             onError(new Error(parsed.error))
@@ -77,6 +117,14 @@ export const aiRemote = {
         }
 
         console.error('[aiRemote] SSE Error:', errorEvent)
+        if (__DEV__) {
+          const errorAt = performance.now()
+          console.info(
+            `${AI_PERF_LOG_PREFIX}[messageId=${messageId}] error=${(
+              errorAt - startedAt
+            ).toFixed(2)}ms`,
+          )
+        }
 
         // 에러 발생 시 연결 종료 및 콜백 호출
         onError(new Error(errorEvent.message || 'SSE connection failed'))
