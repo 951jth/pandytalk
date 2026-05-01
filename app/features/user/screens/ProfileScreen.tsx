@@ -1,5 +1,5 @@
 import React from 'react'
-import {ScrollView, StyleSheet, Text, View} from 'react-native'
+import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 
 import ProfileMenu from '@app/features/user/components/ProfileMenu'
@@ -24,6 +24,7 @@ export default function ProfileScreen(): React.JSX.Element {
     updateUserProfile,
     onReset,
     showDebugInfo,
+    debugInfoLongPressDelayMs,
   } = useProfileScreen()
 
   return (
@@ -47,11 +48,13 @@ export default function ProfileScreen(): React.JSX.Element {
             ref={profileRef}
             defaultUrl={userInfo?.photoURL}
           />
-          <Text
-            style={styles.profileName}
-            onLongPress={showDebugInfo}>
-            {userInfo?.displayName || '사용자'}님
-          </Text>
+          <Pressable
+            onLongPress={showDebugInfo}
+            delayLongPress={debugInfoLongPressDelayMs}>
+            <Text style={styles.profileName}>
+              {userInfo?.displayName || '사용자'}님
+            </Text>
+          </Pressable>
         </View>
 
         {/* 정보 카드 섹션 */}

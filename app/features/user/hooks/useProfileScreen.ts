@@ -17,6 +17,8 @@ import {useAppSelector} from '../../../store/reduxHooks'
 import {AppDispatch} from '../../../store/store'
 import {fetchUserById} from '../../../store/userSlice'
 
+const DEBUG_INFO_LONG_PRESS_DELAY_MS = 5000
+
 /**
  * 프로필 정보 조회 및 업데이트를 담당하는 메인 훅
  * (메뉴 관련 기능은 useProfileMenu 훅으로 이관됨)
@@ -102,5 +104,6 @@ export function useProfileScreen() {
     updateUserProfile,
     onReset,
     showDebugInfo,
+    debugInfoLongPressDelayMs: DEBUG_INFO_LONG_PRESS_DELAY_MS,
   }
 }
