@@ -10,17 +10,19 @@ import {
 
 type propTyps = {
   children: ReactNode
+  borderRadius?: number
   style?: StyleProp<ViewStyle>
 } & PressableProps
 
 export default function PressableWrapper({
+  borderRadius,
   children,
   style,
   ...rest
 }: propTyps) {
   // style에서 borderRadius를 추출하여 Pressable의 터치 영역 곡률에 반영 (안드로이드 리플 대응)
   const flattenedStyle = (StyleSheet.flatten(style) || {}) as ViewStyle
-  const borderRadius = flattenedStyle.borderRadius ?? 0
+  const resolvedBorderRadius = borderRadius ?? flattenedStyle.borderRadius ?? 0
 
   return (
     <Pressable
@@ -33,7 +35,7 @@ export default function PressableWrapper({
       }}
       style={({pressed}) => [
         {
-          borderRadius, // 전달된 곡률과 동일하게 터치 영역 설정
+          borderRadius: resolvedBorderRadius, // 전달된 곡률과 동일하게 터치 영역 설정
           transform: [{scale: pressed ? 0.98 : 1}], // 눌림 효과 소폭 강화
           opacity: pressed ? 0.8 : 1, // 투명도 변화 소폭 강화
         },

@@ -1,6 +1,7 @@
 import type {ChatMessage} from '@app/shared/types/chat'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {aiService} from '../service/aiService'
+import {logAiPerf} from '../utils/aiPerfLogger'
 
 export interface UseAiStreamOptions {
   chatId?: string
@@ -14,8 +15,6 @@ export interface UseAiStreamOptions {
  * 화면 전환이나 재마운트 시 이미 진행 중인 스트리밍이 다시 시작되는 현상을 원천 차단합니다.
  */
 const processedMessageIds = new Set<string>()
-
-const AI_PERF_LOG_PREFIX = '[AI_PERF][client][stream]'
 
 /**
  * AI 응답 스트리밍 및 자연스러운 타이핑 효과를 위한 커스텀 훅
@@ -69,13 +68,15 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
 
-          if (__DEV__ && !perfRef.current.firstRenderAt) {
+          if (!perfRef.current.firstRenderAt) {
             perfRef.current.firstRenderAt = performance.now()
-            console.info(
-              `${AI_PERF_LOG_PREFIX}[messageId=${item?.id || 'unknown'}] firstTextRendered=${(
-                perfRef.current.firstRenderAt - perfRef.current.startAt
-              ).toFixed(2)}ms`,
-            )
+            logAiPerf({
+              scope: 'stream',
+              event: 'firstTextRendered',
+              messageId: item?.id,
+              startedAt: perfRef.current.startAt,
+              at: perfRef.current.firstRenderAt,
+            })
           }
         } else if (!isStreaming) {
           // 모든 데이터가 수신되었고 출력이 완료되었으면 타이머 종료
@@ -95,7 +96,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         timerRef.current = null
       }
     }
-  }, [isStreaming])
+  }, [isStreaming, item?.id])
 
   /**
    * SSE(Server-Sent Events) 스트리밍 시작 함수
@@ -125,11 +126,11 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         chunkCount: 0,
       }
 
-      if (__DEV__) {
-        console.info(
-          `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] requestStart`,
-        )
-      }
+      logAiPerf({
+        scope: 'stream',
+        event: 'requestStart',
+        messageId: targetMessageId,
+      })
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
@@ -142,51 +143,49 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             fullTextRef.current += chunk
             perfRef.current.chunkCount += 1
 
-            if (__DEV__ && !perfRef.current.firstChunkAt) {
+            if (!perfRef.current.firstChunkAt) {
               perfRef.current.firstChunkAt = performance.now()
-              console.info(
-                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] firstChunkBuffered=${(
-                  perfRef.current.firstChunkAt - perfRef.current.startAt
-                ).toFixed(2)}ms`,
-              )
+              logAiPerf({
+                scope: 'stream',
+                event: 'firstChunkBuffered',
+                messageId: targetMessageId,
+                startedAt: perfRef.current.startAt,
+                at: perfRef.current.firstChunkAt,
+              })
             }
           },
           onDone: () => {
             setIsStreaming(false) // 스트리밍 완료 핸들러
-            if (__DEV__) {
-              const doneAt = performance.now()
-              console.info(
-                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] streamDone=${(
-                  doneAt - perfRef.current.startAt
-                ).toFixed(2)}ms chunks=${perfRef.current.chunkCount} chars=${
-                  fullTextRef.current.length
-                }`,
-              )
-            }
+            logAiPerf({
+              scope: 'stream',
+              event: 'streamDone',
+              messageId: targetMessageId,
+              startedAt: perfRef.current.startAt,
+              metrics: {
+                chunks: perfRef.current.chunkCount,
+                chars: fullTextRef.current.length,
+              },
+            })
             if (targetMessageId) processedMessageIds.delete(targetMessageId)
           },
           onError: (err: any) => {
-            if (__DEV__) {
-              const errorAt = performance.now()
-              console.info(
-                `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] streamError=${(
-                  errorAt - perfRef.current.startAt
-                ).toFixed(2)}ms`,
-              )
-            }
+            logAiPerf({
+              scope: 'stream',
+              event: 'streamError',
+              messageId: targetMessageId,
+              startedAt: perfRef.current.startAt,
+            })
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
           },
         })
       } catch (err: any) {
-        if (__DEV__) {
-          const errorAt = performance.now()
-          console.info(
-            `${AI_PERF_LOG_PREFIX}[messageId=${targetMessageId || 'unknown'}] requestError=${(
-              errorAt - perfRef.current.startAt
-            ).toFixed(2)}ms`,
-          )
-        }
+        logAiPerf({
+          scope: 'stream',
+          event: 'requestError',
+          messageId: targetMessageId,
+          startedAt: perfRef.current.startAt,
+        })
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
       }

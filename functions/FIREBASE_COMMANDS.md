@@ -16,6 +16,7 @@ Cloud Functions 전체 또는 일부를 배포할 때 사용합니다.
 
 ```bash
 # 전체 함수 배포
+npm run deploy
 firebase deploy --only functions
 
 # 특정 함수만 배포
@@ -77,3 +78,25 @@ curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/sendDummyMessages
 -H "Content-Type: application/json" \
 -d '{"data": {"roomId": "mKn39zVd5MgDIse1KuPg", "count": 50}}'
 ```
+
+### 4. AI 스트림 vs 일반 응답 공정 비교하기
+
+tool-call/preflight를 제외하고, 같은 프롬프트를 `stream:false` 일반 응답과 `stream:true` 스트리밍 응답으로 직접 호출해 첫 응답 체감 시간을 비교할 때 씁니다.
+
+```bash
+curl.exe -X POST "https://asia-northeast3-csh-rn.cloudfunctions.net/testAiStreamBenchmark" -H "Content-Type: application/json; charset=utf-8" --data-raw '{"prompt":"@팬디 Local-First 아키텍처가 채팅 앱에서 왜 유리한지, SQLite를 사용할 때의 장점과 단점, Firestore만 사용하는 방식과의 차이를 면접 답변처럼 정리해줘.","runs":3,"order":"alternate"}'
+```
+
+```bash
+curl -X POST https://asia-northeast3-csh-rn.cloudfunctions.net/testAiStreamBenchmark \
+-H "Content-Type: application/json" \
+-d '{"promptBase64": "<UTF8_BASE64_PROMPT>", "runs": 3, "order": "alternate"}'
+```
+
+응답에서 주로 확인할 값:
+
+- `summary.streamFirstChunkAvgMs`: 스트리밍 첫 응답 평균 시간
+- `summary.normalAvgMs`: 일반 응답 전체 완료 평균 시간
+- `summary.responseGainAvgMs`: 일반 응답 대비 스트리밍 첫 응답 개선 시간
+- `summary.responseGainPercent`: 일반 응답 대비 스트리밍 첫 응답 개선율
+- `samples`: 회차별 원본 측정값

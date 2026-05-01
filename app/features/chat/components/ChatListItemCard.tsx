@@ -35,6 +35,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
 
   return (
     <PressableWrapper
+      borderRadius={32}
       onPress={() => moveToChatRoom?.(targetId, roomId)}
       style={styles.chatRoom}>
       <View style={styles.avatarFrame}>

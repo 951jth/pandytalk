@@ -2,10 +2,9 @@ import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions/v1'
 import {db} from '../../core/firebase'
 
-const bucket = admin.storage().bucket()
-
 // Storage: profiles/{uid}/ 밑의 모든 파일 삭제
 async function deleteUserProfileFiles(uid: string) {
+  const bucket = admin.storage().bucket()
   const prefix = `profiles/${uid}/` // 👈 너가 말한 구조
   const [files] = await bucket.getFiles({prefix})
 

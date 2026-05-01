@@ -9,7 +9,7 @@
     "ios": "expo run:ios",
     "start": "react-native start",
     "lint": "eslint \"app/**/*.{js,jsx,ts,tsx}\"",
-    "test": "jest",
+    "test": "jest --runInBand",
     "bundle-android": "react-native bundle --platform android --dev false --entry-file index.tsx --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res --reset-cache",
     "release-android": "cd android && ./gradlew assembleRelease && cd ..",
     "clean-android": "cd android && ./gradlew clean && cd ..",
