@@ -16,6 +16,10 @@
 
 > _참고: 위 수치는 특정 테스트 환경의 측정 결과로, 절대적인 수치보다는 로컬 DB 도입 전후의 상대적인 성능 차이를 확인하기 위한 참고용 데이터입니다._
 
+**측정 방법**: 채팅 메시지 조회 액션을 `performance.now()` 기반의 커스텀 측정 훅으로 감싸 Firestore 직접 조회 경로와 SQLite 로컬 조회 경로의 응답 시간을 비교했습니다. 동일한 사용자 흐름에서 측정 태그별 로그를 남겨 평균 지연 시간뿐 아니라 최대 지연과 편차를 함께 확인했습니다.
+
+- [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
+
 ---
 
 ## ✨ Core Features & Key Logic
@@ -74,19 +78,7 @@ sequenceDiagram
     end
 ```
 
-### 2. 안정적인 SQLite 트랜잭션 관리 (Concurrency & Mutex)
-
-React Native의 비동기 환경에서 SQLite 데이터가 꼬이는 것을 방지하기 위해 **Mutex 기반의 락(Lock) 서비스**를 구현했습니다. 특히 테이블 재생성(Migration) 중 쿼리가 실행되어 앱이 크래시되는 것을 방지하기 위해 `sqliteCall` 래퍼를 통해 실행 순서를 직렬화했습니다.
-
-- [🔗 sqliteCall.ts (직렬화 실행 래퍼)](app/shared/sqlite/sqliteCall.ts)
-
-### 3. 정량적 성능 최적화
-
-채팅 조회 데이터 액션의 레이턴시를 `usePerformanceMeasure`로 정량 측정합니다. 이 데이터를 기반으로 Firestore 직접 호출 대비 SQLite 조회가 **약 31배 빠르다는 수치**를 도출했으며, 성능 병목 없는 아키텍처를 유지하고 있습니다.
-
-- [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
-
-### 4. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
+### 2. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
 
 단순한 요청-응답 방식이 아니라, 사용자 경험을 극대화하기 위해 **실시간 스트리밍(SSE)**과 **데이터베이스 영속성(Trigger)**을 분리하여 처리합니다.
 
