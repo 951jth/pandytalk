@@ -1,4 +1,3 @@
-import {appRoutes} from '@app/navigation/useScreens'
 import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
 import {useLogout} from '@app/shared/hooks/useLogout'
@@ -27,8 +26,6 @@ export default function AppHeader({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const canGoBack = navigation.canGoBack()
-  const allRoutes =
-    appRoutes()?.flatMap(layoutGroup => layoutGroup?.children) || []
   const tabs = useTabScreens()
   const {confirmLogout} = useLogout()
 
@@ -44,8 +41,7 @@ export default function AppHeader({
       return matched?.title ?? tabRoute.name
     }
     // 2. 그 외 route는 title 그대로 사용
-    const matchedRoute = allRoutes.find(r => r.name === current.name)
-    return matchedRoute?.title ?? current.name
+    return current.name
   })
 
   return (
