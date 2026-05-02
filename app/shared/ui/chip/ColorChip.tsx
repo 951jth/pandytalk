@@ -17,9 +17,10 @@ const accountStatusMap = {
   pending: {text: '승인대기', textColor: '#E67E22', bgColor: '#FEF5ED'},
   confirm: {text: '승인완료', textColor: '#27AE60', bgColor: '#EAF7EE'},
   reject: {text: '거절됨', textColor: '#E74C3C', bgColor: '#FDEDEC'},
+  stop: {text: '정지됨', textColor: '#495057', bgColor: '#F1F3F5'},
 }
 
-const ColorChip = ({status}: {status: 'pending' | 'confirm' | 'reject'}) => {
+const ColorChip = ({status}: {status: 'pending' | 'confirm' | 'reject' | 'stop'}) => {
   const statusObj = accountStatusMap?.[status] || {}
   return (
     <View style={[styles.colorChip, {backgroundColor: statusObj.bgColor}]}>

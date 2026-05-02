@@ -16,7 +16,7 @@ export interface User {
   groupId?: string | null // 선택: 그룹 운영 시
   groupName?: string | null | undefined
   // 상태/검토 정보
-  accountStatus: 'pending' | 'confirm' | 'reject'
+  accountStatus: 'pending' | 'confirm' | 'reject' | 'stop'
   approvedAt?: Timestamp | FieldValue | null
   approvedBy?: string | null // admin uid
   rejectedAt?: Timestamp | FieldValue | null

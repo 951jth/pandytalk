@@ -24,6 +24,8 @@ type AppButtonProps = PaperButtonProps & {
   loadingIndicator?: 'dots' | 'spinner'
   loadingDotCount?: 3 | 4
   loadingText?: string
+  textColor?: string
+  bgColor?: string
 }
 
 /**
@@ -60,6 +62,8 @@ export const AppButton: React.FC<AppButtonProps> = ({
   loadingIndicator = 'dots',
   loadingDotCount = 3,
   loadingText,
+  textColor,
+  bgColor,
   // 나머지 Paper Button props 그대로 전달
   ...rest
 }) => {
@@ -70,14 +74,19 @@ export const AppButton: React.FC<AppButtonProps> = ({
   const activeColorType = disabled && !loading ? 'disabled' : colorType
   const isTextLikeMode = rest.mode === 'text' || rest.mode === 'outlined'
   const shouldShowDots = !!loading && loadingIndicator === 'dots'
-  const loadingDotColor = getButtonContentColor(activeColorType, isTextLikeMode)
   const loadingLabel = loadingText ?? children
   const labelColorStyle = getLabelColorStyle(activeColorType, isTextLikeMode)
   const labelStyle = [
     labelStyleMap[size],
     labelColorStyle,
+    textColor ? {color: textColor} : null,
     rest.labelStyle,
   ] as StyleProp<TextStyle>
+
+  const flattenedLabelStyle = StyleSheet.flatten(labelStyle)
+  const loadingDotColor =
+    (flattenedLabelStyle?.color as string) ||
+    getButtonContentColor(activeColorType, isTextLikeMode)
 
   return (
     <Button
@@ -87,6 +96,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
         sizeStyleMap[size],
         shapeStyleMap[shape],
         containerColorMap[activeColorType],
+        bgColor ? {backgroundColor: bgColor} : null,
         {minWidth: 0, flex: fullWidth ? 1 : 0},
         style as StyleProp<ViewStyle>,
       ]}
