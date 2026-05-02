@@ -3,13 +3,14 @@ import type {User} from '@app/shared/types/auth'
 import type {InputFormRef} from '@app/shared/ui/form/InputForm'
 import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {useAppSelector} from '@app/store/reduxHooks'
-import {useRef} from 'react'
+import {useRef, useState} from 'react'
 import {Alert} from 'react-native'
 
 export const useUserDetail = (onComplete: () => void) => {
   const {data: user} = useAppSelector(state => state.user)
   const formRef = useRef<InputFormRef>(null)
   const profileRef = useRef<ProfileInputRef>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const currentAdminUid = user?.uid
 
   const handleMemberStatusUpdate = async (
@@ -17,6 +18,7 @@ export const useUserDetail = (onComplete: () => void) => {
   ) => {
     try {
       if (!status) return
+      setIsLoading(true)
       if (status === 'delete') {
         return
       } else {
@@ -32,11 +34,14 @@ export const useUserDetail = (onComplete: () => void) => {
       }
     } catch (e) {
       console.error('유저 멤버 정보 수정 중 오류:', e)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return {
     user,
+    isLoading,
     handleMemberStatusUpdate,
     formRef,
     profileRef,

@@ -72,7 +72,7 @@ export default function UserDetailModal({
   onClose = () => {},
   record,
 }: propTypes) {
-  const {handleMemberStatusUpdate, formRef, profileRef, user} =
+  const {handleMemberStatusUpdate, formRef, profileRef, user, isLoading} =
     useUserDetail(onComplete)
 
   return (
@@ -115,6 +115,8 @@ export default function UserDetailModal({
                             button?.status as UserStatus,
                           )
                         }
+                        loading={isLoading}
+                        disabled={isLoading}
                         style={{backgroundColor: button?.bgColor, flex: 1}}
                         labelStyle={{color: button?.textColor || '#FFF'}}>
                         {button?.label}

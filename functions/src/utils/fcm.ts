@@ -7,6 +7,14 @@ import admin from 'firebase-admin'
 import {Messaging, MulticastMessage} from 'firebase-admin/messaging'
 import {isEmpty} from 'lodash'
 import * as logger from 'firebase-functions/logger'
+import {LRUCache} from 'lru-cache'
+
+// 전역(Global) 캐시 인스턴스 (인스턴스 생존 기간 동안 유지)
+// 유저 FCM 토큰 캐시 (TTL: 10분)
+const userTokensCache = new LRUCache<string, string[]>({
+  max: 2000, // 최대 2000명의 유저 토큰 캐싱
+  ttl: 1000 * 60 * 10,
+})
 
 interface PushMessageData {
   id: string
@@ -32,6 +40,7 @@ export const sendPushToChatMembers = async (
 ) => {
   try {
     // 1) 채팅방 정보 조회
+    // members는 푸시 수신 권한과 직결되므로 캐싱하지 않고 항상 최신 값을 사용합니다.
     const chatRef = db.doc(`chats/${chatId}`)
     const chatDoc = await chatRef.get()
     if (!chatDoc.exists) return
@@ -46,20 +55,57 @@ export const sendPushToChatMembers = async (
     const receiverIds = members.filter(uid => uid !== senderId)
     const isGroup = chatType === 'group'
 
-    // 2) 수신자들의 fcmToken 추출
-    const userSnaps = await Promise.all(
-      receiverIds.map(uid => db.doc(`users/${uid}`).get()),
-    )
+    // 2) 수신자들의 fcmToken 추출 (캐시 활용)
     const targetUsers: {uid: string; fcmToken: string}[] = []
+    const missingUids: string[] = []
 
-    for (const userSnap of userSnaps) {
-      if (!userSnap.exists) continue
-      const userData = userSnap.data()
-      const fcmTokens = userData?.fcmTokens as string[] | undefined
-      if (Array.isArray(fcmTokens)) {
-        for (const token of fcmTokens) {
-          targetUsers.push({uid: userSnap.id, fcmToken: token})
+    receiverIds.forEach(uid => {
+      const cachedTokens = userTokensCache.get(uid)
+      if (cachedTokens) {
+        // 캐시에 있으면 바로 추가
+        cachedTokens.forEach(token => targetUsers.push({uid, fcmToken: token}))
+      } else {
+        // 캐시에 없으면 DB 조회 대기열에 추가
+        missingUids.push(uid)
+      }
+    })
+
+    const hitCount = receiverIds.length - missingUids.length
+    if (hitCount > 0) {
+      logger.info(`[Cache HIT] 유저 ${hitCount}명의 토큰 캐시에서 불러옴`)
+    }
+
+    // 캐시에 없는 유저들만 DB에서 한꺼번에 조회
+    if (missingUids.length > 0) {
+      const userSnaps = await Promise.all(
+        missingUids.map(uid => db.doc(`users/${uid}`).get()),
+      )
+
+      let newCachedCount = 0
+
+      for (const userSnap of userSnaps) {
+        if (!userSnap.exists) continue
+        const userData = userSnap.data()
+        const fcmTokens = Array.isArray(userData?.fcmTokens)
+          ? (userData.fcmTokens as string[])
+          : []
+
+        // 조회한 데이터를 캐시에 10분간 저장합니다.
+        // 토큰이 없는 유저도 빈 배열로 캐싱해 반복 DB 조회를 줄입니다.
+        userTokensCache.set(userSnap.id, fcmTokens)
+        newCachedCount++
+
+        if (fcmTokens.length > 0) {
+          for (const token of fcmTokens) {
+            targetUsers.push({uid: userSnap.id, fcmToken: token})
+          }
         }
+      }
+      
+      if (newCachedCount > 0) {
+        logger.info(
+          `[Cache MISS] 유저 ${newCachedCount}명의 토큰 DB 조회 및 캐싱 완료`,
+        )
       }
     }
 
@@ -132,6 +178,8 @@ export const sendPushToChatMembers = async (
           ]
           if (code && deletable.includes(code)) {
             await removeFcmTokenFromUser(uid, fcmToken)
+            // 캐시 무효화: 다음 번 푸시 때 DB에서 무조건 새로 읽어오도록 캐시 삭제
+            userTokensCache.delete(uid)
           }
         }
       }),
