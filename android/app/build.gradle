@@ -41,7 +41,7 @@ android {
         }
         development {
             dimension "default"
-            applicationId 'com.cshchatapp'
+            applicationId 'com.cshchatapp.debug'
         }
     }
 
