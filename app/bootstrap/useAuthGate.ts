@@ -1,7 +1,6 @@
 import {auth} from '@app/shared/firebase/firestore'
 import {useLogout} from '@app/shared/hooks/useLogout'
 import {logger} from '@app/shared/services/logger'
-import type {User} from '@app/shared/types/auth'
 import {useAppSelector} from '@app/store/reduxHooks'
 import type {AppDispatch} from '@app/store/store'
 import {fetchUserById} from '@app/store/userSlice'
@@ -16,9 +15,7 @@ import {useDispatch} from 'react-redux'
 export function useAuthGate() {
   const [fbUser, setFbUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState(true) //앱이 로드 되었는지 유무
-  const [verifiedAccountStatus, setVerifiedAccountStatus] = useState<
-    User['accountStatus'] | 'stop' | null
-  >(null)
+  const [profileChecked, setProfileChecked] = useState(false)
 
   const dispatch = useDispatch<AppDispatch>()
   const {data: userInfo} = useAppSelector(state => state.user)
@@ -74,25 +71,24 @@ export function useAuthGate() {
         })
         setInitializing(true)
         setFbUser(user)
-        setVerifiedAccountStatus(null)
+        setProfileChecked(false)
 
         if (!user?.uid) {
           logger.warn(
             'AuthGate resolved to login because Firebase auth user is null',
           )
+          setProfileChecked(true)
           setInitializing(false)
           return
         }
 
         try {
-          const profile = await fetchProfile(user.uid)
-          if (currentVersion === authStateVersion) {
-            setVerifiedAccountStatus(profile?.accountStatus ?? null)
-          }
+          await fetchProfile(user.uid)
         } catch (err) {
           logger.error('AuthGate profile fetch failed', err)
         } finally {
           if (currentVersion === authStateVersion) {
+            setProfileChecked(true)
             setInitializing(false)
           }
         }
@@ -102,12 +98,12 @@ export function useAuthGate() {
   }, [fetchProfile])
 
   //스플래시 스크린은 마운트 될떄만 뜨도록 설정함(isMounted)
-  const shouldShowSplash = initializing
+  const hasAuthUser = !!fbUser?.uid
+  const shouldShowSplash = initializing || (hasAuthUser && !profileChecked)
 
   const allowedStatuses = ['confirm', 'pending']
-  const accountStatus = verifiedAccountStatus ?? userInfo?.accountStatus ?? ''
   const canEnterApp =
-    !!fbUser?.uid && allowedStatuses.includes(accountStatus)
+    hasAuthUser && allowedStatuses.includes(userInfo?.accountStatus ?? '')
 
   return {shouldShowSplash, canEnterApp}
 }
