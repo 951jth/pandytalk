@@ -45,6 +45,7 @@ export function useCheckForceUpdate() {
 }
 
 function toUpdateLogEvent(context: UpdateStateContext): UpdateLogEvent {
+  if (!context) return {type: 'idle'}
   if (context.downloadError) {
     return {type: 'error', message: context.downloadError.message}
   }

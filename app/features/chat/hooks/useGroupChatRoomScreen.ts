@@ -15,12 +15,13 @@ export const useGroupChatRoomScreen = () => {
   //chatId는 groupId와 동일
   const {data: group, isLoading: isGroupLoading} = useGroup(groupId)
   const {data: roomInfo, isLoading: isRoomLoading} = useChatRoomInfo(groupId)
+  const routeTitle = route.params?.title
 
   const isLoading = isUserLoading || isGroupLoading || isRoomLoading || (!!groupId && !roomInfo)
 
   const headerTitle = useMemo(() => {
-    return group?.name
-  }, [group])
+    return group?.name || roomInfo?.name || routeTitle || '그룹 채팅'
+  }, [group?.name, roomInfo?.name, routeTitle])
 
   return {
     user,

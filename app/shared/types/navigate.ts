@@ -15,7 +15,7 @@ export type AuthStackParamList = {
 export type AppRouteParamList = {
   // Auth
   'dm-chat': {myId: string; targetId: string; title?: string; roomId?: string}
-  'group-chat': {roomId: string; type?: ChatRoom['type']} | undefined
+  'group-chat': {roomId?: string; title?: string; type?: ChatRoom['type']} | undefined
   'guest-manage': undefined
   'group-manage': undefined
   harness: undefined

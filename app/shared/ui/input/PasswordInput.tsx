@@ -10,7 +10,7 @@ export type PasswordInputProps = AppInputProps & {
 
 export default function PasswordInput({
   style,
-  secureTextEntry, // 외부에서 강제하고 싶다면 사용 가능 (내부 토글이 우선)
+  secureTextEntry = true, // 외부에서 강제하고 싶다면 사용 가능 (내부 토글이 우선)
   type = 'borderless',
   outlineStyle,
   ...others

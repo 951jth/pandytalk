@@ -2,12 +2,56 @@ import crashlytics from '@react-native-firebase/crashlytics'
 import * as Updates from 'expo-updates'
 
 type CrashReporter = {
-  log: (message: string) => void
-  recordError: (error: Error) => void
-  setCustomKey: (key: string, value: string) => void
+  log?: (message: string) => void
+  recordError?: (error: Error) => void
+  setAttribute?: (key: string, value: string) => Promise<null>
+  setAttributes?: (attributes: Record<string, string>) => Promise<null>
 }
 
-const getCrashReporter = () => crashlytics() as unknown as CrashReporter
+const getCrashReporter = () => {
+  try {
+    if (typeof crashlytics !== 'function') return null
+    return crashlytics() as unknown as CrashReporter
+  } catch (e) {
+    return null
+  }
+}
+
+const safeCrashLog = (crash: CrashReporter | null, message: string) => {
+  try {
+    crash?.log?.(message)
+  } catch (e) {
+    console.warn('Failed to write Crashlytics log', e)
+  }
+}
+
+const safeRecordError = (crash: CrashReporter | null, error: Error) => {
+  try {
+    crash?.recordError?.(error)
+  } catch (e) {
+    console.warn('Failed to record Crashlytics error', e)
+  }
+}
+
+const safeSetAttributes = (
+  crash: CrashReporter | null,
+  attributes: Record<string, string>,
+) => {
+  try {
+    const result = crash?.setAttributes?.(attributes)
+    result?.catch(e => console.warn('Failed to set Crashlytics attributes', e))
+  } catch (e) {
+    console.warn('Failed to set Crashlytics attributes', e)
+  }
+}
+
+const safeStringify = (value: unknown) => {
+  try {
+    return JSON.stringify(value)
+  } catch (e) {
+    return String(value)
+  }
+}
 
 /**
  * Common logging utility with support for:
@@ -33,18 +77,20 @@ class Logger {
    */
   refreshUpdateInfo() {
     try {
+      const createdAt = Updates.createdAt
       const info = {
         update_id: Updates.updateId || 'none',
-        update_created_at: Updates.createdAt?.toISOString() || 'none',
+        update_created_at:
+          createdAt instanceof Date
+            ? createdAt.toISOString()
+            : String(createdAt || 'none'),
         update_channel: Updates.channel || 'none',
         runtime_version: Updates.runtimeVersion || 'none',
         is_embedded: Updates.isEmbeddedLaunch ? 'true' : 'false',
       }
 
       const crash = getCrashReporter()
-      Object.entries(info).forEach(([key, value]) => {
-        crash.setCustomKey(key, value)
-      })
+      safeSetAttributes(crash, info)
     } catch (e) {
       console.warn('Failed to set Crashlytics custom keys', e)
     }
@@ -61,21 +107,25 @@ class Logger {
 
     const logMsg = `[EAS Update Event] Type: ${event.type}`
     const crash = getCrashReporter()
-    crash.log(logMsg)
+    safeCrashLog(crash, logMsg)
 
     // 성공 케이스: 업데이트가 다운로드되었거나 사용 가능한 상태
     if (event.type === 'downloaded' || event.type === 'updateAvailable') {
-      crash.log(`🚀 EAS Update Success: ${event.type}`)
-      crash.setCustomKey('last_update_status', 'success')
-      crash.setCustomKey('last_update_error', 'none')
+      safeCrashLog(crash, `EAS Update Success: ${event.type}`)
+      safeSetAttributes(crash, {
+        last_update_status: 'success',
+        last_update_error: 'none',
+      })
     }
 
     // 에러 케이스
     if (event.type === 'error' || event.type === 'error_check') {
       const errorMsg = event.message || 'unknown'
-      crash.recordError(new Error(`EAS Update Error: ${errorMsg}`))
-      crash.setCustomKey('last_update_status', 'failed')
-      crash.setCustomKey('last_update_error', errorMsg)
+      safeRecordError(crash, new Error(`EAS Update Error: ${errorMsg}`))
+      safeSetAttributes(crash, {
+        last_update_status: 'failed',
+        last_update_error: errorMsg,
+      })
     }
   }
 
@@ -96,8 +146,10 @@ class Logger {
       console.info(`[INFO] ${message}`, context || '')
     } else {
       // In production, we can use crashlytics().log() for breadcrumbs
-      getCrashReporter().log(
-        `[INFO] ${message} ${context ? JSON.stringify(context) : ''}`,
+      const crash = getCrashReporter()
+      safeCrashLog(
+        crash,
+        `[INFO] ${message} ${context ? safeStringify(context) : ''}`,
       )
     }
   }
@@ -110,10 +162,11 @@ class Logger {
       console.warn(`[WARN] ${message}`, error || '')
     } else {
       const crash = getCrashReporter()
-      crash.log(`[WARN] ${message}`)
+      safeCrashLog(crash, `[WARN] ${message}`)
       if (error) {
-        crash.recordError(
-          error instanceof Error ? error : new Error(JSON.stringify(error)),
+        safeRecordError(
+          crash,
+          error instanceof Error ? error : new Error(safeStringify(error)),
         )
       }
     }
@@ -127,13 +180,14 @@ class Logger {
       console.error(`[ERROR] ${message}`, error || '')
     } else {
       const crash = getCrashReporter()
-      crash.log(`[ERROR] ${message}`)
+      safeCrashLog(crash, `[ERROR] ${message}`)
       if (error) {
-        crash.recordError(
-          error instanceof Error ? error : new Error(JSON.stringify(error)),
+        safeRecordError(
+          crash,
+          error instanceof Error ? error : new Error(safeStringify(error)),
         )
       } else {
-        crash.recordError(new Error(message))
+        safeRecordError(crash, new Error(message))
       }
     }
   }
