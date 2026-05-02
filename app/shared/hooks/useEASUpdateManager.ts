@@ -2,6 +2,7 @@ import {useEffect} from 'react'
 import * as Updates from 'expo-updates'
 import {AppState} from 'react-native'
 import {logger} from '@app/shared/services/logger'
+import {formatUpdateCreatedAt} from '@app/shared/utils/update'
 
 /**
  * EAS Update(CodePush)의 상태를 모니터링하고 업데이트를 관리하는 훅입니다.
@@ -13,7 +14,9 @@ export const useEASUpdateManager = () => {
 
     const checkAndApplyUpdates = async () => {
       if (isChecking) {
-        logger.debug('Skipping EAS Update check because another check is running')
+        logger.debug(
+          'Skipping EAS Update check because another check is running',
+        )
         return
       }
 
@@ -24,7 +27,7 @@ export const useEASUpdateManager = () => {
         updateId: Updates.updateId,
         channel: Updates.channel,
         runtimeVersion: Updates.runtimeVersion,
-        createdAt: Updates.createdAt?.toISOString(),
+        createdAt: formatUpdateCreatedAt(Updates.createdAt),
         isEmbeddedLaunch: Updates.isEmbeddedLaunch,
       }
 
@@ -52,7 +55,9 @@ export const useEASUpdateManager = () => {
           const result = await Updates.fetchUpdateAsync()
 
           if (result.isNew) {
-            logger.info('EAS Update fetch successful. Reloading app to apply...')
+            logger.info(
+              'EAS Update fetch successful. Reloading app to apply...',
+            )
             // 4. 즉시 재시작하여 적용 (사용자 요청: 자동 로드 방식)
             await Updates.reloadAsync()
           } else {

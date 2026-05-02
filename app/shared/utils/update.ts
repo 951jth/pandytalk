@@ -3,6 +3,24 @@ import {Alert, Linking, Platform} from 'react-native'
 import Constants from 'expo-constants'
 import {logger} from '../services/logger'
 
+type FormatUpdateCreatedAtOptions = {
+  fallback?: string
+  format?: 'iso' | 'locale'
+}
+
+export const formatUpdateCreatedAt = (
+  createdAt: unknown,
+  {fallback, format = 'iso'}: FormatUpdateCreatedAtOptions = {},
+) => {
+  if (createdAt instanceof Date) {
+    return format === 'locale'
+      ? createdAt.toLocaleString()
+      : createdAt.toISOString()
+  }
+
+  return createdAt ? String(createdAt) : fallback
+}
+
 /**
  * 스토어 주소 설정
  */
@@ -10,7 +28,6 @@ const STORE_URL = Platform.select({
   ios: 'https://apps.apple.com/app/id...', // 실제 App Store ID로 변경 필요
   android: 'market://details?id=com.cshchatapp', // 실제 패키지 명 확인
 })
-
 
 /**
  * 앱의 버전을 비교하는 함수 (단순 문자열 비교)
