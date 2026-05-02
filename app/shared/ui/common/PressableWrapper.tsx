@@ -57,6 +57,7 @@ export default function PressableWrapper({
 
         return (
           <>
+            {children}
             <View
               pointerEvents="none"
               style={[
@@ -67,7 +68,6 @@ export default function PressableWrapper({
                 },
               ]}
             />
-            {children}
           </>
         )
       }}

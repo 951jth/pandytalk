@@ -20,7 +20,7 @@ type propTypes = {
   style?: StyleProp<ViewStyle>
 }
 
-export default function GuestGroup({item, onPress, style}: propTypes) {
+export default function GroupManageItem({item, onPress, style}: propTypes) {
   const formattedDate = item?.createdAt instanceof Timestamp
     ? dayjs(item?.createdAt?.toDate()).format('YYYY.MM.DD')
     : '-'
@@ -29,8 +29,7 @@ export default function GuestGroup({item, onPress, style}: propTypes) {
     <PressableWrapper
       borderRadius={28}
       onPress={() => onPress(item)}
-      style={[styles.cardWrapper, style]}>
-      <View style={styles.cardContainer}>
+      style={[styles.cardContainer, style]}>
         {/* 그룹 아바타 영역 */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
@@ -60,17 +59,14 @@ export default function GuestGroup({item, onPress, style}: propTypes) {
         <View style={styles.actionSection}>
           <Icon source="chevron-right" size={24} color="#ADB5BD" />
         </View>
-      </View>
     </PressableWrapper>
   )
 }
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    marginVertical: 8,
-    marginHorizontal: 12,
-  },
+
   cardContainer: {
+    flex: 1,
     padding: 16,
     backgroundColor: COLORS.white,
     borderRadius: 28, // 프리미엄 곡률
@@ -82,6 +78,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 4,
+    marginVertical: 8,
+    marginHorizontal: 12,
   },
   avatarSection: {
     marginRight: 16,

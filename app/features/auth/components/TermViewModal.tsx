@@ -2,7 +2,7 @@ import COLORS from '@app/shared/constants/color'
 import {terms} from '@app/shared/constants/terms'
 import {termType} from '@app/shared/types/auth'
 import {AppButton} from '@app/shared/ui/button/AppButton'
-import CustomModal from '@app/shared/ui/modal/CustomModal'
+import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import React from 'react'
 import {StyleSheet, Text, View} from 'react-native'
 
@@ -17,7 +17,7 @@ export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
   const termContent = terms.find(term => term?.id === code) as termType
 
   return (
-    <CustomModal visible={visible} onClose={onClose}>
+    <BottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.container}>
         <Text style={styles.termTitle}>{termContent?.title}</Text>
         <Text style={styles.termContent}>{termContent?.content}</Text>
@@ -40,7 +40,7 @@ export default function TermViewModal({code, onClose, onConfirm}: propTypes) {
           </AppButton>
         </View>
       </View>
-    </CustomModal>
+    </BottomSheetModal>
   )
 }
 

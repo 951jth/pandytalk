@@ -8,7 +8,7 @@ import {updateUserItems} from '@app/features/user/screens/updateUser.form'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import {AppButton} from '@app/shared/ui/button/AppButton'
-import CustomModal from '@app/shared/ui/modal/CustomModal'
+import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 
 const ButtonsByType = {
@@ -76,7 +76,7 @@ export default function UserDetailModal({
     useUserDetail(onComplete)
 
   return (
-    <CustomModal visible={open} onClose={onClose}>
+    <BottomSheetModal visible={open} onClose={onClose}>
       <View style={styles.container}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -127,7 +127,7 @@ export default function UserDetailModal({
           />
         </ScrollView>
       </View>
-    </CustomModal>
+    </BottomSheetModal>
   )
 }
 
@@ -152,5 +152,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 20,
     gap: 12,
+    paddingBottom: 12,
   },
 })
