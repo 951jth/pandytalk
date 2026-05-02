@@ -1,3 +1,21 @@
+const {withAppBuildGradle} = require('expo/config-plugins')
+
+const PRODUCTION_ANDROID_PACKAGE = 'com.cshchatapp'
+const DEVELOPMENT_ANDROID_PACKAGE = 'com.cshchatapp.debug'
+
+const withDevelopmentAndroidPackage = config =>
+  withAppBuildGradle(config, buildGradleConfig => {
+    buildGradleConfig.modResults.contents =
+      buildGradleConfig.modResults.contents.replace(
+        /development\s*\{\s*dimension "default"\s*applicationId 'com\.cshchatapp'\s*\}/,
+        `development {
+            dimension "default"
+            applicationId '${DEVELOPMENT_ANDROID_PACKAGE}'
+        }`,
+      )
+    return buildGradleConfig
+  })
+
 module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
@@ -32,7 +50,7 @@ module.exports = {
 
   // 6. 안드로이드 섹션 (프리빌드 시 매우 중요)
   android: {
-    package: 'com.cshchatapp', // 안드로이드 앱 고유 ID (패키지명)
+    package: PRODUCTION_ANDROID_PACKAGE, // 안드로이드 운영 앱 고유 ID (패키지명)
     versionCode: 44, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
@@ -47,9 +65,13 @@ module.exports = {
     eas: {
       projectId: '713adbab-1d3b-4992-9aab-396e9557bd0f',
     },
+    androidApplicationIds: {
+      production: PRODUCTION_ANDROID_PACKAGE,
+      development: DEVELOPMENT_ANDROID_PACKAGE,
+    },
   },
 
   // 8. 기타 설정
   owner: 'sehooncho',
-  plugins: ['expo-font'],
+  plugins: ['expo-font', withDevelopmentAndroidPackage],
 }

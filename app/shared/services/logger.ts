@@ -8,6 +8,12 @@ type CrashReporter = {
   setAttributes?: (attributes: Record<string, string>) => Promise<null>
 }
 
+const isFunction = (value: unknown): value is (...args: any[]) => unknown =>
+  typeof value === 'function'
+
+const isPromiseLike = (value: unknown): value is Promise<null> =>
+  !!value && typeof value === 'object' && 'catch' in value
+
 const getCrashReporter = () => {
   try {
     if (typeof crashlytics !== 'function') return null
@@ -19,7 +25,9 @@ const getCrashReporter = () => {
 
 const safeCrashLog = (crash: CrashReporter | null, message: string) => {
   try {
-    crash?.log?.(message)
+    if (isFunction(crash?.log)) {
+      crash.log(message)
+    }
   } catch (e) {
     console.warn('Failed to write Crashlytics log', e)
   }
@@ -27,7 +35,9 @@ const safeCrashLog = (crash: CrashReporter | null, message: string) => {
 
 const safeRecordError = (crash: CrashReporter | null, error: Error) => {
   try {
-    crash?.recordError?.(error)
+    if (isFunction(crash?.recordError)) {
+      crash.recordError(error)
+    }
   } catch (e) {
     console.warn('Failed to record Crashlytics error', e)
   }
@@ -38,8 +48,26 @@ const safeSetAttributes = (
   attributes: Record<string, string>,
 ) => {
   try {
-    const result = crash?.setAttributes?.(attributes)
-    result?.catch(e => console.warn('Failed to set Crashlytics attributes', e))
+    if (isFunction(crash?.setAttributes)) {
+      const result = crash.setAttributes(attributes)
+      if (isPromiseLike(result)) {
+        result.catch(e =>
+          console.warn('Failed to set Crashlytics attributes', e),
+        )
+      }
+      return
+    }
+
+    if (isFunction(crash?.setAttribute)) {
+      Object.entries(attributes).forEach(([key, value]) => {
+        const result = crash.setAttribute?.(key, value)
+        if (isPromiseLike(result)) {
+          result.catch(e =>
+            console.warn('Failed to set Crashlytics attribute', e),
+          )
+        }
+      })
+    }
   } catch (e) {
     console.warn('Failed to set Crashlytics attributes', e)
   }
@@ -93,39 +121,6 @@ class Logger {
       safeSetAttributes(crash, info)
     } catch (e) {
       console.warn('Failed to set Crashlytics custom keys', e)
-    }
-  }
-
-  /**
-   * 업데이트 체크 결과를 상세히 로깅 (Crashlytics 로그에 포함)
-   */
-  logUpdateCheck(event: {type: string; message?: string}) {
-    if (this.isDev) {
-      console.log(`[UPDATE EVENT] ${event.type}`, event)
-      return
-    }
-
-    const logMsg = `[EAS Update Event] Type: ${event.type}`
-    const crash = getCrashReporter()
-    safeCrashLog(crash, logMsg)
-
-    // 성공 케이스: 업데이트가 다운로드되었거나 사용 가능한 상태
-    if (event.type === 'downloaded' || event.type === 'updateAvailable') {
-      safeCrashLog(crash, `EAS Update Success: ${event.type}`)
-      safeSetAttributes(crash, {
-        last_update_status: 'success',
-        last_update_error: 'none',
-      })
-    }
-
-    // 에러 케이스
-    if (event.type === 'error' || event.type === 'error_check') {
-      const errorMsg = event.message || 'unknown'
-      safeRecordError(crash, new Error(`EAS Update Error: ${errorMsg}`))
-      safeSetAttributes(crash, {
-        last_update_status: 'failed',
-        last_update_error: errorMsg,
-      })
     }
   }
 
