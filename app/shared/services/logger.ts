@@ -1,23 +1,19 @@
-import crashlytics from '@react-native-firebase/crashlytics'
+import {crashlytics} from '@app/shared/firebase/firestore'
+import {
+  log,
+  recordError,
+  setAttributes,
+} from '@react-native-firebase/crashlytics'
 import * as Updates from 'expo-updates'
 
-type CrashReporter = {
-  log?: (message: string) => void
-  recordError?: (error: Error) => void
-  setAttribute?: (key: string, value: string) => Promise<null>
-  setAttributes?: (attributes: Record<string, string>) => Promise<null>
-}
-
-const isFunction = (value: unknown): value is (...args: any[]) => unknown =>
-  typeof value === 'function'
+type CrashReporter = typeof crashlytics
 
 const isPromiseLike = (value: unknown): value is Promise<null> =>
   !!value && typeof value === 'object' && 'catch' in value
 
 const getCrashReporter = () => {
   try {
-    if (typeof crashlytics !== 'function') return null
-    return crashlytics() as unknown as CrashReporter
+    return crashlytics
   } catch (e) {
     return null
   }
@@ -25,8 +21,8 @@ const getCrashReporter = () => {
 
 const safeCrashLog = (crash: CrashReporter | null, message: string) => {
   try {
-    if (isFunction(crash?.log)) {
-      crash.log(message)
+    if (crash) {
+      log(crash, message)
     }
   } catch (e) {
     console.warn('Failed to write Crashlytics log', e)
@@ -35,8 +31,8 @@ const safeCrashLog = (crash: CrashReporter | null, message: string) => {
 
 const safeRecordError = (crash: CrashReporter | null, error: Error) => {
   try {
-    if (isFunction(crash?.recordError)) {
-      crash.recordError(error)
+    if (crash) {
+      recordError(crash, error)
     }
   } catch (e) {
     console.warn('Failed to record Crashlytics error', e)
@@ -48,25 +44,13 @@ const safeSetAttributes = (
   attributes: Record<string, string>,
 ) => {
   try {
-    if (isFunction(crash?.setAttributes)) {
-      const result = crash.setAttributes(attributes)
+    if (crash) {
+      const result = setAttributes(crash, attributes)
       if (isPromiseLike(result)) {
         result.catch(e =>
           console.warn('Failed to set Crashlytics attributes', e),
         )
       }
-      return
-    }
-
-    if (isFunction(crash?.setAttribute)) {
-      Object.entries(attributes).forEach(([key, value]) => {
-        const result = crash.setAttribute?.(key, value)
-        if (isPromiseLike(result)) {
-          result.catch(e =>
-            console.warn('Failed to set Crashlytics attribute', e),
-          )
-        }
-      })
     }
   } catch (e) {
     console.warn('Failed to set Crashlytics attributes', e)
@@ -140,7 +124,7 @@ class Logger {
     if (this.isDev) {
       console.info(`[INFO] ${message}`, context || '')
     } else {
-      // In production, we can use crashlytics().log() for breadcrumbs
+      // In production, write Crashlytics breadcrumbs via the modular API.
       const crash = getCrashReporter()
       safeCrashLog(
         crash,

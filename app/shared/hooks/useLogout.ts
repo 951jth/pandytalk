@@ -10,9 +10,9 @@ import {useDispatch} from 'react-redux'
 export const useLogout = () => {
   const queryClient = useQueryClient()
   const dispatch = useDispatch<AppDispatch>()
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (source: string = 'use_logout') => {
     try {
-      await authService.logout()
+      await authService.logout(source)
       queryClient.clear()
       dispatch?.(clearUser())
       // 필요시 로그인 화면으로 리디렉션

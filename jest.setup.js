@@ -68,6 +68,7 @@ jest.mock('@react-native-firebase/storage', () => ({
 }));
 jest.mock('@react-native-firebase/remote-config', () => ({
   __esModule: true,
+  getRemoteConfig: jest.fn(() => ({})),
   default: jest.fn(() => ({
     activate: jest.fn(() => Promise.resolve(true)),
     fetch: jest.fn(() => Promise.resolve()),
@@ -81,11 +82,25 @@ jest.mock('@react-native-firebase/remote-config', () => ({
 }));
 jest.mock('@react-native-firebase/crashlytics', () => ({
   __esModule: true,
+  getCrashlytics: jest.fn(() => ({})),
+  log: jest.fn(),
+  recordError: jest.fn(),
+  setAttributes: jest.fn(),
   default: jest.fn(() => ({
     log: jest.fn(),
     recordError: jest.fn(),
     setAttributes: jest.fn(),
     setUserId: jest.fn(),
+  })),
+}));
+jest.mock('@react-native-firebase/analytics', () => ({
+  __esModule: true,
+  getAnalytics: jest.fn(() => ({})),
+  logEvent: jest.fn(() => Promise.resolve()),
+  setUserId: jest.fn(() => Promise.resolve()),
+  default: jest.fn(() => ({
+    logEvent: jest.fn(() => Promise.resolve()),
+    setUserId: jest.fn(() => Promise.resolve()),
   })),
 }));
 
