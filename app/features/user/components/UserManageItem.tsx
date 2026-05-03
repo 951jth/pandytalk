@@ -28,8 +28,10 @@ export default function UserManageItem({
     : '-'
 
   return (
-    <PressableWrapper onPress={() => onPress(item)} style={[styles.cardWrapper, style]}>
-      <View style={styles.cardContainer}>
+    <PressableWrapper
+      borderRadius={28}
+      onPress={() => onPress(item)}
+      style={[styles.cardContainer, style]}>
         {/* 아바타 영역 */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
@@ -53,23 +55,18 @@ export default function UserManageItem({
           <Text style={styles.userName}>{item?.displayName || '이름 없음'}</Text>
           <Text style={styles.userEmail} numberOfLines={1}>{item?.email || '-'}</Text>
         </View>
-
-        {/* 상태 및 날짜 영역 (우측) */}
+        {/* 상태 및 날짜 영역 (우측) */}  
         <View style={styles.statusSection}>
           <ColorChip status={item.accountStatus} />
           <Text style={styles.dateText}>{formattedDate}</Text>
         </View>
-      </View>
     </PressableWrapper>
   )
 }
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    marginVertical: 8,
-    marginHorizontal: 12,
-  },
   cardContainer: {
+    flex:1,
     padding: 16,
     backgroundColor: COLORS.white,
     borderRadius: 28,
@@ -80,6 +77,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 4,
+    marginVertical: 8,
+    marginHorizontal: 12,
   },
   avatarSection: {
     marginRight: 16,

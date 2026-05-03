@@ -1,4 +1,4 @@
-import UserDetailModal from '@app/features/user/components/UserDetailModal'
+import UserManageModal from '@app/features/user/components/UserManageModal'
 import UserManageItem from '@app/features/user/components/UserManageItem'
 import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScreen'
 import AppHeader from '@app/layout/AppHeader'
@@ -63,7 +63,7 @@ export default function UsersManageScreen() {
         />
       )}
 
-      <UserDetailModal
+      <UserManageModal
         open={!!modalProps?.open}
         record={modalProps?.record as User}
         onComplete={() => setModalProps({open: false, record: null})}

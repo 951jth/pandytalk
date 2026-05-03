@@ -11,6 +11,7 @@ import {userService} from '@app/features/user/service/userService'
 import {type User} from '@app/shared/types/auth'
 import {type UpdateInput} from '@app/shared/types/firebase'
 import {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
+import {formatUpdateCreatedAt} from '@app/shared/utils/update'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import {InputFormRef} from '../../../shared/ui/form/InputForm'
 import {useAppSelector} from '../../../store/reduxHooks'
@@ -87,9 +88,7 @@ export function useProfileScreen() {
       `Update ID: ${Updates.updateId || 'None (Local Build)'}\n` +
         `Runtime Version: ${Updates.runtimeVersion || 'N/A'}\n` +
         `Channel: ${Updates.channel || 'N/A'}\n` +
-        `Created At: ${
-          Updates.createdAt ? Updates.createdAt.toLocaleString() : 'N/A'
-        }\n` +
+        `Created At: ${formatUpdateCreatedAt(Updates.createdAt, {fallback: 'N/A', format: 'locale'})}\n` +
         `Is Embedded: ${Updates.isEmbeddedLaunch ? 'Yes' : 'No'}`,
     )
   }, [])

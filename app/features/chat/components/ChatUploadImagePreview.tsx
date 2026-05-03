@@ -5,12 +5,15 @@ import {IconButton} from 'react-native-paper'
 
 import ImageViewer from '@app/shared/ui/common/ImageViewer'
 
-interface ImagePreviewProps {
+interface ChatUploadImagePreviewProps {
   uri: string
   onRemove: () => void
 }
 
-export default function ImagePreview({uri, onRemove}: ImagePreviewProps) {
+export default function ChatUploadImagePreview({
+  uri,
+  onRemove,
+}: ChatUploadImagePreviewProps) {
   return (
     <View style={styles.container}>
       <View style={styles.imageWrapper}>

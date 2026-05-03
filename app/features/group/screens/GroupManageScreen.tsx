@@ -7,7 +7,7 @@ import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {IconButton} from 'react-native-paper'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import GroupModalForm from '../components/GroupFormModal'
-import GuestGroup from '../components/GuestGroup'
+import GroupManageItem from '../components/GroupManageItem'
 
 export default function GroupManageScreen() {
   const {
@@ -43,7 +43,7 @@ export default function GroupManageScreen() {
           keyExtractor={item => item.id}
           style={{flex: 1}}
           renderItem={({item}) => (
-            <GuestGroup
+            <GroupManageItem
               item={item}
               onPress={selectedGroup => {
                 setGroupModalProps({open: true, record: selectedGroup})

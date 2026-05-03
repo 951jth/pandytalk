@@ -1,6 +1,6 @@
 import {FlashList} from '@shopify/flash-list'
 import React, {memo, useCallback} from 'react'
-import {StyleSheet, View} from 'react-native'
+import {Platform, StyleSheet, View} from 'react-native'
 
 import ChatMessageItem, {
   ChatMessageItemProps,
@@ -8,7 +8,7 @@ import ChatMessageItem, {
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
 
-interface Props {
+type Props = {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: ChatRoom | null | undefined
@@ -40,12 +40,9 @@ const maintainVisibleContentPosition = {
   minIndexForVisible: 0,
   autoscrollToTopThreshold: 10,
 }
+const shouldUseNativeVisiblePosition = Platform.OS === 'ios'
 
-export default function ChatMessageList({
-  roomId,
-  userId,
-  roomInfo,
-}: Props) {
+export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
   const {
     messagesWithUi, // 훅에서 가공된 데이터 받아옴(멤버 정보도 포함)
     isLoading,
@@ -93,8 +90,12 @@ export default function ChatMessageList({
         scrollEventThrottle={16}
         estimatedItemSize={80} // 말풍선의 평균적인 높이
         drawDistance={500}
-        removeClippedSubviews={true}
-        maintainVisibleContentPosition={maintainVisibleContentPosition}
+        removeClippedSubviews={false}
+        maintainVisibleContentPosition={
+          shouldUseNativeVisiblePosition
+            ? maintainVisibleContentPosition
+            : undefined
+        }
         inverted={true}
       />
     </View>

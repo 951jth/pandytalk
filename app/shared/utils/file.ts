@@ -1,4 +1,3 @@
-import {fileService} from '@app/features/media/service/fileService'
 import dayjs from 'dayjs'
 import {Platform} from 'react-native'
 import ReactNativeBlobUtil from 'react-native-blob-util'
@@ -11,11 +10,6 @@ export const isLocalFile = (url: string | null): boolean => {
   else return url.startsWith('file://')
 }
 
-interface UploadResult {
-  downloadUrl: string
-  fileName: string
-}
-
 export function normalizeLocalUri(uri: string) {
   // putFile은 Android에서 보통 file:// 제거가 안정적
   // iOS도 제거해도 대체로 문제 없음
@@ -24,24 +18,6 @@ export function normalizeLocalUri(uri: string) {
 
 export function pickFirstAsset(result: ImagePickerResponse) {
   return result?.assets?.[0]
-}
-
-export const firebaseImageUpload = async (
-  result: ImagePickerResponse,
-  rootName?: string,
-): Promise<UploadResult | null> => {
-  const image = result?.assets?.[0]
-  if (!image?.uri || !image.fileName) return null
-  try {
-    const uploadRes = await fileService.uploadImagesFromPicker(result, {
-      rootName: rootName ?? 'common',
-      ext: 'jpg',
-    })
-    return uploadRes?.[0] || null
-  } catch (error) {
-    console.error('[firebaseImageUpload] 업로드 실패:', error)
-    return null
-  }
 }
 
 export const filebaseFileDownload = async (uid: string, imageUrl: string) => {

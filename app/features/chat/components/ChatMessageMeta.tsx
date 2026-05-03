@@ -1,13 +1,13 @@
-import React from 'react'
-import {StyleSheet, View} from 'react-native'
-import {Text} from 'react-native-paper'
 import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageStatusIcon'
 import {useChatMessageDeleteMutation} from '@app/features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {formatChatTime} from '@app/shared/utils/firebase'
+import React from 'react'
+import {StyleSheet, View} from 'react-native'
+import {Text} from 'react-native-paper'
 
-interface ChatMessageMetaProps {
+type ChatMessageMetaProps = {
   isMine: boolean
   item: ChatMessage
   roomId?: string | null

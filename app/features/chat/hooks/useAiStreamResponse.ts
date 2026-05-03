@@ -1,6 +1,7 @@
 import type {ChatMessage} from '@app/shared/types/chat'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {aiService} from '../service/aiService'
+import {logAiPerf} from '../utils/aiPerfLogger'
 
 export interface UseAiStreamOptions {
   chatId?: string
@@ -35,6 +36,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const fullTextRef = useRef<string>('') // 서버로부터 수신된 실제 전체 텍스트 원본
   const cursorRef = useRef<number>(0) // 타이핑 효과가 현재 진행 중인 글자 위치
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null) // 애니메이션 타이머
+  const perfRef = useRef({
+    startAt: 0,
+    firstChunkAt: 0,
+    firstRenderAt: 0,
+    chunkCount: 0,
+  })
 
   // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
   const isPreviouslyProcessed = useRef<boolean>(
@@ -60,6 +67,17 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
           const charsToAdd = Math.max(1, Math.min(5, Math.ceil(backlog / 10)))
           cursorRef.current += charsToAdd
           setDisplayText(fullTextRef.current.substring(0, cursorRef.current))
+
+          if (!perfRef.current.firstRenderAt) {
+            perfRef.current.firstRenderAt = performance.now()
+            logAiPerf({
+              scope: 'stream',
+              event: 'firstTextRendered',
+              messageId: item?.id,
+              startedAt: perfRef.current.startAt,
+              at: perfRef.current.firstRenderAt,
+            })
+          }
         } else if (!isStreaming) {
           // 모든 데이터가 수신되었고 출력이 완료되었으면 타이머 종료
           if (timerRef.current) {
@@ -78,7 +96,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
         timerRef.current = null
       }
     }
-  }, [isStreaming])
+  }, [isStreaming, item?.id])
 
   /**
    * SSE(Server-Sent Events) 스트리밍 시작 함수
@@ -98,8 +116,21 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
       setDisplayText('')
       fullTextRef.current = ''
+      cursorRef.current = 0
       setIsStreaming(true)
       setError(null)
+      perfRef.current = {
+        startAt: performance.now(),
+        firstChunkAt: 0,
+        firstRenderAt: 0,
+        chunkCount: 0,
+      }
+
+      logAiPerf({
+        scope: 'stream',
+        event: 'requestStart',
+        messageId: targetMessageId,
+      })
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
@@ -110,17 +141,51 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고,
             // 타이핑 타이머가 이를 감지하여 화면에 순차적으로 노출함
             fullTextRef.current += chunk
+            perfRef.current.chunkCount += 1
+
+            if (!perfRef.current.firstChunkAt) {
+              perfRef.current.firstChunkAt = performance.now()
+              logAiPerf({
+                scope: 'stream',
+                event: 'firstChunkBuffered',
+                messageId: targetMessageId,
+                startedAt: perfRef.current.startAt,
+                at: perfRef.current.firstChunkAt,
+              })
+            }
           },
           onDone: () => {
             setIsStreaming(false) // 스트리밍 완료 핸들러
+            logAiPerf({
+              scope: 'stream',
+              event: 'streamDone',
+              messageId: targetMessageId,
+              startedAt: perfRef.current.startAt,
+              metrics: {
+                chunks: perfRef.current.chunkCount,
+                chars: fullTextRef.current.length,
+              },
+            })
             if (targetMessageId) processedMessageIds.delete(targetMessageId)
           },
           onError: (err: any) => {
+            logAiPerf({
+              scope: 'stream',
+              event: 'streamError',
+              messageId: targetMessageId,
+              startedAt: perfRef.current.startAt,
+            })
             setError(err instanceof Error ? err : new Error(String(err)))
             setIsStreaming(false)
           },
         })
       } catch (err: any) {
+        logAiPerf({
+          scope: 'stream',
+          event: 'requestError',
+          messageId: targetMessageId,
+          startedAt: perfRef.current.startAt,
+        })
         setError(err instanceof Error ? err : new Error(String(err)))
         setIsStreaming(false)
       }

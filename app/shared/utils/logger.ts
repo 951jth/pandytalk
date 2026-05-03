@@ -39,6 +39,12 @@ export const handleFirebaseAuthError = (error: unknown): string => {
   // setError(message)
 }
 
+export const createFirebaseAuthError = (error: unknown) => {
+  const authError = new Error(handleFirebaseAuthError(error))
+  authError.name = 'FirebaseAuthError'
+  return authError
+}
+
 export const handleFirebaseJoinError = (error: unknown): string => {
   const firebaseError = toErrorWithCode(error)
 

@@ -11,7 +11,7 @@ import {MAX_CHAT_IMAGES} from '@shared/constants/chat'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
 import ChatMentionSuggestion from './ChatMentionSuggestion'
-import ImagePreview from './ImagePreview'
+import ChatUploadImagePreview from './ChatUploadImagePreview'
 
 export default function ChatMessageInput({
   roomInfo,
@@ -67,7 +67,7 @@ export default function ChatMessageInput({
             {selectedImages.length > 0 && (
               <View style={styles.previewList}>
                 {selectedImages.map((asset, idx) => (
-                  <ImagePreview
+                  <ChatUploadImagePreview
                     key={asset.uri || idx}
                     uri={asset.uri!}
                     onRemove={() => removeImage(asset.uri!)}

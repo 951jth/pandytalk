@@ -1,10 +1,10 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {userService} from '@app/features/user/service/userService'
 import COLORS from '@app/shared/constants/color'
+import {useLogout} from '@app/shared/hooks/useLogout'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
 import {useAppSelector} from '@app/store/reduxHooks'
-import auth from '@react-native-firebase/auth'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {useQueryClient} from '@tanstack/react-query'
@@ -24,6 +24,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
   const [menuVisible, setMenuVisible] = useState(false)
   const [withdrawalVisible, setWithdrawalVisible] = useState(false) // ✅ 추가
   const queryClient = useQueryClient()
+  const {logout} = useLogout()
 
   const openMenu = () => setMenuVisible(true)
   const closeMenu = () => setMenuVisible(false)
@@ -63,7 +64,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
         text: '확인',
         onPress: async () => {
           try {
-            await auth().signOut()
+            await logout('profile_menu')
           } catch (e) {
             console.error('Logout error:', e)
             Alert.alert('오류', '로그아웃 실패')
@@ -71,7 +72,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
         },
       },
     ])
-  }, [])
+  }, [logout])
 
   // 🗑️ 회원 탈퇴 로직 (실제 처리)
   const onDelete = useCallback(async () => {
@@ -83,10 +84,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
       console.error('Withdrawal error:', e)
       const message =
         e instanceof Error ? e.message : '탈퇴 처리 중 문제가 발생했습니다.'
-      Alert.alert(
-        '초기화 실패',
-        message,
-      )
+      Alert.alert('초기화 실패', message)
     }
   }, [])
 

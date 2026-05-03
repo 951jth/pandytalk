@@ -1,7 +1,30 @@
-import remoteConfig from '@react-native-firebase/remote-config'
+import {remoteConfig} from '@app/shared/firebase/firestore'
+import {
+  fetchAndActivate,
+  getValue,
+  setConfigSettings,
+} from '@react-native-firebase/remote-config'
 import {Alert, Linking, Platform} from 'react-native'
 import Constants from 'expo-constants'
 import {logger} from '../services/logger'
+
+type FormatUpdateCreatedAtOptions = {
+  fallback?: string
+  format?: 'iso' | 'locale'
+}
+
+export const formatUpdateCreatedAt = (
+  createdAt: unknown,
+  {fallback, format = 'iso'}: FormatUpdateCreatedAtOptions = {},
+) => {
+  if (createdAt instanceof Date) {
+    return format === 'locale'
+      ? createdAt.toLocaleString()
+      : createdAt.toISOString()
+  }
+
+  return createdAt ? String(createdAt) : fallback
+}
 
 /**
  * 스토어 주소 설정
@@ -10,7 +33,6 @@ const STORE_URL = Platform.select({
   ios: 'https://apps.apple.com/app/id...', // 실제 App Store ID로 변경 필요
   android: 'market://details?id=com.cshchatapp', // 실제 패키지 명 확인
 })
-
 
 /**
  * 앱의 버전을 비교하는 함수 (단순 문자열 비교)
@@ -47,12 +69,12 @@ export const checkForceUpdate = async () => {
 
   try {
     // 1. 설정 초기화 및 데이터 가져오기 (0초 간격으로 즉시 갱신)
-    await remoteConfig().setConfigSettings({minimumFetchIntervalMillis: 0})
-    await remoteConfig().fetchAndActivate()
+    await setConfigSettings(remoteConfig, {minimumFetchIntervalMillis: 0})
+    await fetchAndActivate(remoteConfig)
 
     // 2. 버전 결정 (Firebase 서버 버전)
     const minRequiredVersion =
-      remoteConfig().getValue('min_required_version').asString() ||
+      getValue(remoteConfig, 'min_required_version').asString() ||
       Constants.expoConfig?.version ||
       '1.0.0'
     const currentVersion = Constants.expoConfig?.version || '1.0.0'

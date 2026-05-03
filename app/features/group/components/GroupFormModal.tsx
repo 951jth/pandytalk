@@ -1,5 +1,5 @@
 import {Group} from '@app/shared/types/group'
-import CustomModal from '@app/shared/ui/modal/CustomModal'
+import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import React from 'react'
 import GroupForm from './GroupForm'
 
@@ -17,9 +17,8 @@ export default function GroupModalForm({
   onRefresh,
 }: propTypes) {
   return (
-    <CustomModal visible={open} onClose={onClose}>
+    <BottomSheetModal visible={open} onClose={onClose}>
       <GroupForm record={record} onClose={onClose} onRefresh={onRefresh} />
-    </CustomModal>
+    </BottomSheetModal>
   )
 }
-

@@ -171,6 +171,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
             labelStyle: {fontFamily: 'BMDOHYEON', color: COLORS.secondary},
           }}
           loading={loading}
+          btnDisable={loading}
           useBotton={true}
         />
       </ScrollView>

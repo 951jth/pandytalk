@@ -3,12 +3,12 @@ import {Modal, ScrollView, StyleSheet, Text, View} from 'react-native'
 
 import InputForm from '../../../shared/ui/form/InputForm'
 
-import {useUserDetail} from '@app/features/user/hooks/useUserDetail'
+import {useUserManage} from '@app/features/user/hooks/useUserManage'
 import {updateUserItems} from '@app/features/user/screens/updateUser.form'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import {AppButton} from '@app/shared/ui/button/AppButton'
-import CustomModal from '@app/shared/ui/modal/CustomModal'
+import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import EditProfile from '@app/shared/ui/upload/EditProfile'
 
 const ButtonsByType = {
@@ -29,9 +29,9 @@ const ButtonsByType = {
   confirm: [
     {
       label: '정지',
-      bgColor: '#FFF9DB', // Soft Pastel Yellow
-      textColor: '#F08C00',
-      status: 'pending',
+      bgColor: '#F1F3F5', // Soft Pastel Gray
+      textColor: '#495057',
+      status: 'stop',
     },
     {
       label: '수정',
@@ -54,6 +54,20 @@ const ButtonsByType = {
       status: 'delete',
     },
   ],
+  stop: [
+    {
+      label: '복구',
+      bgColor: '#F4FCF7',
+      textColor: '#099268',
+      status: 'confirm',
+    },
+    {
+      label: '삭제',
+      bgColor: '#E03131',
+      textColor: '#FFF',
+      status: 'delete',
+    },
+  ],
 }
 
 type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
@@ -64,19 +78,19 @@ type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
   onClose?: () => void
 }
 
-type UserStatus = User['accountStatus'] & 'delete'
+type UserStatus = User['accountStatus'] | 'delete'
 
-export default function UserDetailModal({
+export default function UserManageModal({
   open,
   onComplete = () => {},
   onClose = () => {},
   record,
 }: propTypes) {
-  const {handleMemberStatusUpdate, formRef, profileRef, user} =
-    useUserDetail(onComplete)
+  const {handleMemberStatusUpdate, formRef, profileRef, loadingStatus} =
+    useUserManage(onComplete)
 
   return (
-    <CustomModal visible={open} onClose={onClose}>
+    <BottomSheetModal visible={open} onClose={onClose}>
       <View style={styles.container}>
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -104,9 +118,10 @@ export default function UserDetailModal({
               labelStyle: {fontFamily: 'BMDOHYEON', color: COLORS.secondary},
             }}
             bottomElement={
-              user?.accountStatus && (
+              record?.accountStatus && (
                 <View style={styles.buttons}>
-                  {(ButtonsByType?.[user?.accountStatus] || [])?.map(button => {
+                  {(ButtonsByType?.[record?.accountStatus] || [])?.map(button => {
+                    const isCurrentLoading = loadingStatus === button.status
                     return (
                       <AppButton
                         key={button?.label}
@@ -115,8 +130,11 @@ export default function UserDetailModal({
                             button?.status as UserStatus,
                           )
                         }
-                        style={{backgroundColor: button?.bgColor, flex: 1}}
-                        labelStyle={{color: button?.textColor || '#FFF'}}>
+                        loading={isCurrentLoading}
+                        disabled={!!loadingStatus && !isCurrentLoading}
+                        fullWidth={true}
+                        bgColor={button?.bgColor}
+                        textColor={button?.textColor || '#FFF'}>
                         {button?.label}
                       </AppButton>
                     )
@@ -127,7 +145,7 @@ export default function UserDetailModal({
           />
         </ScrollView>
       </View>
-    </CustomModal>
+    </BottomSheetModal>
   )
 }
 
@@ -152,5 +170,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 20,
     gap: 12,
+    paddingBottom: 12,
   },
 })

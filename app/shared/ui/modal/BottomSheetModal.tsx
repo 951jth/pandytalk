@@ -19,7 +19,7 @@ type Props = {
   >
 >
 
-export default function CustomModal({
+export default function BottomSheetModal({
   visible,
   onClose,
   children,
@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32, // ✅ 시그니처 32px 곡률
     borderTopRightRadius: 32, // ✅ 시그니처 32px 곡률
     minHeight: 200,
-    padding: 16,
+    paddingTop: 16,
+    paddingHorizontal:16,
   },
 })

@@ -1,9 +1,10 @@
 import {authService} from '@app/features/auth/service/authService'
+import {analytics} from '@app/shared/services/analytics'
 import {AuthStackParamList} from '@app/shared/types/navigate'
 import {validateField} from '@app/shared/utils/validation'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useState} from 'react'
 import {Alert} from 'react-native'
 
 const validationMap = {
@@ -40,14 +41,84 @@ export function useLoginScreen() {
   const [password, setPassword] = useState<string>('')
   const [errors, setErrors] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
+  // 필드가 많아지면 객체 방식이 편함:
+  // const [touched, setTouched] = useState({email: false, password: false})
+  const [blurredEmail, setBlurredEmail] = useState(false)
+  const [blurredPassword, setBlurredPassword] = useState(false)
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList, 'user-join'>>()
 
+  const validateCheck = useCallback(
+    (key: 'email' | 'password', value: string) => {
+      const item = validationMap?.[key] || null
+      if (!item) return null
+      const msg = validateField(item, value, {email, password})
+      const nextError = msg || null
+      setErrors(nextError)
+      if (nextError) {
+        analytics.track('login_validation_failed', {
+          field: key,
+          reason: nextError,
+        })
+      }
+      return nextError
+    },
+    [email, password],
+  )
+
+  const setEmailValue = useCallback(
+    (value: string) => {
+      setEmail(value)
+      if (blurredEmail) {
+        validateCheck('email', value)
+      }
+    },
+    [blurredEmail, validateCheck],
+  )
+
+  const setPasswordValue = useCallback(
+    (value: string) => {
+      setPassword(value)
+      if (blurredPassword) {
+        validateCheck('password', value)
+      }
+    },
+    [blurredPassword, validateCheck],
+  )
+
+  const onEmailBlur = useCallback(() => {
+    // 객체 방식: setTouched(prev => ({...prev, email: true}))
+    setBlurredEmail(true)
+    validateCheck('email', email)
+  }, [email, validateCheck])
+
+  const onPasswordBlur = useCallback(() => {
+    // 객체 방식: setTouched(prev => ({...prev, password: true}))
+    setBlurredPassword(true)
+    validateCheck('password', password)
+  }, [password, validateCheck])
+
+  const validateAll = useCallback(() => {
+    // 객체 방식: setTouched({email: true, password: true})
+    setBlurredEmail(true)
+    setBlurredPassword(true)
+
+    const emailError = validateCheck('email', email)
+    if (emailError) return emailError
+
+    return validateCheck('password', password)
+  }, [email, password, validateCheck])
+
   const onSubmit = async () => {
+    const validationError = validateAll()
+    if (validationError) return
+
     try {
       setLoading(true)
-      // const {email, password} = formValues
-      if (!email || !password) return
+      analytics.track('login_submit', {
+        hasEmail: !!email,
+        hasPassword: !!password,
+      })
       await authService.login(email, password)
     } catch (error) {
       const message =
@@ -58,37 +129,17 @@ export function useLoginScreen() {
     }
   }
 
-  const validateCheck = useCallback(
-    (key: 'email' | 'password', value: string) => {
-      if (!key) return
-      if (!value || value === '') {
-        return setErrors(null)
-      }
-      const item = validationMap?.[key] || null
-      if (!item) return
-      const msg = validateField(item, value, {email, password})
-      setErrors(msg || null)
-    },
-    [email, password],
-  )
-
   const moveJoinPage = () => navigation.push('user-join')
-
-  useEffect(() => {
-    if (email) validateCheck('email', email)
-  }, [email, validateCheck])
-
-  useEffect(() => {
-    if (password) validateCheck('password', password)
-  }, [password, validateCheck])
 
   return {
     email,
-    setEmail,
+    setEmail: setEmailValue,
     password,
-    setPassword,
+    setPassword: setPasswordValue,
     errors,
     loading,
+    onEmailBlur,
+    onPasswordBlur,
     onSubmit,
     moveJoinPage,
   }

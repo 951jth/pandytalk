@@ -3,7 +3,7 @@ import {StyleSheet, View} from 'react-native'
 import Skeleton from './Skeleton'
 
 /**
- * 그룹 관리 목록용 스켈레톤 카드 (GuestGroup 스타일)
+ * 그룹 관리 목록용 스켈레톤 카드 (GroupManageItem 스타일)
  */
 export default function GroupManageSkeleton() {
   const items = Array.from({length: 8})

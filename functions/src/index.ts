@@ -24,3 +24,5 @@ export {setupTestDummyData} from './triggers/test/setupDummy'
 export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
 // 더미 메시지 생성하기
 export {sendDummyMessages} from './triggers/test/sendDummyMessages'
+// AI 일반 응답과 스트리밍 응답 체감 속도 비교하기
+export {testAiStreamBenchmark} from './triggers/test/aiStreamBenchmark'

@@ -79,6 +79,7 @@ export default function ProfileScreen(): React.JSX.Element {
           {userInfo?.authority !== 'TEST' && (
             <AppButton
               loading={submitting}
+              loadingText="저장 중"
               style={styles.saveBtn}
               onTouchEnd={updateUserProfile}>
               내 정보 저장하기
