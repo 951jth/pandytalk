@@ -52,6 +52,15 @@ function logAuthGateDecision(params: {
     reason,
   })
 
+  // ✅ [DEBUG] 인증은 됐는데 튕기는 경우만 상세 추적을 위해 에러 로그 발생
+  if (hasAuthUser && !canEnterApp) {
+    logger.error(`[DEBUG_AUTH_GATE_FAIL] reason: ${reason}`, {
+      accountStatus,
+      isUserInfoLoaded,
+      hasAuthUser,
+    })
+  }
+
   analytics.track('auth_gate_decision', {
     result: canEnterApp ? 'app' : 'auth',
     reason,
