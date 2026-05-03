@@ -1,6 +1,6 @@
-import * as Updates from 'expo-updates'
 import {getFirestore} from '@react-native-firebase/firestore'
 import {useQueryClient} from '@tanstack/react-query'
+import * as Updates from 'expo-updates'
 import {cloneDeep} from 'lodash'
 import {useCallback, useMemo, useRef, useState} from 'react'
 import {Alert} from 'react-native'
@@ -18,7 +18,7 @@ import {useAppSelector} from '../../../store/reduxHooks'
 import {AppDispatch} from '../../../store/store'
 import {fetchUserById} from '../../../store/userSlice'
 
-const DEBUG_INFO_LONG_PRESS_DELAY_MS = 5000
+const DEBUG_INFO_LONG_PRESS_DELAY_MS = 3000
 
 /**
  * 프로필 정보 조회 및 업데이트를 담당하는 메인 훅

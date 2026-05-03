@@ -55,8 +55,7 @@ export default function UserManageItem({
           <Text style={styles.userName}>{item?.displayName || '이름 없음'}</Text>
           <Text style={styles.userEmail} numberOfLines={1}>{item?.email || '-'}</Text>
         </View>
-
-        {/* 상태 및 날짜 영역 (우측) */}
+        {/* 상태 및 날짜 영역 (우측) */}  
         <View style={styles.statusSection}>
           <ColorChip status={item.accountStatus} />
           <Text style={styles.dateText}>{formattedDate}</Text>

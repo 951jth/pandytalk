@@ -1,4 +1,9 @@
-import remoteConfig from '@react-native-firebase/remote-config'
+import {remoteConfig} from '@app/shared/firebase/firestore'
+import {
+  fetchAndActivate,
+  getValue,
+  setConfigSettings,
+} from '@react-native-firebase/remote-config'
 import {Alert, Linking, Platform} from 'react-native'
 import Constants from 'expo-constants'
 import {logger} from '../services/logger'
@@ -64,12 +69,12 @@ export const checkForceUpdate = async () => {
 
   try {
     // 1. 설정 초기화 및 데이터 가져오기 (0초 간격으로 즉시 갱신)
-    await remoteConfig().setConfigSettings({minimumFetchIntervalMillis: 0})
-    await remoteConfig().fetchAndActivate()
+    await setConfigSettings(remoteConfig, {minimumFetchIntervalMillis: 0})
+    await fetchAndActivate(remoteConfig)
 
     // 2. 버전 결정 (Firebase 서버 버전)
     const minRequiredVersion =
-      remoteConfig().getValue('min_required_version').asString() ||
+      getValue(remoteConfig, 'min_required_version').asString() ||
       Constants.expoConfig?.version ||
       '1.0.0'
     const currentVersion = Constants.expoConfig?.version || '1.0.0'

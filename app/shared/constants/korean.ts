@@ -15,3 +15,10 @@ export const messageType = {
   image: '이미지',
   file: '파일',
 }
+
+export const accountStatus = {
+  pending: '대기중',
+  confirm: '승인됨',
+  reject: '거절됨',
+  stop: '정지됨',
+}

@@ -1,4 +1,5 @@
 import {authService} from '@app/features/auth/service/authService'
+import {analytics} from '@app/shared/services/analytics'
 import {AuthStackParamList} from '@app/shared/types/navigate'
 import {validateField} from '@app/shared/utils/validation'
 import {useNavigation} from '@react-navigation/native'
@@ -54,6 +55,12 @@ export function useLoginScreen() {
       const msg = validateField(item, value, {email, password})
       const nextError = msg || null
       setErrors(nextError)
+      if (nextError) {
+        analytics.track('login_validation_failed', {
+          field: key,
+          reason: nextError,
+        })
+      }
       return nextError
     },
     [email, password],
@@ -108,6 +115,10 @@ export function useLoginScreen() {
 
     try {
       setLoading(true)
+      analytics.track('login_submit', {
+        hasEmail: !!email,
+        hasPassword: !!password,
+      })
       await authService.login(email, password)
     } catch (error) {
       const message =

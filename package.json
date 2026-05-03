@@ -1,6 +1,6 @@
 {
   "name": "cshchatapp",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "main": "index.tsx",
   "scripts": {
@@ -26,6 +26,7 @@
   "dependencies": {
     "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@react-native-clipboard/clipboard": "^1.16.3",
+    "@react-native-firebase/analytics": "22.2.1",
     "@react-native-firebase/app": "22.2.1",
     "@react-native-firebase/auth": "22.2.1",
     "@react-native-firebase/crashlytics": "22.2.1",

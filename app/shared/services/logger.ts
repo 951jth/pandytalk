@@ -1,17 +1,19 @@
-import crashlytics from '@react-native-firebase/crashlytics'
+import {crashlytics} from '@app/shared/firebase/firestore'
+import {
+  log,
+  recordError,
+  setAttributes,
+} from '@react-native-firebase/crashlytics'
 import * as Updates from 'expo-updates'
 
-type CrashReporter = {
-  log?: (message: string) => void
-  recordError?: (error: Error) => void
-  setAttribute?: (key: string, value: string) => Promise<null>
-  setAttributes?: (attributes: Record<string, string>) => Promise<null>
-}
+type CrashReporter = typeof crashlytics
+
+const isPromiseLike = (value: unknown): value is Promise<null> =>
+  !!value && typeof value === 'object' && 'catch' in value
 
 const getCrashReporter = () => {
   try {
-    if (typeof crashlytics !== 'function') return null
-    return crashlytics() as unknown as CrashReporter
+    return crashlytics
   } catch (e) {
     return null
   }
@@ -19,7 +21,9 @@ const getCrashReporter = () => {
 
 const safeCrashLog = (crash: CrashReporter | null, message: string) => {
   try {
-    crash?.log?.(message)
+    if (crash) {
+      log(crash, message)
+    }
   } catch (e) {
     console.warn('Failed to write Crashlytics log', e)
   }
@@ -27,7 +31,9 @@ const safeCrashLog = (crash: CrashReporter | null, message: string) => {
 
 const safeRecordError = (crash: CrashReporter | null, error: Error) => {
   try {
-    crash?.recordError?.(error)
+    if (crash) {
+      recordError(crash, error)
+    }
   } catch (e) {
     console.warn('Failed to record Crashlytics error', e)
   }
@@ -38,8 +44,14 @@ const safeSetAttributes = (
   attributes: Record<string, string>,
 ) => {
   try {
-    const result = crash?.setAttributes?.(attributes)
-    result?.catch(e => console.warn('Failed to set Crashlytics attributes', e))
+    if (crash) {
+      const result = setAttributes(crash, attributes)
+      if (isPromiseLike(result)) {
+        result.catch(e =>
+          console.warn('Failed to set Crashlytics attributes', e),
+        )
+      }
+    }
   } catch (e) {
     console.warn('Failed to set Crashlytics attributes', e)
   }
@@ -97,39 +109,6 @@ class Logger {
   }
 
   /**
-   * 업데이트 체크 결과를 상세히 로깅 (Crashlytics 로그에 포함)
-   */
-  logUpdateCheck(event: {type: string; message?: string}) {
-    if (this.isDev) {
-      console.log(`[UPDATE EVENT] ${event.type}`, event)
-      return
-    }
-
-    const logMsg = `[EAS Update Event] Type: ${event.type}`
-    const crash = getCrashReporter()
-    safeCrashLog(crash, logMsg)
-
-    // 성공 케이스: 업데이트가 다운로드되었거나 사용 가능한 상태
-    if (event.type === 'downloaded' || event.type === 'updateAvailable') {
-      safeCrashLog(crash, `EAS Update Success: ${event.type}`)
-      safeSetAttributes(crash, {
-        last_update_status: 'success',
-        last_update_error: 'none',
-      })
-    }
-
-    // 에러 케이스
-    if (event.type === 'error' || event.type === 'error_check') {
-      const errorMsg = event.message || 'unknown'
-      safeRecordError(crash, new Error(`EAS Update Error: ${errorMsg}`))
-      safeSetAttributes(crash, {
-        last_update_status: 'failed',
-        last_update_error: errorMsg,
-      })
-    }
-  }
-
-  /**
    * Log debug message to console only in development
    */
   debug(message: string, context?: unknown) {
@@ -145,7 +124,7 @@ class Logger {
     if (this.isDev) {
       console.info(`[INFO] ${message}`, context || '')
     } else {
-      // In production, we can use crashlytics().log() for breadcrumbs
+      // In production, write Crashlytics breadcrumbs via the modular API.
       const crash = getCrashReporter()
       safeCrashLog(
         crash,
