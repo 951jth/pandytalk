@@ -51,7 +51,6 @@ export const updateUserItems: FormItem[] = [
   {
     key: 'note',
     label: '신청메모',
-    required: true,
     validation: {
       maxLength: 200,
       message: '신청메모는 1-200자 입력해주세요.',

@@ -107,17 +107,15 @@ export function useAuthGate() {
   )
 
   useEffect(() => {
-    let authStateVersion = 0
+    let isEffectActive = true
 
     const unsubscribe = onAuthStateChanged(auth, user => {
-      authStateVersion += 1
-      const currentVersion = authStateVersion
-
       void (async () => {
         logger.info('AuthGate: onAuthStateChanged fired', {
           uid: user?.uid ?? 'null',
-          currentVersion,
         })
+
+        if (!isEffectActive) return
 
         setInitializing(true)
         setFbUser(user)
@@ -148,13 +146,16 @@ export function useAuthGate() {
             errorMessage: err instanceof Error ? err.message : 'unknown',
           })
         } finally {
-          if (currentVersion === authStateVersion) {
+          if (isEffectActive) {
             setInitializing(false)
           }
         }
       })()
     })
-    return unsubscribe
+    return () => {
+      isEffectActive = false
+      unsubscribe()
+    }
   }, [fetchProfile])
 
   const hasAuthUser = !!fbUser?.uid
