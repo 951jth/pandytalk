@@ -40,7 +40,7 @@ export async function fetchRemoteCacheResetOp(
 export function observeRemoteCacheResetOp(
   uid: string,
   onOp: (op: CacheResetOp | null) => void,
-  onError?: (e: any) => void,
+  onError?: (e: Error) => void,
 ) {
   const ref = cacheResetRef(uid)
   return firebaseRefObserver(

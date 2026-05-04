@@ -1,5 +1,4 @@
-import type {FieldValue} from '@react-native-firebase/firestore'
-import type {Timestamp} from 'firebase-admin/firestore'
+import type {FieldValue, Timestamp} from '@react-native-firebase/firestore'
 
 export interface User {
   id?: string
@@ -9,7 +8,7 @@ export interface User {
   authority: 'ADMIN' | 'MANAGER' | 'USER' | 'TEST'
   status: 'online' | 'offline'
   photoURL?: string | null
-  lastSeen?: Timestamp | number | FieldValue | null // RN Firebase 기준 차후 Timestamp로 변경예정
+  lastSeen?: Timestamp | number | FieldValue | null
   isGuest?: boolean // 현재는 무조건 TRUE
   note: string // 신청 메모(사용자 입력)
   intro: string // 소개(사용자 입력)
@@ -17,16 +16,16 @@ export interface User {
   groupName?: string | null | undefined
   // 상태/검토 정보
   accountStatus: 'pending' | 'confirm' | 'reject' | 'stop'
-  approvedAt?: Timestamp | FieldValue | null
+  approvedAt?: Timestamp | number | FieldValue | null
   approvedBy?: string | null // admin uid
-  rejectedAt?: Timestamp | FieldValue | null
+  rejectedAt?: Timestamp | number | FieldValue | null
   rejectedBy?: string | null
   emailVerified?: boolean // 이메일 인증 여부
   isConfirmed?: boolean // firebase collection 조건비교용
 
   // 메타 시간
-  createdAt: FirebaseFirestore.Timestamp | Timestamp | FieldValue | null
-  updatedAt?: FirebaseFirestore.Timestamp | Timestamp | FieldValue | null
+  createdAt: Timestamp | number | FieldValue | null
+  updatedAt?: Timestamp | number | FieldValue | null
 }
 
 export interface UserJoinRequest {
@@ -53,15 +52,15 @@ export interface GuestApplication {
 
   // 상태/검토 정보
   accountStatus: 'pending' | 'confirm' | 'reject' | 'stop'
-  approvedAt?: Timestamp | null
+  approvedAt?: Timestamp | number | FieldValue | null
   approvedBy?: string | null // admin uid
-  rejectedAt?: Timestamp | null
+  rejectedAt?: Timestamp | number | FieldValue | null
   rejectedBy?: string | null
   emailVerified?: boolean // (선택) 이메일 인증 여부 스냅샷
 
   // 메타 시간
-  createdAt: Timestamp
-  updatedAt?: Timestamp
+  createdAt: Timestamp | number | FieldValue | null
+  updatedAt?: Timestamp | number | FieldValue | null
 
   // (선택) 소유/검토자 추적
   // ownerUid?: string | null // 신청 당사자의 uid(로그인 상태에서 신청하는 경우)

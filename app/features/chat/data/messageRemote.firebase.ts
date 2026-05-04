@@ -39,10 +39,10 @@ export const messageRemote = {
       ].filter(Boolean)
       const q = query(messagesRef, ...constraints)
       const snapshot = await getDocs(q)
-      const result = toPageResult<ChatMessage>(snapshot.docs, PAGE_SIZE, d => ({
+      const result = toPageResult(snapshot.docs, PAGE_SIZE, d => ({
         id: d.id,
         ...d.data(),
-      }))
+      }) as ChatMessage)
       return result
     })
   },

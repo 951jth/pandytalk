@@ -1,7 +1,7 @@
 // shared/firebase/pagination.ts (추천 위치 예시)
-export type PageResult<T> = {
+export type PageResult<T, TDoc = unknown> = {
   items: T[]
-  nextPageParam: unknown | null
+  nextPageParam: TDoc | null
   hasNext: boolean
 }
 
@@ -12,11 +12,11 @@ export type PageResult<T> = {
  * - items는 pageSize까지만 매핑
  * - nextPageParam은 "실제로 반환한 마지막 doc" (다음 startAfter에 사용)
  */
-export function toPageResult<T>(
-  docs: any[], // Firebase 타입 의존 숨기고 싶으면 any/unknown 권장
+export function toPageResult<T, TDoc>(
+  docs: TDoc[],
   pageSize: number,
-  mapFn: (doc: any) => T,
-): PageResult<T> {
+  mapFn: (doc: TDoc) => T,
+): PageResult<T, TDoc> {
   const hasNext = docs.length > pageSize
   const pageDocs = hasNext ? docs.slice(0, pageSize) : docs
 
@@ -26,7 +26,7 @@ export function toPageResult<T>(
   return {items, nextPageParam, hasNext}
 }
 
-export function toInfiniteQueryData<T>(pages: PageResult<T>[]) {
+export function toInfiniteQueryData<T, TDoc>(pages: PageResult<T, TDoc>[]) {
   const data = pages.flatMap(page => page.items)
   const lastPage = pages[pages.length - 1]
   const nextPageParam = lastPage.hasNext ? lastPage.nextPageParam : undefined

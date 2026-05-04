@@ -110,7 +110,7 @@ export function useAuthGate() {
     let isEffectActive = true
 
     const unsubscribe = onAuthStateChanged(auth, user => {
-      void (async () => {
+      const handleAuthStateChange = async () => {
         logger.info('AuthGate: onAuthStateChanged fired', {
           uid: user?.uid ?? 'null',
         })
@@ -150,7 +150,9 @@ export function useAuthGate() {
             setInitializing(false)
           }
         }
-      })()
+      }
+
+      handleAuthStateChange()
     })
     return () => {
       isEffectActive = false

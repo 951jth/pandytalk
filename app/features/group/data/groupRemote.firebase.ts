@@ -33,13 +33,13 @@ export const groupRemote = {
 
       const q = query(groupRef, ...constaints)
       const snapshot = await getDocs(q)
-      return toPageResult<Group>(
+      return toPageResult(
         snapshot.docs,
         pageSize || DEFAULT_SIZE,
         groupDoc => ({
           id: groupDoc.id,
           ...groupDoc.data(),
-        }),
+        }) as Group,
       )
     })
   },

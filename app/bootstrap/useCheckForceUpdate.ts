@@ -9,13 +9,13 @@ import {AppState} from 'react-native'
 export function useCheckForceUpdate() {
   useEffect(() => {
     // 1. 앱 최초 진입 시 체크
-    void checkForceUpdate()
+    checkForceUpdate()
 
     // 2. 앱 상태 변경 시 체크 (Background -> Foreground 전환 감지)
     const subscription = AppState.addEventListener('change', nextAppState => {
       const isFocused = nextAppState === 'active'
       if (isFocused) {
-        void checkForceUpdate()
+        checkForceUpdate()
       }
       // 네이티브 전용이므로 Platform 체크 없이 바로 실행
       focusManager.setFocused(isFocused)

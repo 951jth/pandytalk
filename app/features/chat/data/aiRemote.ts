@@ -7,7 +7,7 @@ export interface AiStreamParams {
   item: import('@app/shared/types/chat').ChatMessage
   onChunk: (text: string) => void
   onDone: () => void
-  onError: (error: any) => void
+  onError: (error: unknown) => void
 }
 
 export const aiRemote = {
@@ -27,7 +27,7 @@ export const aiRemote = {
 
       logAiPerf({scope: 'sse', event: 'connect', messageId})
 
-      const es = new EventSource<any>(AI_STREAM_URL, {
+      const es = new EventSource(AI_STREAM_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

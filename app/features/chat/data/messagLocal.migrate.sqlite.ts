@@ -8,7 +8,19 @@ import {
 import {logger} from '@app/shared/services/logger'
 import {db} from '@app/shared/sqlite/sqlite'
 import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
-import type {Transaction} from 'react-native-sqlite-storage'
+import type {
+  ResultSet,
+  SQLError,
+  Transaction,
+} from 'react-native-sqlite-storage'
+
+type UserVersionRow = {
+  user_version?: number
+}
+
+type TableInfoRow = {
+  name?: string
+}
 
 export const messageMigrateLocal = {
   isMessagesTableExists: () => {
@@ -131,9 +143,14 @@ export const messageMigrateLocal = {
           tx.executeSql(
             'PRAGMA user_version;',
             [],
-            (_: any, res: any) =>
-              resolve(res.rows.item(0).user_version as number),
-            (_: any, err: any) => (reject(err), true),
+            (_tx: Transaction, res: ResultSet) => {
+              const row = res.rows.item(0) as UserVersionRow
+              resolve(row.user_version ?? 0)
+            },
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
           )
         })
       })
@@ -148,12 +165,12 @@ export const messageMigrateLocal = {
           tx.executeSql(
             `PRAGMA table_info(${MESSAGE_TABLE});`,
             [],
-            (_: any, res: any) => {
+            (_tx: Transaction, res: ResultSet) => {
               try {
                 // 1) 현재 테이블 컬럼명 Set 만들기
                 const currentColumns = new Set<string>()
                 for (let i = 0; i < res.rows.length; i++) {
-                  const row = res.rows.item(i)
+                  const row = res.rows.item(i) as TableInfoRow
                   if (row?.name) currentColumns.add(String(row.name))
                 }
 
@@ -171,7 +188,10 @@ export const messageMigrateLocal = {
                 reject(e)
               }
             },
-            (_: any, err: any) => (reject(err), true),
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
           )
         })
       })

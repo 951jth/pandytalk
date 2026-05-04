@@ -88,7 +88,7 @@ export default function ProfileScreen(): React.JSX.Element {
         </View>
       </ScrollView>
 
-      {/* 유저 도메인 전용 메뉴 컴포넌트 (초경량 자율 모드) */}
+      {/* 유저 도메인 전용 메뉴 컴포넌트 */}
       <ProfileMenu
         onReset={onReset}
         anchorStyle={styles.menuAnchor}
