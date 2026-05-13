@@ -1,5 +1,6 @@
 import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
+import {getDMChatId} from '@app/shared/utils/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
@@ -30,8 +31,12 @@ export function useUsersScreen() {
       if (!currentUid) return
       navigation.navigate('dm-chat', {
         myId: currentUid,
-        targetId,
-        title,
+        initialChatInfo: {
+          id: getDMChatId(currentUid, targetId),
+          type: 'dm',
+          title,
+          targetId,
+        },
       })
     },
     [currentUid, navigation],

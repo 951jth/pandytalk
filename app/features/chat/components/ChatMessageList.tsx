@@ -7,12 +7,14 @@ import ChatMessageItem, {
 } from '@features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
+import type {InitialChatInfo} from '@shared/types/navigate'
 
 type Props = {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: ChatRoom | null | undefined
   chatType?: ChatRoom['type']
+  initialChatInfo?: InitialChatInfo
 }
 
 //FlatList vs FlashList
@@ -42,7 +44,12 @@ const maintainVisibleContentPosition = {
 }
 const shouldUseNativeVisiblePosition = Platform.OS === 'ios'
 
-export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
+export default function ChatMessageList({
+  roomId,
+  userId,
+  roomInfo,
+  initialChatInfo,
+}: Props) {
   const {
     messagesWithUi, // 훅에서 가공된 데이터 받아옴(멤버 정보도 포함)
     isLoading,
@@ -51,7 +58,7 @@ export default function ChatMessageList({roomId, userId, roomInfo}: Props) {
     isFetchingNextPage,
     flatListRef,
     handleScroll,
-  } = useChatMessageList({userId, roomId, roomInfo})
+  } = useChatMessageList({userId, roomId, roomInfo, initialChatInfo})
 
   const renderMessage = useCallback(
     ({item}: {item: ChatMessageItemProps}) => {

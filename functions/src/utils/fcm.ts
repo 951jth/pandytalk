@@ -27,6 +27,7 @@ interface PushMessageData {
   imageUrl?: string
   createdAt: any
   chatType?: string
+  seq?: number
 }
 
 /**
@@ -48,6 +49,8 @@ export const sendPushToChatMembers = async (
     const members = chatDoc.get('members') as string[]
     const chatType = chatDoc.get('type')
     const chatName = chatDoc.get('name')
+    const chatImage = chatDoc.get('image')
+    const lastSeq = message.seq ?? chatDoc.get('lastSeq')
 
     if (!Array.isArray(members) || members.length < 2) return
 
@@ -159,6 +162,9 @@ export const sendPushToChatMembers = async (
         createdAt: String(message.createdAt ?? Date.now()),
         pushType: 'chat',
         chatType: String(chatType ?? ''),
+        roomName: String(chatName ?? ''),
+        roomImage: String(chatImage ?? ''),
+        lastSeq: String(lastSeq ?? ''),
       },
     }
 

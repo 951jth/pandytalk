@@ -9,7 +9,8 @@ import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 
 export default function DmChatRoomScreen() {
-  const {user, targetId, roomId, roomInfo, headerTitle} = useDmChatRoomScreen()
+  const {user, targetId, roomId, roomInfo, initialChatInfo, headerTitle} =
+    useDmChatRoomScreen()
 
   // if (isLoading || !user) {
   //   return (
@@ -30,6 +31,7 @@ export default function DmChatRoomScreen() {
               userId={user?.uid}
               roomId={roomId}
               roomInfo={roomInfo}
+              initialChatInfo={initialChatInfo}
             />
             <ChatInputBox
               roomInfo={roomInfo}

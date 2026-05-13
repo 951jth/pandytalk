@@ -10,12 +10,13 @@ type GroupChatRoute = RouteProp<AppRouteParamList, 'group-chat'>
 export const useGroupChatRoomScreen = () => {
   const route = useRoute<GroupChatRoute>()
   const {data: user, loading: isUserLoading} = useAppSelector(data => data?.user)
+  const initialChatInfo = route.params?.initialChatInfo
   // route.params?.roomId가 있으면 최우선 (푸시 알림 등으로 진입 시)
-  const groupId = route.params?.roomId ?? user?.groupId ?? null
+  const groupId = initialChatInfo?.id ?? route.params?.roomId ?? user?.groupId ?? null
   //chatId는 groupId와 동일
   const {data: group, isLoading: isGroupLoading} = useGroup(groupId)
   const {data: roomInfo, isLoading: isRoomLoading} = useChatRoomInfo(groupId)
-  const routeTitle = route.params?.title
+  const routeTitle = route.params?.title ?? initialChatInfo?.title
 
   const isLoading = isUserLoading || isGroupLoading || isRoomLoading || (!!groupId && !roomInfo)
 
@@ -28,6 +29,7 @@ export const useGroupChatRoomScreen = () => {
     isLoading,
     roomId: groupId,
     roomInfo,
+    initialChatInfo,
     headerTitle,
   }
 }

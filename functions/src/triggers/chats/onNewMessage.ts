@@ -46,6 +46,7 @@ export const sendNewMessageNotification = onDocumentCreated(
         senderPicURL: message.senderPicURL ?? '',
         imageUrl: message.imageUrl ?? '',
         createdAt: message.createdAt,
+        seq: message.seq,
       })
 
       // 최종 성능 로그

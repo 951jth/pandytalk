@@ -14,8 +14,13 @@ export const useDmChatRoomScreen = () => {
   )
 
   const myId = route.params?.myId ?? user?.uid
-  const {targetId, title} = route.params
-  const roomId = route?.params?.roomId ?? getDMChatId(myId || '', targetId) //DM채팅은 aId_bId의 형식(사용자는 채팅방 아이디를 미리 알고있음.)
+  const initialChatInfo = route.params?.initialChatInfo
+  const targetId = route.params?.targetId ?? initialChatInfo?.targetId ?? ''
+  const title = route.params?.title ?? initialChatInfo?.title
+  const roomId =
+    route?.params?.roomId ??
+    initialChatInfo?.id ??
+    getDMChatId(myId || '', targetId) //DM채팅은 aId_bId의 형식(사용자는 채팅방 아이디를 미리 알고있음.)
   const {data: roomInfo, isLoading: isRoomLoading} = useChatRoomInfo(roomId)
 
   const isLoading = isUserLoading || isRoomLoading
@@ -33,6 +38,7 @@ export const useDmChatRoomScreen = () => {
     targetId,
     roomId,
     roomInfo,
+    initialChatInfo,
     headerTitle,
   }
 }

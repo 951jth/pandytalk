@@ -68,11 +68,29 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     (rawChats.length > 0 && filteredChat.length === 0 && !input)
 
   const moveToChatRoom = useCallback(
-    (targetId?: string | undefined, roomId?: string | undefined) => {
-      if (type === 'dm' && user?.uid && targetId) {
-        navigation.navigate('dm-chat', {myId: user.uid, targetId})
-      } else if (type === 'group' && roomId) {
-        navigation.navigate('group-chat', {roomId})
+    (chatInfo: ChatItemWithMemberInfo) => {
+      if (type === 'dm' && user?.uid && chatInfo.findMember?.id) {
+        navigation.navigate('dm-chat', {
+          myId: user.uid,
+          initialChatInfo: {
+            id: chatInfo.id,
+            type: 'dm',
+            title: chatInfo.findMember?.displayName ?? chatInfo.name,
+            image: chatInfo.findMember?.photoURL,
+            targetId: chatInfo.findMember.id,
+            lastSeq: chatInfo.lastSeq,
+          },
+        })
+      } else if (type === 'group' && chatInfo.id) {
+        navigation.navigate('group-chat', {
+          initialChatInfo: {
+            id: chatInfo.id,
+            type: 'group',
+            title: chatInfo.name,
+            image: chatInfo.image,
+            lastSeq: chatInfo.lastSeq,
+          },
+        })
       }
     },
     [navigation, type, user?.uid],

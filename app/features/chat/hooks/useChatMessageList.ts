@@ -5,6 +5,7 @@ import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages'
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
 import type {ChatRoom} from '@app/shared/types/chat'
+import type {InitialChatInfo} from '@app/shared/types/navigate'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
 import {useMemo} from 'react'
 
@@ -12,14 +13,16 @@ type Props = {
   roomId: string | null
   userId: string | null | undefined
   roomInfo: ChatRoom | null | undefined
+  initialChatInfo?: InitialChatInfo
 }
 
 export const useChatMessageList = ({
   roomId, // 쿼리를 통해 알수있는 정보(구독전용)
   userId,
   roomInfo, // 실제 채팅방 정보 생성 확인
+  initialChatInfo,
 }: Props) => {
-  const serverLastSeq = roomInfo?.lastSeq
+  const serverLastSeq = roomInfo?.lastSeq ?? initialChatInfo?.lastSeq
 
   // 1. 최신 메시지 동기화 엔진 (포커스 시 작동)
   useSyncChatMessages(roomId, serverLastSeq)

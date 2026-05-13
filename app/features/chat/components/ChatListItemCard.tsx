@@ -11,10 +11,7 @@ import {toMillisFromServerTime} from '@shared/utils/firebase'
 
 type propTypes = {
   item: ChatItemWithMemberInfo
-  moveToChatRoom?: (
-    targetId?: string | undefined,
-    roomId?: string | undefined,
-  ) => void
+  moveToChatRoom?: (item: ChatItemWithMemberInfo) => void
 }
 
 export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
@@ -25,8 +22,6 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
     ai: {name: findMember?.displayName, image: findMember?.photoURL},
   }
   const viewByType = nameMaps?.[item?.type]
-  const targetId = item?.findMember?.id
-  const roomId = item?.id
   const lastSeenAt = toMillisFromServerTime(findMember?.lastSeen)
   const isOnline = !!(
     findMember?.status === 'online' &&
@@ -35,7 +30,7 @@ export default function ChatListItemCard({item, moveToChatRoom}: propTypes) {
 
   return (
     <PressableWrapper
-      onPress={() => moveToChatRoom?.(targetId, roomId)}
+      onPress={() => moveToChatRoom?.(item)}
       style={styles.chatRoom}>
       <View style={styles.avatarFrame}>
         {viewByType?.image ? (

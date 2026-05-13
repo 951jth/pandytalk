@@ -12,9 +12,13 @@ export const useSyncChatMessages = (
 ) => {
   const queryClient = useQueryClient()
   const isSyncing = useRef(false)
+  const lastSyncedSeqRef = useRef<number | undefined>(undefined)
 
   const sync = useCallback(async () => {
     if (!roomId || serverLastSeq === undefined || isSyncing.current) return
+    if (lastSyncedSeqRef.current !== undefined && serverLastSeq <= lastSyncedSeqRef.current) {
+      return
+    }
 
     try {
       isSyncing.current = true
@@ -23,6 +27,7 @@ export const useSyncChatMessages = (
         roomId,
         serverLastSeq,
       )
+      lastSyncedSeqRef.current = serverLastSeq
 
       if (hasNewData) {
         // 현재 화면에 보이는(active) 상태일 때만 다시 불러오도록 제한하여 부하를 방지합니다.

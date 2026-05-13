@@ -14,6 +14,7 @@
 import {
   createNavigationContainerRef,
 } from '@react-navigation/native'
+import type {InitialChatInfo} from '@app/shared/types/navigate'
 import BootSplash from 'react-native-bootsplash'
 
 // 전역 내비게이션 참조 객체
@@ -43,14 +44,11 @@ export const onNavReady = () => {
  * @param targetId DM일 경우 상대방 사용자 ID
  */
 export function navigateToChat(
-  roomId: string,
-  title?: string,
-  chatType?: string,
-  targetId?: string,
+  initialChatInfo: InitialChatInfo,
 ) {
   const task = () => {
     // 채팅 타입에 따라 스크린 결정
-    const screenName = chatType === 'group' ? 'group-chat' : 'dm-chat'
+    const screenName = initialChatInfo.type === 'group' ? 'group-chat' : 'dm-chat'
 
     /**
      * [dispatch vs navigate]
@@ -63,14 +61,22 @@ export function navigateToChat(
      */
     navigationRef.navigate('app', {
       screen: screenName,
-      params: {roomId, title, targetId},
+      params:
+        initialChatInfo.type === 'group'
+          ? {initialChatInfo}
+          : {
+              initialChatInfo: {
+                ...initialChatInfo,
+                targetId: initialChatInfo.targetId ?? '',
+              },
+            },
       // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나
       // 파라미터를 강제 갱신하도록 key를 roomId로 설정
-      key: `${screenName}-${roomId}`,
+      key: `${screenName}-${initialChatInfo.id}`,
     })
   }
 
-  if (!roomId) return console.warn('❗ roomId is required.')
+  if (!initialChatInfo.id) return console.warn('❗ chatId is required.')
 
   // 내비게이션이 아직 준비되지 않았다면 큐에 저장 후 리턴
   if (!navigationRef.isReady() || !ready) {

@@ -25,12 +25,21 @@ export const fcmService = {
       case 'chat':
         console.log('🚀 [FCM] 채팅 화면으로 이동:', data)
         if (actualChatId) {
-          navigateToChat(
-            actualChatId,
-            data.senderName as string,
-            (data.chatType as string) || 'dm',
-            data.senderId as string, // targetId 추가
-          )
+          const chatType = data.chatType === 'group' ? 'group' : 'dm'
+          navigateToChat({
+            id: actualChatId,
+            type: chatType,
+            title:
+              chatType === 'group'
+                ? (data.roomName as string)
+                : (data.senderName as string),
+            image:
+              chatType === 'group'
+                ? (data.roomImage as string)
+                : (data.senderPicURL as string),
+            targetId: data.senderId as string,
+            lastSeq: data.lastSeq ? Number(data.lastSeq) : undefined,
+          })
         }
         break
       case 'join-approve':

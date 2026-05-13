@@ -1,6 +1,15 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
 import type {ChatRoom} from './chat'
 
+export type InitialChatInfo = {
+  id: string
+  type: ChatRoom['type']
+  title?: string
+  image?: string | null
+  targetId?: string
+  lastSeq?: number
+}
+
 export type TabParamList = {
   'group-chat': {groupId: string} | undefined
   'group-chat-list': {type: ChatRoom['type']}
@@ -14,8 +23,24 @@ export type AuthStackParamList = {
 
 export type AppRouteParamList = {
   // Auth
-  'dm-chat': {myId: string; targetId: string; title?: string; roomId?: string}
-  'group-chat': {roomId?: string; title?: string; type?: ChatRoom['type']} | undefined
+  'dm-chat': {
+    myId?: string
+    targetId?: string
+    title?: string
+    roomId?: string
+    initialChatInfo?: InitialChatInfo & {
+      type: 'dm' | 'ai'
+      targetId: string
+    }
+  }
+  'group-chat':
+    | {
+        roomId?: string
+        title?: string
+        type?: ChatRoom['type']
+        initialChatInfo?: InitialChatInfo & {type: 'group'}
+      }
+    | undefined
   'guest-manage': undefined
   'group-manage': undefined
   harness: undefined
