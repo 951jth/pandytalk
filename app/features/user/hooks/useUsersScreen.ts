@@ -30,7 +30,6 @@ export function useUsersScreen() {
     (targetId: string, title: string) => {
       if (!currentUid) return
       navigation.navigate('dm-chat', {
-        myId: currentUid,
         initialChatInfo: {
           id: getDMChatId(currentUid, targetId),
           type: 'dm',

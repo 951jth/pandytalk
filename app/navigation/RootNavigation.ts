@@ -14,11 +14,16 @@
 import {
   createNavigationContainerRef,
 } from '@react-navigation/native'
-import type {InitialChatInfo} from '@app/shared/types/navigate'
+import type {
+  InitialDmChatInfo,
+  InitialGroupChatInfo,
+  InitialChatInfo,
+  RootStackParamList,
+} from '@app/shared/types/navigate'
 import BootSplash from 'react-native-bootsplash'
 
 // 전역 내비게이션 참조 객체
-export const navigationRef = createNavigationContainerRef<any>()
+export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 
 let ready = false
 const queue: Array<() => void> = []
@@ -47,9 +52,6 @@ export function navigateToChat(
   initialChatInfo: InitialChatInfo,
 ) {
   const task = () => {
-    // 채팅 타입에 따라 스크린 결정
-    const screenName = initialChatInfo.type === 'group' ? 'group-chat' : 'dm-chat'
-
     /**
      * [dispatch vs navigate]
      * - navigate(): 동일 화면이면 이동하지 않고 파라미터만 바꾸려 함 (가끔 무시됨)
@@ -59,20 +61,17 @@ export function navigateToChat(
      * - "이전 화면이 무엇이든 상관없이" 새로운 채팅방 화면을 현재 스택 맨 위에 강제로 얹습니다.
      * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
      */
+    if (initialChatInfo.type === 'group') {
+      navigationRef.navigate('app', {
+        screen: 'group-chat',
+        params: {initialChatInfo},
+      })
+      return
+    }
+
     navigationRef.navigate('app', {
-      screen: screenName,
-      params:
-        initialChatInfo.type === 'group'
-          ? {initialChatInfo}
-          : {
-              initialChatInfo: {
-                ...initialChatInfo,
-                targetId: initialChatInfo.targetId ?? '',
-              },
-            },
-      // 동일한 스크린명이라도 roomId가 다르면 새로운 인스턴스로 인식하거나
-      // 파라미터를 강제 갱신하도록 key를 roomId로 설정
-      key: `${screenName}-${initialChatInfo.id}`,
+      screen: 'dm-chat',
+      params: {initialChatInfo},
     })
   }
 
@@ -91,9 +90,12 @@ export function navigateToChat(
 /**
  * 일반적인 페이지 이동 함수 (단순 이동용)
  */
-export function navigateByPush(routeName: string, params?: object) {
+export function navigateByPush(routeName: 'users') {
   const task = () => {
-    navigationRef.navigate(routeName, params)
+    navigationRef.navigate('app', {
+      screen: 'main',
+      params: {screen: routeName},
+    })
   }
   if (!navigationRef.isReady() || !ready) {
     queue.push(task)

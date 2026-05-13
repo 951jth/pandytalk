@@ -1,19 +1,31 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
 import type {ChatRoom} from './chat'
 
-export type InitialChatInfo = {
+type InitialChatInfoBase = {
   id: string
-  type: ChatRoom['type']
   title?: string
   image?: string | null
-  targetId?: string
   lastSeq?: number
 }
 
+export type InitialDmChatInfo = InitialChatInfoBase & {
+  type: 'dm' | 'ai'
+  targetId: string
+}
+
+export type InitialGroupChatInfo = InitialChatInfoBase & {
+  type: 'group'
+}
+
+export type InitialChatInfo = InitialDmChatInfo | InitialGroupChatInfo
+
 export type TabParamList = {
-  'group-chat': {groupId: string} | undefined
+  users: undefined
+  chats: {type?: ChatRoom['type']} | undefined
+  'group-chat-tab': undefined
   'group-chat-list': {type: ChatRoom['type']}
-  [key: string]: Record<string, unknown> | undefined
+  profile: undefined
+  'admin-menu': undefined
 }
 
 export type AuthStackParamList = {
@@ -22,30 +34,17 @@ export type AuthStackParamList = {
 }
 
 export type AppRouteParamList = {
-  // Auth
+  main: NavigatorScreenParams<TabParamList> | undefined
   'dm-chat': {
-    myId?: string
-    targetId?: string
-    title?: string
-    roomId?: string
-    initialChatInfo?: InitialChatInfo & {
-      type: 'dm' | 'ai'
-      targetId: string
-    }
+    initialChatInfo: InitialDmChatInfo
   }
-  'group-chat':
-    | {
-        roomId?: string
-        title?: string
-        type?: ChatRoom['type']
-        initialChatInfo?: InitialChatInfo & {type: 'group'}
-      }
-    | undefined
+  'group-chat': {
+    initialChatInfo: InitialGroupChatInfo
+  }
   'guest-manage': undefined
   'group-manage': undefined
   harness: undefined
   'user-select': undefined
-  chats: {type?: ChatRoom['type']}
 }
 
 export type RootStackParamList = {

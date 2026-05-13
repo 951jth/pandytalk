@@ -1,6 +1,6 @@
 import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
-import {AppRouteParamList, TabParamList} from '@app/shared/types/navigate'
+import {TabParamList} from '@app/shared/types/navigate'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -8,7 +8,7 @@ import {Icon} from 'react-native-paper'
 import {ActionTabButton} from '../features/app/components/ActionTabBarButton'
 
 const Tab = createBottomTabNavigator<TabParamList>()
-const EmptyScreen: React.FC<any> = () => null
+const EmptyScreen = () => null
 
 /** 탭바 기본 높이 */
 const TAB_BAR_HEIGHT = 64
@@ -38,13 +38,42 @@ export default function TabScreenNavigator(): React.JSX.Element {
         }
       }}>
       {tabs.map(route => {
-        const ScreenComponent = (route.component ??
-          EmptyScreen) as React.ComponentType<any>
+        if (route.path) {
+          const params = route.getParams()
+
+          return (
+            <Tab.Screen
+              key={route.name}
+              name={route.name}
+              options={{
+                title: route.title ?? route.name,
+                tabBarButton: btnProps => (
+                  <ActionTabButton
+                    {...btnProps}
+                    name={route.name}
+                    disabled={route.disabled}
+                    target={route.path}
+                    params={params}
+                    BadgeComponent={route.badge}
+                  />
+                ),
+              }}>
+              {() => (
+                <View style={styles.screenContainer}>
+                  <EmptyScreen />
+                </View>
+              )}
+            </Tab.Screen>
+          )
+        }
+
+        const params = route.getParams?.()
+        const ScreenComponent = route.component
         return (
           <Tab.Screen
             key={route.name}
             name={route.name}
-            initialParams={route.getParams?.()}
+            initialParams={params}
             options={{
               title: route.title ?? route.name,
               tabBarButton: btnProps => (
@@ -52,15 +81,13 @@ export default function TabScreenNavigator(): React.JSX.Element {
                   {...btnProps}
                   name={route.name}
                   disabled={route.disabled}
-                  target={route.path as keyof AppRouteParamList}
-                  params={route.getParams?.()}
                   BadgeComponent={route.badge}
                 />
               ),
             }}>
-            {props => (
+            {() => (
               <View style={styles.screenContainer}>
-                <ScreenComponent {...props} />
+                <ScreenComponent />
               </View>
             )}
           </Tab.Screen>

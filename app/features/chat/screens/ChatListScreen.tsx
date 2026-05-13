@@ -1,6 +1,6 @@
 import COLORS from '@app/shared/constants/color'
 import type {ChatItemWithMemberInfo} from '@app/shared/types/chat'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
+import type {TabParamList} from '@app/shared/types/navigate'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
 import ChatListSkeleton from '@app/shared/ui/skeleton/ChatListSkeleton'
@@ -11,7 +11,7 @@ import {ActivityIndicator} from 'react-native-paper'
 import ChatListItemCard from '../components/ChatListItemCard'
 import {useChatListScreen} from '../hooks/useChatListScreen'
 
-type ChatRouteParams = RouteProp<AppRouteParamList, 'chats'>
+type ChatRouteParams = RouteProp<TabParamList, 'chats' | 'group-chat-list'>
 
 const MemoizedChatListItem = memo(ChatListItemCard)
 

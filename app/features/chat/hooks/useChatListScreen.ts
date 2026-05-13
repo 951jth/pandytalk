@@ -71,7 +71,6 @@ export const useChatListScreen = (type: ChatItemWithMemberInfo['type']) => {
     (chatInfo: ChatItemWithMemberInfo) => {
       if (type === 'dm' && user?.uid && chatInfo.findMember?.id) {
         navigation.navigate('dm-chat', {
-          myId: user.uid,
           initialChatInfo: {
             id: chatInfo.id,
             type: 'dm',

@@ -1,9 +1,10 @@
 import {appRoutes, initialRouteName} from '@app/navigation/useScreens'
+import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 // import {navigate} from '../components/navigation/RootNavigation'
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator<AppRouteParamList>()
 
 export default function AppNavigator() {
   const routes = appRoutes()
@@ -16,13 +17,13 @@ export default function AppNavigator() {
             key={route.name}
             name={route.name}
             options={layoutGroup.options || route.options}>
-            {(props: any) => {
+            {() => {
               const Component = route.component ?? React.Fragment
               const Layout = layoutGroup.layout ?? React.Fragment
 
               return (
                 <Layout>
-                  <Component {...props} />
+                  <Component />
                 </Layout>
               )
             }}

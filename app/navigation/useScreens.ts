@@ -7,11 +7,19 @@ import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
 import HarnessScreen from '@app/features/harness/screens/HarnessScreen'
 import MainLayout from '@app/layout/MainLayout'
 import TabScreenNavigator from '@app/navigation/TabScreenNavigator'
+import type {
+  AppRouteParamList,
+  AuthStackParamList,
+} from '@app/shared/types/navigate'
 import type {NativeStackNavigationOptions} from '@react-navigation/native-stack'
 import React from 'react'
 
-type RouteItem = {
-  name: string
+/**
+ * 스택 route 설정의 공통 필드.
+ * AppStack과 AuthStack에 등록되는 화면 설정이 공유한다.
+ */
+type RouteItem<RouteName extends string> = {
+  name: RouteName
   title?: string
   component?: React.ComponentType
   options?: NativeStackNavigationOptions
@@ -20,11 +28,16 @@ type RouteItem = {
   path?: string
 }
 
+/**
+ * 공통 레이아웃으로 묶을 AppStack route 그룹.
+ * layout이 있으면 children 화면들을 해당 레이아웃으로 감싸고,
+ * options는 그룹에 공통으로 적용할 Native Stack 옵션을 만든다.
+ */
 type LayoutItem = {
   key: string
   layout?: React.ComponentType<{children: React.ReactNode}>
   options?: NativeStackNavigationOptions
-  children: RouteItem[]
+  children: RouteItem<keyof AppRouteParamList>[]
 }
 
 //규모가 커지면 분리도 권장
@@ -77,7 +90,7 @@ const appRoutes = (): LayoutItem[] => {
 }
 
 //규모가 커지면 useAuthRoutes로 분리.
-const authRoutes: RouteItem[] = [
+const authRoutes: RouteItem<keyof AuthStackParamList>[] = [
   {
     name: 'login',
     component: LoginScreen,
@@ -88,6 +101,6 @@ const authRoutes: RouteItem[] = [
   },
 ]
 
-const initialRouteName = 'main'
+const initialRouteName: keyof AppRouteParamList = 'main'
 
 export {appRoutes, authRoutes, initialRouteName}
