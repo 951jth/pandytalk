@@ -1,5 +1,6 @@
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
-import {firestore} from '@app/shared/firebase/firestore'
+import {ADMIN_DELETE_USER_URL} from '@app/shared/constants/functions'
+import {auth, firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
 import {type User, type UserJoinRequest} from '@app/shared/types/auth'
 import {type FsSnapshot, UpdateInput} from '@app/shared/types/firebase'
@@ -60,6 +61,30 @@ export const userRemote = {
   deleteUser: (user: FirebaseAuthTypes.User) => {
     return firebaseCall('userRemote.deleteUser', async () => {
       await deleteUser(user)
+    })
+  },
+  deleteUserByAdmin: (uid: string) => {
+    return firebaseCall('userRemote.deleteUserByAdmin', async () => {
+      const idToken = await auth.currentUser?.getIdToken()
+      if (!idToken) throw new Error('관리자 인증 정보가 없습니다.')
+
+      const response = await fetch(ADMIN_DELETE_USER_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({uid}),
+      })
+      const data = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
+
+      if (!response.ok) {
+        throw new Error(data?.message || '유저 삭제에 실패했습니다.')
+      }
+
+      return data
     })
   },
   deleteProfile: (uid: string) => {

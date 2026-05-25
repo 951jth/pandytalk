@@ -102,10 +102,7 @@ export const userService = {
         throw new Error('TEST 계정은 탈퇴할 수 없습니다.')
       }
 
-      // 1. Firestore 프로필 먼저 삭제 (데이터 정리)
-      await userRemote.deleteProfile(uid)
-
-      // 2. Firebase Auth 계정 삭제
+      // Auth 삭제가 성공하면 onAuthUserDeleted Functions 트리거가 프로필/이미지/멤버십 정리를 처리합니다.
       await userRemote.deleteUser(user)
     } catch (err: any) {
       if (err.code === 'auth/requires-recent-login') {
@@ -119,6 +116,18 @@ export const userService = {
         throw err
       }
     }
+  },
+  deleteUserByAdmin: async (currentAdminUid: string, targetUser: User) => {
+    if (!currentAdminUid) throw new Error('관리자 정보가 없습니다.')
+    if (!targetUser?.uid) throw new Error('삭제할 유저 정보가 없습니다.')
+    if (currentAdminUid === targetUser.uid) {
+      throw new Error('본인 계정은 관리자 화면에서 삭제할 수 없습니다.')
+    }
+    if (targetUser.authority === 'ADMIN' || targetUser.authority === 'TEST') {
+      throw new Error('관리자 또는 테스트 계정은 삭제할 수 없습니다.')
+    }
+
+    await userRemote.deleteUserByAdmin(targetUser.uid)
   },
 
   getUsers: async ({

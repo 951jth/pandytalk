@@ -87,7 +87,7 @@ export default function UserManageModal({
   record,
 }: propTypes) {
   const {handleMemberStatusUpdate, formRef, profileRef, loadingStatus} =
-    useUserManage(onComplete)
+    useUserManage({record, onComplete})
 
   return (
     <BottomSheetModal visible={open} onClose={onClose}>

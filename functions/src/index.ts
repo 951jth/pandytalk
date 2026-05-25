@@ -8,6 +8,7 @@ export {onGroupMembersUpdate} from './triggers/groups/onGroupMembersUpdate'
 export {onGroupMetaUpdate} from './triggers/groups/onGroupMetaUpdate'
 
 // --- 사용자 트리거 ---
+export {adminDeleteUser} from './triggers/users/adminDeleteUser'
 export {cleanupInactiveUsers} from './triggers/users/cleanupInactiveUsers'
 export {onUserApprove} from './triggers/users/onUserApprove'
 export {onAuthUserDeleted} from './triggers/users/onUserDelete'
