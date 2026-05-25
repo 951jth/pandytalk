@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin'
+import {FieldValue} from 'firebase-admin/firestore'
 import {onDocumentUpdated} from 'firebase-functions/v2/firestore'
 import {db} from '../../core/firebase'
 
@@ -15,7 +15,7 @@ export const onUserGroupIdUpdated = onDocumentUpdated(
     if (prevGroupId === nextGroupId) return
 
     await db.runTransaction(async tx => {
-      const ts = admin.firestore.FieldValue.serverTimestamp()
+      const ts = FieldValue.serverTimestamp()
 
       // ---------- READ PHASE ----------
       // (읽기가 필요하면 여기서만 수행)
@@ -36,7 +36,7 @@ export const onUserGroupIdUpdated = onDocumentUpdated(
         tx.delete(prevChat)
         tx.set(
           prevGroup,
-          {memberCount: admin.firestore.FieldValue.increment(-1)},
+          {memberCount: FieldValue.increment(-1)},
           {merge: true},
         )
       }
@@ -76,7 +76,7 @@ export const onUserGroupIdUpdated = onDocumentUpdated(
 
         tx.set(
           nextGroup,
-          {memberCount: admin.firestore.FieldValue.increment(1)},
+          {memberCount: FieldValue.increment(1)},
           {merge: true},
         )
       }

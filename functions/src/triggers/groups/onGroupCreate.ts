@@ -1,5 +1,5 @@
-import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
+import {FieldValue} from 'firebase-admin/firestore'
 import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {db} from '../../core/firebase'
 import {PLATFORM_ADMIN_UIDS} from '../../services/groupService'
@@ -39,8 +39,8 @@ export const onGroupCreate = onDocumentCreated(
         groupId,
         name: name ?? null,
         image: image ?? null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        lastMessageAt: FieldValue.serverTimestamp(),
         members: Array.from(initialMemberSet),
       },
       {merge: true},
@@ -54,7 +54,7 @@ export const onGroupCreate = onDocumentCreated(
         {
           role: roleOf(uid),
           isActive: true,
-          joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+          joinedAt: FieldValue.serverTimestamp(),
           leftAt: null,
         },
         {merge: true},

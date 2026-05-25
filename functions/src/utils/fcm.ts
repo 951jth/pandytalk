@@ -3,9 +3,9 @@
  * @param userId Firestore 내 사용자 문서 ID
  * @param token 제거할 FCM 토큰
  */
-import admin from 'firebase-admin'
+import {FieldValue, Firestore, getFirestore} from 'firebase-admin/firestore'
 import {Messaging, MulticastMessage} from 'firebase-admin/messaging'
-import {isEmpty} from 'lodash'
+import isEmpty from 'lodash/isEmpty'
 import * as logger from 'firebase-functions/logger'
 import {LRUCache} from 'lru-cache'
 
@@ -34,7 +34,7 @@ interface PushMessageData {
  * 채팅방 멤버들에게 푸시 알림을 전송
  */
 export const sendPushToChatMembers = async (
-  db: admin.firestore.Firestore,
+  db: Firestore,
   messaging: Messaging,
   chatId: string,
   message: PushMessageData,
@@ -202,11 +202,11 @@ export const sendPushToChatMembers = async (
  */
 export const removeFcmTokenFromUser = async (userId: string, token: string) => {
   try {
-    const db = admin.firestore()
+    const db = getFirestore()
     const userRef = db.doc(`users/${userId}`)
 
     await userRef.update({
-      fcmTokens: admin.firestore.FieldValue.arrayRemove(token),
+      fcmTokens: FieldValue.arrayRemove(token),
     })
 
     console.log(`✅ FCM 토큰 제거 완료: ${token}`)

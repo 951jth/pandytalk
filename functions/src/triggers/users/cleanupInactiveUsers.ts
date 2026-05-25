@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin'
+import {FieldValue, Timestamp} from 'firebase-admin/firestore'
 import {onSchedule} from 'firebase-functions/v2/scheduler'
 import {db} from '../../core/firebase'
 
@@ -13,10 +13,10 @@ export const cleanupInactiveUsers = onSchedule(
     timeZone: 'Asia/Seoul',
   },
   async event => {
-    const currentTime = admin.firestore.Timestamp.now()
+    const currentTime = Timestamp.now()
     // 1시간 전 타임스탬프 계산 (60분 * 60초 * 1000밀리초)
     const thresholdMillis = currentTime.toMillis() - 60 * 60 * 1000
-    const thresholdDate = admin.firestore.Timestamp.fromMillis(thresholdMillis)
+    const thresholdDate = Timestamp.fromMillis(thresholdMillis)
 
     console.log(
       `🧹 비활성 유저 정리 배치 시작... 기준 시간: ${thresholdDate.toDate().toISOString()}`,
@@ -39,7 +39,7 @@ export const cleanupInactiveUsers = onSchedule(
       snapshot.docs.forEach(doc => {
         batch.update(doc.ref, {
           status: 'offline',
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         })
       })
 

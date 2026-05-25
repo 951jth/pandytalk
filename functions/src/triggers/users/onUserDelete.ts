@@ -1,10 +1,11 @@
-import * as admin from 'firebase-admin'
 import * as functions from 'firebase-functions/v1'
+import {FieldPath, FieldValue, getFirestore} from 'firebase-admin/firestore'
+import {getStorage} from 'firebase-admin/storage'
 import {db} from '../../core/firebase'
 
 // Storage: profiles/{uid}/ 밑의 모든 파일 삭제
 async function deleteUserProfileFiles(uid: string) {
-  const bucket = admin.storage().bucket()
+  const bucket = getStorage().bucket()
   const prefix = `profiles/${uid}/` // 👈 너가 말한 구조
   const [files] = await bucket.getFiles({prefix})
 
@@ -16,13 +17,13 @@ async function deleteUserProfileFiles(uid: string) {
 
 // 3. groups/*/members/* 에서 문서 ID == uid 인 멤버 삭제
 async function deleteUserFromAllGroups(uid: string) {
-  const db = admin.firestore()
+  const db = getFirestore()
 
   // 1. 모든 'members' 하위 컬렉션에서 ID가 uid인 문서만 찾습니다.
   // (색인 생성이 필요할 수 있습니다)
   const membersSnap = await db
     .collectionGroup('members')
-    .where(admin.firestore.FieldPath.documentId(), '==', uid)
+    .where(FieldPath.documentId(), '==', uid)
     .get()
 
   if (membersSnap.empty) return
@@ -35,7 +36,7 @@ async function deleteUserFromAllGroups(uid: string) {
     if (groupRef) {
       batch.delete(memberDoc.ref) // 내 멤버 정보 삭제
       batch.update(groupRef, {
-        memberCount: admin.firestore.FieldValue.increment(-1), // 실제 가입된 그룹만 -1
+        memberCount: FieldValue.increment(-1), // 실제 가입된 그룹만 -1
       })
     }
   })
@@ -50,7 +51,7 @@ async function deleteUserFromAllGroups(uid: string) {
  * 유저가 포함된 모든 채팅방의 members 배열에서 해당 UID 제거
  */
 async function cleanupUserChats(uid: string) {
-  const db = admin.firestore()
+  const db = getFirestore()
 
   // 유저가 포함된 모든 채팅방 조회
   const chatsSnap = await db
@@ -64,7 +65,7 @@ async function cleanupUserChats(uid: string) {
   chatsSnap.forEach(chatDoc => {
     // members 배열에서 해당 UID 제거
     batch.update(chatDoc.ref, {
-      members: admin.firestore.FieldValue.arrayRemove(uid),
+      members: FieldValue.arrayRemove(uid),
     })
   })
 

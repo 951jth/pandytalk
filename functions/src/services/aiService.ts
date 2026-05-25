@@ -1,6 +1,21 @@
 import * as logger from 'firebase-functions/logger'
 import {OpenAI} from 'openai'
 import {AI_BASE_PROMPT, AI_IMAGE_LIMIT} from '../constants/ai'
+import type {AiRecentMessage} from '../types/chat'
+import {isRecord, parseSearchQuery, toString} from '../utils/aiUtils'
+
+type SearchGoogleResult = {
+  title: string
+  link: string
+  snippet: string
+}
+
+type SearchTabilyResult = {
+  title: string
+  url: string
+  content: string
+}
+
 
 /**
  * 팬디봇이 사용할 수 있는 AI 도구(Function Calling) 목록을 반환합니다.
@@ -28,7 +43,7 @@ export const getPandibotTools =
  */
 export const getPandibotMessages = (
   prompt: string,
-  history: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [],
+  history: AiRecentMessage[] = [],
   imageUrl?: string,
   imageUrls?: string[],
 ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => {
@@ -36,16 +51,28 @@ export const getPandibotMessages = (
     `🤖 [getPandibotMessages] Prompt: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''} | History: ${history.length}건 | Image: ${imageUrl ? '있음' : '없음'} | MultiImages: ${imageUrls?.length || 0}`,
   )
   // 1. 히스토리 정제: 이전 메시지의 이미지들은 제거하고 텍스트만 남김 (토큰 절약 및 단건 분석)
-  const sanitizedHistory = history.map(msg => {
-    if (Array.isArray(msg.content)) {
-      const textPart = msg.content.find(p => p.type === 'text') as any
-      return {
-        ...msg,
-        content: textPart?.text || '',
+  const sanitizedHistory: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
+    history.map(msg => {
+      if (Array.isArray(msg.content)) {
+        const textPart = msg.content.find(part => part.type === 'text')
+        return {
+          role: msg.role,
+          content: textPart?.text || '',
+        }
       }
-    }
-    return msg
-  })
+
+      if (msg.role === 'assistant') {
+        return {
+          role: 'assistant',
+          content: msg.content,
+        }
+      }
+
+      return {
+        role: 'user',
+        content: msg.content,
+      }
+    })
 
   // 2. 현재 질문 구성
   const userContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
@@ -131,7 +158,7 @@ export const getAiResponseStream = async (
       ) {
         // 모델이 JSON 문자열로 넘긴 function arguments에서 검색어를 꺼냅니다.
         // getPandibotTools에서 query를 required로 선언했기 때문에 정상 호출이면 query가 존재합니다.
-        const queryParam = JSON.parse(toolCall.function.arguments).query
+        const queryParam = parseSearchQuery(toolCall.function.arguments)
         // 구글(Serper) 검색 엔진 사용
         const searchContent = await searchGoogle(queryParam, searchApiKey)
         logger.info(`🔍 [onAiStream] 검색 결과: ${searchContent}`)
@@ -189,7 +216,7 @@ export const getAiResponse = async (
         toolCall.type === 'function' &&
         toolCall.function.name === 'search_web'
       ) {
-        const queryParam = JSON.parse(toolCall.function.arguments).query
+        const queryParam = parseSearchQuery(toolCall.function.arguments)
         const searchContent = await searchGoogle(queryParam, searchApiKey)
         nextMessages.push({
           role: 'tool',
@@ -231,18 +258,14 @@ export const searchGoogle = async (
       }),
     })
 
-    const data = (await response.json()) as any
-    const results = (data.organic || []).map((item: any) => ({
-      title: item.title,
-      link: item.link,
-      snippet: item.snippet,
-    }))
+    const data: unknown = await response.json()
+    const results = toSerperResults(data)
 
     logger.info(`🔍 검색 완료! 결과 수: ${results.length}개`)
     if (results.length > 0) {
       logger.info(`🔍 첫 번째 결과 요약: ${results[0].title.slice(0, 30)}...`)
     } else {
-      logger.warn(`⚠️ 검색 결과가 비어있습니다.`)
+      logger.warn('⚠️ 검색 결과가 비어있습니다.')
     }
 
     return JSON.stringify(results)
@@ -271,18 +294,14 @@ export const searchTabily = async (
         max_results: 5,
       }),
     })
-    const searchData = (await searchRes.json()) as any
-    const results = (searchData.results || []).map((r: any) => ({
-      title: r.title,
-      url: r.url,
-      content: r.content,
-    }))
+    const searchData: unknown = await searchRes.json()
+    const results = toTabilyResults(searchData)
 
     logger.info(`🔍 검색 완료! 결과 수: ${results.length}개`)
     if (results.length > 0) {
       logger.info(`🔍 첫 번째 결과 요약: ${results[0].title.slice(0, 30)}...`)
     } else {
-      logger.warn(`⚠️ 검색 결과가 비어있습니다.`)
+      logger.warn('⚠️ 검색 결과가 비어있습니다.')
     }
 
     return JSON.stringify(results)
@@ -290,4 +309,44 @@ export const searchTabily = async (
     logger.error('🔍 검색 실패', err)
     return '검색에 실패했습니다.'
   }
+}
+
+/**
+ * Serper 응답의 organic 검색 결과를 searchGoogle에서 반환할 최소 필드로 정규화합니다.
+ * 응답 구조가 예상과 다르면 빈 배열을 반환하고, 각 필드는 문자열만 통과시킵니다.
+ */
+export const toSerperResults = (payload: unknown): SearchGoogleResult[] => {
+  if (!isRecord(payload) || !Array.isArray(payload.organic)) return []
+
+  return payload.organic.flatMap(item => {
+    if (!isRecord(item)) return []
+
+    return [
+      {
+        title: toString(item.title),
+        link: toString(item.link),
+        snippet: toString(item.snippet),
+      },
+    ]
+  })
+}
+
+/**
+ * Tavily 응답의 results 검색 결과를 내부에서 쓰는 최소 필드로 정규화합니다.
+ * 응답 구조가 예상과 다르면 빈 배열을 반환하고, 각 필드는 문자열만 통과시킵니다.
+ */
+export const toTabilyResults = (payload: unknown): SearchTabilyResult[] => {
+  if (!isRecord(payload) || !Array.isArray(payload.results)) return []
+
+  return payload.results.flatMap(item => {
+    if (!isRecord(item)) return []
+
+    return [
+      {
+        title: toString(item.title),
+        url: toString(item.url),
+        content: toString(item.content),
+      },
+    ]
+  })
 }

@@ -94,8 +94,8 @@ export const onAiStreamBackup = onTaskDispatched(
       logger.info(
         `[onAiStreamBackup][REWRITE_COMPLETED] ✅ 백업으로 답변 생성 및 업데이트 완료: ${messageId}`,
       )
-    } catch (err: any) {
-      logger.error(`[onAiStreamBackup] Error:`, err)
+    } catch (err) {
+      logger.error('[onAiStreamBackup] Error:', err)
 
       // 에러 시 상태 변경
       if (chatId && messageId) {

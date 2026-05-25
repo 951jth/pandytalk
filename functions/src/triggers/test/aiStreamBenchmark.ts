@@ -1,7 +1,8 @@
 import * as logger from 'firebase-functions/logger'
-import {onRequest} from 'firebase-functions/v2/https'
+import {onRequest, Request} from 'firebase-functions/v2/https'
 import {OpenAI} from 'openai'
 import {getPandibotMessages} from '../../services/aiService'
+import {isRecord} from '../../utils/aiUtils'
 
 const DEFAULT_PROMPT =
   '@팬디 Local-First 아키텍처가 채팅 앱에서 왜 유리한지, SQLite를 사용할 때의 장점과 단점, Firestore만 사용하는 방식과의 차이를 면접 답변처럼 정리해줘.'
@@ -27,14 +28,22 @@ const average = (values: number[]) =>
 
 const hasMojibake = (value: string) => value.includes('\uFFFD')
 
-const getPrompt = (req: any) => {
-  const promptBase64 = req.body?.promptBase64 || req.query?.promptBase64
+const getRequestValue = (source: unknown, key: string) =>
+  isRecord(source) ? source[key] : undefined
+
+const getPrompt = (req: Request) => {
+  const promptBase64 =
+    getRequestValue(req.body, 'promptBase64') ||
+    getRequestValue(req.query, 'promptBase64')
 
   if (typeof promptBase64 === 'string' && promptBase64) {
     return Buffer.from(promptBase64, 'base64').toString('utf8')
   }
 
-  return req.body?.prompt || req.query?.prompt || DEFAULT_PROMPT
+  const prompt =
+    getRequestValue(req.body, 'prompt') || getRequestValue(req.query, 'prompt')
+
+  return typeof prompt === 'string' ? prompt : DEFAULT_PROMPT
 }
 
 const runPureStreamBenchmark = async (openai: OpenAI, prompt: string) => {

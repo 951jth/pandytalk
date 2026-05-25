@@ -8,7 +8,13 @@ import {
   getPandibotMessages,
   getPandibotTools,
 } from '../../services/aiService'
-import {filterDuplicatePrompt} from '../../utils/aiUtils'
+import {
+  filterDuplicatePrompt,
+  isAbortLikeError,
+  isRecord,
+  toAiRecentMessages,
+  toErrorMessage,
+} from '../../utils/aiUtils'
 
 const toAiStreamLogTarget = (chatId?: string, messageId?: string) => {
   const resolvedChatId = chatId || 'unknown'
@@ -16,6 +22,14 @@ const toAiStreamLogTarget = (chatId?: string, messageId?: string) => {
 
   return `${resolvedChatId} (messageId=${resolvedMessageId})`
 }
+
+const toStringValue = (value: unknown) =>
+  typeof value === 'string' ? value : undefined
+
+const toStringArray = (value: unknown) =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : undefined
 
 /**
  * HTTP SSE 스트리밍을 통해 AI 응답을 즉시 반환하고 Firestore에 저장하는 하이브리드 함수
@@ -33,15 +47,15 @@ export const onAiStream = onRequest(
     res.setHeader('Connection', 'keep-alive')
 
     // prompt는 AI Mention에서 질문한 내용 (id는 messageId로 하위 호환성 유지)
-    const {
-      chatId,
-      prompt,
-      messageId: bodyMessageId,
-      id: bodyId,
-      createdAt,
-      imageUrl,
-      imageUrls,
-    } = req.body
+    const body = isRecord(req.body) ? req.body : {}
+    const chatId = toStringValue(body.chatId)
+    const prompt = toStringValue(body.prompt)
+    const bodyMessageId = toStringValue(body.messageId)
+    const bodyId = toStringValue(body.id)
+    const createdAt =
+      typeof body.createdAt === 'number' ? body.createdAt : undefined
+    const imageUrl = toStringValue(body.imageUrl)
+    const imageUrls = toStringArray(body.imageUrls)
     const messageId = bodyMessageId || bodyId
 
     logger.info(
@@ -78,7 +92,7 @@ export const onAiStream = onRequest(
       // 🔍 채팅방 문서에서 캐싱된 맥락(recentMessages) 가져오기
       const chatDoc = await db.doc(`chats/${chatId}`).get()
       const chatData = chatDoc.data()
-      const history = (chatData?.recentMessages as any[]) || []
+      const history = toAiRecentMessages(chatData?.recentMessages)
 
       // 현재 질문(prompt)과 중복되는 히스토리는 제외 (가장 마지막 대화와 중복일 확률이 큼)
       const filteredHistory = filterDuplicatePrompt(history, prompt)
@@ -120,10 +134,8 @@ export const onAiStream = onRequest(
       if (!res.writableEnded) {
         res.write('data: [DONE]\n\n')
       }
-    } catch (error: any) {
-      const isAbortError =
-        error.name === 'AbortError' || error.code === 'ERR_CANCELED'
-      if (isAbortError) {
+    } catch (error) {
+      if (isAbortLikeError(error)) {
         logger.info(
           `🔌 [onAiStream] Stream aborted: ${toAiStreamLogTarget(chatId, messageId)}`,
         )
@@ -136,14 +148,14 @@ export const onAiStream = onRequest(
         if (!res.writableEnded) {
           res.write(
             `data: ${JSON.stringify({
-              error: error.message || 'Internal Server Error',
+              error: toErrorMessage(error, 'Internal Server Error'),
             })}\n\n`,
           )
         }
       }
     } finally {
       // 1. 결과 처리 및 상태 업데이트
-      if (messageId && !isResponseSaved) {
+      if (chatId && messageId && !isResponseSaved) {
         if (aiReplyText) {
           // 생성된 텍스트가 있다면 성공/일부 성공으로 저장
           try {

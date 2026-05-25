@@ -4,6 +4,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
+    "test": "npm run build && node --test test/**/*.test.js",
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },

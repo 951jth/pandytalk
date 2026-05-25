@@ -1,7 +1,9 @@
-import * as admin from 'firebase-admin'
 import * as logger from 'firebase-functions/logger'
+import {FieldValue, Timestamp} from 'firebase-admin/firestore'
 import {AI_BOT_ID, AI_BOT_NAME} from '../constants/ai'
 import {db, messaging} from '../core/firebase'
+import type {AiRecentMessage} from '../types/chat'
+import {toAiRecentMessages, toErrorMessage} from '../utils/aiUtils'
 import {sendPushToChatMembers} from '../utils/fcm'
 
 /**
@@ -27,7 +29,7 @@ export function createAiInitialMessage(params: {
     senderId: AI_BOT_ID,
     senderName: AI_BOT_NAME,
     seq,
-    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
     status: 'streaming' as const,
     skipPush: true,
   }
@@ -40,14 +42,14 @@ export async function updateAiResponse(params: {
   chatId: string
   messageId: string
   text: string
-  createdAt?: number | admin.firestore.Timestamp | admin.firestore.FieldValue
+  createdAt?: number | Timestamp | FieldValue
 }) {
   const {chatId, messageId, text} = params
 
   try {
     const roomRef = db.doc(`chats/${chatId}`)
     const messageRef = roomRef.collection('messages').doc(messageId)
-    const now = admin.firestore.FieldValue.serverTimestamp()
+    const now = FieldValue.serverTimestamp()
     let createdAt = params.createdAt
 
     if (!createdAt) {
@@ -73,8 +75,8 @@ export async function updateAiResponse(params: {
         throw new Error(`Chat room ${chatId} not found`)
       }
 
-      const prevRecent = (chatSnap.get('recentMessages') as any[]) || []
-      const updatedRecent = [
+      const prevRecent = toAiRecentMessages(chatSnap.get('recentMessages'))
+      const updatedRecent: AiRecentMessage[] = [
         ...prevRecent,
         {role: 'assistant' as const, content: text},
       ].slice(-10)
@@ -122,7 +124,7 @@ export async function updateAiResponse(params: {
 export async function handleAiError(params: {
   chatId: string
   messageId: string
-  error?: any
+  error?: unknown
 }) {
   const {chatId, messageId, error} = params
   logger.error(`[aiChatService] AI Error Handled for ${messageId}:`, error)
@@ -132,8 +134,8 @@ export async function handleAiError(params: {
     await messageRef.update({
       status: 'failed',
       text: '답변을 생성하는 중에 오류가 발생했습니다. 잠시 후 재시도 해주세요.',
-      error: error?.message || 'Unknown error',
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      error: toErrorMessage(error),
+      updatedAt: FieldValue.serverTimestamp(),
     })
   } catch (err) {
     logger.error('[aiChatService] Critical failure in handleAiError:', err)
