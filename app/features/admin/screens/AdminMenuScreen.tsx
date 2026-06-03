@@ -29,6 +29,12 @@ const menuItems: MenuItem[] = [
     description: '채팅 그룹 생성 및 할당을 관리합니다.',
     icon: 'domain',
   },
+  {
+    title: '문의 관리',
+    path: 'admin-inquiries',
+    description: '사용자 문의 및 신고 내역을 관리합니다.',
+    icon: 'email-outline',
+  },
 ]
 
 function AdminMenuItem({
@@ -73,13 +79,7 @@ export default function AdminMenuScreen() {
   const navigation = useNavigation<AppNav>()
 
   const onPressMenu = (item: MenuItem) => {
-    if (item.path === 'guest-manage') {
-      navigation.navigate('guest-manage')
-      return
-    }
-    if (item.path === 'group-manage') {
-      navigation.navigate('group-manage')
-    }
+    navigation.navigate(item.path as any)
   }
 
   return (

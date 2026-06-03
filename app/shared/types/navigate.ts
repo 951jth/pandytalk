@@ -43,6 +43,7 @@ export type AppRouteParamList = {
   }
   'guest-manage': undefined
   'group-manage': undefined
+  'admin-inquiries': undefined
   harness: undefined
   'user-select': undefined
 }

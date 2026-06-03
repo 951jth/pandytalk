@@ -27,3 +27,6 @@ export {testDbPerformanceCompare} from './triggers/test/pushBenchmark'
 export {sendDummyMessages} from './triggers/test/sendDummyMessages'
 // AI 일반 응답과 스트리밍 응답 체감 속도 비교하기
 export {testAiStreamBenchmark} from './triggers/test/aiStreamBenchmark'
+
+// --- 외부 연동 (웹훅 등) ---
+export {onInquiryReceived} from './triggers/integrations/onInquiryReceived'

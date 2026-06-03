@@ -5,6 +5,7 @@ import GroupManageScreen from '@app/features/group/screens/GroupManageScreen'
 import UserJoinScreen from '@app/features/user/screens/UserJoinScreen'
 import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
 import HarnessScreen from '@app/features/harness/screens/HarnessScreen'
+import AdminInquiriesScreen from '@app/features/admin/screens/AdminInquiriesScreen'
 import MainLayout from '@app/layout/MainLayout'
 import TabScreenNavigator from '@app/navigation/TabScreenNavigator'
 import type {
@@ -64,6 +65,11 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-manage',
           title: '그룹 관리',
           component: GroupManageScreen,
+        },
+        {
+          name: 'admin-inquiries',
+          title: '문의 관리',
+          component: AdminInquiriesScreen,
         },
         {
           name: 'harness',
