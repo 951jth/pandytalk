@@ -5,6 +5,28 @@ import React from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import AdminInquiriesSkeleton from '@app/shared/ui/skeleton/AdminInquiriesSkeleton'
 import {useAdminInquiriesQuery} from '@app/features/admin/hooks/useAdminInquiriesQuery'
+import type {Inquiry} from '@app/features/admin/service/inquiryService'
+
+function AdminInquiryItem({item}: {item: Inquiry}) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{item.status}</Text>
+        </View>
+        <Text style={styles.date}>
+          {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'N/A'}
+        </Text>
+      </View>
+      <Text style={styles.type}>유형: {item.type || 'general'}</Text>
+      <Text style={styles.email}>이메일: {item.email}</Text>
+      <Text style={styles.source}>출처: {item.source}</Text>
+      <View style={styles.messageContainer}>
+        <Text style={styles.message}>{item.message}</Text>
+      </View>
+    </View>
+  )
+}
 
 export default function AdminInquiriesScreen() {
   const {data: inquiries = [], isLoading, refetch} = useAdminInquiriesQuery()
@@ -19,24 +41,7 @@ export default function AdminInquiriesScreen() {
           data={inquiries}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.contentContainer}
-          renderItem={({item}) => (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.status}</Text>
-                </View>
-                <Text style={styles.date}>
-                  {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'N/A'}
-                </Text>
-              </View>
-              <Text style={styles.type}>유형: {item.type || 'general'}</Text>
-              <Text style={styles.email}>이메일: {item.email}</Text>
-              <Text style={styles.source}>출처: {item.source}</Text>
-              <View style={styles.messageContainer}>
-                <Text style={styles.message}>{item.message}</Text>
-              </View>
-            </View>
-          )}
+          renderItem={({item}) => <AdminInquiryItem item={item} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <EmptyData text="문의 내역이 없습니다." />
