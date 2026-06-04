@@ -2,7 +2,7 @@ import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import React from 'react'
-import {FlatList, StyleSheet, Text, View} from 'react-native'
+import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native'
 import AdminInquiriesSkeleton from '@app/shared/ui/skeleton/AdminInquiriesSkeleton'
 import {useAdminInquiriesQuery} from '@app/features/admin/hooks/useAdminInquiriesQuery'
 import type {Inquiry} from '@app/features/admin/service/inquiryService'
@@ -29,7 +29,16 @@ function AdminInquiryItem({item}: {item: Inquiry}) {
 }
 
 export default function AdminInquiriesScreen() {
-  const {data: inquiries = [], isLoading, refetch} = useAdminInquiriesQuery()
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    refetch,
+  } = useAdminInquiriesQuery()
+  const inquiries = data?.pages.flatMap(page => page.inquiries) ?? []
 
   return (
     <View style={styles.container}>
@@ -47,8 +56,19 @@ export default function AdminInquiriesScreen() {
               <EmptyData text="문의 내역이 없습니다." />
             </View>
           }
-          refreshing={isLoading}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footerLoading}>
+                <ActivityIndicator color={COLORS.primary} />
+              </View>
+            ) : null
+          }
+          refreshing={isRefetching}
           onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage()
+          }}
+          onEndReachedThreshold={0.5}
         />
       )}
     </View>
@@ -74,6 +94,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 100,
+  },
+  footerLoading: {
+    paddingVertical: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
