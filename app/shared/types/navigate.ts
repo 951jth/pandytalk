@@ -44,6 +44,9 @@ export type AppRouteParamList = {
   'guest-manage': undefined
   'group-manage': undefined
   'admin-inquiries': undefined
+  'admin-inquiry-detail': {
+    inquiry: import('@app/features/admin/service/inquiryService').Inquiry
+  }
   harness: undefined
   'user-select': undefined
 }

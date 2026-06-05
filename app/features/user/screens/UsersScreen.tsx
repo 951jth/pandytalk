@@ -1,6 +1,6 @@
 import {useUsersScreen} from '@app/features/user/hooks/useUsersScreen'
 import COLORS from '@app/shared/constants/color'
-import UserListSkeleton from '@app/shared/ui/skeleton/UserListSkeleton'
+import UserListSkeleton from '@app/features/user/components/UserListSkeleton'
 import React, {useState} from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import EmptyData from '../../../shared/ui/common/EmptyData'

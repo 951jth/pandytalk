@@ -29,4 +29,7 @@ export const inquiryService = {
       isLastPage: !hasNext,
     }
   },
+  updateInquiryStatus: async (id: string, status: string) => {
+    await inquiryRemote.updateInquiryStatus(id, status)
+  },
 }

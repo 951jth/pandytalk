@@ -1,6 +1,6 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import Skeleton from './Skeleton'
+import Skeleton from '@app/shared/ui/skeleton/Skeleton'
 
 /**
  * 채팅방 목록 로딩 시 보여줄 스켈레톤 카드

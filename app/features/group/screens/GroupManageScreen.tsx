@@ -1,7 +1,7 @@
 import {useGroupManageScreen} from '@app/features/group/hooks/useGroupManageScreen'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
-import GroupManageSkeleton from '@app/shared/ui/skeleton/GroupManageSkeleton'
+import GroupManageSkeleton from '@app/features/group/components/GroupManageSkeleton'
 import React from 'react'
 import {FlatList, StyleSheet, TouchableOpacity, View} from 'react-native'
 import {IconButton} from 'react-native-paper'

@@ -1,30 +1,49 @@
+import {useAdminInquiriesQuery} from '@app/features/admin/hooks/useAdminInquiriesQuery'
+import type {Inquiry} from '@app/features/admin/service/inquiryService'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import EmptyData from '@app/shared/ui/common/EmptyData'
+import AdminInquiriesSkeleton from '@app/features/admin/components/AdminInquiriesSkeleton'
 import React from 'react'
 import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native'
-import AdminInquiriesSkeleton from '@app/shared/ui/skeleton/AdminInquiriesSkeleton'
-import {useAdminInquiriesQuery} from '@app/features/admin/hooks/useAdminInquiriesQuery'
-import type {Inquiry} from '@app/features/admin/service/inquiryService'
+import {Icon} from 'react-native-paper'
+import {useNavigation} from '@react-navigation/native'
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import type {AppRouteParamList} from '@app/shared/types/navigate'
+import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 
 function AdminInquiryItem({item}: {item: Inquiry}) {
+  const status = getInquiryStatus(item.status)
+  const navigation = useNavigation<NativeStackNavigationProp<AppRouteParamList>>()
+
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.status}</Text>
+    <PressableWrapper
+      style={styles.card}
+      borderRadius={28}
+      onPress={() => navigation.navigate('admin-inquiry-detail', {inquiry: item})}>
+      <View style={styles.thumbnailSection}>
+        <View style={styles.thumbnailCircle}>
+          <Icon source="email-outline" size={30} color={COLORS.primary} />
         </View>
-        <Text style={styles.date}>
-          {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'N/A'}
+      </View>
+
+      <View style={styles.infoSection}>
+        <Text style={styles.email} numberOfLines={1}>
+          {item.email || '-'}
+        </Text>
+        <Text style={styles.message} numberOfLines={2} ellipsizeMode="tail">
+          {item.message || '-'}
         </Text>
       </View>
-      <Text style={styles.type}>유형: {item.type || 'general'}</Text>
-      <Text style={styles.email}>이메일: {item.email}</Text>
-      <Text style={styles.source}>출처: {item.source}</Text>
-      <View style={styles.messageContainer}>
-        <Text style={styles.message}>{item.message}</Text>
+
+      <View style={styles.statusSection}>
+        <View style={[styles.statusChip, {backgroundColor: status.bgColor}]}>
+          <Text style={[styles.statusText, {color: status.textColor}]}>
+            {status.text}
+          </Text>
+        </View>
       </View>
-    </View>
+    </PressableWrapper>
   )
 }
 
@@ -49,7 +68,7 @@ export default function AdminInquiriesScreen() {
         <FlatList
           data={inquiries}
           keyExtractor={item => item.id}
-          contentContainerStyle={styles.contentContainer}
+          contentContainerStyle={styles.inquiriesContainer}
           renderItem={({item}) => <AdminInquiryItem item={item} />}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -80,13 +99,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentContainer: {
-    padding: 16,
+  inquiriesContainer: {
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    paddingBottom: 40,
     flexGrow: 1,
   },
   emptyContainer: {
@@ -99,61 +115,81 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    flex: 1,
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardHeader: {
+    backgroundColor: COLORS.white,
+    borderRadius: 28,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+    marginVertical: 8,
+    marginHorizontal: 12,
   },
-  badge: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+  thumbnailSection: {
+    marginRight: 16,
   },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+  thumbnailCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F9F9F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  date: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  type: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-    color: COLORS.text,
+  infoSection: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingRight: 12,
   },
   email: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: 2,
-  },
-  source: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
+    fontSize: 16,
+    fontFamily: 'BMDOHYEON',
+    color: '#2D2D2D',
     marginBottom: 8,
   },
-  messageContainer: {
-    backgroundColor: '#F8F9FA',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
   message: {
-    fontSize: 14,
-    color: COLORS.text,
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.textSecondary,
+    opacity: 0.75,
+  },
+  statusSection: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  statusChip: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  statusText: {
+    fontFamily: 'BMDOHYEON',
+    fontSize: 10,
   },
 })
+
+const getInquiryStatus = (status?: string) => {
+  switch (status) {
+    case 'pending':
+      return {text: '대기중', textColor: '#E67E22', bgColor: '#FEF5ED'}
+    case 'resolved':
+    case 'done':
+      return {text: '완료', textColor: '#27AE60', bgColor: '#EAF7EE'}
+    case 'rejected':
+    case 'closed':
+      return {text: '종료', textColor: '#495057', bgColor: '#F1F3F5'}
+    default:
+      return {
+        text: status || '-',
+        textColor: COLORS.textSecondary,
+        bgColor: '#F1F3F5',
+      }
+  }
+}

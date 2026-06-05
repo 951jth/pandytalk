@@ -4,7 +4,7 @@ import {useUsersManageScreen} from '@app/features/user/hooks/useUsersManageScree
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
-import UserManageSkeleton from '@app/shared/ui/skeleton/UserManageSkeleton'
+import UserManageSkeleton from '@app/features/user/components/UserManageSkeleton'
 import React, {useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import SearchInput from '../../../shared/ui/input/SearchInput'

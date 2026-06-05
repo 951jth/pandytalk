@@ -72,6 +72,11 @@ const appRoutes = (): LayoutItem[] => {
           component: AdminInquiriesScreen,
         },
         {
+          name: 'admin-inquiry-detail',
+          title: '문의 상세',
+          component: React.lazy(() => import('@app/features/admin/screens/AdminInquiryDetailScreen')),
+        },
+        {
           name: 'harness',
           title: '하네스',
           component: HarnessScreen,

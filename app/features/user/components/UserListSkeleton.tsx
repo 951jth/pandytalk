@@ -1,6 +1,6 @@
 import React from 'react'
 import {ScrollView, StyleSheet, View} from 'react-native'
-import Skeleton from './Skeleton'
+import Skeleton from '@app/shared/ui/skeleton/Skeleton'
 
 /**
  * 유저 목록(친구 목록) 전체 화면 스켈레톤

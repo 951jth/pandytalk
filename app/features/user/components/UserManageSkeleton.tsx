@@ -1,31 +1,32 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
-import Skeleton from './Skeleton'
+import Skeleton from '@app/shared/ui/skeleton/Skeleton'
 
 /**
- * 그룹 관리 목록용 스켈레톤 카드 (GroupManageItem 스타일)
+ * 어드민 유저 관리 목록용 스켈레톤 카드
  */
-export default function GroupManageSkeleton() {
+export default function UserManageSkeleton() {
   const items = Array.from({length: 8})
 
   return (
     <View style={styles.container}>
       {items.map((_, index) => (
         <View key={index} style={styles.cardContainer}>
-          {/* 그룹 아바타 */}
+          {/* 아바타 */}
           <View style={styles.avatarSection}>
             <Skeleton width={64} height={64} borderRadius={32} />
           </View>
 
-          {/* 그룹 정보 영역 */}
+          {/* 유저 정보 */}
           <View style={styles.infoSection}>
-            <Skeleton width="60%" height={16} />
-            <Skeleton width="40%" height={12} style={{marginTop: 8}} />
+            <Skeleton width="50%" height={16} />
+            <Skeleton width="40%" height={12} style={{marginTop: 6}} />
           </View>
 
-          {/* 화살표(액션) 영역 */}
-          <View style={styles.actionSection}>
-            <Skeleton width={24} height={24} borderRadius={12} />
+          {/* 상태 및 날짜 */}
+          <View style={styles.statusSection}>
+            <Skeleton width={60} height={24} borderRadius={12} />
+            <Skeleton width={50} height={10} style={{marginTop: 8}} />
           </View>
         </View>
       ))}
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  actionSection: {
-    paddingLeft: 8,
+  statusSection: {
+    alignItems: 'flex-end',
   },
 })
