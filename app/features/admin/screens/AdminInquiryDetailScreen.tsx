@@ -1,87 +1,25 @@
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
-import {AppRouteParamList} from '@app/shared/types/navigate'
-import {RouteProp, useNavigation, useRoute} from '@react-navigation/native'
-import React, {useState} from 'react'
+import React from 'react'
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Linking,
 } from 'react-native'
 import {Icon} from 'react-native-paper'
-import dayjs from 'dayjs'
-import {useUpdateInquiryStatusMutation} from '@app/features/admin/hooks/useUpdateInquiryStatusMutation'
-import {Timestamp} from '@react-native-firebase/firestore'
-
-type AdminInquiryDetailRouteProp = RouteProp<AppRouteParamList, 'admin-inquiry-detail'>
+import {useAdminInquiryDetail} from '@app/features/admin/hooks/useAdminInquiryDetail'
 
 export default function AdminInquiryDetailScreen() {
-  const route = useRoute<AdminInquiryDetailRouteProp>()
-  const navigation = useNavigation()
-  const inquiry = route.params.inquiry
-
-  const {mutate: updateStatus, isPending} = useUpdateInquiryStatusMutation()
-  const [currentStatus, setCurrentStatus] = useState(inquiry.status)
-
-  const formattedDate =
-    inquiry.createdAt instanceof Timestamp
-      ? dayjs(inquiry.createdAt.toDate()).format('YYYY.MM.DD HH:mm')
-      : '-'
-
-  const handleUpdateStatus = (newStatus: string) => {
-    Alert.alert(
-      '상태 변경',
-      '문의 상태를 완료 처리하시겠습니까?',
-      [
-        {text: '취소', style: 'cancel'},
-        {
-          text: '확인',
-          onPress: () => {
-            updateStatus(
-              {id: inquiry.id, status: newStatus},
-              {
-                onSuccess: () => {
-                  setCurrentStatus(newStatus)
-                  Alert.alert('성공', '상태가 변경되었습니다.')
-                },
-                onError: () => {
-                  Alert.alert('오류', '상태 변경 중 문제가 발생했습니다.')
-                },
-              },
-            )
-          },
-        },
-      ],
-      {cancelable: true},
-    )
-  }
-
-  const handleEmailPress = async () => {
-    if (!inquiry.email) return
-
-    const subject = encodeURIComponent(`[Pandytalk] 문의하신 내용에 대한 답변입니다.`)
-    const body = encodeURIComponent(
-      `안녕하세요.\n\n문의하신 내용에 대한 답변을 드립니다.\n\n\n\n---\n[원본 문의 내용]\n${inquiry.message || ''}`,
-    )
-    const mailtoUrl = `mailto:${inquiry.email}?subject=${subject}&body=${body}`
-
-    try {
-      const supported = await Linking.canOpenURL(mailtoUrl)
-      if (supported) {
-        await Linking.openURL(mailtoUrl)
-      } else {
-        Alert.alert('알림', '이메일 앱을 열 수 없습니다.')
-      }
-    } catch (error) {
-      Alert.alert('오류', '이메일 앱을 여는 중 문제가 발생했습니다.')
-    }
-  }
-
-  const isResolved = currentStatus === 'resolved' || currentStatus === 'done'
+  const {
+    inquiry,
+    formattedDate,
+    isResolved,
+    isPending,
+    handleUpdateStatus,
+    handleEmailPress,
+  } = useAdminInquiryDetail()
 
   return (
     <View style={styles.container}>
