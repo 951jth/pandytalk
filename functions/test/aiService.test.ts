@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict')
-const test = require('node:test')
+const { test: nodeTest, afterEach: nodeAfterEach } = require('node:test')
 
 const {
   getAiResponse,
@@ -8,16 +8,30 @@ const {
   toTabilyResults,
 } = require('../lib/services/aiService')
 
+type FetchCall = {
+  url: string
+  options: {
+    body: string
+    headers: Record<string, string>
+  }
+}
+
+type ToolMessage = {
+  role: string
+  tool_call_id: string
+  content: string
+}
+
 // OpenAI SDK의 chat.completions.create만 흉내냅니다.
 // responses 배열 순서대로 응답을 꺼내며, calls에는 실제 호출 인자를 기록합니다.
-const createOpenAiMock = responses => {
-  const calls = []
+const createOpenAiMock = (responses: any[]) => {
+  const calls: any[] = []
   return {
     calls,
     client: {
       chat: {
         completions: {
-          create: async params => {
+          create: async (params: any) => {
             calls.push(params)
             const response = responses.shift()
             if (response instanceof Error) throw response
@@ -26,14 +40,14 @@ const createOpenAiMock = responses => {
         },
       },
     },
-  }
+  } as any
 }
 
 // searchGoogle 내부의 Serper fetch 호출을 흉내냅니다.
 // responses에 Error를 넣으면 검색 실패 fallback 흐름을 검증할 수 있습니다.
-const createSerperFetchMock = (responses = []) => {
-  const calls = []
-  return async (url, options) => {
+const createSerperFetchMock = (responses: any[] = []): any => {
+  const calls: any[] = []
+  return async (url: any, options: any) => {
     calls.push({url, options})
     const response = responses.shift()
     if (response instanceof Error) throw response
@@ -76,12 +90,12 @@ const searchToolCall = {
 }
 
 // 각 테스트가 global.fetch를 갈아끼우므로 다음 테스트에 새지 않게 정리합니다.
-test.afterEach(() => {
-  delete global.fetch
+nodeAfterEach(() => {
+  delete (global as {fetch?: typeof fetch}).fetch
 })
 
 // toSerperResults: Serper API 응답을 searchGoogle이 쓰는 최소 필드 배열로 정규화합니다.
-test('toSerperResults returns an empty array for non-record or non-array payloads', () => {
+nodeTest('toSerperResults returns an empty array for non-record or non-array payloads', () => {
   assert.deepEqual(toSerperResults(null), [])
   assert.deepEqual(toSerperResults('not-a-record'), [])
   assert.deepEqual(toSerperResults([]), [])
@@ -90,7 +104,7 @@ test('toSerperResults returns an empty array for non-record or non-array payload
 })
 
 // toSerperResults: 정상 결과는 title/link/snippet만 남기고, 문자열이 아닌 값은 빈 문자열로 낮춥니다.
-test('toSerperResults returns searchGoogle-compatible result items', () => {
+nodeTest('toSerperResults returns searchGoogle-compatible result items', () => {
   const results = toSerperResults({
     organic: [
       {
@@ -122,7 +136,7 @@ test('toSerperResults returns searchGoogle-compatible result items', () => {
 })
 
 // toTabilyResults: Tavily API 응답 형태가 아니면 안전하게 빈 배열을 반환합니다.
-test('toTabilyResults returns an empty array for non-record or non-array payloads', () => {
+nodeTest('toTabilyResults returns an empty array for non-record or non-array payloads', () => {
   assert.deepEqual(toTabilyResults(null), [])
   assert.deepEqual(toTabilyResults('not-a-record'), [])
   assert.deepEqual(toTabilyResults([]), [])
@@ -131,7 +145,7 @@ test('toTabilyResults returns an empty array for non-record or non-array payload
 })
 
 // toTabilyResults: Tavily results를 title/url/content 문자열 필드로 정규화합니다.
-test('toTabilyResults returns Tavily result items normalized to strings', () => {
+nodeTest('toTabilyResults returns Tavily result items normalized to strings', () => {
   const results = toTabilyResults({
     results: [
       {
@@ -164,7 +178,7 @@ test('toTabilyResults returns Tavily result items normalized to strings', () => 
 
 // getAiResponse: 백업 태스크에서 쓰는 non-streaming 응답 함수입니다.
 // tool call이 없으면 첫 OpenAI 응답의 content를 그대로 반환해야 합니다.
-test('getAiResponse returns initial content when no tool call is requested', async () => {
+nodeTest('getAiResponse returns initial content when no tool call is requested', async () => {
   const {client, calls} = createOpenAiMock([
     {choices: [{message: {role: 'assistant', content: '안녕!'}}]},
   ])
@@ -184,7 +198,7 @@ test('getAiResponse returns initial content when no tool call is requested', asy
 
 // getAiResponse: 모델이 search_web을 요청하면 Serper 검색 결과를 tool 메시지로 붙인 뒤
 // OpenAI를 한 번 더 호출해 최종 텍스트를 반환해야 합니다.
-test('getAiResponse searches web and returns final content for search_web tool calls', async () => {
+nodeTest('getAiResponse searches web and returns final content for search_web tool calls', async () => {
   const finalMessage = {role: 'assistant', content: '검색 기반 답변'}
   const {client, calls} = createOpenAiMock([
     {
@@ -200,8 +214,8 @@ test('getAiResponse searches web and returns final content for search_web tool c
     },
     {choices: [{message: finalMessage}]},
   ])
-  const fetchCalls = []
-  global.fetch = async (url, options) => {
+  const fetchCalls: FetchCall[] = []
+  global.fetch = (async (url: any, options: any) => {
     fetchCalls.push({url, options})
     return {
       json: async () => ({
@@ -214,7 +228,7 @@ test('getAiResponse searches web and returns final content for search_web tool c
         ],
       }),
     }
-  }
+  }) as any
 
   const result = await getAiResponse(client, baseMessages, baseTools, 'serper-key')
 
@@ -254,7 +268,7 @@ test('getAiResponse searches web and returns final content for search_web tool c
 })
 
 // getAiResponse: 검색 API가 실패해도 함수가 중단되지 않고 fallback tool content로 최종 답변을 이어갑니다.
-test('getAiResponse continues with fallback tool content when search fails', async () => {
+nodeTest('getAiResponse continues with fallback tool content when search fails', async () => {
   const {client, calls} = createOpenAiMock([
     {
       choices: [
@@ -282,7 +296,7 @@ test('getAiResponse continues with fallback tool content when search fails', asy
 })
 
 // getAiResponse: OpenAI 응답에 content가 없으면 호출부가 다루기 쉬운 빈 문자열로 낮춥니다.
-test('getAiResponse returns an empty string when response content is missing', async () => {
+nodeTest('getAiResponse returns an empty string when response content is missing', async () => {
   const {client} = createOpenAiMock([
     {choices: [{message: {role: 'assistant'}}]},
   ])
@@ -294,7 +308,7 @@ test('getAiResponse returns an empty string when response content is missing', a
 
 // getAiResponseStream: SSE 엔드포인트에서 쓰는 streaming 응답 함수입니다.
 // tool call이 없으면 원본 messages로 다시 streaming 요청을 만들어 반환합니다.
-test('getAiResponseStream requests a stream with original messages when no tool call is requested', async () => {
+nodeTest('getAiResponseStream requests a stream with original messages when no tool call is requested', async () => {
   const stream = {
     async *[Symbol.asyncIterator]() {
       yield {choices: [{delta: {content: '안녕'}}]}
@@ -330,7 +344,7 @@ test('getAiResponseStream requests a stream with original messages when no tool 
 
 // getAiResponseStream: search_web tool call이 있으면 검색 결과를 messages에 보강한 뒤
 // 최종 streaming 요청을 생성해 호출부가 for-await로 읽을 수 있게 반환합니다.
-test('getAiResponseStream searches web and requests final stream with tool results', async () => {
+nodeTest('getAiResponseStream searches web and requests final stream with tool results', async () => {
   const stream = {
     async *[Symbol.asyncIterator]() {
       yield {choices: [{delta: {content: '검색'}}]}
@@ -346,8 +360,8 @@ test('getAiResponseStream searches web and requests final stream with tool resul
     {choices: [{message: responseMessage}]},
     stream,
   ])
-  const fetchCalls = []
-  global.fetch = async (url, options) => {
+  const fetchCalls: FetchCall[] = []
+  global.fetch = (async (url: any, options: any) => {
     fetchCalls.push({url, options})
     return {
       json: async () => ({
@@ -360,7 +374,7 @@ test('getAiResponseStream searches web and requests final stream with tool resul
         ],
       }),
     }
-  }
+  }) as any
 
   const result = await getAiResponseStream(
     client,
@@ -394,7 +408,7 @@ test('getAiResponseStream searches web and requests final stream with tool resul
 })
 
 // getAiResponseStream: 모델이 여러 search_web tool call을 반환해도 순서와 tool_call_id를 보존해야 합니다.
-test('getAiResponseStream handles multiple search_web tool calls in order', async () => {
+nodeTest('getAiResponseStream handles multiple search_web tool calls in order', async () => {
   const firstToolCall = {
     id: 'call_search_1',
     type: 'function',
@@ -435,7 +449,9 @@ test('getAiResponseStream handles multiple search_web tool calls in order', asyn
 
   await getAiResponseStream(client, baseMessages, baseTools, 'serper-key')
 
-  const toolMessages = calls[1].messages.filter(message => message.role === 'tool')
+  const toolMessages = (calls[1].messages as ToolMessage[]).filter(
+    message => message.role === 'tool',
+  )
   assert.deepEqual(
     toolMessages.map(message => message.tool_call_id),
     ['call_search_1', 'call_search_2'],
