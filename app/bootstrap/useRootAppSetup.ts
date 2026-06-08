@@ -6,11 +6,17 @@ import {useFCMPush} from '@app/features/notification/hooks/useFCMPush'
 import {useFCMSetup} from '@app/features/notification/hooks/useFCMSetup'
 import {useUserPresence} from '@app/features/user/hooks/useUserPresence'
 import {useEASUpdateManager} from '@app/shared/hooks/useEASUpdateManager'
+import {analytics} from '@app/shared/services/analytics'
+import {setAppNavigationReady} from '@app/navigation/RootNavigation'
+import {useEffect, useRef} from 'react'
+
+type RootAppTarget = 'splash' | 'app' | 'auth'
 
 /**
  * 앱 전역 설정을 총괄하는 최상위 부트스트랩 훅
  */
 export function useRootAppSetup() {
+  const lastResolvedTarget = useRef<RootAppTarget | null>(null)
   const fontsLoaded = useFontFaceSetup() // 1. 폰트 로드
   useCheckForceUpdate() // 2. 업데이트 체크
   useFCMSetup() // 3. 푸시 권한 및 토큰
@@ -22,5 +28,23 @@ export function useRootAppSetup() {
 
   // 전체 로딩 상태 및 권한 여부 반환
   const shouldShowSplash = !fontsLoaded || authLoading
+  const target: RootAppTarget = shouldShowSplash
+    ? 'splash'
+    : canEnterApp
+      ? 'app'
+      : 'auth'
+
+  useEffect(() => {
+    if (lastResolvedTarget.current === target) return
+
+    lastResolvedTarget.current = target
+    setAppNavigationReady(target === 'app')
+    analytics.track('root_navigator_resolved', {
+      target,
+      shouldShowSplash,
+      canEnterApp,
+    })
+  }, [canEnterApp, shouldShowSplash, target])
+
   return {shouldShowSplash, canEnterApp}
 }

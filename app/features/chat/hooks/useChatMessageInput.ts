@@ -31,7 +31,6 @@ export const useChatMessageInput = ({
   const [selectedImage, setSelectedImage] =
     useState<ImagePickerResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
-  const isBlockRef = useRef<boolean>(false)
   const {data: user} = useAppSelector(state => state.user)
   const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
     roomInfo?.id,
@@ -71,7 +70,6 @@ export const useChatMessageInput = ({
       if (type === 'text' || selectedImage) {
         setText('')
         setSelectedImage(null)
-        isBlockRef.current = true
       }
       let fetchedRoomInfo = roomInfo
       //step 1. 기본 메세지 페이로드 생성
@@ -126,9 +124,6 @@ export const useChatMessageInput = ({
       if (type === 'text' || selectedImage) {
         setText('')
         setSelectedImage(null) // 전송 후 이미지 비우기
-        setTimeout(() => {
-          isBlockRef.current = false
-        }, 500)
       }
     } catch (e) {
       console.log(e)
@@ -139,6 +134,17 @@ export const useChatMessageInput = ({
     }
   }
 
+  const removeImage = (uri: string) => {
+    if (!selectedImage) return
+    const nextAssets = selectedImage.assets?.filter(a => a.uri !== uri) || []
+    if (nextAssets.length === 0) {
+      setSelectedImage(null)
+    } else {
+      const nextResponse = {...selectedImage, assets: nextAssets}
+      setSelectedImage(nextResponse)
+    }
+  }
+
   return {
     text,
     setText,
@@ -146,7 +152,7 @@ export const useChatMessageInput = ({
     loading,
     isDisabled,
     selectedImage,
-    isBlockRef,
+    removeImage,
     clearSelectedImage: () => setSelectedImage(null),
   }
 }

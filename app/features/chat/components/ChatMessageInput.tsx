@@ -6,8 +6,8 @@ import {
   useChatMessageInput,
   type ChatInputPropTypes,
 } from '@features/chat/hooks/useChatMessageInput'
-import COLORS from '@shared/constants/color'
 import {MAX_CHAT_IMAGES} from '@shared/constants/chat'
+import COLORS from '@shared/constants/color'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
 import ChatMentionSuggestion from './ChatMentionSuggestion'
@@ -18,33 +18,14 @@ export default function ChatMessageInput({
   targetIds,
   chatType = 'group',
 }: ChatInputPropTypes) {
-  const {
-    text,
-    loading,
-    selectedImage,
-    setText,
-    onSendMessage,
-    isBlockRef,
-    clearSelectedImage,
-  } = useChatMessageInput({
-    roomInfo,
-    targetIds,
-    chatType,
-  })
+  const {text, loading, selectedImage, setText, onSendMessage, removeImage} =
+    useChatMessageInput({
+      roomInfo,
+      targetIds,
+      chatType,
+    })
 
   const selectedImages = selectedImage?.assets || []
-
-  const removeImage = (uri: string) => {
-    if (!selectedImage) return
-    const nextAssets = selectedImage.assets?.filter(a => a.uri !== uri) || []
-    if (nextAssets.length === 0) {
-      clearSelectedImage()
-    } else {
-      // ImagePickerResponse structure 유지하면서 assets 필터링
-      const nextResponse = {...selectedImage, assets: nextAssets}
-      onSendMessage('image', nextResponse) // hook의 setSelectedImage를 업데이트하기 위해 onSendMessage('image', ...) 활용
-    }
-  }
 
   return (
     <>
@@ -53,7 +34,6 @@ export default function ChatMessageInput({
           text={text}
           setText={setText}
           disabled={loading}
-          isBlockRef={isBlockRef}
         />
 
         <View style={[styles.inputContents]}>
@@ -81,7 +61,9 @@ export default function ChatMessageInput({
               contentStyle={styles.chatTextContent}
               outlineStyle={styles.chatTextOutlined}
               placeholder={
-                selectedImages.length > 0 ? '사진에 대해 설명해주세요...' : ''
+                selectedImages.length > 0
+                  ? '사진에 대해 설명해주세요...'
+                  : '메시지 입력 또는 @팬디로 AI 호출'
               }
               value={text}
               onChangeText={setText}

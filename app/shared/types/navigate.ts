@@ -1,3 +1,4 @@
+import type {Inquiry} from '@app/features/admin/service/inquiryService'
 import {NavigatorScreenParams} from '@react-navigation/native'
 import type {ChatRoom} from './chat'
 
@@ -43,6 +44,10 @@ export type AppRouteParamList = {
   }
   'guest-manage': undefined
   'group-manage': undefined
+  'admin-inquiries': undefined
+  'admin-inquiry-detail': {
+    inquiry: Inquiry
+  }
   harness: undefined
   'user-select': undefined
 }
