@@ -13,63 +13,6 @@ import {useCallback, useEffect, useState} from 'react'
 import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
-/**
- * [Helper] 앱 진입 판정 사유를 결정하는 함수
- */
-function getAuthGateDecisionReason(
-  canEnterApp: boolean,
-  hasAuthUser: boolean,
-  isUserInfoLoaded: boolean,
-  accountStatus?: string,
-  allowedStatuses: string[] = [],
-): string {
-  if (canEnterApp) return 'ready'
-  if (!hasAuthUser) return 'firebase_user_null'
-  // 이제 profile_not_loaded여도 진입할 수 있으므로, reason에서 이 상태는 '진입 중'을 의미하게 됨
-  if (!isUserInfoLoaded) return 'profile_loading'
-  if (!allowedStatuses.includes(accountStatus ?? '')) return 'status_not_allowed'
-  return 'unknown'
-}
-
-/**
- * [Helper] 판정 결과를 로깅 및 아날리틱스에 기록하는 함수
- */
-function logAuthGateDecision(params: {
-  canEnterApp: boolean
-  reason: string
-  hasAuthUser: boolean
-  isUserInfoLoaded: boolean
-  accountStatus: string
-}) {
-  const {canEnterApp, reason, hasAuthUser, isUserInfoLoaded, accountStatus} =
-    params
-
-  logger.info('AuthGate Result', {
-    canEnterApp,
-    hasAuthUser,
-    isUserInfoLoaded,
-    accountStatus,
-    reason,
-  })
-
-  // ✅ [DEBUG] 인증은 됐는데 튕기는 경우만 상세 추적을 위해 에러 로그 발생
-  if (hasAuthUser && !canEnterApp) {
-    logger.error(`[DEBUG_AUTH_GATE_FAIL] reason: ${reason}`, {
-      accountStatus,
-      isUserInfoLoaded,
-      hasAuthUser,
-    })
-  }
-
-  analytics.track('auth_gate_decision', {
-    result: canEnterApp ? 'app' : 'auth',
-    reason,
-    hasAuthUser,
-    hasUserInfo: isUserInfoLoaded,
-    accountStatus,
-  })
-}
-
 export function useAuthGate() {
   const [fbUser, setFbUser] = useState<FirebaseAuthTypes.User | null>(null)
   const [initializing, setInitializing] = useState(true)
@@ -107,6 +50,8 @@ export function useAuthGate() {
   )
 
   useEffect(() => {
+    // 화면에 렌더링되어(마운트되어) 있는가?"** 를 추적하여
+    // **안전하게 상태(State)를 업데이트하기 위한 플래그(Flag) 변수**입니다.
     let isEffectActive = true
 
     const unsubscribe = onAuthStateChanged(auth, user => {
@@ -173,7 +118,7 @@ export function useAuthGate() {
 
   // 스플래시는 오직 Firebase 초기화(initializing) 동안에만 보여줍니다.
   const shouldShowSplash = initializing
-
+  // Analytics Logging 용도
   const reason = getAuthGateDecisionReason(
     canEnterApp,
     hasAuthUser,
@@ -202,4 +147,62 @@ export function useAuthGate() {
   ])
 
   return {shouldShowSplash, canEnterApp}
+}
+
+/**
+ * [Helper] 앱 진입 판정 사유를 결정하는 함수
+ */
+function getAuthGateDecisionReason(
+  canEnterApp: boolean,
+  hasAuthUser: boolean,
+  isUserInfoLoaded: boolean,
+  accountStatus?: string,
+  allowedStatuses: string[] = [],
+): string {
+  if (canEnterApp) return 'ready'
+  if (!hasAuthUser) return 'firebase_user_null'
+  // 이제 profile_not_loaded여도 진입할 수 있으므로, reason에서 이 상태는 '진입 중'을 의미하게 됨
+  if (!isUserInfoLoaded) return 'profile_loading'
+  if (!allowedStatuses.includes(accountStatus ?? ''))
+    return 'status_not_allowed'
+  return 'unknown'
+}
+
+/**
+ * [Helper] 판정 결과를 로깅 및 아날리틱스에 기록하는 함수
+ */
+function logAuthGateDecision(params: {
+  canEnterApp: boolean
+  reason: string
+  hasAuthUser: boolean
+  isUserInfoLoaded: boolean
+  accountStatus: string
+}) {
+  const {canEnterApp, reason, hasAuthUser, isUserInfoLoaded, accountStatus} =
+    params
+
+  logger.info('AuthGate Result', {
+    canEnterApp,
+    hasAuthUser,
+    isUserInfoLoaded,
+    accountStatus,
+    reason,
+  })
+
+  // ✅ [DEBUG] 인증은 됐는데 튕기는 경우만 상세 추적을 위해 에러 로그 발생
+  if (hasAuthUser && !canEnterApp) {
+    logger.error(`[DEBUG_AUTH_GATE_FAIL] reason: ${reason}`, {
+      accountStatus,
+      isUserInfoLoaded,
+      hasAuthUser,
+    })
+  }
+
+  analytics.track('auth_gate_decision', {
+    result: canEnterApp ? 'app' : 'auth',
+    reason,
+    hasAuthUser,
+    hasUserInfo: isUserInfoLoaded,
+    accountStatus,
+  })
 }
