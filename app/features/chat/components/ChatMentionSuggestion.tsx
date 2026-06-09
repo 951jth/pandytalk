@@ -10,14 +10,12 @@ type Props = {
   text: string
   setText: (text: string) => void
   disabled?: boolean
-  isBlockRef?: React.RefObject<boolean>
 }
 
 export default function ChatMentionSuggestion({
   text,
   setText,
   disabled,
-  isBlockRef,
 }: Props) {
   const {isKeyboardVisible} = useKeyboardFocus()
   const isMentionBlock = useRef<boolean>(false)
@@ -27,10 +25,9 @@ export default function ChatMentionSuggestion({
       isKeyboardVisible &&
       !disabled &&
       !isMentionBlock.current &&
-      !isBlockRef?.current &&
-      (text === '' || text.endsWith('@') || text.includes('@팬'))
+      (text.endsWith('@') || text.includes('@팬'))
     )
-  }, [isKeyboardVisible, text, disabled, isBlockRef])
+  }, [isKeyboardVisible, text, disabled])
 
   const mentionSuggestions = useMemo(() => {
     if (!isMentionSuggested) return []

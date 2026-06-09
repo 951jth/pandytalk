@@ -11,34 +11,46 @@
  * 3. 앱이 준비되기 전(ready === false)에 들어온 요청은 queue에 담아두었다가,
  *    onNavReady가 실행되는 시점에 순차적으로 처리합니다.
  */
-import {
-  createNavigationContainerRef,
-} from '@react-navigation/native'
+import {analytics} from '@app/shared/services/analytics'
+import {logger} from '@app/shared/services/logger'
 import type {
-  InitialDmChatInfo,
-  InitialGroupChatInfo,
   InitialChatInfo,
   RootStackParamList,
 } from '@app/shared/types/navigate'
+import {createNavigationContainerRef, StackActions} from '@react-navigation/native'
 import BootSplash from 'react-native-bootsplash'
 
 // 전역 내비게이션 참조 객체
 export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 
-let ready = false
+let isSplashFinished = false
 const queue: Array<() => void> = []
+
+const tryReleaseQueue = () => {
+  console.log('navigationRef: ', navigationRef.isReady())
+  console.log('isSplashFinished: ', isSplashFinished)
+  console.log('queue: ', queue)
+  if (navigationRef.isReady() && isSplashFinished) {
+    // 내비게이션 준비와 스플래시 종료가 모두 완료되면 큐 해방
+    BootSplash.hide({fade: true})
+    while (queue.length) queue.shift()?.()
+  }
+}
+
+/**
+ * 스플래시 화면 종료 및 인증 분기가 완료되었을 때 호출되는 함수
+ */
+export const setIsSplashFinished = () => {
+  isSplashFinished = true
+  tryReleaseQueue()
+}
 
 /**
  * 내비게이션 컨테이너가 준비되었을 때 호출되는 핸들러
  * App.tsx의 <NavigationContainer onReady={onNavReady}> 에서 사용됨
  */
 export const onNavReady = () => {
-  ready = true
-  // 내비게이션 준비되면 스플래시 화면 숨기기
-  BootSplash.hide({fade: true})
-
-  // 대기 중이던 내비게이션 작업 수행
-  while (queue.length) queue.shift()?.()
+  tryReleaseQueue()
 }
 
 /**
@@ -48,37 +60,60 @@ export const onNavReady = () => {
  * @param chatType 'group' 또는 'dm'
  * @param targetId DM일 경우 상대방 사용자 ID
  */
-export function navigateToChat(
-  initialChatInfo: InitialChatInfo,
-) {
-  const task = () => {
-    /**
-     * [dispatch vs navigate]
-     * - navigate(): 동일 화면이면 이동하지 않고 파라미터만 바꾸려 함 (가끔 무시됨)
-     * - dispatch(): 내비게이션 상태 머신에 직접 '명령(Action)'을 투척함
-     *
-     * [StackActions.push]
-     * - "이전 화면이 무엇이든 상관없이" 새로운 채팅방 화면을 현재 스택 맨 위에 강제로 얹습니다.
-     * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
-     */
-    if (initialChatInfo.type === 'group') {
-      navigationRef.navigate('app', {
-        screen: 'group-chat',
-        params: {initialChatInfo},
-      })
-      return
-    }
+export function navigateToChat(initialChatInfo: InitialChatInfo) {
+  // 1. [Analytics + Logger] 진입 시도 기록
+  analytics.track('nav_chat_attempt', {
+    type: initialChatInfo.type,
+    roomId: initialChatInfo.id,
+  })
+  logger.info('navigateToChat Attempt', {
+    roomId: initialChatInfo.id,
+    isSplashFinished,
+    isRefReady: navigationRef.isReady(),
+    currentRoute: navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : 'unknown',
+  })
 
-    navigationRef.navigate('app', {
-      screen: 'dm-chat',
-      params: {initialChatInfo},
-    })
+  const task = () => {
+    try {
+      logger.info('navigateToChat Executing Task')
+
+      /**
+       * [dispatch vs navigate]
+       * - navigate(): 동일 화면이면 이동하지 않고 파라미터만 바꾸려 함 (가끔 무시됨)
+       * - dispatch(): 내비게이션 상태 머신에 직접 '명령(Action)'을 투척함
+       *
+       * [StackActions.push]
+       * - "이전 화면이 무엇이든 상관없이" 새로운 채팅방 화면을 현재 스택 맨 위에 강제로 얹습니다.
+       * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
+       */
+      if (initialChatInfo.type === 'group') {
+        console.log('initialChatInfo: ', initialChatInfo)
+        navigationRef.dispatch(StackActions.push('group-chat', {initialChatInfo}))
+      } else {
+        navigationRef.dispatch(StackActions.push('dm-chat', {initialChatInfo}))
+      }
+
+      // 2. [Analytics + Logger] 네비게이션 성공 기록
+      analytics.track('nav_chat_success', {roomId: initialChatInfo.id})
+      logger.info('navigateToChat Succeeded')
+    } catch (error) {
+      // 3. [Crashlytics + Analytics] 치명적 오류 발생 시 에러 수집
+      analytics.track('nav_chat_failed', {
+        roomId: initialChatInfo.id,
+        errorMsg: error instanceof Error ? error.message : String(error),
+      })
+      logger.error('navigateToChat Failed internally', error)
+    }
   }
 
-  if (!initialChatInfo.id) return console.warn('❗ chatId is required.')
+  if (!initialChatInfo.id) {
+    logger.warn('navigateToChat Aborted: No chatId provided')
+    return console.warn('❗ chatId is required.')
+  }
 
-  // 내비게이션이 아직 준비되지 않았다면 큐에 저장 후 리턴
-  if (!navigationRef.isReady() || !ready) {
+  // 4. [Logger] 큐에 들어가는 상황(콜드스타트 등) 기록
+  if (!navigationRef.isReady() || !isSplashFinished) {
+    logger.info('navigateToChat Queued (Waiting for App Setup)')
     queue.push(task)
     return
   }
@@ -97,7 +132,7 @@ export function navigateByPush(routeName: 'users') {
       params: {screen: routeName},
     })
   }
-  if (!navigationRef.isReady() || !ready) {
+  if (!navigationRef.isReady() || !isSplashFinished) {
     queue.push(task)
     return
   }

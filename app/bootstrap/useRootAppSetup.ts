@@ -7,6 +7,9 @@ import {useFCMSetup} from '@app/features/notification/hooks/useFCMSetup'
 import {useUserPresence} from '@app/features/user/hooks/useUserPresence'
 import {useEASUpdateManager} from '@app/shared/hooks/useEASUpdateManager'
 
+import {useEffect} from 'react'
+import {setIsSplashFinished} from '@app/navigation/RootNavigation'
+
 /**
  * 앱 전역 설정을 총괄하는 최상위 부트스트랩 훅
  */
@@ -22,5 +25,12 @@ export function useRootAppSetup() {
 
   // 전체 로딩 상태 및 권한 여부 반환
   const shouldShowSplash = !fontsLoaded || authLoading
+
+  useEffect(() => {
+    if (!shouldShowSplash) {
+      setIsSplashFinished()
+    }
+  }, [shouldShowSplash])
+
   return {shouldShowSplash, canEnterApp}
 }

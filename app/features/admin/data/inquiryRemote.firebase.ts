@@ -35,6 +35,17 @@ export const inquiryRemote = {
       }))
     })
   },
+  getInquiry: (id: string) => {
+    return firebaseCall('inquiryRemote.getInquiry', async () => {
+      const {doc, getDoc} = await import('@react-native-firebase/firestore')
+      const docRef = doc(firestore, 'inquiries', id)
+      const snapshot = await getDoc(docRef)
+      if (snapshot.exists()) {
+        return {id: snapshot.id, ...snapshot.data()}
+      }
+      return null
+    })
+  },
   updateInquiryStatus: (id: string, status: string) => {
     return firebaseCall('inquiryRemote.updateInquiryStatus', async () => {
       const {doc, updateDoc} = await import('@react-native-firebase/firestore')

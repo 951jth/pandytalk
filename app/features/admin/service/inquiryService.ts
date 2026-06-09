@@ -29,6 +29,9 @@ export const inquiryService = {
       isLastPage: !hasNext,
     }
   },
+  getInquiry: async (id: string) => {
+    return (await inquiryRemote.getInquiry(id)) as Inquiry | null
+  },
   updateInquiryStatus: async (id: string, status: string) => {
     await inquiryRemote.updateInquiryStatus(id, status)
   },
