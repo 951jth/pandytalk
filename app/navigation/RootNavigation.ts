@@ -17,7 +17,10 @@ import type {
   InitialChatInfo,
   RootStackParamList,
 } from '@app/shared/types/navigate'
-import {createNavigationContainerRef, StackActions} from '@react-navigation/native'
+import {
+  createNavigationContainerRef,
+  StackActions,
+} from '@react-navigation/native'
 import BootSplash from 'react-native-bootsplash'
 
 // 전역 내비게이션 참조 객체
@@ -70,7 +73,9 @@ export function navigateToChat(initialChatInfo: InitialChatInfo) {
     roomId: initialChatInfo.id,
     isSplashFinished,
     isRefReady: navigationRef.isReady(),
-    currentRoute: navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : 'unknown',
+    currentRoute: navigationRef.isReady()
+      ? navigationRef.getCurrentRoute()?.name
+      : 'unknown',
   })
 
   const task = () => {
@@ -86,11 +91,37 @@ export function navigateToChat(initialChatInfo: InitialChatInfo) {
        * - "이전 화면이 무엇이든 상관없이" 새로운 채팅방 화면을 현재 스택 맨 위에 강제로 얹습니다.
        * - 사용자가 이미 다른 그룹 채팅방에 있더라도, 푸시를 누르면 새로운 방 화면이 위로 뜹니다.
        */
+      const currentRouteName = navigationRef.isReady()
+        ? navigationRef.getCurrentRoute()?.name
+        : null
+
+      const isChatScreen =
+        currentRouteName === 'group-chat' || currentRouteName === 'dm-chat'
+
       if (initialChatInfo.type === 'group') {
-        console.log('initialChatInfo: ', initialChatInfo)
-        navigationRef.dispatch(StackActions.push('group-chat', {initialChatInfo}))
+        if (isChatScreen) {
+          // 현재 이미 채팅방을 보고 있다면 새 스택을 쌓지 않고 기존 화면을 '교체(replace)'
+          navigationRef.dispatch(
+            StackActions.replace('group-chat', {initialChatInfo}),
+          )
+        } else {
+          // 홈이나 다른 화면이라면 자연스럽게 '위로 이동(navigate)'
+          navigationRef.navigate('app', {
+            screen: 'group-chat',
+            params: {initialChatInfo},
+          })
+        }
       } else {
-        navigationRef.dispatch(StackActions.push('dm-chat', {initialChatInfo}))
+        if (isChatScreen) {
+          navigationRef.dispatch(
+            StackActions.replace('dm-chat', {initialChatInfo}),
+          )
+        } else {
+          navigationRef.navigate('app', {
+            screen: 'dm-chat',
+            params: {initialChatInfo},
+          })
+        }
       }
 
       // 2. [Analytics + Logger] 네비게이션 성공 기록

@@ -1,4 +1,4 @@
-const {withAppBuildGradle} = require('expo/config-plugins')
+const {withAppBuildGradle, withAndroidManifest} = require('expo/config-plugins')
 
 const PRODUCTION_ANDROID_PACKAGE = 'com.cshchatapp'
 const DEVELOPMENT_ANDROID_PACKAGE = 'com.cshchatapp.debug'
@@ -16,14 +16,36 @@ const withDevelopmentAndroidPackage = config =>
     return buildGradleConfig
   })
 
+const withAndroidMailtoQuery = config =>
+  withAndroidManifest(config, config => {
+    const manifest = config.modResults.manifest
+    // <queries> 태그가 없으면 생성
+    manifest.queries = manifest.queries || [{}]
+    manifest.queries[0].intent = manifest.queries[0].intent || []
+
+    // 중복 체크
+    const hasMailto = manifest.queries[0].intent.some(
+      intent => intent.data?.[0]?.$?.['android:scheme'] === 'mailto',
+    )
+
+    // mailto 쿼리 추가
+    if (!hasMailto) {
+      manifest.queries[0].intent.push({
+        action: [{$: {'android:name': 'android.intent.action.VIEW'}}],
+        data: [{$: {'android:scheme': 'mailto'}}],
+      })
+    }
+    return config
+  })
+
 module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
   slug: 'cshchatapp', // Expo 프로젝트의 고유 식별자 (URL 등에 사용)
-  version: '1.4.3', // 앱의 외부 버전 (Store 표시용)
+  version: '1.4.4', // 앱의 외부 버전 (Store 표시용)
 
   // 2. 중요: 코드푸시(EAS Update) 설정
-  runtimeVersion: '45',
+  runtimeVersion: '46',
 
   // 3. 자산(Assets) 설정
   icon: './app/shared/assets/images/pandy_icon_padding.png',
@@ -45,13 +67,16 @@ module.exports = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.cshchatapp', // iOS 앱 고유 ID
-    buildNumber: '21', // 빌드 회차 (업로드 시마다 올려야 함)
+    buildNumber: '22', // 빌드 회차 (업로드 시마다 올려야 함)
+    infoPlist: {
+      LSApplicationQueriesSchemes: ['mailto'],
+    },
   },
 
   // 6. 안드로이드 섹션 (프리빌드 시 매우 중요)
   android: {
     package: PRODUCTION_ANDROID_PACKAGE, // 안드로이드 운영 앱 고유 ID (패키지명)
-    versionCode: 45, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
+    versionCode: 46, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {
@@ -73,5 +98,5 @@ module.exports = {
 
   // 8. 기타 설정
   owner: 'sehooncho',
-  plugins: ['expo-font', withDevelopmentAndroidPackage],
+  plugins: ['expo-font', withDevelopmentAndroidPackage, withAndroidMailtoQuery],
 }

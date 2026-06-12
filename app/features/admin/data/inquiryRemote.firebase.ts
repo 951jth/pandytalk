@@ -4,11 +4,14 @@ import {toPageResult} from '@app/shared/firebase/pagination'
 import type {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
   startAfter,
+  updateDoc,
 } from '@react-native-firebase/firestore'
 
 const DEFAULT_PAGE_SIZE = 20
@@ -37,7 +40,6 @@ export const inquiryRemote = {
   },
   getInquiry: (id: string) => {
     return firebaseCall('inquiryRemote.getInquiry', async () => {
-      const {doc, getDoc} = await import('@react-native-firebase/firestore')
       const docRef = doc(firestore, 'inquiries', id)
       const snapshot = await getDoc(docRef)
       if (snapshot.exists()) {
@@ -48,7 +50,6 @@ export const inquiryRemote = {
   },
   updateInquiryStatus: (id: string, status: string) => {
     return firebaseCall('inquiryRemote.updateInquiryStatus', async () => {
-      const {doc, updateDoc} = await import('@react-native-firebase/firestore')
       const docRef = doc(firestore, 'inquiries', id)
       await updateDoc(docRef, {status})
     })
