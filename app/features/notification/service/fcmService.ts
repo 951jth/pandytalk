@@ -8,7 +8,7 @@ import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 import {
   navigateByPush,
   navigateToChat,
-} from '../../../navigation/RootNavigation'
+} from '../../../navigation/rootNavigationService'
 
 export const fcmService = {
   /**

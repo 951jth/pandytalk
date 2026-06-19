@@ -4,19 +4,23 @@ import {getDMChatId} from '@app/shared/utils/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import {useCallback, useMemo, useState} from 'react'
+import {debounce} from 'lodash'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 
 export function useUsersScreen() {
-  const [searchText, setSearchText] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchText, setSearchText] = useState('')
   const {
     data,
-    isLoading,
+    isLoading: isQueryLoading,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     refetch,
   } = useUsersInfinite(searchText, true)
-  const {data: userInfo} = useAppSelector(state => state.user)
+  const {data: userInfo, loading: isUserLoading} = useAppSelector(
+    state => state.user,
+  )
   const currentUid = userInfo?.uid
   const navigation =
     useNavigation<NativeStackNavigationProp<AppRouteParamList, 'dm-chat'>>()
@@ -40,24 +44,25 @@ export function useUsersScreen() {
     },
     [currentUid, navigation],
   )
-  // TODO 필터링 기능 필요하면 사용.
-  // const debouncedSetSearchText = useMemo(
-  //   () =>
-  //     debounce((text: string) => {
-  //       setSearchText(text.toString())
-  //     }, 300),
-  //   [],
-  // )
+  const debouncedSetSearchText = useMemo(
+    () =>
+      debounce((text: string) => {
+        setSearchText(text.trim())
+      }, 300),
+    [],
+  )
 
-  // useEffect(() => {
-  //   debouncedSetSearchText(input)
-  //   // cleanup 함수로 debounce 취소
-  //   return () => debouncedSetSearchText.cancel()
-  // }, [input])
+  useEffect(() => {
+    debouncedSetSearchText(searchQuery)
+    return () => debouncedSetSearchText.cancel()
+  }, [searchQuery, debouncedSetSearchText])
+
+  const isLoading =
+    isUserLoading || isQueryLoading || !userInfo?.uid
 
   return {
-    searchText,
-    setSearchText,
+    searchQuery,
+    setSearchQuery,
     users: others,
     isLoading,
     fetchNextPage,

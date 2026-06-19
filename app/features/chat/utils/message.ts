@@ -17,7 +17,7 @@ type pageType = {
 }
 
 export const MESSAGE_POLICY = {
-  MAX_LENGTH: 2000,
+  MAX_LENGTH: 5000,
   TRIM: true,
 }
 

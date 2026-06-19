@@ -2,7 +2,7 @@ import {appRoutes, initialRouteName} from '@app/navigation/useScreens'
 import type {AppRouteParamList} from '@app/shared/types/navigate'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
-// import {navigate} from '../components/navigation/RootNavigation'
+// import {navigate} from '../components/navigation/rootNavigationService'
 
 const Stack = createNativeStackNavigator<AppRouteParamList>()
 

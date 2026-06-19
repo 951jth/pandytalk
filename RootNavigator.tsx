@@ -20,12 +20,10 @@ export function RootNavigator() {
   //이 파일에는 네비게이션 관련 스크린만 보게해야함.
   const {shouldShowSplash, canEnterApp} = useRootAppSetup()
 
-  // 초기/프로필 로딩 중 스플래시
+  // 초기 필수 준비 중 스플래시
   if (shouldShowSplash) {
     return <PandySplashScreen />
   }
-  console.log('shouldShowSplash', shouldShowSplash)
-  console.log('canEnterApp', canEnterApp)
 
   return (
     <>

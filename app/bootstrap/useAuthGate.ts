@@ -1,53 +1,28 @@
+import {useAuthProfileGate} from '@app/bootstrap/useAuthProfileGate'
 import {auth} from '@app/shared/firebase/firestore'
-import {useLogout} from '@app/shared/hooks/useLogout'
 import {analytics} from '@app/shared/services/analytics'
 import {logger} from '@app/shared/services/logger'
 import {useAppSelector} from '@app/store/reduxHooks'
-import type {AppDispatch} from '@app/store/store'
-import {fetchUserById} from '@app/store/userSlice'
 import {
   onAuthStateChanged,
   type FirebaseAuthTypes,
 } from '@react-native-firebase/auth'
-import {useCallback, useEffect, useState} from 'react'
-import {Alert} from 'react-native'
-import {useDispatch} from 'react-redux'
+import {useEffect, useState} from 'react'
 
+/**
+ * Firebase Auth 상태를 구독하고 루트 진입 상태를 결정하는 훅입니다.
+ * 스플래시 표시 여부와 App/Auth 네비게이터 분기 기준을 제공합니다.
+ */
 export function useAuthGate() {
-  const [fbUser, setFbUser] = useState<FirebaseAuthTypes.User | null>(null)
-  const [initializing, setInitializing] = useState(true)
-
-  const dispatch = useDispatch<AppDispatch>()
-  const {data: userInfo} = useAppSelector(state => state.user)
-  const {logout} = useLogout()
-
-  const fetchProfile = useCallback(
-    async (uid: string) => {
-      const profile = await dispatch(fetchUserById(uid)).unwrap()
-
-      if (!profile?.uid) {
-        analytics.track('auth_profile_missing', {uid})
-        return null
-      }
-
-      const blockedStatuses = ['reject', 'stop']
-      if (blockedStatuses.includes(profile?.accountStatus)) {
-        analytics.track('auth_blocked_logout', {
-          uid,
-          accountStatus: profile.accountStatus,
-        })
-        await logout('blocked_account')
-        Alert.alert(
-          '접속 제한',
-          '회원님의 계정 상태로 인해 접속이 제한되었습니다.\n관리자에게 문의해주세요.',
-        )
-        return null
-      }
-
-      return profile
-    },
-    [dispatch, logout],
+  const [fbUser, setFbUser] = useState<FirebaseAuthTypes.User | null>(
+    auth.currentUser,
   )
+  const [isInitialAuthChecking, setIsInitialAuthChecking] = useState(
+    !auth.currentUser?.uid,
+  )
+
+  const {data: userInfo} = useAppSelector(state => state.user)
+  const {checkProfileAccess} = useAuthProfileGate()
 
   useEffect(() => {
     // 화면에 렌더링되어(마운트되어) 있는가?"** 를 추적하여
@@ -59,40 +34,27 @@ export function useAuthGate() {
         logger.info('AuthGate: onAuthStateChanged fired', {
           uid: user?.uid ?? 'null',
         })
-
         if (!isEffectActive) return
-
-        setInitializing(true)
         setFbUser(user)
+        setIsInitialAuthChecking(false)
 
         if (!user?.uid) {
           analytics.identify(null)
-          setInitializing(false)
           return
         }
 
         analytics.identify(user.uid)
-        const profileFetchStartedAt = Date.now()
 
         try {
-          analytics.track('auth_profile_fetch_start', {uid: user.uid})
-          const profile = await fetchProfile(user.uid)
-
-          analytics.track('auth_profile_fetch_success', {
-            uid: user.uid,
-            success: !!profile,
-            accountStatus: profile?.accountStatus ?? 'none',
-            durationMs: Date.now() - profileFetchStartedAt,
-          })
+          await checkProfileAccess(user.uid)
         } catch (err) {
-          analytics.track('auth_profile_fetch_failure', {
+          logger.error('AuthGate: profile access check failed unexpectedly', {
             uid: user.uid,
-            durationMs: Date.now() - profileFetchStartedAt,
             errorMessage: err instanceof Error ? err.message : 'unknown',
           })
         } finally {
           if (isEffectActive) {
-            setInitializing(false)
+            setIsInitialAuthChecking(false)
           }
         }
       }
@@ -103,7 +65,7 @@ export function useAuthGate() {
       isEffectActive = false
       unsubscribe()
     }
-  }, [fetchProfile])
+  }, [checkProfileAccess])
 
   const hasAuthUser = !!fbUser?.uid
   const isUserInfoLoaded = !!userInfo?.uid
@@ -112,23 +74,22 @@ export function useAuthGate() {
   /**
    * [ Snappy Logic ]
    * 1. Firebase 인증만 되어 있다면(hasAuthUser), 프로필 로드 전이라도 일단 앱 진입을 허용합니다.
-   * 2. 이후 백그라운드에서 fetchProfile이 실패하거나 차단된 유저임이 밝혀지면 로그아웃 처리되어 튕겨나갑니다.
+   * 2. 이후 백그라운드에서 프로필 접근 검증에 실패하거나 차단된 유저임이 밝혀지면 로그아웃 처리되어 튕겨나갑니다.
    */
   const canEnterApp = hasAuthUser
-
-  // 스플래시는 오직 Firebase 초기화(initializing) 동안에만 보여줍니다.
-  const shouldShowSplash = initializing
-  // Analytics Logging 용도
-  const reason = getAuthGateDecisionReason(
-    canEnterApp,
-    hasAuthUser,
-    isUserInfoLoaded,
-    userInfo?.accountStatus,
-    allowedStatuses,
-  )
+  // 스플래시는 앱 최초 Firebase 인증 판정 전까지만 보여줍니다.
+  const shouldShowSplash = isInitialAuthChecking
 
   useEffect(() => {
     if (shouldShowSplash) return
+    // Analytics Logging 용도
+    const reason = getAuthGateDecisionReason(
+      canEnterApp,
+      hasAuthUser,
+      isUserInfoLoaded,
+      userInfo?.accountStatus,
+      allowedStatuses,
+    )
 
     logAuthGateDecision({
       canEnterApp,
@@ -138,7 +99,6 @@ export function useAuthGate() {
       accountStatus: userInfo?.accountStatus ?? 'none',
     })
   }, [
-    reason,
     canEnterApp,
     hasAuthUser,
     isUserInfoLoaded,

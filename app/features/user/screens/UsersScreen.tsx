@@ -1,7 +1,7 @@
 import {useUsersScreen} from '@app/features/user/hooks/useUsersScreen'
 import COLORS from '@app/shared/constants/color'
 import UserListSkeleton from '@app/features/user/components/UserListSkeleton'
-import React, {useState} from 'react'
+import React from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import EmptyData from '../../../shared/ui/common/EmptyData'
 import SearchInput from '../../../shared/ui/input/SearchInput'
@@ -10,6 +10,8 @@ import UserListItem from '../components/UserListItem'
 
 export default function UsersScreen(): React.JSX.Element {
   const {
+    searchQuery,
+    setSearchQuery,
     users,
     isLoading,
     fetchNextPage,
@@ -17,13 +19,6 @@ export default function UsersScreen(): React.JSX.Element {
     refetch,
     moveToChatRoom,
   } = useUsersScreen()
-
-  const [searchQuery, setSearchQuery] = useState('')
-
-  // 검색 필터링 (간단한 클라이언트 사이드 필터링 예시)
-  const filteredUsers = users?.filter(user =>
-    user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
 
   if (isLoading && !users?.length) {
     return (
@@ -41,14 +36,14 @@ export default function UsersScreen(): React.JSX.Element {
         onChangeText={setSearchQuery}
       />
       <FlatList
-        data={filteredUsers}
+        data={users}
         ListHeaderComponent={
           <>
             <GroupMainThumnail />
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>모든 친구</Text>
               <Text style={styles.sectionCount}>
-                {filteredUsers?.length || 0}
+                {users?.length || 0}
               </Text>
             </View>
           </>

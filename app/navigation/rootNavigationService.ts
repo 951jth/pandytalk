@@ -1,9 +1,10 @@
 /**
- * RootNavigation.ts
+ * rootNavigationService.ts
  *
  * [목적]
  * 이 파일은 React 컴포넌트 외부(Service, FCM Listener, Axios Interceptor 등)에서
  * 앱의 내비게이션을 제어하기 위한 "Global Navigation Reference"를 관리합니다.
+ * 화면을 렌더링하는 RootNavigator.tsx와 달리, 전역 이동 명령과 대기 큐만 담당합니다.
  *
  * [동작 원리]
  * 1. createNavigationContainerRef를 통해 전역 참조 객체(navigationRef)를 생성합니다.
@@ -27,15 +28,16 @@ import BootSplash from 'react-native-bootsplash'
 export const navigationRef = createNavigationContainerRef<RootStackParamList>()
 
 let isSplashFinished = false
+let isAppReady = false
 const queue: Array<() => void> = []
 
 const tryReleaseQueue = () => {
-  console.log('navigationRef: ', navigationRef.isReady())
-  console.log('isSplashFinished: ', isSplashFinished)
-  console.log('queue: ', queue)
   if (navigationRef.isReady() && isSplashFinished) {
-    // 내비게이션 준비와 스플래시 종료가 모두 완료되면 큐 해방
     BootSplash.hide({fade: true})
+  }
+
+  if (navigationRef.isReady() && isSplashFinished && isAppReady) {
+    // 앱 내부 내비게이션 준비가 완료되면 큐 해방
     while (queue.length) queue.shift()?.()
   }
 }
@@ -45,6 +47,14 @@ const tryReleaseQueue = () => {
  */
 export const setIsSplashFinished = () => {
   isSplashFinished = true
+  tryReleaseQueue()
+}
+
+/**
+ * AppNavigator로 이동 가능한 인증 상태가 되었을 때 호출되는 함수
+ */
+export const setIsAppReady = (ready: boolean) => {
+  isAppReady = ready
   tryReleaseQueue()
 }
 
@@ -143,7 +153,7 @@ export function navigateToChat(initialChatInfo: InitialChatInfo) {
   }
 
   // 4. [Logger] 큐에 들어가는 상황(콜드스타트 등) 기록
-  if (!navigationRef.isReady() || !isSplashFinished) {
+  if (!navigationRef.isReady() || !isSplashFinished || !isAppReady) {
     logger.info('navigateToChat Queued (Waiting for App Setup)')
     queue.push(task)
     return
@@ -163,7 +173,7 @@ export function navigateByPush(routeName: 'users') {
       params: {screen: routeName},
     })
   }
-  if (!navigationRef.isReady() || !isSplashFinished) {
+  if (!navigationRef.isReady() || !isSplashFinished || !isAppReady) {
     queue.push(task)
     return
   }

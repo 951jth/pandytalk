@@ -65,8 +65,8 @@ describe('message.ts', () => {
       })
       expect(payload?.text).toBe('공백 제거 확인')
     })
-    it('길이 제한(2000자) 초과 시 에러', () => {
-      const longText = 'a'.repeat(2001)
+    it('길이 제한(5000자) 초과 시 에러', () => {
+      const longText = 'a'.repeat(5001)
       expect(() =>
         setChatMessagePayload({
           roomInfo: mockRoomInfo,
@@ -76,7 +76,7 @@ describe('message.ts', () => {
             text: longText,
           },
         }),
-      ).toThrow('메시지는 최대 2000자까지 입력 가능합니다.')
+      ).toThrow('메시지는 최대 5000자까지 입력 가능합니다.')
     })
     it('이미지 메세지 페이로드 생성', () => {
       const payload = setChatMessagePayload({
