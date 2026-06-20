@@ -11,7 +11,7 @@ import {useEffect} from 'react'
 import {
   setIsAppReady,
   setIsSplashFinished,
-} from '@app/navigation/rootNavigationService'
+} from '@app/navigation/navigationRef'
 
 /**
  * 앱 전역 설정을 총괄하는 최상위 부트스트랩 훅

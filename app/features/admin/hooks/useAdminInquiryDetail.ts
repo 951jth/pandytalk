@@ -1,26 +1,44 @@
-import {useState} from 'react'
-import {Alert, Linking} from 'react-native'
-import {RouteProp, useRoute} from '@react-navigation/native'
-import dayjs from 'dayjs'
-import {Timestamp} from '@react-native-firebase/firestore'
-import {useUpdateInquiryStatusMutation} from './useUpdateInquiryStatusMutation'
 import {AppRouteParamList} from '@app/shared/types/navigate'
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native'
+import {Timestamp} from '@react-native-firebase/firestore'
+import dayjs from 'dayjs'
+import {useEffect, useState} from 'react'
+import {Alert, Linking} from 'react-native'
+import {useAdminInquiryQuery} from './useAdminInquiryQuery'
+import {useDeleteInquiryMutation} from './useDeleteInquiryMutation'
+import {useUpdateInquiryStatusMutation} from './useUpdateInquiryStatusMutation'
 
 type AdminInquiryDetailRouteProp = RouteProp<AppRouteParamList, 'admin-inquiry-detail'>
 
 export const useAdminInquiryDetail = () => {
   const route = useRoute<AdminInquiryDetailRouteProp>()
-  const inquiry = route.params.inquiry
+  const navigation = useNavigation()
+  const inquiryId = route.params.inquiryId
+  const {
+    data: inquiry,
+    isLoading,
+    isError,
+    refetch,
+  } = useAdminInquiryQuery(inquiryId)
 
-  const {mutate: updateStatus, isPending} = useUpdateInquiryStatusMutation()
-  const [currentStatus, setCurrentStatus] = useState(inquiry.status)
+  const {mutateAsync: updateStatusAsync, isPending: isUpdating} =
+    useUpdateInquiryStatusMutation()
+  const {mutateAsync: deleteInquiryAsync, isPending: isDeleting} =
+    useDeleteInquiryMutation()
+  const [currentStatus, setCurrentStatus] = useState<string>()
+
+  useEffect(() => {
+    setCurrentStatus(inquiry?.status)
+  }, [inquiry?.status])
 
   const formattedDate =
-    inquiry.createdAt instanceof Timestamp
+    inquiry?.createdAt instanceof Timestamp
       ? dayjs(inquiry.createdAt.toDate()).format('YYYY.MM.DD HH:mm')
       : '-'
 
   const handleUpdateStatus = (newStatus: string) => {
+    if (!inquiry) return
+
     Alert.alert(
       '상태 변경',
       '문의 상태를 완료 처리하시겠습니까?',
@@ -28,19 +46,14 @@ export const useAdminInquiryDetail = () => {
         {text: '취소', style: 'cancel'},
         {
           text: '확인',
-          onPress: () => {
-            updateStatus(
-              {id: inquiry.id, status: newStatus},
-              {
-                onSuccess: () => {
-                  setCurrentStatus(newStatus)
-                  Alert.alert('성공', '상태가 변경되었습니다.')
-                },
-                onError: () => {
-                  Alert.alert('오류', '상태 변경 중 문제가 발생했습니다.')
-                },
-              },
-            )
+          onPress: async () => {
+            try {
+              await updateStatusAsync({id: inquiry.id, status: newStatus})
+              setCurrentStatus(newStatus)
+              Alert.alert('성공', '상태가 변경되었습니다.')
+            } catch {
+              Alert.alert('오류', '상태 변경 중 문제가 발생했습니다.')
+            }
           },
         },
       ],
@@ -49,7 +62,7 @@ export const useAdminInquiryDetail = () => {
   }
 
   const handleEmailPress = async () => {
-    if (!inquiry.email) return
+    if (!inquiry?.email) return
 
     const subject = encodeURIComponent(`[Pandytalk] 문의하신 내용에 대한 답변입니다.`)
     const body = encodeURIComponent(
@@ -69,15 +82,53 @@ export const useAdminInquiryDetail = () => {
     }
   }
 
+  const handleDelete = () => {
+    if (!inquiry) return
+
+    Alert.alert(
+      '문의 삭제',
+      '이 문의를 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.',
+      [
+        {text: '취소', style: 'cancel'},
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteInquiryAsync(inquiry.id)
+              Alert.alert('삭제 완료', '문의가 삭제되었습니다.', [
+                {text: '확인', onPress: () => navigation.goBack()},
+              ])
+            } catch (error) {
+              Alert.alert(
+                '삭제 실패',
+                error instanceof Error
+                  ? error.message
+                  : '문의 삭제 중 문제가 발생했습니다.',
+              )
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    )
+  }
+
   const isResolved = currentStatus === 'resolved' || currentStatus === 'done'
+  const isPending = isUpdating || isDeleting
 
   return {
     inquiry,
+    isLoading,
+    isError,
+    refetch,
     formattedDate,
     currentStatus,
     isResolved,
     isPending,
+    isDeleting,
     handleUpdateStatus,
     handleEmailPress,
+    handleDelete,
   }
 }

@@ -2,6 +2,7 @@ import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
 import React from 'react'
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,12 +15,42 @@ import {useAdminInquiryDetail} from '@app/features/admin/hooks/useAdminInquiryDe
 export default function AdminInquiryDetailScreen() {
   const {
     inquiry,
+    isLoading,
+    isError,
+    refetch,
     formattedDate,
     isResolved,
     isPending,
+    isDeleting,
     handleUpdateStatus,
     handleEmailPress,
+    handleDelete,
   } = useAdminInquiryDetail()
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title="문의 상세" />
+        <View style={styles.stateContainer}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      </View>
+    )
+  }
+
+  if (isError || !inquiry) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title="문의 상세" />
+        <View style={styles.stateContainer}>
+          <Text style={styles.stateText}>문의 정보를 불러올 수 없습니다.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -81,12 +112,28 @@ export default function AdminInquiryDetailScreen() {
         <TouchableOpacity
           style={[
             styles.actionButton,
+            styles.actionButtonDelete,
+            isPending && styles.actionButtonDisabled,
+          ]}
+          disabled={isPending}
+          onPress={handleDelete}>
+          <Text style={styles.actionButtonDeleteText}>
+            {isDeleting ? '삭제 중...' : '삭제'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.actionButton,
             isResolved ? styles.actionButtonDisabled : styles.actionButtonPrimary,
           ]}
           disabled={isResolved || isPending}
           onPress={() => handleUpdateStatus('resolved')}>
           <Text style={styles.actionButtonText}>
-            {isPending ? '처리중...' : isResolved ? '완료된 문의입니다' : '완료 처리'}
+            {isPending && !isDeleting
+              ? '처리중...'
+              : isResolved
+                ? '완료된 문의입니다'
+                : '완료 처리'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -102,6 +149,32 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 100, // 하단 바 공간 확보
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  stateText: {
+    fontSize: 14,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.textSecondary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    minWidth: 120,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primary,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontFamily: 'BMDOHYEON',
+    color: COLORS.white,
   },
   card: {
     backgroundColor: COLORS.white,
@@ -219,12 +292,25 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F1F3F5',
     paddingBottom: 32, // SafeArea 고려
+    flexDirection: 'row',
+    gap: 12,
   },
   actionButton: {
+    flex: 1,
     height: 56,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionButtonDelete: {
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: '#E03131',
+  },
+  actionButtonDeleteText: {
+    fontSize: 16,
+    fontFamily: 'BMDOHYEON',
+    color: '#E03131',
   },
   actionButtonPrimary: {
     backgroundColor: COLORS.primary,

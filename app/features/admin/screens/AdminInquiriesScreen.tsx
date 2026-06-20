@@ -20,7 +20,9 @@ function AdminInquiryItem({item}: {item: Inquiry}) {
     <PressableWrapper
       style={styles.card}
       borderRadius={28}
-      onPress={() => navigation.navigate('admin-inquiry-detail', {inquiry: item})}>
+      onPress={() =>
+        navigation.navigate('admin-inquiry-detail', {inquiryId: item.id})
+      }>
       <View style={styles.thumbnailSection}>
         <View style={styles.thumbnailCircle}>
           <Icon source="email-outline" size={30} color={COLORS.primary} />

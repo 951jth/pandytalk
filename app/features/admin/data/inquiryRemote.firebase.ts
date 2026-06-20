@@ -4,8 +4,10 @@ import {toPageResult} from '@app/shared/firebase/pagination'
 import type {FsSnapshot} from '@app/shared/types/firebase'
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
   limit,
   orderBy,
@@ -52,6 +54,21 @@ export const inquiryRemote = {
     return firebaseCall('inquiryRemote.updateInquiryStatus', async () => {
       const docRef = doc(firestore, 'inquiries', id)
       await updateDoc(docRef, {status})
+    })
+  },
+  deleteInquiry: (id: string) => {
+    return firebaseCall('inquiryRemote.deleteInquiry', async () => {
+      const docRef = doc(firestore, 'inquiries', id)
+      await deleteDoc(docRef)
+
+      // 로컬 캐시만 삭제되고 서버에서 거절되는 경우를 방지하기 위해 서버 기준으로 재확인
+      const snapshot = await getDocFromServer(docRef)
+      if (snapshot.exists()) {
+        throw {
+          code: 'firestore/permission-denied',
+          message: 'Missing or insufficient permissions.',
+        }
+      }
     })
   },
 }

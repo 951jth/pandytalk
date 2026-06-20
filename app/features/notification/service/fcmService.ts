@@ -6,9 +6,10 @@ import {auth} from '@app/shared/firebase/firestore'
 import {logger} from '@app/shared/services/logger'
 import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 import {
-  navigateByPush,
+  navigateToAdminInquiry,
   navigateToChat,
-} from '../../../navigation/rootNavigationService'
+  navigateToMainTab,
+} from '@app/navigation/navigationRef'
 
 export const fcmService = {
   /**
@@ -44,10 +45,14 @@ export const fcmService = {
         break
       case 'join-approve':
         console.log('🚀 [FCM] 가입 승인 알림 수신:', data)
-        navigateByPush('users') //가입 승인 알림은 홈 화면으로 이동
+        navigateToMainTab('users') //가입 승인 알림은 홈 화면으로 이동
+        break
+      case 'admin_inquiry':
+        console.log('🚀 [FCM] 문의 알림 수신:', data)
+        navigateToAdminInquiry(data.inquiryId as string | undefined)
         break
       default:
-        navigateByPush('users') //가입 승인 알림은 홈 화면으로 이동
+        navigateToMainTab('users') //가입 승인 알림은 홈 화면으로 이동
     }
   },
 

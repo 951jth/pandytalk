@@ -1,10 +1,10 @@
 /**
- * rootNavigationService.ts
+ * navigationRef.ts
  *
  * [목적]
- * 이 파일은 React 컴포넌트 외부(Service, FCM Listener, Axios Interceptor 등)에서
- * 앱의 내비게이션을 제어하기 위한 "Global Navigation Reference"를 관리합니다.
- * 화면을 렌더링하는 RootNavigator.tsx와 달리, 전역 이동 명령과 대기 큐만 담당합니다.
+ * React 컴포넌트 외부(FCM Listener, Service 등)에서
+ * 앱 내비게이션을 제어하기 위한 전역 NavigationContainer ref를 관리합니다.
+ * 화면을 렌더링하는 RootNavigator.tsx와 달리, ref·준비 상태 큐·명령형 이동만 담당합니다.
  *
  * [동작 원리]
  * 1. createNavigationContainerRef를 통해 전역 참조 객체(navigationRef)를 생성합니다.
@@ -15,11 +15,14 @@
 import {analytics} from '@app/shared/services/analytics'
 import {logger} from '@app/shared/services/logger'
 import type {
+  AppRouteParamList,
   InitialChatInfo,
   RootStackParamList,
+  TabParamList,
 } from '@app/shared/types/navigate'
 import {
   createNavigationContainerRef,
+  NavigatorScreenParams,
   StackActions,
 } from '@react-navigation/native'
 import BootSplash from 'react-native-bootsplash'
@@ -40,6 +43,16 @@ const tryReleaseQueue = () => {
     // 앱 내부 내비게이션 준비가 완료되면 큐 해방
     while (queue.length) queue.shift()?.()
   }
+}
+
+const runWhenNavigationReady = (task: () => void, logName?: string) => {
+  if (!navigationRef.isReady() || !isSplashFinished || !isAppReady) {
+    if (logName) logger.info(`${logName} Queued (Waiting for App Setup)`)
+    queue.push(task)
+    return
+  }
+
+  task()
 }
 
 /**
@@ -153,29 +166,50 @@ export function navigateToChat(initialChatInfo: InitialChatInfo) {
   }
 
   // 4. [Logger] 큐에 들어가는 상황(콜드스타트 등) 기록
-  if (!navigationRef.isReady() || !isSplashFinished || !isAppReady) {
-    logger.info('navigateToChat Queued (Waiting for App Setup)')
-    queue.push(task)
-    return
-  }
-
-  // 준비되었다면 즉시 실행
-  task()
+  runWhenNavigationReady(task, 'navigateToChat')
 }
 
 /**
- * 일반적인 페이지 이동 함수 (단순 이동용)
+ * 탭 화면 이동 함수 (단순 이동용)
  */
-export function navigateByPush(routeName: 'users') {
-  const task = () => {
+export function navigateToMainTab<RouteName extends keyof TabParamList>(
+  routeName: RouteName,
+  params?: TabParamList[RouteName],
+) {
+  runWhenNavigationReady(() => {
     navigationRef.navigate('app', {
       screen: 'main',
-      params: {screen: routeName},
+      params: {
+        screen: routeName,
+        params,
+      } as NavigatorScreenParams<TabParamList>,
     })
-  }
-  if (!navigationRef.isReady() || !isSplashFinished || !isAppReady) {
-    queue.push(task)
+  })
+}
+
+/**
+ * AppStack에 등록된 일반 화면 이동 함수
+ */
+export function navigateToAppScreen<RouteName extends keyof AppRouteParamList>(
+  routeName: RouteName,
+  params?: AppRouteParamList[RouteName],
+) {
+  runWhenNavigationReady(() => {
+    navigationRef.navigate('app', {
+      screen: routeName,
+      params,
+    } as never)
+  })
+}
+
+/**
+ * 문의 푸시/외부 진입용 이동 함수
+ */
+export function navigateToAdminInquiry(inquiryId?: string) {
+  if (!inquiryId) {
+    navigateToAppScreen('admin-inquiries')
     return
   }
-  task()
+
+  navigateToAppScreen('admin-inquiry-detail', {inquiryId})
 }
