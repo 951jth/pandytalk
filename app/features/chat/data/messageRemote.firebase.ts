@@ -73,21 +73,28 @@ export const messageRemote = {
     callback: (docs: ChatMessage[]) => void,
   ) => {
     if (!roomId) return () => {}
+    const PAGE_SIZE = 20
     const messagesRef = collection(firestore, 'chats', roomId, 'messages')
     const messageQuery = query(
       messagesRef,
-      orderBy('seq', 'asc'),
       where('seq', '>', lastSeq ?? 0),
+      orderBy('seq', 'desc'),
+      limit(PAGE_SIZE),
     )
 
     return firebaseObserver(
       `messageRemote.subscribeChatMessages_${roomId}`,
       messageQuery,
       snapshot => {
-      const newMessages = snapshot.docs.map(messageDoc => ({
-          id: messageDoc.id,
-          ...messageDoc.data(),
-        })) as ChatMessage[]
+        const newMessages = snapshot
+          .docChanges()
+          .filter(
+            change => change.type === 'added' || change.type === 'modified',
+          )
+          .map(change => ({
+            id: change.doc.id,
+            ...change.doc.data(),
+          })) as ChatMessage[]
         callback(newMessages)
       },
       error => {

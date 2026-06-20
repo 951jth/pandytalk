@@ -1,7 +1,7 @@
 import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
 import {useChatScroll} from '@app/features/chat/hooks/useChatScroll'
 import {useSubscribeChatMessages} from '@app/features/chat/hooks/useSubscribeChatMessages'
-import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages' // 신규 추가
+// import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages' // 신규 추가
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {User} from '@app/shared/types/auth'
 import type {ChatRoom} from '@app/shared/types/chat'
@@ -20,12 +20,9 @@ export const useChatMessageList = ({
   roomId, // 쿼리를 통해 알수있는 정보(구독전용)
   userId,
   roomInfo, // 실제 채팅방 정보 생성 확인
-  initialChatInfo,
 }: Props) => {
-  const serverLastSeq = roomInfo?.lastSeq ?? initialChatInfo?.lastSeq
-
   // 1. 최신 메시지 동기화 엔진 (포커스 시 작동)
-  useSyncChatMessages(roomId, serverLastSeq)
+  // 구독 snapshot limit 방식으로 전환하면서 자동 gap sync는 비활성화합니다.
 
   // 2. 채팅 목록 무한 스크롤 (로컬 우선 뷰어)
   const {data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage} =
@@ -72,7 +69,7 @@ export const useChatMessageList = ({
   useUpdateLastReadOnBlur(userId, roomInfo, messages)
 
   // 채팅 목록 구독
-  useSubscribeChatMessages(roomId, roomInfo) // 채팅방 구독설정
+  useSubscribeChatMessages(roomId) // 채팅방 구독설정
   // 채팅 메시지 스크롤
   const latestMessage = messages?.[0]
   const {flatListRef, isAtBottom, handleScroll, scrollToBottom} = useChatScroll(
