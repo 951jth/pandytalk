@@ -18,7 +18,7 @@ export const aiService = {
     item: ChatMessage
     onChunk: (text: string) => void
     onDone: () => void
-    onError: (error: any) => void
+    onError: (error: unknown) => void
   }) => {
     // 1. 필요한 경우 로컬 상태 기록 또는 전처리 진행 가능
 

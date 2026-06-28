@@ -4,6 +4,7 @@ import {notificationRemote} from '@app/features/notification/data/notificationRe
 import {userService} from '@app/features/user/service/userService'
 import {auth} from '@app/shared/firebase/firestore'
 import {logger} from '@app/shared/services/logger'
+import type {User} from '@app/shared/types/auth'
 import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 import {
   navigateToAdminInquiry,
@@ -85,8 +86,10 @@ export const fcmService = {
       const uid = currentUser.uid
 
       // 디버깅을 위해 현재 DB의 토큰 상태 조회 (읽기 비용 1회 발생)
-      const profile = await userService.getProfile(uid)
-      const existingTokens = (profile as any)?.fcmTokens || []
+      const profile = await userService.getProfile(uid) as
+        | (User & {fcmTokens?: string[]})
+        | null
+      const existingTokens = profile?.fcmTokens || []
       const token = await fcmRemote.getFcmToken()
 
       // Crashlytics 로깅

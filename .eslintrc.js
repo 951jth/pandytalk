@@ -31,6 +31,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn', // any 사용 시 에러 대신 경고만 표시
     'react-hooks/exhaustive-deps': 'warn', // useEffect 의존성 배열 누락 시 에러 대신 경고만
     'no-empty': 'warn', // 비어있는 catch 블록 등 허용하되 경고 표시
+    'react/no-unstable-nested-components': ['warn', {allowAsProps: true}],
     '@typescript-eslint/ban-ts-comment': 'off', // @ts-ignore 같은 TS 주석 사용 허용
     'react-native/no-inline-styles': 'off', // 인라인 스타일(<View style={{...}}>) 허용
 

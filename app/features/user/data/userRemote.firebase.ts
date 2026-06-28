@@ -21,6 +21,7 @@ import {
   updateDoc,
   where,
   deleteDoc,
+  type FirebaseFirestoreTypes,
 } from '@react-native-firebase/firestore'
 
 // ✅ updateDoc 전용
@@ -40,13 +41,18 @@ export const userRemote = {
   setProfile: (uid: string, payload: User) => {
     return firebaseCall('userRemote.setProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
-      await setDoc(userRef, payload as any, {merge: true})
+      await setDoc(userRef, payload as FirebaseFirestoreTypes.DocumentData, {
+        merge: true,
+      })
     })
   },
-  updateProfile: (uid: string, payload: Record<string, any>) => {
+  updateProfile: (uid: string, payload: UpdateInput<User>) => {
     return firebaseCall('userRemote.updateProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
-      await updateDoc(userRef, payload as any)
+      await updateDoc(
+        userRef,
+        payload as FirebaseFirestoreTypes.DocumentData,
+      )
     })
   },
   getProfile: (uid: string) => {
@@ -103,13 +109,14 @@ export const userRemote = {
   }: GetUsersParams) => {
     return firebaseCall('userRemote.getUsersPage', async () => {
       const usersRef = collection(firestore, 'users')
-      let filters: any[] = []
+      const filters: Array<ReturnType<typeof where> | ReturnType<typeof or>> =
+        []
 
       const isAdmin = authority === 'ADMIN'
 
       // 관리자가 아닐 때만 승인 여부 필터 적용 (관리자는 모두 볼 수 있음)
       if (!isAdmin && typeof isConfirmed === 'boolean') {
-        filters = [where('isConfirmed', '==', isConfirmed)]
+        filters.push(where('isConfirmed', '==', isConfirmed))
       }
 
       // 비관리자면: 그룹 아이디가 없으면 ADMIN만, 있으면 (내 그룹) OR (ADMIN) 조회

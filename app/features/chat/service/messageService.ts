@@ -8,6 +8,14 @@ export type SendMessageParams = {
   message: ChatMessage
 }
 
+const getErrorCode = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  typeof error.code === 'string'
+    ? error.code
+    : undefined
+
 export const messageService = {
   //채팅방 메세지 가져오기 By Seq(서버)
   getChatMessagesFromSeq: async (
@@ -142,16 +150,17 @@ export const messageService = {
       )
 
       return fetchedRoomId
-    } catch (e: any) {
+    } catch (e: unknown) {
       //SQLite에 실패상태로 저장
       if (fetchedRoomId && newMessageId) {
         messageLocal.updateMessageStatus(fetchedRoomId, newMessageId, 'failed')
       }
-      if (e?.code === 'permission-denied') {
+      const errorCode = getErrorCode(e)
+      if (errorCode === 'permission-denied') {
         throw new Error('메시지를 보낼 권한이 없습니다.')
       }
 
-      if (e?.code === 'unavailable') {
+      if (errorCode === 'unavailable') {
         throw new Error(
           '네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.',
         )

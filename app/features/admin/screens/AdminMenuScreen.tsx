@@ -8,7 +8,7 @@ import COLORS from '@app/shared/constants/color'
 import {AppRouteParamList} from '@app/shared/types/navigate'
 import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 
-type AppRouteName = Extract<keyof AppRouteParamList, string>
+type AppRouteName = 'guest-manage' | 'group-manage' | 'admin-inquiries'
 type MenuItem = {
   title: string
   path: AppRouteName
@@ -79,7 +79,7 @@ export default function AdminMenuScreen() {
   const navigation = useNavigation<AppNav>()
 
   const onPressMenu = (item: MenuItem) => {
-    navigation.navigate(item.path as any)
+    navigation.navigate(item.path)
   }
 
   return (

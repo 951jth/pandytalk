@@ -168,7 +168,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             })
             if (targetMessageId) processedMessageIds.delete(targetMessageId)
           },
-          onError: (err: any) => {
+          onError: (err: unknown) => {
             logAiPerf({
               scope: 'stream',
               event: 'streamError',
@@ -179,7 +179,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             setIsStreaming(false)
           },
         })
-      } catch (err: any) {
+      } catch (err: unknown) {
         logAiPerf({
           scope: 'stream',
           event: 'requestError',

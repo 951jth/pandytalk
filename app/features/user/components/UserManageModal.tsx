@@ -71,7 +71,7 @@ const ButtonsByType = {
 }
 
 type propTypes = Omit<React.ComponentProps<typeof Modal>, 'visible'> & {
-  open: boolean | any
+  open: boolean
   children?: React.ReactNode
   record?: User
   onComplete?: () => void

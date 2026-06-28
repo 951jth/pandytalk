@@ -9,6 +9,10 @@ import {ChatMessage} from '@app/shared/types/chat'
 import {toMillisFromServerTime} from '@app/shared/utils/firebase'
 import {Transaction} from 'react-native-sqlite-storage'
 
+type ChatMessageSqliteRow = Omit<ChatMessage, 'imageUrls'> & {
+  imageUrls?: string | string[]
+}
+
 export const messageLocal = {
   //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
@@ -210,15 +214,18 @@ export const messageLocal = {
             (_, result) => {
               const messages: ChatMessage[] = []
               for (let i = 0; i < result.rows.length; i++) {
-                const item = result.rows.item(i) as ChatMessage
-                if ((item as any).imageUrls) {
+                const item = result.rows.item(i) as ChatMessageSqliteRow
+                if (item.imageUrls) {
                   try {
-                    item.imageUrls = JSON.parse((item as any).imageUrls)
+                    item.imageUrls =
+                      typeof item.imageUrls === 'string'
+                        ? JSON.parse(item.imageUrls)
+                        : item.imageUrls
                   } catch (e) {
                     item.imageUrls = []
                   }
                 }
-                messages.push(item)
+                messages.push(item as ChatMessage)
               }
               resolve(messages)
             },

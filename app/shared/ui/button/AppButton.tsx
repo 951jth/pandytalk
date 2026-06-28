@@ -32,7 +32,7 @@ type AppButtonProps = PaperButtonProps & {
  * [타입 추출 원리]
  * 1. AppButtonProps['size']: 인덱스 액세스 타입으로 Props 인터페이스에서 특정 속성의 타입만 추출합니다.
  * 2. NonNullable<T>: 속성 정의 시 사용된 '?'(옵셔널)로 인해 포함된 'undefined'를 제거합니다.
- * 
+ *
  * [이점]
  * - '단일 진실 공급원': Props 정의만 수정하면 내부 맵(Record) 타입들이 자동으로 동기화됩니다.
  * - '엄격한 매핑': 아래의 sizeStyleMap 등에서 모든 케이스를 누락 없이 처리하도록 강제(Exhaustive Check)합니다.

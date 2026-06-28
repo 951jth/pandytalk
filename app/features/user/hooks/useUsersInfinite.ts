@@ -1,4 +1,5 @@
 import {userService} from '@app/features/user/service/userService'
+import type {FsSnapshot} from '@app/shared/types/firebase'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useInfiniteQuery} from '@tanstack/react-query'
 
@@ -18,7 +19,7 @@ export function useUsersInfinite(
       userInfo?.authority ?? null, // 권한 변경 시 캐시 분기
     ],
     enabled: !!userInfo, // 프로필 준비 후 실행,
-    queryFn: async ({pageParam}: {pageParam?: any}) => {
+    queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
       const {users, lastVisible, isLastPage} = await userService.getUsers({
         groupId,
         authority,

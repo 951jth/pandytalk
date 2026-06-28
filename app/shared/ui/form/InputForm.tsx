@@ -73,6 +73,7 @@ const DEFAULT_LAYOUT = {
   buttonStyle: {},
   buttonLabelStyle: {},
 } as const
+const DEFAULT_FORM_DATA = {}
 
 //row memoization
 const MemoizedFormRow = memo(InputRowRender)
@@ -81,7 +82,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   {
     // 1. 폼 엔진 (필수)
     items = [],
-    formData = {},
+    formData = DEFAULT_FORM_DATA,
     formKey, //폼 값 갱신(초기화값까지 갱신)
     // 2. 레이아웃 / 스타일 (선택)
     layout = DEFAULT_LAYOUT,
@@ -89,13 +90,13 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
     useBotton = false, //버튼 생성 유무
     buttonLabel = '저장', //컨펌 버튼 라벨
     loading = false, //컨펌 버튼 로딩
-    onSubmit = values => {},
+    onSubmit = _values => {},
     onReset,
     btnDisable = false,
     // 4. 확장 포인트
     topElement,
     bottomElement,
-    onFormChange = (key, value, meta) => {}, // 폼 변경 이벤트
+    onFormChange = (_key, _value, _meta) => {}, // 폼 변경 이벤트
   }: Props,
   ref,
 ) {
@@ -150,7 +151,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
       resetValues,
       updateSavePoint, // ✅ 외부 노출
     }),
-    [items, resetValues, updateSavePoint, validateAll],
+    [items, resetValues, setErrors, setFormValues, updateSavePoint, validateAll],
   )
 
   const memoizedChangeField = useCallback(

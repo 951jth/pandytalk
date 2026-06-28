@@ -9,6 +9,8 @@ import {
 } from '@react-native-firebase/auth'
 import {useEffect, useState} from 'react'
 
+const ALLOWED_ACCOUNT_STATUSES = ['confirm', 'pending'] as const
+
 /**
  * Firebase Auth 상태를 구독하고 루트 진입 상태를 결정하는 훅입니다.
  * 스플래시 표시 여부와 App/Auth 네비게이터 분기 기준을 제공합니다.
@@ -69,7 +71,6 @@ export function useAuthGate() {
 
   const hasAuthUser = !!fbUser?.uid
   const isUserInfoLoaded = !!userInfo?.uid
-  const allowedStatuses = ['confirm', 'pending']
 
   /**
    * [ Snappy Logic ]
@@ -88,7 +89,7 @@ export function useAuthGate() {
       hasAuthUser,
       isUserInfoLoaded,
       userInfo?.accountStatus,
-      allowedStatuses,
+      ALLOWED_ACCOUNT_STATUSES,
     )
 
     logAuthGateDecision({
@@ -117,7 +118,7 @@ function getAuthGateDecisionReason(
   hasAuthUser: boolean,
   isUserInfoLoaded: boolean,
   accountStatus?: string,
-  allowedStatuses: string[] = [],
+  allowedStatuses: readonly string[] = [],
 ): string {
   if (canEnterApp) return 'ready'
   if (!hasAuthUser) return 'firebase_user_null'

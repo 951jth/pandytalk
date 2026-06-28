@@ -82,7 +82,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
       const currentUid = auth.currentUser?.uid ?? undefined
 
       // 🔎 편집 여부 판정 (uid 우선, 없으면 id도 허용)
-      const targetId = (record as any)?.uid ?? (record as any)?.id
+      const targetId = record?.uid ?? record?.id
       const isEditing = !!targetId
 
       if (isEditing) {

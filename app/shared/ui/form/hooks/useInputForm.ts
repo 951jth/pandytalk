@@ -16,7 +16,7 @@ export function useInputForm(formData: object | null, formKey?: any) {
     savePoint.current = cloneDeep(formData ?? {})
     setFormValues(formData)
     setErrors({})
-  }, [formKey])
+  }, [formData, formKey])
 
   //필드 변경
   const changeField = useCallback(

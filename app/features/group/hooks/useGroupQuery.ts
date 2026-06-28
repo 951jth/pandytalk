@@ -1,4 +1,5 @@
 import {groupService} from '@app/features/group/service/groupService'
+import type {FsSnapshot} from '@app/shared/types/firebase'
 import type {Group} from '@app/shared/types/group'
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query'
 
@@ -20,7 +21,7 @@ export const useGroup = (groupId?: string | null) => {
 export function useGroupsInfinity(pageSize: number = DEFAULT_PAGE_SIZE) {
   return useInfiniteQuery({
     queryKey: ['groups', pageSize],
-    queryFn: async ({pageParam}: {pageParam?: any}) => {
+    queryFn: async ({pageParam}: {pageParam?: FsSnapshot}) => {
       try {
         const {data, lastVisible, isLastPage} =
           await groupService.getGroupsPaging(pageSize, pageParam)

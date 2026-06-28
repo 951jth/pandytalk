@@ -34,9 +34,9 @@ export const inquiryRemote = {
 
       const q = query(collection(firestore, 'inquiries'), ...constraints)
       const snapshot = await getDocs(q)
-      return toPageResult(snapshot.docs, pageSize, doc => ({
-        id: doc.id,
-        ...doc.data(),
+      return toPageResult(snapshot.docs, pageSize, inquiryDoc => ({
+        id: inquiryDoc.id,
+        ...inquiryDoc.data(),
       }))
     })
   },

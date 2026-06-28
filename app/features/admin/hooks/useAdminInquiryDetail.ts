@@ -64,7 +64,7 @@ export const useAdminInquiryDetail = () => {
   const handleEmailPress = async () => {
     if (!inquiry?.email) return
 
-    const subject = encodeURIComponent(`[Pandytalk] 문의하신 내용에 대한 답변입니다.`)
+    const subject = encodeURIComponent('[Pandytalk] 문의하신 내용에 대한 답변입니다.')
     const body = encodeURIComponent(
       `안녕하세요.\n\n문의하신 내용에 대한 답변을 드립니다.\n\n\n\n---\n[원본 문의 내용]\n${inquiry.message || ''}`,
     )

@@ -10,6 +10,14 @@ import type {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {serverTimestamp} from '@react-native-firebase/firestore'
 import {Alert} from 'react-native'
 
+const getErrorCode = (error: unknown) =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  typeof error.code === 'string'
+    ? error.code
+    : undefined
+
 export const userService = {
   //프로필 생성
   setProfile: async (
@@ -104,8 +112,8 @@ export const userService = {
 
       // Auth 삭제가 성공하면 onAuthUserDeleted Functions 트리거가 프로필/이미지/멤버십 정리를 처리합니다.
       await userRemote.deleteUser(user)
-    } catch (err: any) {
-      if (err.code === 'auth/requires-recent-login') {
+    } catch (err: unknown) {
+      if (getErrorCode(err) === 'auth/requires-recent-login') {
         Alert.alert(
           '보안 인증 필요',
           '개인정보 보호를 위해 다시 로그인하신 후 탈퇴를 진행해 주세요.',

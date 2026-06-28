@@ -3,7 +3,7 @@ import COLORS from '@app/shared/constants/color'
 import {TabParamList} from '@app/shared/types/navigate'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import {StyleSheet} from 'react-native'
 import {Icon} from 'react-native-paper'
 import {ActionTabButton} from '../features/app/components/ActionTabBarButton'
 
@@ -12,6 +12,21 @@ const EmptyScreen = () => null
 
 /** 탭바 기본 높이 */
 const TAB_BAR_HEIGHT = 64
+
+type TabBarIconProps = {
+  focused: boolean
+  color: string
+}
+
+const createTabBarIcon =
+  (icon?: string) =>
+  ({focused, color}: TabBarIconProps) => (
+    <Icon
+      source={icon ?? 'help-circle-outline'}
+      color={color}
+      size={focused ? 26 : 24}
+    />
+  )
 
 export default function TabScreenNavigator(): React.JSX.Element {
   const tabs = useTabScreens()
@@ -22,19 +37,14 @@ export default function TabScreenNavigator(): React.JSX.Element {
         const currentRoute = tabs.find(r => r.name === route.name)
         return {
           headerShown: false,
-          tabBarIcon: ({focused, color}) => (
-            <Icon
-              source={currentRoute?.icon ?? 'help-circle-outline'}
-              color={color}
-              size={focused ? 26 : 24}
-            />
-          ),
+          tabBarIcon: createTabBarIcon(currentRoute?.icon),
           tabBarActiveTintColor: COLORS.primary,
           tabBarInactiveTintColor: COLORS.textSecondary,
           tabBarShowLabel: true,
           tabBarLabelStyle: styles.tabBarLabel,
           tabBarItemStyle: {justifyContent: 'center'}, // 중앙 정렬 명시
           tabBarStyle: styles.tabBar,
+          sceneStyle: styles.screenContainer,
         }
       }}>
       {tabs.map(route => {
@@ -45,25 +55,20 @@ export default function TabScreenNavigator(): React.JSX.Element {
             <Tab.Screen
               key={route.name}
               name={route.name}
+              component={EmptyScreen}
               options={{
                 title: route.title ?? route.name,
-                tabBarButton: btnProps => (
-                  <ActionTabButton
-                    {...btnProps}
-                    name={route.name}
-                    disabled={route.disabled}
-                    target={route.path}
-                    params={params}
-                    BadgeComponent={route.badge}
-                  />
-                ),
-              }}>
-              {() => (
-                <View style={styles.screenContainer}>
-                  <EmptyScreen />
-                </View>
-              )}
-            </Tab.Screen>
+                tabBarButton: btnProps =>
+                  React.createElement(ActionTabButton, {
+                    ...btnProps,
+                    name: route.name,
+                    disabled: route.disabled,
+                    target: route.path,
+                    params,
+                    BadgeComponent: route.badge,
+                  }),
+              }}
+            />
           )
         }
 
@@ -73,24 +78,19 @@ export default function TabScreenNavigator(): React.JSX.Element {
           <Tab.Screen
             key={route.name}
             name={route.name}
+            component={ScreenComponent}
             initialParams={params}
             options={{
               title: route.title ?? route.name,
-              tabBarButton: btnProps => (
-                <ActionTabButton
-                  {...btnProps}
-                  name={route.name}
-                  disabled={route.disabled}
-                  BadgeComponent={route.badge}
-                />
-              ),
-            }}>
-            {() => (
-              <View style={styles.screenContainer}>
-                <ScreenComponent />
-              </View>
-            )}
-          </Tab.Screen>
+              tabBarButton: btnProps =>
+                React.createElement(ActionTabButton, {
+                  ...btnProps,
+                  name: route.name,
+                  disabled: route.disabled,
+                  BadgeComponent: route.badge,
+                }),
+            }}
+          />
         )
       })}
     </Tab.Navigator>
