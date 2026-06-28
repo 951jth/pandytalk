@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import type {FormItem} from '../types/form'
+import type {FormItem, FormValue} from '../types/form'
 
 //악성 스크립트 검사
 export const containsMaliciousScript = (value: string) => {
@@ -73,12 +73,12 @@ export const isValidKoreanPhoneNumber = (phone: string) => {
   )
 }
 
-export const isEmpty = (v: any) =>
+export const isEmpty = (v: unknown) =>
   v === null || v === undefined || (typeof v === 'string' && v.trim() === '')
 
 export const validateField = (
   formItem: FormItem,
-  value: string,
+  value: FormValue,
   allValues: object | null,
 ) => {
   const {required, validation, children} = formItem
@@ -89,7 +89,7 @@ export const validateField = (
   }
 
   // 2. XSS 검사
-  if (containsMaliciousScript(value)) {
+  if (containsMaliciousScript(String(value ?? ''))) {
     return '유효하지 않은 스크립트가 포함되어 있습니다.'
   }
 
@@ -108,7 +108,7 @@ export const validateField = (
     }
     // ✅ custom 함수 검사
     if (typeof validation.customFn === 'function') {
-      const result = validation.customFn(value, allValues)
+      const result = validation.customFn(String(value ?? ''), allValues)
       if (result !== true) {
         return result || validation.message || '유효하지 않은 값입니다.'
       }
@@ -122,10 +122,10 @@ export const validateAllFields = (
   formItems: FormItem[],
   formValues: object,
 ) => {
-  const newErrors: any = {}
+  const newErrors: Record<string, string> = {}
   //데이터 값 검사
   formItems.forEach(item => {
-    const value = _.get(formValues, item.key, '')
+    const value = _.get(formValues, item.key, '') as FormValue
     const error = validateField(item, value, formValues)
     if (error) {
       newErrors[item.key] = error

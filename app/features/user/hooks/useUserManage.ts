@@ -63,7 +63,7 @@ export const useUserManage = ({record, onComplete}: UseUserManageParams) => {
     try {
       if (!status) return
       setLoadingStatus(status)
-      const formValues = formRef?.current?.getValues() as User
+      const formValues = formRef?.current?.getValues() as unknown as User
       const photoURL = (await profileRef?.current?.upload()) ?? ''
       if (currentAdminUid)
         await userService.updateUserStatus(currentAdminUid, status, {

@@ -13,7 +13,11 @@ import React, {
 } from 'react'
 import {StyleProp, StyleSheet, TextStyle, View, ViewStyle} from 'react-native'
 import {IconButton} from 'react-native-paper'
-import {type FormItem} from '../../types/form'
+import {type FormItem, type FormValue} from '../../types/form'
+
+type BivariantCallback<T> = {
+  bivarianceHack(value: T): void
+}['bivarianceHack']
 import {AppButton} from '../button/AppButton'
 
 export type layoutType = {
@@ -31,30 +35,30 @@ interface Props {
   // 1. 폼 엔진 (필수)
   items: FormItem[]
   formData?: object | null
-  formKey?: any
+  formKey?: unknown
   // 2. 레이아웃 / 스타일 (선택)
   layout?: layoutType
   // 3. 액션 / 버튼 (선택)
   useBotton?: boolean
   buttonLabel?: string
   loading?: boolean
-  onSubmit?: (value: any) => void
+  onSubmit?: BivariantCallback<object | null>
   onReset?: () => void
   btnDisable?: boolean
   // 4. 확장 포인트
   topElement?: React.JSX.Element
   bottomElement?: React.JSX.Element
-  onFormChange?: (key: string, value: string | number, meta: object) => any
+  onFormChange?: (key: string, value: FormValue, meta: unknown) => void
 }
 
 // 🔗 외부에서 사용할 ref 타입
 export interface InputFormRef {
   /** 현재 formValues를 깊은 복사로 반환 */
-  getValues: () => Record<string, any>
+  getValues: () => Record<string, unknown>
   /** formValues를 통째로 교체 (기존 값 덮어씀) */
-  setValues: (next: Record<string, any> | null | undefined) => void
+  setValues: (next: Record<string, unknown> | null | undefined) => void
   /** formValues 일부만 갱신 (merge) */
-  updateValues: (patch: Partial<Record<string, any>>) => void
+  updateValues: (patch: Partial<Record<string, unknown>>) => void
   // formValues 폼데이터 입력값 초기화
   resetValues: () => void
   /** 현재 값을 새로운 세이브포인트로 갱신 */
@@ -100,7 +104,9 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   }: Props,
   ref,
 ) {
-  const valuesRef = useRef<object>(formData)
+  const valuesRef = useRef<Record<string, unknown>>(
+    formData ? {...formData} : {},
+  )
   const {
     formValues,
     setFormValues,
@@ -132,7 +138,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   }, [layout])
 
   useEffect(() => {
-    valuesRef.current = formValues as object
+    valuesRef.current = formValues ? {...formValues} : {}
   }, [formValues])
 
   // ✅ 외부로 노출할 메서드들
@@ -155,7 +161,7 @@ const InputForm = forwardRef<InputFormRef, Props>(function InputForm(
   )
 
   const memoizedChangeField = useCallback(
-    (key: string, val: string | object | null, item: FormItem) =>
+    (key: string, val: FormValue, item: FormItem) =>
       changeField(key, val, item),
     [changeField],
   )

@@ -1,4 +1,4 @@
-import {FormItem} from '@app/shared/types/form'
+import {FormItem, type FormValue} from '@app/shared/types/form'
 import {
   hasAnyError,
   validateAllFields,
@@ -7,7 +7,7 @@ import {
 import {cloneDeep} from 'lodash'
 import {useCallback, useEffect, useRef, useState} from 'react'
 
-export function useInputForm(formData: object | null, formKey?: any) {
+export function useInputForm(formData: object | null, formKey?: unknown) {
   const [formValues, setFormValues] = useState<object | null>(formData) //폼 값
   const [errors, setErrors] = useState<Record<string, string | undefined>>({}) // 에러메시지 표기
   const savePoint = useRef(formData)
@@ -20,7 +20,7 @@ export function useInputForm(formData: object | null, formKey?: any) {
 
   //필드 변경
   const changeField = useCallback(
-    (key: string, val: string | any, item: FormItem) => {
+    (key: string, val: FormValue, item: FormItem) => {
       setFormValues(old => {
         const next = {...(old ?? {}), [key]: val}
         // 실시간 단일 필드 검증
@@ -50,7 +50,7 @@ export function useInputForm(formData: object | null, formKey?: any) {
   const validateAll = (items: FormItem[]) => {
     const errorsFields = validateAllFields(
       items,
-      (formValues ?? {}) as Record<string, any>,
+      formValues ?? {},
     )
     setErrors(errorsFields)
     if (hasAnyError(errorsFields)) return false

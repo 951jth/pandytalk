@@ -13,7 +13,7 @@ jest.mock('@tanstack/react-query', () => ({
 }))
 jest.mock('@app/shared/hooks/usePerformanceMeasure', () => ({
   usePerformanceMeasure: () => ({
-    measureAsync: (tag: string, fn: any) => fn(),
+    measureAsync: (_tag: string, fn: () => unknown) => fn(),
   }),
 }))
 

@@ -49,7 +49,10 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
         label: '그룹장',
         // required: true,
         render: (value, onChange) => (
-          <UserSelect value={value} onChange={onChange} />
+          <UserSelect
+            value={typeof value === 'string' ? value : null}
+            onChange={onChange}
+          />
         ),
       },
       {
@@ -69,7 +72,9 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
       {
         key: 'createdAt',
         label: '생성일',
-        render: value => <Text>{formatServerDate(value as ServerTime)}</Text>,
+        render: value => (
+          <Text>{formatServerDate(value as unknown as ServerTime)}</Text>
+        ),
       },
     ],
     [],

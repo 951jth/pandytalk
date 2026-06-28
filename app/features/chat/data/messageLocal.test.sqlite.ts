@@ -7,7 +7,7 @@ import {
 } from '@app/features/chat/data/messages.schema'
 import {db, makeInsertSql} from '@app/shared/sqlite/sqlite'
 import {sqliteCall} from '@app/shared/sqlite/sqliteCall'
-import type {Transaction} from 'react-native-sqlite-storage'
+import type {SQLError, Transaction} from 'react-native-sqlite-storage'
 
 export type TargetOldVersion = 1 | 2
 
@@ -21,7 +21,10 @@ export const messageLocalTest = {
             `PRAGMA user_version = ${version};`,
             [],
             () => resolve(),
-            (_: any, err: any) => (reject(err), true),
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
           )
         })
       })
@@ -35,9 +38,8 @@ export const messageLocalTest = {
       return new Promise<void>((resolve, reject) => {
         const now = Date.now()
 
-        const onSqlError = (tx: any, err: any) => {
+        const onSqlError = (_tx: Transaction, err: SQLError) => {
           reject(err)
-          console.log(tx?.message)
           return true
         }
 

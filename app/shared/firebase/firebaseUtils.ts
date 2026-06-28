@@ -27,7 +27,7 @@ export const firebaseCall = async <T>(
     console.groupEnd()
 
     return result
-  } catch (error: any) {
+  } catch (error: unknown) {
     // ❌ 실패 시: 아이콘(🔥)을 맨 앞으로 배치
     const duration = Date.now() - startTime
     const expected = isExpectedError(error)
@@ -36,7 +36,7 @@ export const firebaseCall = async <T>(
     console.group(`🔥 [Firestore/Call] ❌ ${logName} (${duration}ms)`)
     if (expected) {
       console.log('Reason: Data might not exist yet or permission denied.')
-      console.log('Original Error:', error.message)
+      console.log('Original Error:', error instanceof Error ? error.message : String(error))
     } else {
       logger.error(`[Firestore/Call] ${logName} failed`, error)
     }
@@ -107,7 +107,7 @@ export const firebaseObserver = (
 
       onNext(snapshot)
     },
-    (error: any) => {
+    (error: Error) => {
       // 3. [Error] 에러는 중요하니까 원본 이름 노출 (혹은 줄여도 됨)
       const isExpected = isExpectedError(error)
 
@@ -150,7 +150,7 @@ export const firebaseRefObserver = (
   logName: string,
   ref: FirebaseFirestoreTypes.DocumentReference,
   onNext: (snapshot: FirebaseFirestoreTypes.DocumentSnapshot) => void,
-  onError?: (error: any) => void,
+  onError?: (error: Error) => void,
 ): (() => void) => {
   const options = {includeMetadataChanges: true}
 

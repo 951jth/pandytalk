@@ -3,6 +3,14 @@ import {
   setChatMessagePayload,
 } from '@app/features/chat/utils/message'
 import {mockMessages, mockRoomInfo, mockUser} from '@app/shared/test/mocks'
+import type {ChatMessage} from '@app/shared/types/chat'
+import type {InfiniteData} from '@tanstack/react-query'
+
+type MessagePage = {
+  data: ChatMessage[]
+  lastVisible: unknown | null
+  isLastPage: boolean
+}
 
 jest.mock('@app/features/chat/data/messageRemote.firebase', () => ({
   messageRemote: {
@@ -134,9 +142,13 @@ describe('message.ts', () => {
     })
 
     it('마지막이 아닌 페이지는 isLastPage가 false여야 한다.', () => {
+      const emptyPages: InfiniteData<MessagePage> = {
+        pages: [],
+        pageParams: [],
+      }
       const {pages} = rebuildMessagePages(
         mockMessages(45),
-        {pages: [], pageParams: []} as any,
+        emptyPages,
         20,
       )
 

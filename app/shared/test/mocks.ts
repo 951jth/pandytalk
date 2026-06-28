@@ -11,14 +11,14 @@ export const mockUser: User = {
   intro: '안녕하세요',
   photoURL: 'https://example.com/avatar.jpg',
   accountStatus: 'confirm',
-  createdAt: {seconds: Date.now() / 1000, nanoseconds: 0} as any,
+  createdAt: Date.now(),
 }
 
 export const mockRoomInfo: ChatRoom = {
   id: 'room_1',
   name: '테스트방',
   type: 'group',
-  createdAt: Date.now() as any,
+  createdAt: Date.now() as unknown as ChatRoom['createdAt'],
 }
 
 export const mockMessage: ChatMessage = {

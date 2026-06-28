@@ -102,7 +102,10 @@ export const updateUserItems: FormItem[] = [
     required: true,
     render: (value, onChange) => (
       // <Select options={groupOptions} value={value} onChange={onChange} />
-      <GroupSelect value={value} onChange={onChange} />
+      <GroupSelect
+        value={typeof value === 'string' ? value : null}
+        onChange={onChange}
+      />
     ),
   },
   {

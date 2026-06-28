@@ -1,16 +1,16 @@
 // InputForm.tsx (교체용: ref + useImperativeHandle 추가)
 import {layoutType} from '@app/shared/ui/form/InputForm'
-import React, {Fragment} from 'react'
+import React, {Fragment, type ReactNode} from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'
-import {type FormItem} from '../../types/form'
+import {type FormItem, type FormValue} from '../../types/form'
 
 type inputRowType = {
   item: FormItem
-  value: any
+  value: FormValue
   layout: layoutType
-  changeField: (key: string, val: string, item: FormItem) => void
-  onFormChange?: (key: string, val: string, meta: any) => void
+  changeField: (key: string, val: FormValue, item: FormItem) => void
+  onFormChange?: (key: string, val: FormValue, meta: unknown) => void
   errMsg?: string
 }
 
@@ -33,11 +33,11 @@ const InputRowRender = ({
     labelStyle,
     contentsStyle,
   } = layout
-  let InnerContents = <></>
+  let InnerContents: ReactNode = null
 
   switch (type) {
     case 'custom':
-      InnerContents = render?.(value as string, (val: any) => {
+      InnerContents = render?.(value, (val: FormValue) => {
         changeField(key, val, item)
         onFormChange?.(key, val, meta)
       })
@@ -61,7 +61,7 @@ const InputRowRender = ({
                 {item?.contents}
               </Text>
             ) : (
-              render?.(value as string, (val: any) => {
+              render?.(value, (val: FormValue) => {
                 changeField(key, val, item)
                 onFormChange?.(key, val, meta)
               })

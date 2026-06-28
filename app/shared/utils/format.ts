@@ -23,16 +23,18 @@
 //   return `${period}:${hour}`
 // }
 
-export function removeEmpty<T extends Record<string, any>>(
-  obj: T,
-): {
+type NonEmptyRecord<T extends Record<string, unknown>> = {
   [K in keyof T as T[K] extends null | undefined ? never : K]: T[K]
-} {
+}
+
+export function removeEmpty<T extends Record<string, unknown>>(
+  obj: T,
+): NonEmptyRecord<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(
       ([_, value]) => value !== null && value !== undefined,
     ),
-  ) as any
+  ) as unknown as NonEmptyRecord<T>
 }
 
-export const toStr = (v: any) => (v == null ? '' : String(v))
+export const toStr = (v: unknown) => (v == null ? '' : String(v))
