@@ -1,5 +1,22 @@
 import {User} from '@app/shared/types/auth'
 import {ChatMessage, ChatRoom} from '@app/shared/types/chat'
+import type {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
+
+const mockTimestamp = (ms: number): FirebaseFirestoreTypes.Timestamp => {
+  const seconds = Math.floor(ms / 1000)
+  const nanoseconds = (ms % 1000) * 1_000_000
+
+  return {
+    seconds,
+    nanoseconds,
+    toMillis: () => ms,
+    toDate: () => new Date(ms),
+    toJSON: () => ({seconds, nanoseconds}),
+    valueOf: () => `${seconds}.${String(nanoseconds).padStart(9, '0')}`,
+    isEqual: other =>
+      other.seconds === seconds && other.nanoseconds === nanoseconds,
+  }
+}
 
 export const mockUser: User = {
   uid: 'user_1',
@@ -18,7 +35,7 @@ export const mockRoomInfo: ChatRoom = {
   id: 'room_1',
   name: '테스트방',
   type: 'group',
-  createdAt: Date.now() as unknown as ChatRoom['createdAt'],
+  createdAt: mockTimestamp(Date.now()),
 }
 
 export const mockMessage: ChatMessage = {
