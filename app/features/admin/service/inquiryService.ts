@@ -1,5 +1,5 @@
 import {inquiryRemote} from '@app/features/admin/data/inquiryRemote.firebase'
-import type {FsSnapshot} from '@app/shared/types/firebase'
+import type {GetInquiriesParams} from '@app/features/admin/data/inquiryRemote.firebase'
 import type {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 
 export interface Inquiry {
@@ -10,11 +10,6 @@ export interface Inquiry {
   message: string
   status: string
   createdAt?: FirebaseFirestoreTypes.Timestamp | null
-}
-
-export type GetInquiriesParams = {
-  pageSize?: number
-  pageParam?: FsSnapshot
 }
 
 export const inquiryService = {
