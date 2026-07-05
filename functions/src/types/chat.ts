@@ -4,12 +4,6 @@ export type MessageStatus = 'streaming' | 'success' | 'failed' | 'pending'
 
 export type ServerTime = FieldValue | Timestamp
 
-export const CHAT_MESSAGE_TYPES = ['text', 'image', 'file', 'ai_text'] as const
-export type ChatMessageType = (typeof CHAT_MESSAGE_TYPES)[number]
-
-export const CHAT_ROOM_TYPES = ['dm', 'group', 'ai'] as const
-export type ChatRoomType = (typeof CHAT_ROOM_TYPES)[number]
-
 export type AiRecentMessageRole = 'user' | 'assistant'
 
 export interface AiTextContentPart {
@@ -44,7 +38,7 @@ export interface ChatRoomLastMessage {
   text?: string
   prompt?: string
   mentionerId?: string
-  type?: ChatMessageType
+  type?: ChatMessage['type']
   imageUrl?: string
   imageUrls?: string[]
   createdAt?: number
@@ -63,7 +57,7 @@ export interface ChatMessage {
   text?: string
   prompt?: string
   mentionerId?: string
-  type: ChatMessageType
+  type: 'text' | 'image' | 'file' | 'ai_text'
   imageUrl?: string
   imageUrls?: string[]
   createdAt: number
@@ -78,7 +72,7 @@ export interface ChatMessage {
 
 export interface ChatRoom {
   id: string
-  type: ChatRoomType
+  type: 'dm' | 'group' | 'ai'
   createdAt: ServerTime
   members?: string[]
   name?: string

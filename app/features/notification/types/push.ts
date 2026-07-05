@@ -1,8 +1,6 @@
 import type {
   ChatMessage,
-  ChatMessageType,
   ChatRoom,
-  ChatRoomType,
 } from '@app/shared/types/chat'
 
 export const PUSH_TYPES = ['chat', 'admin_inquiry', 'join_approve'] as const
@@ -18,13 +16,13 @@ export type PushChatPayload = {
   id: ChatMessage['id']
   chatId: ChatRoom['id']
   text: string
-  type: ChatMessageType | ''
+  type: ChatMessage['type'] | ''
   senderId: ChatMessage['senderId']
   senderName: string
   senderPicURL?: string
   imageUrl?: string
   createdAt?: ChatMessage['createdAt']
-  chatType: ChatRoomType
+  chatType: ChatRoom['type']
   roomName?: ChatRoom['name']
   roomImage?: ChatRoom['image']
   lastSeq?: ChatRoom['lastSeq']
