@@ -7,7 +7,7 @@ import ChatMessageItem, {
 } from '@features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
-import type {InitialChatInfo} from '@shared/types/navigate'
+import type {InitialChatInfo} from '@app/navigation/types'
 
 type Props = {
   roomId: string | null

@@ -1,4 +1,4 @@
-import {AppRouteParamList} from '@app/shared/types/navigate'
+import {AppRouteParamList} from '@app/navigation/types'
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native'
 import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'

@@ -1,6 +1,6 @@
 import {authService} from '@app/features/auth/service/authService'
 import {analytics} from '@app/shared/services/analytics'
-import {AuthStackParamList} from '@app/shared/types/navigate'
+import {AuthStackParamList} from '@app/navigation/types'
 import {validateField} from '@app/shared/utils/validation'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'

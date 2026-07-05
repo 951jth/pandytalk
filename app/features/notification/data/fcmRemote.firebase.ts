@@ -1,3 +1,4 @@
+// 토큰 저장/삭제만. 푸시 종류 추가 시 보통 변경 없음
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore, messaging} from '@app/shared/firebase/firestore'
 import {

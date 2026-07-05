@@ -11,7 +11,7 @@ import TabScreenNavigator from '@app/navigation/TabScreenNavigator'
 import type {
   AppRouteParamList,
   AuthStackParamList,
-} from '@app/shared/types/navigate'
+} from '@app/navigation/types'
 import type {NativeStackNavigationOptions} from '@react-navigation/native-stack'
 import React from 'react'
 

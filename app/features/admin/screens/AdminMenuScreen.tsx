@@ -5,7 +5,7 @@ import {FlatList, StyleSheet, Text, View} from 'react-native'
 import {Icon} from 'react-native-paper'
 
 import COLORS from '@app/shared/constants/color'
-import {AppRouteParamList} from '@app/shared/types/navigate'
+import {AppRouteParamList} from '@app/navigation/types'
 import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 
 type AppRouteName = 'guest-manage' | 'group-manage' | 'admin-inquiries'

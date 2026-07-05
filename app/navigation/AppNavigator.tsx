@@ -1,5 +1,5 @@
 import {appRoutes, initialRouteName} from '@app/navigation/useScreens'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
+import type {AppRouteParamList} from '@app/navigation/types'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 // import {navigate} from '@app/navigation/navigationRef'

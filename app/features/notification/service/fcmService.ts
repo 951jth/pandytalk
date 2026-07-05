@@ -1,59 +1,49 @@
-// features/notification/service/fcmService.ts
+// 푸시 종류 추가 시: handleMessageNavigation (네비 분기)
 import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
+import {
+  parsePushPayload,
+  toFcmDataPayload,
+  toInitialChatInfo,
+} from '@app/features/notification/types/push'
 import {userService} from '@app/features/user/service/userService'
-import {auth} from '@app/shared/firebase/firestore'
-import {logger} from '@app/shared/services/logger'
-import type {User} from '@app/shared/types/auth'
-import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 import {
   navigateToAdminInquiry,
   navigateToChat,
   navigateToMainTab,
 } from '@app/navigation/navigationRef'
+import {auth} from '@app/shared/firebase/firestore'
+import {logger} from '@app/shared/services/logger'
+import type {User} from '@app/shared/types/auth'
+import type {FirebaseMessagingTypes} from '@react-native-firebase/messaging'
 
 export const fcmService = {
-  /**
-   */
   handleMessageNavigation(
     remoteMessage: FirebaseMessagingTypes.RemoteMessage | null,
   ) {
     if (!remoteMessage) return
+    //data.pushType에 맞춰서 data payload를 파싱
+    const payload = parsePushPayload(toFcmDataPayload(remoteMessage.data))
+    if (!payload) {
+      navigateToMainTab('users')
+      return
+    }
 
-    const data = remoteMessage.data
-    const actualChatId = (data?.chatId || data?.roomId) as string
-
-    switch (data?.pushType) {
+    switch (payload.pushType) {
       case 'chat':
-        console.log('🚀 [FCM] 채팅 화면으로 이동:', data)
-        if (actualChatId) {
-          const chatType = data.chatType === 'group' ? 'group' : 'dm'
-          navigateToChat({
-            id: actualChatId,
-            type: chatType,
-            title:
-              chatType === 'group'
-                ? (data.roomName as string)
-                : (data.senderName as string),
-            image:
-              chatType === 'group'
-                ? (data.roomImage as string)
-                : (data.senderPicURL as string),
-            targetId: data.senderId as string,
-            lastSeq: data.lastSeq ? Number(data.lastSeq) : undefined,
-          })
-        }
+        console.log('🚀 [FCM] 채팅 화면으로 이동:', payload)
+        navigateToChat(toInitialChatInfo(payload))
         break
-      case 'join-approve':
-        console.log('🚀 [FCM] 가입 승인 알림 수신:', data)
-        navigateToMainTab('users') //가입 승인 알림은 홈 화면으로 이동
+      case 'join_approve':
+        console.log('🚀 [FCM] 가입 승인 알림 수신:', payload)
+        navigateToMainTab('users')
         break
       case 'admin_inquiry':
-        console.log('🚀 [FCM] 문의 알림 수신:', data)
-        navigateToAdminInquiry(data.inquiryId as string | undefined)
+        console.log('🚀 [FCM] 문의 알림 수신:', payload)
+        navigateToAdminInquiry(
+          payload.inquiryId ? payload.inquiryId : undefined,
+        )
         break
-      default:
-        navigateToMainTab('users') //가입 승인 알림은 홈 화면으로 이동
     }
   },
 

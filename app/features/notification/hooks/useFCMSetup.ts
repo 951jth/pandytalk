@@ -1,3 +1,4 @@
+// 푸시 종류 추가 시 보통 변경 없음 (notificationService.registerDevice 호출만)
 import {notificationService} from '@app/features/notification/service/notificationService'
 import {auth} from '@app/shared/firebase/firestore'
 import {

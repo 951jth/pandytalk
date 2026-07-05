@@ -1,6 +1,6 @@
 import COLORS from '@app/shared/constants/color'
 import type {ChatItemWithMemberInfo} from '@app/shared/types/chat'
-import type {TabParamList} from '@app/shared/types/navigate'
+import type {TabParamList} from '@app/navigation/types'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
 import ChatListSkeleton from '@app/features/chat/components/ChatListSkeleton'

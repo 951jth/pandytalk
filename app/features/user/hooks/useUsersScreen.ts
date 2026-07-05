@@ -1,5 +1,5 @@
 import {useUsersInfinite} from '@app/features/user/hooks/useUsersInfinite'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
+import type {AppRouteParamList} from '@app/navigation/types'
 import {getDMChatId} from '@app/shared/utils/chat'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useNavigation} from '@react-navigation/native'

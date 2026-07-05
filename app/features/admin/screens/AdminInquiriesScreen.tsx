@@ -9,7 +9,7 @@ import {ActivityIndicator, FlatList, StyleSheet, Text, View} from 'react-native'
 import {Icon} from 'react-native-paper'
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
+import type {AppRouteParamList} from '@app/navigation/types'
 import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
 
 function AdminInquiryItem({item}: {item: Inquiry}) {

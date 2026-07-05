@@ -1,3 +1,4 @@
+// 권한·알림 탭 이벤트. 푸시 종류 추가 시 보통 변경 없음
 import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {messaging} from '@app/shared/firebase/firestore'
 import {

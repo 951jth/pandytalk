@@ -19,7 +19,7 @@ import type {
   InitialChatInfo,
   RootStackParamList,
   TabParamList,
-} from '@app/shared/types/navigate'
+} from '@app/navigation/types'
 import {
   createNavigationContainerRef,
   NavigatorScreenParams,

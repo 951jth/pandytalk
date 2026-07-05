@@ -6,7 +6,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {ReactNode} from 'react'
 import {StyleProp, StyleSheet, TextStyle, View, ViewStyle} from 'react-native'
 import {IconButton, Text} from 'react-native-paper'
-import type {RootStackParamList} from '../shared/types/navigate'
+import type {RootStackParamList} from '@app/navigation/types'
 
 interface propTypes {
   title?: string

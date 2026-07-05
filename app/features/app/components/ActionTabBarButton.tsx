@@ -12,7 +12,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native'
-import type {AppRouteParamList} from '../../../shared/types/navigate'
+import type {AppRouteParamList} from '@app/navigation/types'
 
 type AppNav = NativeStackNavigationProp<AppRouteParamList>
 

@@ -1,23 +1,6 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
-import type {ChatRoom} from './chat'
-
-type InitialChatInfoBase = {
-  id: string
-  title?: string
-  image?: string | null
-  lastSeq?: number
-}
-
-export type InitialDmChatInfo = InitialChatInfoBase & {
-  type: 'dm' | 'ai'
-  targetId: string
-}
-
-export type InitialGroupChatInfo = InitialChatInfoBase & {
-  type: 'group'
-}
-
-export type InitialChatInfo = InitialDmChatInfo | InitialGroupChatInfo
+import type {ChatRoom} from '@app/shared/types/chat'
+import type {InitialDmChatInfo, InitialGroupChatInfo} from './initialChat'
 
 export type TabParamList = {
   users: undefined
@@ -48,7 +31,6 @@ export type AppRouteParamList = {
     inquiryId: string
   }
   harness: undefined
-  'user-select': undefined
 }
 
 export type RootStackParamList = {

@@ -1,6 +1,6 @@
 import {useChatRoomInfo} from '@app/features/chat/hooks/useChatRoomInfo'
 import {useGroup} from '@app/features/group/hooks/useGroupQuery'
-import type {AppRouteParamList} from '@app/shared/types/navigate'
+import type {AppRouteParamList} from '@app/navigation/types'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useRoute, type RouteProp} from '@react-navigation/native'
 import {useMemo} from 'react'

@@ -1,3 +1,4 @@
+// 푸시 발송 대상 등록만 필요할 때: registerDevice
 import {fcmRemote} from '@app/features/notification/data/fcmRemote.firebase'
 import {notificationRemote} from '@app/features/notification/data/notificationRemote.firebase'
 

@@ -1,6 +1,6 @@
 import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
-import {TabParamList} from '@app/shared/types/navigate'
+import {TabParamList} from '@app/navigation/types'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {StyleSheet} from 'react-native'

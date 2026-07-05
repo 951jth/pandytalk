@@ -2,7 +2,7 @@
 import {useChatWithMembersInfo} from '@app/features/chat/hooks/useChatWithMembersInfo'
 import {useMyChatListInfinite} from '@app/features/chat/hooks/useMyChatListInfinite'
 import {ChatItemWithMemberInfo, ChatRoom} from '@app/shared/types/chat'
-import {AppRouteParamList} from '@app/shared/types/navigate'
+import {AppRouteParamList} from '@app/navigation/types'
 import {useNavigation} from '@react-navigation/native'
 import {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import {debounce} from 'lodash'

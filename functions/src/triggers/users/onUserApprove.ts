@@ -43,6 +43,9 @@ export const onUserApprove = onDocumentUpdated(
           title: '계정 승인 완료',
           body: '축하합니다! 귀하의 계정이 승인되었습니다.',
         },
+        android: {
+          priority: 'high',
+        },
         apns: {
           headers: {'apns-priority': '10'},
           payload: {
@@ -54,6 +57,9 @@ export const onUserApprove = onDocumentUpdated(
               sound: 'default',
             },
           },
+        },
+        data: {
+          pushType: 'join_approve',
         },
       }
 

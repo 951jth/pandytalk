@@ -6,7 +6,7 @@
 
 import {useRootAppSetup} from '@app/bootstrap/useRootAppSetup'
 import COLORS from '@app/shared/constants/color'
-import type {RootStackParamList} from '@app/shared/types/navigate'
+import type {RootStackParamList} from '@app/navigation/types'
 import {createNativeStackNavigator} from '@react-navigation/native-stack'
 import React from 'react'
 import {StatusBar} from 'react-native'

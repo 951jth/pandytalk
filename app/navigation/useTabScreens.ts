@@ -10,7 +10,7 @@ import type {
   AppRouteParamList,
   InitialGroupChatInfo,
   TabParamList,
-} from '../shared/types/navigate'
+} from '@app/navigation/types'
 
 /**
  * 탭 설정의 공통 필드.
