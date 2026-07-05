@@ -3,8 +3,7 @@ import {User} from '@app/shared/types/auth'
 import OnlineBadge from '@app/shared/ui/badge/OnlineBadge'
 import ColorChip from '@app/shared/ui/chip/ColorChip'
 import PressableWrapper from '@app/shared/ui/common/PressableWrapper'
-import {Timestamp} from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
+import {formatServerDate} from '@app/shared/utils/format'
 import React from 'react'
 import {Image, StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native'
 import {Icon} from 'react-native-paper'
@@ -23,9 +22,10 @@ export default function UserManageItem({
   style,
   onPress = () => {},
 }: UserManageItemProps) {
-  const formattedDate = item?.createdAt instanceof Timestamp
-    ? dayjs(item?.createdAt?.toDate()).format('YYYY.MM.DD')
-    : '-'
+  const formattedDate =
+    typeof item?.createdAt === 'number'
+      ? formatServerDate(item.createdAt, 'YYYY.MM.DD')
+      : '-'
 
   return (
     <PressableWrapper

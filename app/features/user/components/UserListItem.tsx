@@ -1,4 +1,3 @@
-import {Timestamp} from '@react-native-firebase/firestore'
 import React from 'react'
 import {
   Pressable,
@@ -30,14 +29,11 @@ export default function UserListItem({
   style,
   onPress = () => {},
 }: UserListItemProps) {
-  const lastSeen =
-    item?.lastSeen instanceof Timestamp
-      ? item?.lastSeen?.toDate()
-      : item?.lastSeen
+  const lastSeen = typeof item?.lastSeen === 'number' ? item.lastSeen : null
 
   const isOnline = !!(
     item?.status === 'online' &&
-    (lastSeen ? dayjs().diff(dayjs(Number(lastSeen)), 'minute') < 15 : true)
+    (lastSeen ? dayjs().diff(dayjs(lastSeen), 'minute') < 15 : true)
   )
 
   return (
@@ -70,7 +66,7 @@ export default function UserListItem({
           <View style={styles.contentsRow}>
             <Text style={styles.name}>{item?.displayName}</Text>
             <Text style={styles.lastSeen}>
-              {lastSeen ? dayjs(Number(lastSeen)).fromNow() : ''}
+              {lastSeen ? dayjs(lastSeen).fromNow() : ''}
             </Text>
           </View>
           <Text style={styles.introduce} numberOfLines={1} ellipsizeMode="tail">
