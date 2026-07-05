@@ -4,7 +4,8 @@ import {
   Timestamp,
 } from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
-import type {ChatRoom, ServerTime} from '../types/chat'
+import type {ChatRoom} from '../types/chat'
+import type {ServerTime} from '../types/firebase'
 
 // Timestamp/number → ms number 로 통일
 export const toMillis = (

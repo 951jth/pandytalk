@@ -1,7 +1,7 @@
 import COLORS from '@app/shared/constants/color'
 import {terms} from '@app/shared/constants/terms'
 import {termType} from '@app/features/auth/types/term'
-import {ServerTime} from '@app/shared/types/chat'
+import {ServerTime} from '@app/shared/types/firebase'
 import {serverTimestamp} from '@react-native-firebase/firestore'
 import React, {useMemo, useState} from 'react'
 import {StyleSheet, Text, View} from 'react-native'
