@@ -11,27 +11,33 @@ import {
   type PushType,
 } from '@app/features/notification/types/push'
 import {
-  CHAT_MESSAGE_TYPES,
-  CHAT_ROOM_TYPES,
-  type ChatMessageType,
-  type ChatRoomType,
+  type ChatMessage,
+  type ChatRoom,
 } from '@app/shared/types/chat'
+
+const CHAT_MESSAGE_TYPES: readonly ChatMessage['type'][] = [
+  'text',
+  'image',
+  'file',
+  'ai_text',
+]
+const CHAT_ROOM_TYPES: readonly ChatRoom['type'][] = ['dm', 'group', 'ai']
 
 function normalizePushType(raw: string): PushType | null {
   return PUSH_TYPES.includes(raw as PushType) ? (raw as PushType) : null
 }
 
-function parseChatRoomType(raw?: string): ChatRoomType {
-  if (CHAT_ROOM_TYPES.includes(raw as ChatRoomType)) {
-    return raw as ChatRoomType
+function parseChatRoomType(raw?: string): ChatRoom['type'] {
+  if (CHAT_ROOM_TYPES.includes(raw as ChatRoom['type'])) {
+    return raw as ChatRoom['type']
   }
   return 'dm'
 }
 
-function parseChatMessageType(raw?: string): ChatMessageType | '' {
+function parseChatMessageType(raw?: string): ChatMessage['type'] | '' {
   if (!raw) return ''
-  return CHAT_MESSAGE_TYPES.includes(raw as ChatMessageType)
-    ? (raw as ChatMessageType)
+  return CHAT_MESSAGE_TYPES.includes(raw as ChatMessage['type'])
+    ? (raw as ChatMessage['type'])
     : ''
 }
 
