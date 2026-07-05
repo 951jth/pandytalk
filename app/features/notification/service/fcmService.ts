@@ -5,7 +5,7 @@ import {
   parsePushPayload,
   toFcmDataPayload,
   toInitialChatInfo,
-} from '@app/features/notification/types/push'
+} from '@app/features/notification/utils/push'
 import {userService} from '@app/features/user/service/userService'
 import {
   navigateToAdminInquiry,
