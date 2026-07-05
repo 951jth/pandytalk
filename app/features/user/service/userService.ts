@@ -21,6 +21,8 @@ const getErrorCode = (error: unknown) =>
     ? error.code
     : undefined
 
+const toUser = (data: unknown) => convertTimestampsToMillis(data) as User
+
 export const userService = {
   //프로필 생성
   setProfile: async (
@@ -59,10 +61,7 @@ export const userService = {
   //프로필 가져오기
   getProfile: async (uid: string) => {
     const data = await userRemote.getProfile(uid)
-    const timestampConverted = convertTimestampsToMillis(data) //timestamp를 클라이언트 포맷으로
-    return {
-      ...timestampConverted,
-    } as User
+    return toUser(data) //timestamp를 클라이언트 포맷으로
   },
   //유저 정보 수정(어드민)
   updateUserStatus: async (
@@ -156,7 +155,7 @@ export const userService = {
     })
 
     return {
-      users: items,
+      users: items.map(toUser),
       lastVisible: nextPageParam,
       isLastPage: !hasNext,
     }
@@ -171,6 +170,6 @@ export const userService = {
     }
     const promises = chunks?.map(chunk => userRemote.getUsersByIds(chunk))
     const results = await Promise.all(promises)
-    return results?.flat()
+    return results?.flat().map(toUser)
   },
 }
