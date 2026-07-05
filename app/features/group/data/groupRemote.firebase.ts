@@ -2,7 +2,7 @@ import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
 import type {FsSnapshot} from '@app/shared/types/firebase'
-import type {Group} from '@app/shared/types/group'
+import type {Group} from '@app/features/group/types/group'
 import {
   collection,
   doc,

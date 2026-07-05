@@ -1,4 +1,3 @@
-// cacheResetTypes.ts
 export type CacheResetScope = 'all' | 'rooms' | 'messages' | 'room'
 
 export type CacheResetOp = {

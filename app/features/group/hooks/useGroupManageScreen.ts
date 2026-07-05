@@ -1,5 +1,5 @@
 import {useAllGroups} from '@app/features/group/hooks/useGroupQuery'
-import {Group} from '@app/shared/types/group'
+import {Group} from '@app/features/group/types/group'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useState} from 'react'
 

@@ -1,5 +1,5 @@
 import COLORS from '@app/shared/constants/color'
-import {Group} from '@app/shared/types/group'
+import {Group} from '@app/features/group/types/group'
 import {Timestamp} from '@react-native-firebase/firestore'
 import dayjs from 'dayjs'
 import React from 'react'

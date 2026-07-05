@@ -1,6 +1,6 @@
 import {groupService} from '@app/features/group/service/groupService'
 import type {FsSnapshot} from '@app/shared/types/firebase'
-import type {Group} from '@app/shared/types/group'
+import type {Group} from '@app/features/group/types/group'
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query'
 
 const DEFAULT_PAGE_SIZE = 20
