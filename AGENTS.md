@@ -11,3 +11,6 @@ Important encoding rule:
 - Never treat mojibake in terminal output as file corruption.
 - Do not delete, rewrite, normalize, or replace Korean comments or strings unless the user explicitly asks for that change.
 
+Commit message rule:
+
+- Write commit messages in Korean.
