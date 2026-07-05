@@ -1,7 +1,7 @@
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'
-import {formatServerDate} from '@app/shared/utils/firebase'
+import {formatServerDate} from '@app/shared/utils/format'
 import {ServerTime} from '@app/shared/types/firebase'
 
 interface ChatDateSeparatorProps {

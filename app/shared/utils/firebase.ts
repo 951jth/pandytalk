@@ -1,11 +1,11 @@
 import {FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {
   FirebaseFirestoreTypes,
+  serverTimestamp,
   Timestamp,
 } from '@react-native-firebase/firestore'
-import dayjs from 'dayjs'
 import type {ChatRoom} from '../types/chat'
-import type {ServerTime} from '../types/firebase'
+import type {ServerTimestampField} from '../types/firebase'
 
 // Timestamp/number → ms number 로 통일
 export const toMillis = (
@@ -18,6 +18,28 @@ export const toMillis = (
 // // ms number → Firestore Timestamp
 export const toTimestamp = (ms: number) =>
   FirebaseFirestoreTypes.Timestamp.fromMillis(ms)
+
+export const withServerTimestamps = <
+  T extends object,
+  TField extends string = string,
+>(
+  payload: T,
+  fields: ServerTimestampField<TField>[],
+) => {
+  if (!fields.length) return payload
+
+  const nowTime = serverTimestamp()
+  return fields.reduce(
+    (acc, field) => ({
+      ...acc,
+      [field]: nowTime,
+    }),
+    {...payload} as T &
+      Partial<
+        Record<ServerTimestampField<TField>, FirebaseFirestoreTypes.FieldValue>
+      >,
+  )
+}
 
 type TimestampLike = {
   toMillis?: () => number
@@ -132,32 +154,10 @@ export function msToTs(ms?: number | null) {
   return Timestamp.fromMillis(fixed)
 }
 
-/** '오전 3:45' 형태로 포맷 (serverTimestamp 미확정이면 '') */
-export const formatChatTime = (
-  timestamp: ServerTime | number | null | undefined,
-): string => {
-  const ms = toMillisFromServerTime(timestamp)
-  if (ms == null) return ''
-  const d = dayjs(ms)
-  const period = d.hour() < 12 ? '오전' : '오후'
-  const hhmm = d.format('h:mm')
-  return `${period} ${hhmm}`
-}
-
 export function sortKey(item: ChatRoom): number {
   // lastMessageAt을 쓰는 경우(권장) 여기에 넣어두면 됨.
   const roomTime = toMillisFromServerTime(item.lastMessageAt ?? item.createdAt)
   return roomTime ?? toMillis(item.lastMessage?.createdAt)
-}
-
-/** 서버타임스탬프를 원하는 포맷으로 ('YYYY년 MM월 DD일 dddd') */
-export const formatServerDate = (
-  ts: ServerTime | number | null | undefined,
-  fmt = 'YYYY년 MM월 DD일 dddd',
-): string => {
-  const ms = typeof ts === 'number' ? ts : toMillisFromServerTime(ts)
-  if (ms == null) return '' // 미확정이면 빈 문자열
-  return dayjs(ms).format(fmt)
 }
 
 // any → RNFirebase Timestamp 로 정규화

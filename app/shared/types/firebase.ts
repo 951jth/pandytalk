@@ -4,6 +4,8 @@ export type ServerTime =
   | FirebaseFirestoreTypes.FieldValue
   | FirebaseFirestoreTypes.Timestamp
 
+export type ServerTimestampField<TField extends string = string> = TField
+
 export type FsSnapshot =
   FirebaseFirestoreTypes.QueryDocumentSnapshot<FirebaseFirestoreTypes.DocumentData>
 
