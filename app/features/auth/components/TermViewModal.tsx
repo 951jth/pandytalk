@@ -1,6 +1,6 @@
 import COLORS from '@app/shared/constants/color'
 import {terms} from '@app/shared/constants/terms'
-import {termType} from '@app/shared/types/auth'
+import {termType} from '@app/features/auth/types/term'
 import {AppButton} from '@app/shared/ui/button/AppButton'
 import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import React from 'react'

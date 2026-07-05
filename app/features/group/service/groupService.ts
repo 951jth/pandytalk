@@ -1,6 +1,6 @@
 import {groupRemote} from '@app/features/group/data/groupRemote.firebase'
 import type {FsSnapshot} from '@app/shared/types/firebase'
-import type {Group} from '@app/shared/types/group'
+import type {Group} from '@app/features/group/types/group'
 
 export const groupService = {
   getAllGroups: async (batchSize: number) => {

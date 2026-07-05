@@ -3,7 +3,8 @@ import {
   type GetUsersParams,
 } from '@app/features/user/data/userRemote.firebase'
 import {auth} from '@app/shared/firebase/firestore'
-import {type User, type UserJoinRequest} from '@app/shared/types/auth'
+import {type UserJoinRequest} from '@app/features/user/types/user'
+import {type User} from '@app/shared/types/auth'
 import type {UpdateInput} from '@app/shared/types/firebase'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import type {FirebaseAuthTypes} from '@react-native-firebase/auth'

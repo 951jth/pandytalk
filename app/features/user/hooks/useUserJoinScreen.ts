@@ -5,7 +5,7 @@ import {
   checkRequiredTerm,
   defaultTermsRecord,
 } from '@app/shared/constants/terms'
-import type {UserJoinRequest} from '@app/shared/types/auth'
+import type {UserJoinRequest} from '@app/features/user/types/user'
 import {InputFormRef} from '@app/shared/ui/form/InputForm'
 import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {handleFirebaseJoinError} from '@app/shared/utils/logger'

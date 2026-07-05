@@ -4,7 +4,7 @@ import {
   firebaseRefObserver,
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
-import {CacheResetOp} from '@app/shared/types/cache'
+import {CacheResetOp} from '@app/features/app/types/cache'
 
 import {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 

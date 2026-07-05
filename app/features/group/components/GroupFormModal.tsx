@@ -1,4 +1,4 @@
-import {Group} from '@app/shared/types/group'
+import {Group} from '@app/features/group/types/group'
 import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
 import React from 'react'
 import GroupForm from './GroupForm'
