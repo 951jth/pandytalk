@@ -2,9 +2,14 @@ import {firebaseCall} from '@app/shared/firebase/firebaseUtils'
 import {ADMIN_DELETE_USER_URL} from '@app/shared/constants/functions'
 import {auth, firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
+import {withServerTimestamps} from '@app/shared/utils/firebase'
 import {type UserJoinRequest} from '@app/features/user/types/user'
 import {type User} from '@app/shared/types/auth'
-import {type FsSnapshot, UpdateInput} from '@app/shared/types/firebase'
+import {
+  type FsSnapshot,
+  type ServerTimestampField,
+  UpdateInput,
+} from '@app/shared/types/firebase'
 import {deleteUser, FirebaseAuthTypes} from '@react-native-firebase/auth'
 import {
   collection,
@@ -39,20 +44,33 @@ export type GetUsersParams = {
 }
 
 export const userRemote = {
-  setProfile: (uid: string, payload: User) => {
+  setProfile: (
+    uid: string,
+    payload: Omit<User, 'createdAt' | 'updatedAt' | 'lastSeen'>,
+  ) => {
     return firebaseCall('userRemote.setProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
-      await setDoc(userRef, payload as FirebaseFirestoreTypes.DocumentData, {
+      const profile = withServerTimestamps(payload, [
+        'createdAt',
+        'updatedAt',
+        'lastSeen',
+      ])
+      await setDoc(userRef, profile as FirebaseFirestoreTypes.DocumentData, {
         merge: true,
       })
     })
   },
-  updateProfile: (uid: string, payload: UpdateInput<User>) => {
+  updateProfile: (
+    uid: string,
+    payload: UpdateInput<User>,
+    serverTimeFields: ServerTimestampField[] = [],
+  ) => {
     return firebaseCall('userRemote.updateProfile', async () => {
       const userRef = doc(firestore, 'users', uid)
+      const profile = withServerTimestamps(payload, serverTimeFields)
       await updateDoc(
         userRef,
-        payload as FirebaseFirestoreTypes.DocumentData,
+        profile as FirebaseFirestoreTypes.DocumentData,
       )
     })
   },

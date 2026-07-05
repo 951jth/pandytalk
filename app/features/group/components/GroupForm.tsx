@@ -15,7 +15,7 @@ import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/features/group/types/group'
 import AppInput from '@app/shared/ui/input/AppInput'
 import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
-import {formatServerDate} from '../../../shared/utils/firebase'
+import {formatServerDate} from '../../../shared/utils/format'
 import UserSelect from '../../user/components/UserSelect'
 
 type propTypes = {

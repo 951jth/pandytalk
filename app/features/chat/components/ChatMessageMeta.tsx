@@ -2,7 +2,7 @@ import ChatMessageStatusIcons from '@app/features/chat/components/ChatMessageSta
 import {useChatMessageDeleteMutation} from '@app/features/chat/hooks/useChatMessageDeleteMutation'
 import {useChatMessageUpsertMutation} from '@app/features/chat/hooks/useChatMessageUpsertMutation'
 import type {ChatMessage} from '@app/shared/types/chat'
-import {formatChatTime} from '@app/shared/utils/firebase'
+import {formatChatTime} from '@app/shared/utils/format'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {Text} from 'react-native-paper'

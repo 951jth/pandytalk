@@ -5,10 +5,12 @@ import {
 import {auth} from '@app/shared/firebase/firestore'
 import {type UserJoinRequest} from '@app/features/user/types/user'
 import {type User} from '@app/shared/types/auth'
-import type {UpdateInput} from '@app/shared/types/firebase'
+import type {
+  ServerTimestampField,
+  UpdateInput,
+} from '@app/shared/types/firebase'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import type {FirebaseAuthTypes} from '@react-native-firebase/auth'
-import {serverTimestamp} from '@react-native-firebase/firestore'
 import {Alert} from 'react-native'
 
 const getErrorCode = (error: unknown) =>
@@ -25,7 +27,6 @@ export const userService = {
     cred: FirebaseAuthTypes.UserCredential,
     {displayName, note, intro, photoURL}: UserJoinRequest,
   ) => {
-    const nowTime = serverTimestamp()
     const payload = {
       uid: cred.user.uid,
       email: cred?.user?.email,
@@ -39,10 +40,7 @@ export const userService = {
       accountStatus: 'pending', // 'pending' | 'confirm' | 'reject'
       emailVerified: cred.user.emailVerified ?? false,
       isConfirmed: false,
-      createdAt: nowTime,
-      updatedAt: nowTime,
-      lastSeen: nowTime,
-    } as User
+    } as Omit<User, 'createdAt' | 'updatedAt' | 'lastSeen'>
 
     await userRemote.setProfile(cred.user.uid, payload)
   },
@@ -56,8 +54,7 @@ export const userService = {
   },
   //마지막 활동 기록 및 상태 갱신
   updateLastSeen: async (uid: string, status: User['status'] = 'online') => {
-    const lastSeen = serverTimestamp()
-    await userRemote.updateProfile(uid, {lastSeen, status})
+    await userRemote.updateProfile(uid, {status}, ['lastSeen'])
   },
   //프로필 가져오기
   getProfile: async (uid: string) => {
@@ -73,7 +70,6 @@ export const userService = {
     status: User['accountStatus'],
     formValues: User,
   ) => {
-    const nowTime = serverTimestamp()
     if (!formValues?.uid) return
     if (!currentAdminUid) return
 
@@ -81,8 +77,6 @@ export const userService = {
     const payload: Partial<User> = {
       accountStatus: status,
       isConfirmed: status === 'confirm',
-      updatedAt: nowTime,
-      lastSeen: nowTime,
       note: (formValues.note ?? '').trim(),
       intro: (formValues.intro ?? '').trim(),
       displayName: formValues.displayName,
@@ -90,14 +84,19 @@ export const userService = {
       photoURL: formValues.photoURL,
     }
 
+    const serverTimeFields: ServerTimestampField[] = [
+      'updatedAt',
+      'lastSeen',
+    ]
+
     if (status === 'confirm') {
-      payload.approvedAt = nowTime
       payload.approvedBy = currentAdminUid
+      serverTimeFields.push('approvedAt')
     } else if (status === 'reject') {
-      payload.rejectedAt = nowTime
       payload.rejectedBy = currentAdminUid
+      serverTimeFields.push('rejectedAt')
     }
-    await userRemote.updateProfile(formValues?.uid, payload)
+    await userRemote.updateProfile(formValues?.uid, payload, serverTimeFields)
   },
   deleteMyAccount: async () => {
     const user = auth.currentUser
