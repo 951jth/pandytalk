@@ -1,5 +1,5 @@
-import type {FirebaseFirestoreTypes} from '@react-native-firebase/firestore'
 import type {User} from './auth'
+import type {ServerTime} from './firebase'
 
 import {AI_BOT_ID, AI_BOT_NAME} from '../constants/ai'
 
@@ -8,10 +8,6 @@ export const PANDY_AI_BOT = {
   name: AI_BOT_NAME,
 }
 
-export type ServerTime =
-  | FirebaseFirestoreTypes.FieldValue
-  | FirebaseFirestoreTypes.Timestamp
-  
 export const CHAT_MESSAGE_TYPES = ['text', 'image', 'file', 'ai_text'] as const
 export type ChatMessageType = (typeof CHAT_MESSAGE_TYPES)[number]
 

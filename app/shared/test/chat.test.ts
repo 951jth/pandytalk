@@ -1,4 +1,5 @@
-import type {ChatMessage, ChatRoom, ServerTime} from '@app/shared/types/chat'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
+import type {ServerTime} from '@app/shared/types/firebase'
 import {compareChat} from '@app/shared/utils/chat'
 
 const chat = (params: Partial<ChatRoom>): ChatRoom =>

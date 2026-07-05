@@ -10,7 +10,7 @@ import {auth, firestore} from '../../../shared/firebase/firestore'
 import InputForm from '../../../shared/ui/form/InputForm'
 
 import COLORS from '@app/shared/constants/color'
-import {ServerTime} from '@app/shared/types/chat'
+import {ServerTime} from '@app/shared/types/firebase'
 import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/features/group/types/group'
 import AppInput from '@app/shared/ui/input/AppInput'

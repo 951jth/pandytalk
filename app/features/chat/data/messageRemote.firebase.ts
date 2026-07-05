@@ -4,7 +4,8 @@ import {
 } from '@app/shared/firebase/firebaseUtils'
 import {firestore} from '@app/shared/firebase/firestore'
 import {toPageResult} from '@app/shared/firebase/pagination'
-import type {ChatMessage, ServerTime} from '@app/shared/types/chat'
+import type {ChatMessage} from '@app/shared/types/chat'
+import type {ServerTime} from '@app/shared/types/firebase'
 import {AI_IMAGE_LIMIT} from '@shared/constants/chat'
 import {
   collection,
