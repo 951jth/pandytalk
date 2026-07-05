@@ -1,5 +1,5 @@
 import COLORS from '@app/shared/constants/color'
-import type {ChatItemWithMemberInfo} from '@app/shared/types/chat'
+import type {ChatItemWithMemberInfo} from '@app/features/chat/types/chat'
 import type {TabParamList} from '@app/navigation/types'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'

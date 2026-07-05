@@ -5,7 +5,7 @@ import FastImage from 'react-native-fast-image'
 import {Icon} from 'react-native-paper'
 
 import COLORS from '@shared/constants/color'
-import {ChatItemWithMemberInfo} from '@shared/types/chat'
+import {ChatItemWithMemberInfo} from '@app/features/chat/types/chat'
 import PressableWrapper from '@shared/ui/common/PressableWrapper'
 import {toMillisFromServerTime} from '@shared/utils/firebase'
 

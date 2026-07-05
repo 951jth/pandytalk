@@ -1,6 +1,7 @@
 import {userService} from '@app/features/user/service/userService'
 import {User} from '@app/shared/types/auth'
-import {ChatItemWithMemberInfo, ChatRoom} from '@app/shared/types/chat'
+import {ChatItemWithMemberInfo} from '@app/features/chat/types/chat'
+import {ChatRoom} from '@app/shared/types/chat'
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
 type UserInfosById = Record<string, User>

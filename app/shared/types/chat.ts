@@ -37,21 +37,6 @@ export interface ChatMessage {
   skipPush?: boolean
 }
 
-export type ChatMessagesWithUiType = ChatMessage & {
-  hideProfile?: boolean
-  hideMinute?: boolean
-  hideDate?: boolean
-}
-
-export interface ChatMemberDoc {
-  uid: string // 문서 ID와 동일하게 두되, 필드에도 보관(쿼리용)
-  role?: 'ADMIN' | 'MEMBER'
-  joinedAt?: FirebaseFirestoreTypes.Timestamp | null
-  lastReadSeq: number
-  lastReadAt?: FirebaseFirestoreTypes.Timestamp | null
-  mute?: boolean
-}
-
 export interface ChatRoom {
   id: string
   type: ChatRoomType
@@ -70,5 +55,3 @@ export interface ChatRoom {
   lastSeq?: number
   recentMessages?: {role: 'user' | 'assistant'; content: string}[]
 }
-
-export type ChatItemWithMemberInfo = ChatRoom & {findMember: User}
