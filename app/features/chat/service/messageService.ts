@@ -1,5 +1,8 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {messageRemote} from '@app/features/chat/data/messageRemote.firebase'
+import {
+  messageRemote,
+  type SendChatMessageResult,
+} from '@app/features/chat/data/messageRemote.firebase'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {toMillisFromServerTime} from '@app/shared/utils/firebase'
 
@@ -35,27 +38,14 @@ export const messageService = {
   //채팅방 메세지 구독
   subscribeChatMessages: (
     roomId: string | null | undefined,
-    lastSeq: number | null | undefined,
-    // lastCreatedAt?: number,
     callback: (messages: ChatMessage[]) => void,
-  ) => {
-    // 1. 방어 코드: roomId가 없으면 빈 해지 함수 반환
+  ): Promise<() => void> => {
     if (!roomId) {
       console.warn('subscribeChatMessages: roomId is missing')
-      return () => {}
+      return Promise.resolve(() => {})
     }
 
-    const unsub = messageRemote.subscribeChatMessages(
-      roomId,
-      lastSeq,
-      async newMessages => {
-        if (newMessages.length === 0) return []
-        //SQLite 저장 시도
-        await messageLocal.saveMessagesToSQLite(roomId, newMessages)
-        callback(newMessages)
-      },
-    )
-    return unsub
+    return startChatMessageSubscription(roomId, callback)
   },
 
   //최신 채팅과 동기화 (고도화된 버전)
@@ -125,49 +115,13 @@ export const messageService = {
   },
 
   //메세지 전송 (신규채팅생성)
-  sendChatMessage: async ({roomId, message}: SendMessageParams) => {
-    const fetchedRoomId: string = roomId ?? ''
-    const newMessageId: string = message?.id ?? ''
-    const trimmed = message.text?.trim() ?? ''
-    if (message.type === 'text' && !trimmed)
-      throw new Error('메시지를 입력해주세요.')
-    if (
-      message.type === 'image' &&
-      !message.imageUrl &&
-      !message.imageUrls?.length
-    )
-      throw new Error('이미지 업로드에 실패했습니다.')
-    try {
-      if (!fetchedRoomId) throw new Error('채팅방 정보가 없습니다.')
-      await messageLocal.saveMessagesToSQLite(fetchedRoomId, [
-        {...message, status: 'pending'},
-      ])
-      await messageRemote.sendChatMessage(fetchedRoomId, message)
-      await messageLocal.updateMessageStatus(
-        fetchedRoomId,
-        newMessageId,
-        'success',
-      )
+  sendChatMessage: (params: SendMessageParams) => {
+    return sendChatMessageWithRemote(params, messageRemote.sendChatMessage)
+  },
 
-      return fetchedRoomId
-    } catch (e: unknown) {
-      //SQLite에 실패상태로 저장
-      if (fetchedRoomId && newMessageId) {
-        messageLocal.updateMessageStatus(fetchedRoomId, newMessageId, 'failed')
-      }
-      const errorCode = getErrorCode(e)
-      if (errorCode === 'permission-denied') {
-        throw new Error('메시지를 보낼 권한이 없습니다.')
-      }
-
-      if (errorCode === 'unavailable') {
-        throw new Error(
-          '네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.',
-        )
-      }
-      // 기타 에러
-      throw new Error('메시지 전송에 실패했습니다. 다시 시도해주세요.')
-    }
+  //실패 메세지 재시도 (서버에 동일 ID가 있으면 기존 seq 사용)
+  retryChatMessage: (params: SendMessageParams) => {
+    return sendChatMessageWithRemote(params, messageRemote.retryChatMessage)
   },
 
   /**
@@ -234,4 +188,135 @@ export const messageService = {
 
     return localMessages
   },
+}
+
+type SendMessageRemote = (
+  roomId: string,
+  message: Omit<ChatMessage, 'createdAt'>,
+) => Promise<SendChatMessageResult>
+
+const sendChatMessageWithRemote = async (
+  {roomId, message}: SendMessageParams,
+  sendRemote: SendMessageRemote,
+) => {
+  const fetchedRoomId = roomId ?? ''
+  const newMessageId = message.id ?? ''
+  const trimmed = message.text?.trim() ?? ''
+
+  if (message.type === 'text' && !trimmed) {
+    throw new Error('메시지를 입력해주세요.')
+  }
+  if (
+    message.type === 'image' &&
+    !message.imageUrl &&
+    !message.imageUrls?.length
+  ) {
+    throw new Error('이미지 업로드에 실패했습니다.')
+  }
+  if (!fetchedRoomId) throw new Error('채팅방 정보가 없습니다.')
+
+  let isRemoteSucceeded = false
+
+  try {
+    // pending 영속화는 Service에서 한 번만 담당
+    await messageLocal.saveMessagesToSQLite(fetchedRoomId, [
+      {...message, status: 'pending'},
+    ])
+
+    const result = await sendRemote(fetchedRoomId, message)
+    isRemoteSucceeded = true
+
+    try {
+      const updated = await messageLocal.markMessageAsSuccess(
+        fetchedRoomId,
+        newMessageId,
+        result.seq,
+      )
+      if (!updated) {
+        console.warn('[messageService] success message not found in SQLite', {
+          roomId: fetchedRoomId,
+          messageId: newMessageId,
+        })
+      }
+    } catch (localError) {
+      // 서버 전송은 성공했으므로 로컬 갱신 실패가 전송 실패로 역행하지 않게 함
+      console.warn('[messageService] failed to persist send success', {
+        roomId: fetchedRoomId,
+        messageId: newMessageId,
+        error: localError,
+      })
+    }
+
+    return fetchedRoomId
+  } catch (e: unknown) {
+    if (!isRemoteSucceeded && newMessageId) {
+      try {
+        await messageLocal.markMessageAsFailedIfPending(
+          fetchedRoomId,
+          newMessageId,
+        )
+      } catch (localError) {
+        console.warn('[messageService] failed to persist send failure', {
+          roomId: fetchedRoomId,
+          messageId: newMessageId,
+          error: localError,
+        })
+      }
+    }
+
+    const errorCode = getErrorCode(e)
+    if (errorCode === 'permission-denied') {
+      throw new Error('메시지를 보낼 권한이 없습니다.')
+    }
+    if (errorCode === 'unavailable') {
+      throw new Error(
+        '네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.',
+      )
+    }
+    throw new Error('메시지 전송에 실패했습니다. 다시 시도해주세요.')
+  }
+}
+
+const startChatMessageSubscription = async (
+  roomId: string,
+  callback: (messages: ChatMessage[]) => void,
+) => {
+  let lastSeq = 0
+
+  try {
+    lastSeq = await messageLocal.getMaxLocalSeq(roomId)
+  } catch (error) {
+    // 로컬 조회 실패가 실시간 구독 시작까지 막지 않도록 처음부터 구독
+    console.warn('[messageService] failed to read local lastSeq', {
+      roomId,
+      error,
+    })
+  }
+
+  return messageRemote.subscribeChatMessages(
+    roomId,
+    lastSeq,
+    newMessages => {
+      if (newMessages.length === 0) return
+      void persistSubscribedMessages(roomId, newMessages, callback)
+    },
+  )
+}
+
+const persistSubscribedMessages = async (
+  roomId: string,
+  messages: ChatMessage[],
+  callback: (messages: ChatMessage[]) => void,
+) => {
+  try {
+    await messageLocal.saveMessagesToSQLite(roomId, messages)
+  } catch (error) {
+    // 로컬 저장에 실패해도 수신 메시지는 현재 화면에 표시
+    console.warn('[messageService] failed to persist subscribed messages', {
+      roomId,
+      error,
+    })
+  }
+
+  callback(messages)
 }

@@ -13,4 +13,4 @@ Important encoding rule:
 
 Commit message rule:
 
-- Write commit messages in Korean.
+- Write commit messages following the Conventional Commits format with English type and scope (e.g., `feat(auth):`, `refactor(chat):`), but write the description in Korean.
