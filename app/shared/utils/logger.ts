@@ -33,6 +33,9 @@ export const handleFirebaseAuthError = (error: unknown): string => {
       // 잘못된 이메일/비밀번호
       message = '잘못된 이메일/비밀번호 입니다.'
       break
+    case 'auth/network-request-failed':
+      message = '네트워크 연결 상태를 확인해주세요.'
+      break
     // 필요시 추가
   }
   return message
@@ -62,6 +65,8 @@ export const handleFirebaseJoinError = (error: unknown): string => {
       return '비밀번호가 올바르지 않습니다.'
     case 'auth/too-many-requests':
       return '잠시 후 다시 시도해주세요. (로그인 시도 과다)'
+    case 'auth/network-request-failed':
+      return '네트워크 연결 상태를 확인해주세요.'
     case 'permission-denied':
       return '권한이 없습니다. 잠시 후 다시 시도해주세요.'
 
