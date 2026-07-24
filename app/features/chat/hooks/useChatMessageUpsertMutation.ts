@@ -1,4 +1,3 @@
-import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/features/chat/types/react-query'
@@ -36,13 +35,19 @@ type SendChatParams = {
   createdRoomId?: string | null
 }
 
+type MutationContext = {
+  prev: MessagesInfiniteData | undefined
+  optimistic: ChatMessage
+  key: readonly [string, string]
+}
+
 export const useChatMessageUpsertMutation = (
   roomId: string | null | undefined,
 ) => {
   const queryClient = useQueryClient()
-  // 메시지 추가
-  const addMessages = useCallback(
-    async (newMessages: ChatMessage[], createdRoomId?: string) => {
+  // 메시지 영속화는 Service가 담당하고 여기서는 React Query 캐시만 갱신
+  const mergeMessagesIntoCache = useCallback(
+    (newMessages: ChatMessage[], createdRoomId?: string) => {
       const rid = createdRoomId ?? roomId
       if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
       queryClient.setQueryData(
@@ -57,71 +62,115 @@ export const useChatMessageUpsertMutation = (
           }
         },
       )
-      try {
-        await messageLocal.saveMessagesToSQLite(rid, newMessages)
-      } catch (e) {
-        console.warn('[sqlite] saveMessages failed', e)
-      }
     },
     [queryClient, roomId],
   )
 
   // 메시지 상태 업데이트 (pending -> success / fail)
-  const updateMessageStatus = (
-    key: readonly unknown[],
-    message: ChatMessage,
-    status: ChatMessage['status'],
-  ) => {
-    queryClient.setQueryData<MessagesInfiniteData>(key, old => {
-      const base = old ?? init
-      const newPages = base.pages.map(page => ({
-        ...page,
-        data: page.data.map(msg =>
-          msg.id === message?.id ? {...message, status} : msg,
-        ),
-      }))
-      return {
-        ...base,
-        pages: newPages,
-      }
-    })
-  }
-
-  const mutation = useMutation({
-    mutationFn: async ({message, createdRoomId}: SendChatParams) => {
-      const rid = createdRoomId ?? roomId
-      if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
-      await messageService.sendChatMessage({roomId: rid, message})
-      return true
+  const updateMessageStatus = useCallback(
+    (
+      key: readonly unknown[],
+      messageId: string,
+      status: ChatMessage['status'],
+    ) => {
+      queryClient.setQueryData<MessagesInfiniteData>(key, old => {
+        const base = old ?? init
+        const newPages = base.pages.map(page => ({
+          ...page,
+          data: page.data.map(message => {
+            if (message.id !== messageId) return message
+            // 구독으로 확정된 success는 늦게 도착한 실패 결과로 되돌리지 않음
+            if (message.status === 'success' && status === 'failed') {
+              return message
+            }
+            return {...message, status}
+          }),
+        }))
+        return {
+          ...base,
+          pages: newPages,
+        }
+      })
     },
+    [queryClient],
+  )
 
-    onMutate: async ({message, createdRoomId}: SendChatParams) => {
+  const handleMutate = useCallback(
+    async ({message, createdRoomId}: SendChatParams) => {
       const rid = createdRoomId ?? roomId
       if (!rid) return
 
-      const key = ['chatMessages', rid] // ✅ roomId 바뀔 수 있으니 key도 rid 기준
+      const key = ['chatMessages', rid] as const
       await queryClient.cancelQueries({queryKey: key})
 
       const prev = queryClient.getQueryData<MessagesInfiniteData>(key)
-      const msgs = [
+      const optimisticMessages = [
         {...convertTimestampsToMillis(message), status: 'pending'},
       ] as ChatMessage[]
-      addMessages(msgs, rid)
-      //방이 없음 -> 생성되는 경우 key값이 바뀌므로 전달해줘야함
+      mergeMessagesIntoCache(optimisticMessages, rid)
+
       return {prev, optimistic: message, key}
     },
-    // 성공 시 onSnapshot에서 데이터를 내려주기떄문에 별도의 설정하지않음.
-    // onSuccess: (data, message, ctx) => {
-    //   if (!ctx?.optimistic?.id) return
-    //   updateMessageStatus(ctx.key, ctx.optimistic, 'success')
-    // },
+    [roomId, queryClient, mergeMessagesIntoCache],
+  )
 
-    onError: (err, _message, ctx) => {
-      console.warn('[chat] send message failed', err)
-      if (ctx?.optimistic?.id)
-        updateMessageStatus(ctx.key, ctx.optimistic, 'failed')
+  const handleSuccess = useCallback(
+    async (_data: string, _params: SendChatParams, ctx?: MutationContext) => {
+      if (!ctx?.optimistic.id) return
+
+      updateMessageStatus(ctx.key, ctx.optimistic.id, 'success')
+      // Service가 SQLite에 반영한 서버 seq를 캐시에 다시 동기화
+      await queryClient.invalidateQueries({
+        queryKey: ctx.key,
+        refetchType: 'active',
+      })
     },
+    [queryClient, updateMessageStatus],
+  )
+
+  const handleError = useCallback(
+    (err: Error, _params: SendChatParams, ctx?: MutationContext) => {
+      console.warn('[chat] send message failed', err)
+      if (ctx?.optimistic.id) {
+        updateMessageStatus(ctx.key, ctx.optimistic.id, 'failed')
+      }
+    },
+    [updateMessageStatus],
+  )
+
+  const mutation = useMutation<string, Error, SendChatParams, MutationContext>({
+    mutationFn: async ({message, createdRoomId}) => {
+      const rid = createdRoomId ?? roomId
+      if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
+      return await messageService.sendChatMessage({roomId: rid, message})
+    },
+    onMutate: handleMutate,
+    onSuccess: handleSuccess,
+    onError: handleError,
   })
 
-  return {...mutation, addMessages, updateMessageStatus}
+  const retryMutation = useMutation<
+    string,
+    Error,
+    SendChatParams,
+    MutationContext
+  >({
+    mutationFn: async ({message, createdRoomId}) => {
+      const rid = createdRoomId ?? roomId
+      if (!rid) throw new Error('채팅방이 존재하지 않습니다.')
+      return await messageService.retryChatMessage({roomId: rid, message})
+    },
+    onMutate: handleMutate,
+    onSuccess: handleSuccess,
+    onError: handleError,
+  })
+
+  return {
+    ...mutation,
+    retryMessage: retryMutation.mutate,
+    retryMessageAsync: retryMutation.mutateAsync,
+    isRetryPending: retryMutation.isPending,
+    mergeMessagesIntoCache,
+    updateMessageStatus,
+  }
 }

@@ -21,7 +21,7 @@ const ChatMessageMeta = ({
   hideMinute,
 }: ChatMessageMetaProps) => {
   const {mutate: deleteAction} = useChatMessageDeleteMutation(roomId)
-  const {mutate: retryAction} = useChatMessageUpsertMutation(roomId)
+  const {retryMessage} = useChatMessageUpsertMutation(roomId)
 
   return (
     <View
@@ -34,7 +34,7 @@ const ChatMessageMeta = ({
         <ChatMessageStatusIcons
           item={item}
           onDelete={id => deleteAction(id)}
-          onRetry={m => retryAction({message: m})}
+          onRetry={message => retryMessage({message})}
         />
       )}
       {/* 분 단위가 겹치지 않을 때만 시간 표시 */}

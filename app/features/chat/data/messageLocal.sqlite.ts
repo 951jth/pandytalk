@@ -88,6 +88,64 @@ export const messageLocal = {
       {lock: true}, //테이블마이그레이션(재생성)이 끝난 뒤에 설정하도록함
     )
   },
+  // 전송 성공 시 로컬 메시지의 상태와 서버 seq를 함께 반영
+  markMessageAsSuccess: (
+    roomId: string,
+    messageId: string,
+    seq: number,
+  ) => {
+    return sqliteCall(
+      'messageLocal.markMessageAsSuccess',
+      () => {
+        return new Promise<boolean>((resolve, reject) => {
+          db.transaction((tx: Transaction) => {
+            tx.executeSql(
+              `UPDATE ${MESSAGE_TABLE} SET status = 'success', seq = ? WHERE roomId = ? AND id = ?`,
+              [seq, roomId, messageId],
+              (_tx, result) => resolve(result.rowsAffected > 0),
+              (_tx, error) => {
+                console.error('[SQLite] markMessageAsSuccess query failed', {
+                  roomId,
+                  messageId,
+                  seq,
+                  error,
+                })
+                reject(error)
+                return true
+              },
+            )
+          })
+        })
+      },
+      {lock: true},
+    )
+  },
+  // 전송 결과가 늦게 도착해도 success가 failed로 역행하지 않도록 pending일 때만 실패 처리
+  markMessageAsFailedIfPending: (roomId: string, messageId: string) => {
+    return sqliteCall(
+      'messageLocal.markMessageAsFailedIfPending',
+      () => {
+        return new Promise<boolean>((resolve, reject) => {
+          db.transaction((tx: Transaction) => {
+            tx.executeSql(
+              `UPDATE ${MESSAGE_TABLE} SET status = 'failed' WHERE roomId = ? AND id = ? AND status = 'pending'`,
+              [roomId, messageId],
+              (_tx, result) => resolve(result.rowsAffected > 0),
+              (_tx, error) => {
+                console.error(
+                  '[SQLite] markMessageAsFailedIfPending query failed',
+                  {roomId, messageId, error},
+                )
+                reject(error)
+                return true
+              },
+            )
+          })
+        })
+      },
+      {lock: true},
+    )
+  },
   getChatMessagesByCreated: (
     roomId: string,
     cursorCreatedAt?: number | null,

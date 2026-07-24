@@ -104,3 +104,183 @@ describe('messageService.getChatMessages (통합 조회 오케스트레이션 �
     expect(result).toEqual(mockLocalData)
   })
 })
+
+describe('messageService 메시지 전송 상태 처리', () => {
+  const roomId = 'room_123'
+  const message = {
+    id: 'message_123',
+    senderId: 'user_123',
+    text: '안녕하세요',
+    type: 'text' as const,
+    createdAt: 1,
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(messageLocal.saveMessagesToSQLite as jest.Mock).mockResolvedValue(
+      undefined,
+    )
+    ;(messageLocal.markMessageAsSuccess as jest.Mock).mockResolvedValue(true)
+    ;(
+      messageLocal.markMessageAsFailedIfPending as jest.Mock
+    ).mockResolvedValue(true)
+  })
+
+  it('일반 전송 성공 시 서버 seq와 success 상태를 반영한다', async () => {
+    (messageRemote.sendChatMessage as jest.Mock).mockResolvedValue({
+      id: message.id,
+      seq: 11,
+      alreadySent: false,
+    })
+
+    const result = await messageService.sendChatMessage({roomId, message})
+
+    expect(result).toBe(roomId)
+    expect(messageLocal.saveMessagesToSQLite).toHaveBeenCalledWith(roomId, [
+      {...message, status: 'pending'},
+    ])
+    expect(messageLocal.markMessageAsSuccess).toHaveBeenCalledWith(
+      roomId,
+      message.id,
+      11,
+    )
+    expect(messageLocal.markMessageAsFailedIfPending).not.toHaveBeenCalled()
+  })
+
+  it('재시도는 retry Remote 결과의 기존 seq를 success로 반영한다', async () => {
+    (messageRemote.retryChatMessage as jest.Mock).mockResolvedValue({
+      id: message.id,
+      seq: 11,
+      alreadySent: true,
+    })
+
+    const result = await messageService.retryChatMessage({roomId, message})
+
+    expect(result).toBe(roomId)
+    expect(messageRemote.retryChatMessage).toHaveBeenCalledWith(roomId, message)
+    expect(messageLocal.markMessageAsSuccess).toHaveBeenCalledWith(
+      roomId,
+      message.id,
+      11,
+    )
+  })
+
+  it('Remote 전송 실패 시 pending 메시지만 failed로 변경한다', async () => {
+    const remoteError = Object.assign(new Error('network error'), {
+      code: 'unavailable',
+    })
+    ;(messageRemote.sendChatMessage as jest.Mock).mockRejectedValue(remoteError)
+
+    await expect(
+      messageService.sendChatMessage({roomId, message}),
+    ).rejects.toThrow(
+      '네트워크 상태가 불안정합니다. 잠시 후 다시 시도해주세요.',
+    )
+
+    expect(messageLocal.markMessageAsFailedIfPending).toHaveBeenCalledWith(
+      roomId,
+      message.id,
+    )
+    expect(messageLocal.markMessageAsSuccess).not.toHaveBeenCalled()
+  })
+
+  it('서버 성공 후 로컬 success 저장 실패는 전송 실패로 바꾸지 않는다', async () => {
+    (messageRemote.sendChatMessage as jest.Mock).mockResolvedValue({
+      id: message.id,
+      seq: 11,
+      alreadySent: false,
+    })
+    ;(messageLocal.markMessageAsSuccess as jest.Mock).mockRejectedValue(
+      new Error('SQLite error'),
+    )
+
+    const result = await messageService.sendChatMessage({roomId, message})
+
+    expect(result).toBe(roomId)
+    expect(messageLocal.markMessageAsFailedIfPending).not.toHaveBeenCalled()
+  })
+})
+
+describe('messageService 메시지 구독 처리', () => {
+  const roomId = 'room_123'
+  const unsubscribe = jest.fn()
+  const callback = jest.fn()
+  const messages = [
+    {
+      id: 'message_123',
+      senderId: 'user_123',
+      text: '안녕하세요',
+      type: 'text' as const,
+      createdAt: 1,
+      seq: 11,
+    },
+  ]
+  let remoteCallback: (newMessages: typeof messages) => void
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    ;(messageLocal.getMaxLocalSeq as jest.Mock).mockResolvedValue(10)
+    ;(messageLocal.saveMessagesToSQLite as jest.Mock).mockResolvedValue(
+      undefined,
+    )
+    ;(messageRemote.subscribeChatMessages as jest.Mock).mockImplementation(
+      (_roomId, _lastSeq, nextCallback) => {
+        remoteCallback = nextCallback
+        return unsubscribe
+      },
+    )
+  })
+
+  it('로컬 마지막 seq부터 Remote 구독을 시작한다', async () => {
+    const result = await messageService.subscribeChatMessages(roomId, callback)
+
+    expect(messageLocal.getMaxLocalSeq).toHaveBeenCalledWith(roomId)
+    expect(messageRemote.subscribeChatMessages).toHaveBeenCalledWith(
+      roomId,
+      10,
+      expect.any(Function),
+    )
+    expect(result).toBe(unsubscribe)
+  })
+
+  it('구독 메시지를 SQLite에 저장한 뒤 화면 callback을 호출한다', async () => {
+    await messageService.subscribeChatMessages(roomId, callback)
+
+    remoteCallback(messages)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(messageLocal.saveMessagesToSQLite).toHaveBeenCalledWith(
+      roomId,
+      messages,
+    )
+    expect(callback).toHaveBeenCalledWith(messages)
+  })
+
+  it('SQLite 저장 실패 시에도 화면 callback을 호출한다', async () => {
+    (messageLocal.saveMessagesToSQLite as jest.Mock).mockRejectedValue(
+      new Error('SQLite error'),
+    )
+    await messageService.subscribeChatMessages(roomId, callback)
+
+    remoteCallback(messages)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(callback).toHaveBeenCalledWith(messages)
+  })
+
+  it('로컬 seq 조회 실패 시 0부터 구독한다', async () => {
+    (messageLocal.getMaxLocalSeq as jest.Mock).mockRejectedValue(
+      new Error('SQLite error'),
+    )
+
+    await messageService.subscribeChatMessages(roomId, callback)
+
+    expect(messageRemote.subscribeChatMessages).toHaveBeenCalledWith(
+      roomId,
+      0,
+      expect.any(Function),
+    )
+  })
+})

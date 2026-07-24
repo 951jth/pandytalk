@@ -10,6 +10,7 @@ import {AI_IMAGE_LIMIT} from '@shared/constants/chat'
 import {
   collection,
   doc,
+  FirebaseFirestoreTypes,
   getDocs,
   limit,
   orderBy,
@@ -18,6 +19,14 @@ import {
   serverTimestamp,
   where,
 } from '@react-native-firebase/firestore'
+
+export type SendChatMessageResult = {
+  id: string
+  seq: number
+  alreadySent: boolean
+}
+
+type SendChatMessagePayload = Omit<ChatMessage, 'createdAt'>
 
 export const messageRemote = {
   getLatestSeq: async (roomId: string): Promise<number> => {
@@ -140,98 +149,164 @@ export const messageRemote = {
   },
   sendChatMessage: (
     roomId: string,
-    message: Omit<ChatMessage, 'createdAt'>,
-  ) => {
+    message: SendChatMessagePayload,
+  ): Promise<SendChatMessageResult> => {
     return firebaseCall('messageRemote.sendChatMessage', async () => {
       const chatRef = doc(firestore, 'chats', roomId)
-      const messageId = message.id
+      // 클라이언트 메시지 ID를 우선 사용하고, 없으면 Firestore Auto ID를 생성
       let msgRef = null
-      if (messageId) {
-        msgRef = doc(firestore, 'chats', roomId, 'messages', messageId)
+      if (message.id) {
+        msgRef = doc(firestore, 'chats', roomId, 'messages', message.id)
       } else {
         msgRef = doc(collection(firestore, 'chats', roomId, 'messages'))
       }
 
       //여러 명이 동시에 채팅을 칠 때 단순히 addDoc으로 넣으면 네트워크 속도에 따라 메시지 순서가 뒤죽박죽됨
-      await runTransaction(firestore, async tx => {
-        // 1) 현재 채팅방 데이터 가져오기
+      return await runTransaction(firestore, async tx => {
+        // 신규 전송은 클라이언트에서 생성한 새 ID를 사용하므로 메시지 문서를 조회하지 않음
         const chatSnap = await tx.get(chatRef)
-        const chatData = chatSnap.data()
-        const prev = Number(chatData?.lastSeq ?? 0)
-        const next = prev + 1
-        const now = serverTimestamp()
+        if (!chatSnap.exists()) throw new Error('채팅방이 존재하지 않습니다.')
 
-        // 2) AI 맥락(Context) 업데이트 로직 추가
-        const prevRecent = (chatData?.recentMessages as unknown[]) || []
-        let updatedRecent = prevRecent
-
-        // 텍스트나 이미지가 있는 경우 맥락에 추가
-        if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
-          const namePrefix = message.senderName ? `[${message.senderName}]: ` : ''
-          let content:
-            | string
-            | Array<
-                | {type: 'text'; text: string}
-                | {type: 'image_url'; image_url: {url: string}}
-              > = message.text || ''
-
-          // 이미지가 포함된 경우 멀티모달 포맷으로 저장 (최대 3장까지만 문맥에 포함)
-          if (message.imageUrls && message.imageUrls.length > 0) {
-            content = [
-              {type: 'text', text: `${namePrefix}${message.text || ''}`},
-              ...message.imageUrls.slice(0, AI_IMAGE_LIMIT).map(url => ({
-                type: 'image_url' as const,
-                image_url: {url},
-              })),
-            ]
-          } else if (message.imageUrl) {
-            content = [
-              {type: 'text', text: `${namePrefix}${message.text || ''}`},
-              {type: 'image_url', image_url: {url: message.imageUrl}},
-            ]
-          } else {
-            // 일반 텍스트인 경우
-            content = `${namePrefix}${content}`
-          }
-
-          const newContextItem = {
-            role: 'user',
-            content,
-          }
-          // 최신 10개만 유지
-          updatedRecent = [...prevRecent, newContextItem].slice(-10)
-        }
-
-        // 3) 메시지 문서 작성
-        const newMessage = {
-          seq: next,
-          senderId: message.senderId,
-          text: message.text ?? '',
-          type: message.type,
-          imageUrl: message.imageUrl ?? '',
-          imageUrls: message.imageUrls ?? [],
-          createdAt: now,
-          senderPicURL: message?.senderPicURL ?? null,
-          senderName: message?.senderName ?? null,
-        }
-        tx.set(msgRef, newMessage)
-
-        // 4) 채팅방 갱신
-        tx.update(chatRef, {
-          lastSeq: next,
-          lastMessageAt: now,
-          recentMessages: updatedRecent, // 맥락 업데이트
-          lastMessage: {
-            seq: next,
-            text: newMessage.text,
-            senderId: newMessage.senderId,
-            createdAt: now,
-            type: newMessage.type,
-            imageUrl: newMessage.imageUrl,
-            imageUrls: newMessage.imageUrls,
-          },
-        })
+        return writeNewChatMessage(
+          tx,
+          chatRef,
+          msgRef,
+          chatSnap.data(),
+          message,
+        )
       })
     })
   },
+  retryChatMessage: (
+    roomId: string,
+    message: SendChatMessagePayload,
+  ): Promise<SendChatMessageResult> => {
+    return firebaseCall('messageRemote.retryChatMessage', async () => {
+      if (!message.id) throw new Error('재시도할 메시지 ID가 없습니다.')
+
+      const chatRef = doc(firestore, 'chats', roomId)
+      const msgRef = doc(
+        firestore,
+        'chats',
+        roomId,
+        'messages',
+        message.id,
+      )
+
+      return await runTransaction(firestore, async tx => {
+        const chatSnap = await tx.get(chatRef)
+        if (!chatSnap.exists()) throw new Error('채팅방이 존재하지 않습니다.')
+
+        // 재시도에서만 서버에 이미 등록된 동일 ID 메시지가 있는지 확인
+        const existingMessageSnap = await tx.get(msgRef)
+        if (existingMessageSnap.exists()) {
+          const existingMessage = existingMessageSnap.data()
+          const existingSeq = Number(existingMessage?.seq ?? 0)
+
+          if (existingMessage?.senderId !== message.senderId) {
+            throw new Error('동일한 메시지 ID가 이미 사용 중입니다.')
+          }
+          if (existingSeq <= 0) {
+            throw new Error('기존 메시지의 seq가 유효하지 않습니다.')
+          }
+
+          return {
+            id: msgRef.id,
+            seq: existingSeq,
+            alreadySent: true,
+          }
+        }
+
+        return writeNewChatMessage(
+          tx,
+          chatRef,
+          msgRef,
+          chatSnap.data(),
+          message,
+        )
+      })
+    })
+  },
+}
+
+const writeNewChatMessage = (
+  tx: FirebaseFirestoreTypes.Transaction,
+  chatRef: FirebaseFirestoreTypes.DocumentReference,
+  msgRef: FirebaseFirestoreTypes.DocumentReference,
+  chatData: FirebaseFirestoreTypes.DocumentData | undefined,
+  message: SendChatMessagePayload,
+): SendChatMessageResult => {
+  const prev = Number(chatData?.lastSeq ?? 0)
+  const next = prev + 1
+  const now = serverTimestamp()
+  const prevRecent = (chatData?.recentMessages as unknown[]) || []
+  let updatedRecent = prevRecent
+
+  if (message.text?.trim() || message.imageUrl || message.imageUrls?.length) {
+    const namePrefix = message.senderName ? `[${message.senderName}]: ` : ''
+    let content:
+      | string
+      | Array<
+          | {type: 'text'; text: string}
+          | {type: 'image_url'; image_url: {url: string}}
+        > = message.text || ''
+
+    if (message.imageUrls && message.imageUrls.length > 0) {
+      content = [
+        {type: 'text', text: `${namePrefix}${message.text || ''}`},
+        ...message.imageUrls.slice(0, AI_IMAGE_LIMIT).map(url => ({
+          type: 'image_url' as const,
+          image_url: {url},
+        })),
+      ]
+    } else if (message.imageUrl) {
+      content = [
+        {type: 'text', text: `${namePrefix}${message.text || ''}`},
+        {type: 'image_url', image_url: {url: message.imageUrl}},
+      ]
+    } else {
+      content = `${namePrefix}${content}`
+    }
+
+    updatedRecent = [
+      ...prevRecent,
+      {
+        role: 'user',
+        content,
+      },
+    ].slice(-10)
+  }
+
+  const newMessage = {
+    seq: next,
+    senderId: message.senderId,
+    text: message.text ?? '',
+    type: message.type,
+    imageUrl: message.imageUrl ?? '',
+    imageUrls: message.imageUrls ?? [],
+    createdAt: now,
+    senderPicURL: message.senderPicURL ?? null,
+    senderName: message.senderName ?? null,
+  }
+  tx.set(msgRef, newMessage)
+  tx.update(chatRef, {
+    lastSeq: next,
+    lastMessageAt: now,
+    recentMessages: updatedRecent,
+    lastMessage: {
+      seq: next,
+      text: newMessage.text,
+      senderId: newMessage.senderId,
+      createdAt: now,
+      type: newMessage.type,
+      imageUrl: newMessage.imageUrl,
+      imageUrls: newMessage.imageUrls,
+    },
+  })
+
+  return {
+    id: msgRef.id,
+    seq: next,
+    alreadySent: false,
+  }
 }
