@@ -7,6 +7,7 @@ import {
   Platform,
   Text,
   TouchableOpacity,
+  type TextProps,
   type StyleProp,
   type TextStyle,
   type TouchableOpacityProps,
@@ -16,6 +17,8 @@ type propTypes = TouchableOpacityProps & {
   value: string
   textStyle?: StyleProp<TextStyle>
   longPressDelayMs?: number
+  numberOfLines?: number
+  ellipsizeMode?: TextProps['ellipsizeMode']
 }
 
 const androidConfig = {
@@ -27,6 +30,8 @@ export default function CopyableText({
   textStyle,
   value,
   longPressDelayMs = 300,
+  numberOfLines,
+  ellipsizeMode,
   ...rest
 }: propTypes) {
   const handleCopy = useCallback(() => {
@@ -53,6 +58,8 @@ export default function CopyableText({
       activeOpacity={0.7}
       {...rest}>
       <Text
+        numberOfLines={numberOfLines}
+        ellipsizeMode={ellipsizeMode}
         style={[
           {
             fontFamily: FONTS.regular,

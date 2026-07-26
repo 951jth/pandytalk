@@ -1,4 +1,5 @@
 import LoginScreen from '@app/features/auth/screens/LoginScreen'
+import ChatMessageDetailScreen from '@app/features/chat/screens/ChatMessageDetailScreen'
 import DmChatRoomScreen from '@app/features/chat/screens/DmChatRoomScreen'
 import GroupChatRoomScreen from '@app/features/chat/screens/GroupChatRoomScreen'
 import GroupManageScreen from '@app/features/group/screens/GroupManageScreen'
@@ -94,6 +95,11 @@ const appRoutes = (): LayoutItem[] => {
           name: 'group-chat',
           title: '그룹 채팅',
           component: GroupChatRoomScreen,
+        },
+        {
+          name: 'chat-message-detail',
+          title: '메시지 상세',
+          component: ChatMessageDetailScreen,
         },
       ],
     },

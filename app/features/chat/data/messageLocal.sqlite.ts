@@ -297,6 +297,42 @@ export const messageLocal = {
     })
   },
 
+  getMessageById: (roomId: string, messageId: string) => {
+    return sqliteCall('messageLocal.getMessageById', async () => {
+      return new Promise<ChatMessage | null>((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(
+            `SELECT * FROM ${MESSAGE_TABLE} WHERE roomId = ? AND id = ? LIMIT 1`,
+            [roomId, messageId],
+            (_tx, result) => {
+              if (result.rows.length === 0) {
+                resolve(null)
+                return
+              }
+
+              const item = result.rows.item(0) as ChatMessageSqliteRow
+              if (item.imageUrls) {
+                try {
+                  item.imageUrls =
+                    typeof item.imageUrls === 'string'
+                      ? JSON.parse(item.imageUrls)
+                      : item.imageUrls
+                } catch (e) {
+                  item.imageUrls = []
+                }
+              }
+              resolve(item as ChatMessage)
+            },
+            (_tx, error) => {
+              reject(error)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+
   deleteMessageById: (roomId: string, messageId: string) => {
     return sqliteCall('messageLocal.deleteChatMessage', async () => {
       return new Promise<boolean>((resolve, reject) => {

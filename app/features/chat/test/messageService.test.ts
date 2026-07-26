@@ -6,6 +6,41 @@ import {messageService} from '@app/features/chat/service/messageService'
 jest.mock('@app/features/chat/data/messageLocal.sqlite')
 jest.mock('@app/features/chat/data/messageRemote.firebase')
 
+describe('messageService.getChatMessage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('roomId와 messageId로 로컬 메시지를 조회한다', async () => {
+    const message = {
+      id: 'message_123',
+      senderId: 'user_123',
+      text: '상세 메시지',
+      type: 'text' as const,
+      createdAt: 1,
+    }
+    ;(messageLocal.getMessageById as jest.Mock).mockResolvedValue(message)
+
+    const result = await messageService.getChatMessage(
+      'room_123',
+      message.id,
+    )
+
+    expect(messageLocal.getMessageById).toHaveBeenCalledWith(
+      'room_123',
+      message.id,
+    )
+    expect(result).toEqual(message)
+  })
+
+  it('식별자가 없으면 로컬 조회 없이 null을 반환한다', async () => {
+    const result = await messageService.getChatMessage('', 'message_123')
+
+    expect(messageLocal.getMessageById).not.toHaveBeenCalled()
+    expect(result).toBeNull()
+  })
+})
+
 describe('messageService.getChatMessages (통합 조회 오케스트레이션 테스트)', () => {
   const mockRoomId = 'room_123'
   const PAGE_SIZE = 20

@@ -24,6 +24,10 @@ export type AppRouteParamList = {
   'group-chat': {
     initialChatInfo: InitialGroupChatInfo
   }
+  'chat-message-detail': {
+    roomId: string
+    messageId: string
+  }
   'guest-manage': undefined
   'group-manage': undefined
   'admin-inquiries': undefined

@@ -2,15 +2,13 @@ import React, {memo} from 'react'
 import {StyleSheet, View, useWindowDimensions} from 'react-native'
 import {Text} from 'react-native-paper'
 
-import AiStreamingText from '@app/features/chat/components/AiStreamingText'
 import ChatDateSeparator from '@app/features/chat/components/ChatDateSeparator'
 import ChatMessageAvatar from '@app/features/chat/components/ChatMessageAvatar'
+import ChatMessageContent from '@app/features/chat/components/ChatMessageContent'
 import ChatMessageMeta from '@app/features/chat/components/ChatMessageMeta'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import type {ChatMessage} from '@app/shared/types/chat'
-import MultiImageViewer from '@app/shared/ui/common/MultiImageViewer'
-import CopyableText from '@app/shared/ui/text/CopyableText'
 
 export type ChatMessageItemProps = {
   item: ChatMessage
@@ -22,6 +20,7 @@ export type ChatMessageItemProps = {
   }
   roomId?: string | null
   member?: User
+  onMessagePress?: (message: ChatMessage) => void
 }
 
 // --- 메인 컴포넌트 ---
@@ -30,6 +29,7 @@ const ChatMessageItem = ({
   uiConfig,
   roomId,
   member,
+  onMessagePress,
 }: ChatMessageItemProps) => {
   const {hideProfile, hideMinute, hideDate, isMine} = uiConfig
   const {width} = useWindowDimensions()
@@ -82,6 +82,7 @@ const ChatMessageItem = ({
                 isMine={isMine}
                 bubbleMaxWidth={bubbleMaxWidth}
                 roomId={roomId}
+                onMessagePress={onMessagePress}
               />
             </View>
 
@@ -97,45 +98,6 @@ const ChatMessageItem = ({
       </View>
     </View>
   )
-}
-
-// --- 보조 컴포넌트: 본문 내용 (Bubble Content) ---
-const ChatMessageContent = ({
-  item,
-  isMine,
-  bubbleMaxWidth,
-  roomId,
-}: {
-  item: ChatMessage
-  isMine: boolean
-  bubbleMaxWidth: number
-  roomId?: string | null
-}) => {
-  const textColor = isMine ? COLORS.onPrimary : COLORS.text
-  const {type, text, imageUrls, imageUrl} = item
-
-  if (type === 'ai_text') {
-    return (
-      <AiStreamingText chatId={roomId ?? ''} color={textColor} item={item} />
-    )
-  }
-
-  if (type === 'image') {
-    const images = imageUrls?.length ? imageUrls : imageUrl ? [imageUrl] : []
-    return (
-      <>
-        <MultiImageViewer images={images} maxWidth={bubbleMaxWidth - 24} />
-        {text && (
-          <CopyableText
-            textStyle={{color: textColor, marginTop: 5}}
-            value={text}
-          />
-        )}
-      </>
-    )
-  }
-
-  return <CopyableText textStyle={{color: textColor}} value={text ?? '-'} />
 }
 
 const styles = StyleSheet.create({
