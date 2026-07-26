@@ -5,7 +5,7 @@ import {useSubscribeChatMessages} from '@app/features/chat/hooks/useSubscribeCha
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
 import type {AppRouteParamList, InitialChatInfo} from '@app/navigation/types'
 import type {User} from '@app/shared/types/auth'
-import type {ChatRoom} from '@app/shared/types/chat'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
 import {
   useNavigation,
