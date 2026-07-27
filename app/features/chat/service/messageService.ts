@@ -188,6 +188,11 @@ export const messageService = {
 
     return localMessages
   },
+
+  getChatMessage: async (roomId: string, messageId: string) => {
+    if (!roomId || !messageId) return null
+    return await messageLocal.getMessageById(roomId, messageId)
+  },
 }
 
 type SendMessageRemote = (

@@ -3,11 +3,15 @@ import {useChatScroll} from '@app/features/chat/hooks/useChatScroll'
 import {useSubscribeChatMessages} from '@app/features/chat/hooks/useSubscribeChatMessages'
 // import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages' // 신규 추가
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
+import type {AppRouteParamList, InitialChatInfo} from '@app/navigation/types'
 import type {User} from '@app/shared/types/auth'
-import type {ChatRoom} from '@app/shared/types/chat'
-import type {InitialChatInfo} from '@app/navigation/types'
+import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
-import {useMemo} from 'react'
+import {
+  useNavigation,
+  type NavigationProp,
+} from '@react-navigation/native'
+import {useCallback, useMemo} from 'react'
 
 type Props = {
   roomId: string | null
@@ -21,6 +25,8 @@ export const useChatMessageList = ({
   userId,
   roomInfo, // 실제 채팅방 정보 생성 확인
 }: Props) => {
+  const navigation = useNavigation<NavigationProp<AppRouteParamList>>()
+
   // 1. 최신 메시지 동기화 엔진 (포커스 시 작동)
   // 구독 snapshot limit 방식으로 전환하면서 자동 gap sync는 비활성화합니다.
 
@@ -80,6 +86,17 @@ export const useChatMessageList = ({
     },
   )
 
+  const handleMessagePress = useCallback(
+    (message: ChatMessage) => {
+      if (!roomId) return
+      navigation.navigate('chat-message-detail', {
+        roomId,
+        messageId: message.id,
+      })
+    },
+    [navigation, roomId],
+  )
+
   return {
     messagesWithUi, // 가공된 채팅 메세지
     isLoading,
@@ -91,5 +108,6 @@ export const useChatMessageList = ({
     handleScroll,
     scrollToBottom,
     isAtBottom,
+    handleMessagePress,
   }
 }

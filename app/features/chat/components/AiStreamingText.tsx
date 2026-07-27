@@ -4,12 +4,20 @@ import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
 import COLORS from '@shared/constants/color'
 import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import {
+  StyleSheet,
+  View,
+  type TextProps,
+  type TouchableOpacityProps,
+} from 'react-native'
 
-interface AiStreamingTextProps {
+interface AiStreamingTextProps
+  extends Pick<TouchableOpacityProps, 'onPress'> {
   chatId?: string
   color?: string
   item?: ChatMessage
+  numberOfLines?: number
+  ellipsizeMode?: TextProps['ellipsizeMode']
 }
 
 /**
@@ -25,6 +33,9 @@ export default function AiStreamingText({
   chatId,
   color,
   item,
+  numberOfLines,
+  ellipsizeMode,
+  onPress,
 }: AiStreamingTextProps) {
   const isStreamingStatus = item?.status === 'streaming'
   const currentUid = auth.currentUser?.uid
@@ -50,6 +61,9 @@ export default function AiStreamingText({
         value={displayValue}
         textStyle={[styles.text, color ? {color} : {}]}
         disabled={isStreamingStatus}
+        numberOfLines={numberOfLines}
+        ellipsizeMode={ellipsizeMode}
+        onPress={onPress}
       />
     </View>
   )

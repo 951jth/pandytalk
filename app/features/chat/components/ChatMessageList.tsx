@@ -35,6 +35,7 @@ const arePropsEqual = (
     pUi.isMine === nUi.isMine
   if (!isUiConfigSame) return false
   if (prev.member !== next.member) return false
+  if (prev.onMessagePress !== next.onMessagePress) return false
   return pMsg === nMsg
 }
 const MemoizedChatMessage = memo(ChatMessageItem, arePropsEqual)
@@ -58,6 +59,7 @@ export default function ChatMessageList({
     isFetchingNextPage,
     flatListRef,
     handleScroll,
+    handleMessagePress,
   } = useChatMessageList({userId, roomId, roomInfo, initialChatInfo})
 
   const renderMessage = useCallback(
@@ -69,10 +71,11 @@ export default function ChatMessageList({
           uiConfig={uiConfig}
           roomId={roomId ?? null}
           member={member}
+          onMessagePress={handleMessagePress}
         />
       )
     },
-    [roomId],
+    [handleMessagePress, roomId],
   )
 
   return (
