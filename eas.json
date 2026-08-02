@@ -13,7 +13,11 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "main"
+      "channel": "main",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleProductionRelease"
+      }
     },
     "production": {
       "channel": "main",
@@ -23,8 +27,8 @@
     },
     "apk": {
       "android": {
-        "buildType": "app-bundle",
-        "gradleCommand": ":app:bundleProductionRelease"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleProductionRelease"
       },
       "channel": "main"
     }
