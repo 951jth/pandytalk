@@ -1,6 +1,6 @@
 const PRODUCTION_ANDROID_PACKAGE = 'com.cshchatapp'
 const DEVELOPMENT_ANDROID_PACKAGE = 'com.cshchatapp.debug'
-const ANDROID_RUNTIME_VERSION = '46'
+const ANDROID_RUNTIME_VERSION = '47'
 const IOS_RUNTIME_VERSION = '46'
 
 // 이 프로젝트는 React Native CLI로 시작해 Expo Modules를 연결한 Bare 프로젝트다.
@@ -9,7 +9,7 @@ module.exports = {
   // 1. 앱 기본 정보
   name: '팬디톡', // 앱의 표시 이름 (홈 화면)
   slug: 'cshchatapp', // Expo 프로젝트의 고유 식별자 (URL 등에 사용)
-  version: '1.4.4', // 앱의 외부 버전 (Store 표시용)
+  version: '1.4.5', // 앱의 외부 버전 (Store 표시용)
   // 2. 자산(Assets) 설정
   icon: './app/shared/assets/images/pandy_icon_padding.png',
   orientation: 'portrait',
@@ -32,7 +32,7 @@ module.exports = {
     runtimeVersion: IOS_RUNTIME_VERSION,
     supportsTablet: true,
     bundleIdentifier: 'com.cshchatapp', // iOS 앱 고유 ID
-    buildNumber: '22', // 빌드 회차 (업로드 시마다 올려야 함)
+    buildNumber: '23', // 빌드 회차 (업로드 시마다 올려야 함)
     infoPlist: {
       LSApplicationQueriesSchemes: ['mailto'],
     },
@@ -44,7 +44,7 @@ module.exports = {
     // scripts/bumpAndroidBuildVersion.js가 versionCode와 함께 증가시킨다.
     runtimeVersion: ANDROID_RUNTIME_VERSION,
     package: PRODUCTION_ANDROID_PACKAGE, // 안드로이드 운영 앱 고유 ID (패키지명)
-    versionCode: 46, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
+    versionCode: 47, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {
