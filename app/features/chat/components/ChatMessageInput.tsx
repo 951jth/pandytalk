@@ -2,6 +2,7 @@ import React from 'react'
 import {StyleSheet, View} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 
+import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {
   useChatMessageInput,
   type ChatInputPropTypes,
@@ -18,12 +19,20 @@ export default function ChatMessageInput({
   targetIds,
   chatType = 'group',
 }: ChatInputPropTypes) {
+  const {scrollToBottom} = useChatRoomUIAction()
   const {text, loading, selectedImage, setText, onSendMessage, removeImage} =
     useChatMessageInput({
       roomInfo,
       targetIds,
       chatType,
     })
+
+  const handleSend = (type: 'text' | 'image', result?: any) => {
+    if (!loading) {
+      onSendMessage(type, result)
+      scrollToBottom(true)
+    }
+  }
 
   const selectedImages = selectedImage?.assets || []
 
@@ -38,7 +47,7 @@ export default function ChatMessageInput({
 
         <View style={[styles.inputContents]}>
           <UploadButton
-            onChange={res => !loading && onSendMessage('image', res)}
+            onChange={res => handleSend('image', res)}
             options={{quality: 0.5, selectionLimit: MAX_CHAT_IMAGES}}
             style={styles.uploadButton}
             disabled={loading}
@@ -62,14 +71,14 @@ export default function ChatMessageInput({
               outlineStyle={styles.chatTextOutlined}
               placeholder={
                 selectedImages.length > 0
-                  ? '사진에 대해 설명해주세요...'
-                  : '메시지 입력 또는 @팬디로 AI 호출'
+                  ? '사진 설명 입력...'
+                  : '메시지 입력 (@팬디 호출)'
               }
               value={text}
               onChangeText={setText}
               multiline={true}
               dense={true}
-              onSubmitEditing={() => !loading && onSendMessage('text')}
+              onSubmitEditing={() => handleSend('text')}
             />
           </View>
           <IconButton
@@ -77,7 +86,7 @@ export default function ChatMessageInput({
             size={25}
             style={styles.sendButton}
             iconColor={COLORS.onPrimary}
-            onPress={() => !loading && onSendMessage('text')}
+            onPress={() => handleSend('text')}
             loading={loading}
             disabled={loading}
           />
@@ -138,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(242, 114, 73, 0.05)',
   },
   uploadButton: {
-    marginBottom: 10,
+    marginBottom: 11.5,
   },
   sendButton: {
     padding: 0,

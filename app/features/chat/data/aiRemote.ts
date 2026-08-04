@@ -117,6 +117,12 @@ export const aiRemote = {
         onError(new Error(errorEvent.message || 'SSE connection failed'))
         es.close()
       })
+
+      return {
+        close: () => {
+          es.close()
+        },
+      }
     } catch (error) {
       onError(error)
     }

@@ -1,5 +1,4 @@
 import {useChatMessagesInfinite} from '@app/features/chat/hooks/useChatMessagesInfinite'
-import {useChatScroll} from '@app/features/chat/hooks/useChatScroll'
 import {useSubscribeChatMessages} from '@app/features/chat/hooks/useSubscribeChatMessages'
 // import {useSyncChatMessages} from '@app/features/chat/hooks/useSyncChatMessages' // 신규 추가
 import {useUpdateLastReadOnBlur} from '@app/features/chat/hooks/useUpdateLastReadOnBlur'
@@ -7,10 +6,7 @@ import type {AppRouteParamList, InitialChatInfo} from '@app/navigation/types'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
 import {isSameDate, isSameMinute, isSameSender} from '@app/shared/utils/chat'
-import {
-  useNavigation,
-  type NavigationProp,
-} from '@react-navigation/native'
+import {useNavigation, type NavigationProp} from '@react-navigation/native'
 import {useCallback, useMemo} from 'react'
 
 type Props = {
@@ -76,15 +72,6 @@ export const useChatMessageList = ({
 
   // 채팅 목록 구독
   useSubscribeChatMessages(roomId) // 채팅방 구독설정
-  // 채팅 메시지 스크롤
-  const latestMessage = messages?.[0]
-  const {flatListRef, isAtBottom, handleScroll, scrollToBottom} = useChatScroll(
-    {
-      userId,
-      latestMessageId: latestMessage?.id,
-      isMine: latestMessage?.senderId === userId,
-    },
-  )
 
   const handleMessagePress = useCallback(
     (message: ChatMessage) => {
@@ -104,10 +91,6 @@ export const useChatMessageList = ({
     hasNextPage,
     isFetchingNextPage,
     membersMap,
-    flatListRef,
-    handleScroll,
-    scrollToBottom,
-    isAtBottom,
     handleMessagePress,
   }
 }

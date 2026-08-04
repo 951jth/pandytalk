@@ -5,6 +5,7 @@ import {Platform, StyleSheet, View} from 'react-native'
 import ChatMessageItem, {
   ChatMessageItemProps,
 } from '@features/chat/components/ChatMessageItem'
+import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
 import type {InitialChatInfo} from '@app/navigation/types'
@@ -57,10 +58,10 @@ export default function ChatMessageList({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    flatListRef,
-    handleScroll,
     handleMessagePress,
   } = useChatMessageList({userId, roomId, roomInfo, initialChatInfo})
+
+  const {flatListRef, handleScroll} = useChatRoomUIAction()
 
   const renderMessage = useCallback(
     ({item}: {item: ChatMessageItemProps}) => {

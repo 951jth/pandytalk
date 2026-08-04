@@ -1,3 +1,4 @@
+import {ChatRoomUIProvider} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useGroupChatRoomScreen} from '@app/features/chat/hooks/useGroupChatRoomScreen'
 import COLORS from '@shared/constants/color'
 import React from 'react'
@@ -13,25 +14,27 @@ export default function GroupChatRoomScreen() {
     useGroupChatRoomScreen()
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardUtilitiesWrapper useTouchable={false}>
-        <AppHeader title={headerTitle} titleAlign="left" />
-        <ChatMessageList
-          roomId={roomId}
-          userId={user?.uid}
-          roomInfo={roomInfo}
-          initialChatInfo={initialChatInfo}
-          chatType={'group'}
-        />
-        <ChatInputBox roomInfo={roomInfo} chatType="group" />
-      </KeyboardUtilitiesWrapper>
-    </SafeAreaView>
+    <ChatRoomUIProvider>
+      <SafeAreaView style={styles.container}>
+        <KeyboardUtilitiesWrapper useTouchable={false}>
+          <AppHeader title={headerTitle} titleAlign="left" />
+          <ChatMessageList
+            roomId={roomId}
+            userId={user?.uid}
+            roomInfo={roomInfo}
+            initialChatInfo={initialChatInfo}
+            chatType={'group'}
+          />
+          <ChatInputBox roomInfo={roomInfo} chatType="group" />
+        </KeyboardUtilitiesWrapper>
+      </SafeAreaView>
+    </ChatRoomUIProvider>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'transparent',
   },
 })

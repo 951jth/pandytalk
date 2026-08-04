@@ -3,7 +3,9 @@ import {useCreateChatRoomMutation} from '@app/features/chat/hooks/useChatRoomCre
 import {setChatMessagePayload} from '@app/features/chat/utils/message'
 import {fileService} from '@app/features/media/service/fileService'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
+import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useAppSelector} from '@app/store/reduxHooks'
+import type {RootState} from '@app/store/store'
 import {useMemo, useState} from 'react'
 import {Alert} from 'react-native'
 import type {ImagePickerResponse} from 'react-native-image-picker'
@@ -31,11 +33,12 @@ export const useChatMessageInput = ({
   const [selectedImage, setSelectedImage] =
     useState<ImagePickerResponse | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
-  const {data: user} = useAppSelector(state => state.user)
+  const {data: user} = useAppSelector((state: RootState) => state.user)
   const {mutate: sendMessageAndCache} = useChatMessageUpsertMutation(
     roomInfo?.id,
   )
   const {mutateAsync: createChatRoomAndCache} = useCreateChatRoomMutation()
+  const {setIsAIGenerating} = useChatRoomUIAction()
 
   const isDisabled = useMemo(() => {
     if (!roomInfo) return false
@@ -117,6 +120,15 @@ export const useChatMessageInput = ({
         user,
       })
       if (!reformedMsg) throw new Error('메시지 생성에 실패했습니다.')
+
+      // AI 멘션 포함 시 서버 응답(Firestore 생성) 전이라도 즉각적으로 UI에 그라데이션 표시
+      if (
+        reformedMsg.type === 'text' &&
+        reformedMsg.text?.includes('@팬디')
+      ) {
+        setIsAIGenerating(true)
+      }
+
       sendMessageAndCache({
         message: reformedMsg,
         createdRoomId: fetchedRoomInfo.id,
