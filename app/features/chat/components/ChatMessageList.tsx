@@ -5,7 +5,10 @@ import {Platform, StyleSheet, View} from 'react-native'
 import ChatMessageItem, {
   ChatMessageItemProps,
 } from '@features/chat/components/ChatMessageItem'
-import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
+import {
+  useChatRoomUIAction,
+  useChatRoomUIState,
+} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
 import type {InitialChatInfo} from '@app/navigation/types'
@@ -62,6 +65,7 @@ export default function ChatMessageList({
   } = useChatMessageList({userId, roomId, roomInfo, initialChatInfo})
 
   const {flatListRef, handleScroll} = useChatRoomUIAction()
+  const {inputHeight} = useChatRoomUIState()
 
   const renderMessage = useCallback(
     ({item}: {item: ChatMessageItemProps}) => {
@@ -86,6 +90,7 @@ export default function ChatMessageList({
         data={messagesWithUi || []} // 메시지 가공 데이터 연결
         keyExtractor={item => item.item?.id}
         renderItem={renderMessage}
+        ListHeaderComponent={<View style={{height: inputHeight + 8}} />}
         contentContainerStyle={styles.chatList}
         keyboardShouldPersistTaps="handled"
         refreshing={isLoading}

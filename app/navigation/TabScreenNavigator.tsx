@@ -5,6 +5,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {StyleSheet} from 'react-native'
 import {Icon} from 'react-native-paper'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 import {ActionTabButton} from '../features/app/components/ActionTabBarButton'
 
 const Tab = createBottomTabNavigator<TabParamList>()
@@ -30,9 +31,12 @@ const createTabBarIcon =
 
 export default function TabScreenNavigator(): React.JSX.Element {
   const tabs = useTabScreens()
+  const {bottom} = useSafeAreaInsets()
+  const tabBarHeight = TAB_BAR_HEIGHT + bottom
 
   return (
     <Tab.Navigator
+      safeAreaInsets={{bottom: 0}}
       screenOptions={({route}) => {
         const currentRoute = tabs.find(r => r.name === route.name)
         return {
@@ -43,7 +47,10 @@ export default function TabScreenNavigator(): React.JSX.Element {
           tabBarShowLabel: true,
           tabBarLabelStyle: styles.tabBarLabel,
           tabBarItemStyle: {justifyContent: 'center'}, // 중앙 정렬 명시
-          tabBarStyle: styles.tabBar,
+          tabBarStyle: [
+            styles.tabBar,
+            {height: tabBarHeight, paddingBottom: bottom + 4},
+          ],
           sceneStyle: styles.screenContainer,
         }
       }}>
@@ -100,12 +107,12 @@ export default function TabScreenNavigator(): React.JSX.Element {
 const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: COLORS.background,
-    borderTopWidth: 0,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.white + '8C',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     position: 'absolute',
-    height: TAB_BAR_HEIGHT,
-    paddingBottom: 4, // 라벨 아래쪽 미세 여백
+    paddingTop: 4,
     // 그림자 설정
     shadowColor: '#000',
     shadowOffset: {width: 0, height: -4},
@@ -121,6 +128,5 @@ const styles = StyleSheet.create({
   screenContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingBottom: TAB_BAR_HEIGHT,
   },
 })

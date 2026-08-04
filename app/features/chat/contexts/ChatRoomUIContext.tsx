@@ -9,6 +9,7 @@ import {useChatScroll} from '../hooks/useChatScroll'
 interface ChatRoomUIState {
   isAtBottom: boolean
   isAIGenerating: boolean
+  inputHeight: number
 }
 
 interface ChatRoomUIAction {
@@ -16,6 +17,7 @@ interface ChatRoomUIAction {
   handleScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
   scrollToBottom: (animated?: boolean) => void
   setIsAIGenerating: (value: boolean) => void
+  setInputHeight: (value: number) => void
 }
 
 const ChatRoomUIStateContext = createContext<ChatRoomUIState | null>(null)
@@ -26,13 +28,21 @@ import {View, StyleSheet} from 'react-native'
 
 export const ChatRoomUIProvider = ({children}: {children: ReactNode}) => {
   const [isAIGenerating, setIsAIGenerating] = React.useState(false)
+  const [inputHeight, setInputHeight] = React.useState(0)
   const {flatListRef, isAtBottom, handleScroll, scrollToBottom} =
     useChatScroll()
 
   return (
     <ChatRoomUIActionContext.Provider
-      value={{flatListRef, handleScroll, scrollToBottom, setIsAIGenerating}}>
-      <ChatRoomUIStateContext.Provider value={{isAtBottom, isAIGenerating}}>
+      value={{
+        flatListRef,
+        handleScroll,
+        scrollToBottom,
+        setIsAIGenerating,
+        setInputHeight,
+      }}>
+      <ChatRoomUIStateContext.Provider
+        value={{isAtBottom, isAIGenerating, inputHeight}}>
         <View style={{flex: 1, backgroundColor: COLORS.background}}>
           <AnimatedAIGradient />
           {children}

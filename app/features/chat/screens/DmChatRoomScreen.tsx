@@ -3,7 +3,6 @@ import ChatMessageList from '@app/features/chat/components/ChatMessageList'
 import {ChatRoomUIProvider} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useDmChatRoomScreen} from '@app/features/chat/hooks/useDmChatRoomScreen'
 import AppHeader from '@app/layout/AppHeader'
-import COLORS from '@app/shared/constants/color'
 import KeyboardUtilitiesWrapper from '@app/shared/ui/container/KeyboardUtilitiesWrapper'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -15,7 +14,7 @@ export default function DmChatRoomScreen() {
 
   return (
     <ChatRoomUIProvider>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <View style={styles.inner}>
             <AppHeader title={headerTitle} titleAlign="left" />
@@ -44,14 +43,7 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
+    position: 'relative',
     backgroundColor: 'transparent',
-  },
-  inputWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    zIndex: 10,
   },
 })

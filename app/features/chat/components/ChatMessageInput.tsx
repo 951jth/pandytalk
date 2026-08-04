@@ -1,6 +1,7 @@
-import React from 'react'
-import {StyleSheet, View} from 'react-native'
+import React, {useCallback} from 'react'
+import {StyleSheet, View, type LayoutChangeEvent} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 
 import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {
@@ -9,6 +10,7 @@ import {
 } from '@features/chat/hooks/useChatMessageInput'
 import {MAX_CHAT_IMAGES} from '@shared/constants/chat'
 import COLORS from '@shared/constants/color'
+import useKeyboardFocus from '@shared/hooks/useKeyboardFocus'
 import UploadButton from '@shared/ui/upload/UploadButton'
 
 import ChatMentionSuggestion from './ChatMentionSuggestion'
@@ -19,7 +21,9 @@ export default function ChatMessageInput({
   targetIds,
   chatType = 'group',
 }: ChatInputPropTypes) {
-  const {scrollToBottom} = useChatRoomUIAction()
+  const {scrollToBottom, setInputHeight} = useChatRoomUIAction()
+  const {bottom} = useSafeAreaInsets()
+  const {isKeyboardVisible} = useKeyboardFocus()
   const {text, loading, selectedImage, setText, onSendMessage, removeImage} =
     useChatMessageInput({
       roomInfo,
@@ -35,87 +39,104 @@ export default function ChatMessageInput({
   }
 
   const selectedImages = selectedImage?.assets || []
+  const bottomPadding = bottom + (isKeyboardVisible ? 12 : 8)
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      setInputHeight(event.nativeEvent.layout.height)
+    },
+    [setInputHeight],
+  )
 
   return (
-    <>
-      <View style={[styles.inputWrapper]}>
-        <ChatMentionSuggestion
-          text={text}
-          setText={setText}
+    <View
+      onLayout={handleLayout}
+      style={[styles.inputWrapper, {paddingBottom: bottomPadding}]}>
+      <ChatMentionSuggestion
+        text={text}
+        setText={setText}
+        disabled={loading}
+      />
+
+      <View style={styles.inputContents}>
+        <UploadButton
+          onChange={res => handleSend('image', res)}
+          options={{quality: 0.5, selectionLimit: MAX_CHAT_IMAGES}}
+          style={styles.uploadButton}
+          iconColor={COLORS.primary}
           disabled={loading}
         />
-
-        <View style={[styles.inputContents]}>
-          <UploadButton
-            onChange={res => handleSend('image', res)}
-            options={{quality: 0.5, selectionLimit: MAX_CHAT_IMAGES}}
-            style={styles.uploadButton}
-            disabled={loading}
-          />
-          <View style={styles.textInputContainer}>
-            {selectedImages.length > 0 && (
-              <View style={styles.previewList}>
-                {selectedImages.map((asset, idx) => (
-                  <ChatUploadImagePreview
-                    key={asset.uri || idx}
-                    uri={asset.uri!}
-                    onRemove={() => removeImage(asset.uri!)}
-                  />
-                ))}
-              </View>
-            )}
-            <TextInput
-              style={[styles.chatTextInput]}
-              mode="outlined"
-              contentStyle={styles.chatTextContent}
-              outlineStyle={styles.chatTextOutlined}
-              placeholder={
-                selectedImages.length > 0
-                  ? '사진 설명 입력...'
-                  : '메시지 입력 (@팬디 호출)'
-              }
-              value={text}
-              onChangeText={setText}
-              multiline={true}
-              dense={true}
-              onSubmitEditing={() => handleSend('text')}
-            />
-          </View>
-          <IconButton
-            icon="send"
-            size={25}
-            style={styles.sendButton}
-            iconColor={COLORS.onPrimary}
-            onPress={() => handleSend('text')}
-            loading={loading}
-            disabled={loading}
+        <View style={styles.textInputContainer}>
+          {selectedImages.length > 0 && (
+            <View style={styles.previewList}>
+              {selectedImages.map((asset, idx) => (
+                <ChatUploadImagePreview
+                  key={asset.uri || idx}
+                  uri={asset.uri!}
+                  onRemove={() => removeImage(asset.uri!)}
+                />
+              ))}
+            </View>
+          )}
+          <TextInput
+            style={styles.chatTextInput}
+            mode="outlined"
+            contentStyle={styles.chatTextContent}
+            outlineStyle={styles.chatTextOutlined}
+            placeholder={
+              selectedImages.length > 0
+                ? '사진 설명 입력...'
+                : '메시지 입력 (@팬디 호출)'
+            }
+            value={text}
+            onChangeText={setText}
+            textColor={COLORS.text}
+            placeholderTextColor={COLORS.textSecondary}
+            cursorColor={COLORS.primary}
+            multiline={true}
+            dense={true}
+            onSubmitEditing={() => handleSend('text')}
           />
         </View>
+        <IconButton
+          icon="send"
+          size={25}
+          style={styles.sendButton}
+          iconColor={COLORS.onPrimary}
+          onPress={() => handleSend('text')}
+          loading={loading}
+          disabled={loading}
+        />
       </View>
-    </>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   inputWrapper: {
-    position: 'relative',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
     backgroundColor: 'transparent',
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingHorizontal: 12,
   },
   inputContents: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface + 'D1',
     borderRadius: 35,
+    borderWidth: 1,
+    borderColor: COLORS.white + '8C',
     flexDirection: 'row',
     gap: 8,
     alignItems: 'flex-end', // 사진이 있을 때 버튼들을 아래로 정렬
     paddingVertical: 6,
     paddingHorizontal: 12,
     shadowColor: '#2D241F',
-    shadowOffset: {width: 0, height: 10},
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
   },
   textInputContainer: {
     flex: 1,
@@ -144,10 +165,14 @@ const styles = StyleSheet.create({
   chatTextOutlined: {
     borderRadius: 25,
     borderWidth: 0,
-    backgroundColor: 'rgba(242, 114, 73, 0.05)',
+    backgroundColor: COLORS.primary + '0F',
   },
   uploadButton: {
-    marginBottom: 11.5,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginBottom: 4,
+    backgroundColor: COLORS.primary + '1A',
   },
   sendButton: {
     padding: 0,

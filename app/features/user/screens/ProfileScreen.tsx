@@ -1,6 +1,7 @@
 import React from 'react'
 import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
 
 import ProfileMenu from '@app/features/user/components/ProfileMenu'
 import {useProfileScreen} from '@app/features/user/hooks/useProfileScreen'
@@ -14,6 +15,7 @@ import InputForm from '../../../shared/ui/form/InputForm'
  * 초경량화된 아키텍처 (userInfo 내부 조회, reset 액션 통합)
  */
 export default function ProfileScreen(): React.JSX.Element {
+  const tabBarHeight = useBottomTabBarHeight()
   const {
     userInfo,
     submitting,
@@ -39,7 +41,10 @@ export default function ProfileScreen(): React.JSX.Element {
 
       <ScrollView
         style={styles.contents}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {paddingBottom: tabBarHeight + 24},
+        ]}
         showsVerticalScrollIndicator={false}>
         {/* 아바타 중앙 배치 영역 */}
         <View style={styles.profileWrap}>
@@ -112,7 +117,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 60,
-    paddingBottom: 40,
   },
   contents: {
     flexGrow: 1,

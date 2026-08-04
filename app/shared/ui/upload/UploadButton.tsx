@@ -12,6 +12,7 @@ import {
 } from '../../utils/permission'
 interface propTypes {
   iconSize?: number
+  iconColor?: string
   onChange?: (result: ImagePickerResponse) => void
   options?: Omit<ImageLibraryOptions, 'mediaType'>
   style?: StyleProp<ViewStyle>
@@ -20,6 +21,7 @@ interface propTypes {
 
 export default function UploadButton({
   iconSize = 25,
+  iconColor,
   onChange,
   options,
   style,
@@ -47,8 +49,9 @@ export default function UploadButton({
       <IconButton
         icon={'plus'}
         size={iconSize}
+        iconColor={iconColor}
         style={[styles.iconButton, {width: iconSize, height: iconSize}, style]}
-        contentStyle={{width: iconSize, height: iconSize}}
+        contentStyle={styles.iconButtonContent}
         onPress={pickFile}
         disabled={disabled}
       />
@@ -66,5 +69,11 @@ const styles = StyleSheet.create({
     // backgroundColor: COLORS.outerColor,
     margin: 0,
     padding: 0,
+  },
+  iconButtonContent: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })
