@@ -215,14 +215,17 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     ) {
       startStreaming(chatId, item)
     }
+  }, [enabled, chatId, item, startStreaming, isStreaming])
 
+  // 컴포넌트 언마운트 시 스트림 연결 해제
+  useEffect(() => {
     return () => {
       if (connectionRef.current) {
         connectionRef.current.close()
         connectionRef.current = null
       }
     }
-  }, [enabled, chatId, item, startStreaming, isStreaming])
+  }, [])
 
   const resetStream = useCallback(() => {
     if (timerRef.current) {

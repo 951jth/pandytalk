@@ -2,16 +2,16 @@ import {FlashList} from '@shopify/flash-list'
 import React, {memo, useCallback} from 'react'
 import {Platform, StyleSheet, View} from 'react-native'
 
-import ChatMessageItem, {
-  ChatMessageItemProps,
-} from '@features/chat/components/ChatMessageItem'
 import {
   useChatRoomUIAction,
   useChatRoomUIState,
 } from '@app/features/chat/contexts/ChatRoomUIContext'
+import type {InitialChatInfo} from '@app/navigation/types'
+import ChatMessageItem, {
+  ChatMessageItemProps,
+} from '@features/chat/components/ChatMessageItem'
 import {useChatMessageList} from '@features/chat/hooks/useChatMessageList'
 import {ChatRoom} from '@shared/types/chat'
-import type {InitialChatInfo} from '@app/navigation/types'
 
 type Props = {
   roomId: string | null
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
   },
   chatList: {
     paddingBottom: 16,
-    paddingTop: 8,
     paddingHorizontal: 16,
   },
 })

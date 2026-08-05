@@ -51,11 +51,7 @@ export default function ChatMessageInput({
     <View
       onLayout={handleLayout}
       style={[styles.inputWrapper, {paddingBottom: bottomPadding}]}>
-      <ChatMentionSuggestion
-        text={text}
-        setText={setText}
-        disabled={loading}
-      />
+      <ChatMentionSuggestion text={text} setText={setText} disabled={loading} />
 
       <View style={styles.inputContents}>
         <UploadButton
@@ -123,7 +119,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   inputContents: {
-    backgroundColor: COLORS.surface + 'D1',
+    backgroundColor: COLORS.surface + 'F2',
     borderRadius: 35,
     borderWidth: 1,
     borderColor: COLORS.white + '8C',
