@@ -1,6 +1,8 @@
+import {getAuth} from 'firebase-admin/auth'
 import * as logger from 'firebase-functions/logger'
 import {onRequest} from 'firebase-functions/v2/https'
 import {OpenAI} from 'openai'
+import {AI_BOT_ID} from '../../constants/ai'
 import {db} from '../../core/firebase'
 import {handleAiError, updateAiResponse} from '../../services/aiChatService'
 import {
@@ -31,6 +33,11 @@ const toStringArray = (value: unknown) =>
     ? value.filter((item): item is string => typeof item === 'string')
     : undefined
 
+const toBearerToken = (authorization?: string) => {
+  if (!authorization?.startsWith('Bearer ')) return undefined
+  return authorization.slice('Bearer '.length).trim()
+}
+
 /**
  * HTTP SSE 스트리밍을 통해 AI 응답을 즉시 반환하고 Firestore에 저장하는 하이브리드 함수
  */
@@ -41,6 +48,26 @@ export const onAiStream = onRequest(
     cors: true,
   },
   async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(405).json({error: 'POST 요청만 허용됩니다.'})
+      return
+    }
+
+    const idToken = toBearerToken(req.headers.authorization)
+    if (!idToken) {
+      res.status(401).json({error: '인증 토큰이 필요합니다.'})
+      return
+    }
+
+    let requesterUid: string
+    try {
+      requesterUid = (await getAuth().verifyIdToken(idToken)).uid
+    } catch (error) {
+      logger.warn('[onAiStream] Firebase ID token verification failed', error)
+      res.status(401).json({error: '유효하지 않은 인증 토큰입니다.'})
+      return
+    }
+
     // SSE 헤더 설정
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')
@@ -49,13 +76,8 @@ export const onAiStream = onRequest(
     // prompt는 AI Mention에서 질문한 내용 (id는 messageId로 하위 호환성 유지)
     const body = isRecord(req.body) ? req.body : {}
     const chatId = toStringValue(body.chatId)
-    const prompt = toStringValue(body.prompt)
     const bodyMessageId = toStringValue(body.messageId)
     const bodyId = toStringValue(body.id)
-    const createdAt =
-      typeof body.createdAt === 'number' ? body.createdAt : undefined
-    const imageUrl = toStringValue(body.imageUrl)
-    const imageUrls = toStringArray(body.imageUrls)
     const messageId = bodyMessageId || bodyId
 
     logger.info(
@@ -66,7 +88,7 @@ export const onAiStream = onRequest(
     let aiReplyText = ''
     let isResponseSaved = false // 중복 저장 방지용 플래그
 
-    req.on('close', () => {
+    res.on('close', () => {
       if (!res.writableEnded) {
         logger.info(
           `🔌 [onAiStream] Client disconnected: ${toAiStreamLogTarget(chatId, messageId)}`,
@@ -76,12 +98,87 @@ export const onAiStream = onRequest(
     })
 
     try {
-      if (!chatId || !prompt) {
+      if (!chatId || !messageId) {
         logger.warn(
-          `⚠️ 필수 파라미터 누락됨: chatId=${chatId}, prompt=${prompt ? '있음' : '없음'}`,
+          `⚠️ 필수 파라미터 누락됨: chatId=${chatId}, messageId=${messageId}`,
         )
+        res.write(`data: ${JSON.stringify({error: 'Invalid parameters'})}\n\n`)
+        res.end()
+        return
+      }
+
+      // 클라이언트 payload를 신뢰하지 않고 저장된 AI 메시지를 원본으로 사용합니다.
+      const roomRef = db.doc(`chats/${chatId}`)
+      const messageRef = roomRef.collection('messages').doc(messageId)
+      const [messageSnap, chatDoc] = await db.getAll(messageRef, roomRef)
+      const messageData = messageSnap.data()
+      const chatData = chatDoc.data()
+
+      if (
+        !messageSnap.exists ||
+        !chatDoc.exists ||
+        !messageData ||
+        !chatData ||
+        messageData.senderId !== AI_BOT_ID
+      ) {
+        isResponseSaved = true
         res.write(
-          `data: ${JSON.stringify({error: 'Invalid parameters', received: req.body})}\n\n`,
+          `data: ${JSON.stringify({error: 'AI message not found'})}\n\n`,
+        )
+        res.end()
+        return
+      }
+
+      const members = chatData?.members
+      if (!Array.isArray(members) || !members.includes(requesterUid)) {
+        isResponseSaved = true
+        res.write(
+          `data: ${JSON.stringify({error: '채팅방 접근 권한이 없습니다.'})}\n\n`,
+        )
+        res.end()
+        return
+      }
+
+      if (messageData.mentionerId !== requesterUid) {
+        isResponseSaved = true
+        res.write(
+          `data: ${JSON.stringify({error: 'AI 질문자만 스트림을 시작할 수 있습니다.'})}\n\n`,
+        )
+        res.end()
+        return
+      }
+
+      if (messageData.status === 'success') {
+        isResponseSaved = true
+        res.write(
+          `data: ${JSON.stringify({error: 'AI response already completed'})}\n\n`,
+        )
+        res.end()
+        return
+      }
+
+      if (messageData.status !== 'streaming') {
+        isResponseSaved = true
+        res.write(
+          `data: ${JSON.stringify({error: 'AI 스트림을 시작할 수 없는 상태입니다.'})}\n\n`,
+        )
+        res.end()
+        return
+      }
+
+      const prompt = toStringValue(messageData.prompt) || ''
+      const imageUrl = toStringValue(messageData.imageUrl)
+      const imageUrls = toStringArray(messageData.imageUrls)
+
+      if (!prompt && !imageUrl && !imageUrls?.length) {
+        await handleAiError({
+          chatId,
+          messageId,
+          error: new Error('AI 요청 내용이 없습니다.'),
+        })
+        isResponseSaved = true
+        res.write(
+          `data: ${JSON.stringify({error: 'AI request content is empty'})}\n\n`,
         )
         res.end()
         return
@@ -90,8 +187,6 @@ export const onAiStream = onRequest(
       const openai = new OpenAI({apiKey: process.env.OPENAI_API_SECRET})
 
       // 🔍 채팅방 문서에서 캐싱된 맥락(recentMessages) 가져오기
-      const chatDoc = await db.doc(`chats/${chatId}`).get()
-      const chatData = chatDoc.data()
       const history = toAiRecentMessages(chatData?.recentMessages)
 
       // 현재 질문(prompt)과 중복되는 히스토리는 제외 (가장 마지막 대화와 중복일 확률이 큼)
@@ -163,7 +258,6 @@ export const onAiStream = onRequest(
               chatId,
               messageId,
               text: aiReplyText,
-              createdAt,
             })
             isResponseSaved = true
             logger.info(

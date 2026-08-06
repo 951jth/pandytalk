@@ -1,6 +1,7 @@
 export const AI_BOT_ID = 'pandytalk_ai_bot'
 export const AI_BOT_NAME = '팬디봇'
 export const AI_IMAGE_LIMIT = 3
+export const AI_RESPONSE_EXPIRATION_MS = 90_000
 
 export const AI_BASE_PROMPT = `너는 실시간 소통 그 이상의 가치를 만드는 그룹 채팅 앱 "PandyTalk(팬디톡)"의 공식 마스코트이자 지능형 도우미 "팬디봇"이야.
 [아이덴티티]

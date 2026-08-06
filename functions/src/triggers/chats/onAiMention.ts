@@ -4,7 +4,10 @@ import {onDocumentCreated} from 'firebase-functions/v2/firestore'
 import {db} from '../../core/firebase'
 
 import {AI_BOT_ID} from '../../constants/ai'
-import {createAiInitialMessage} from '../../services/aiChatService'
+import {
+  createAiInitialMessage,
+  handleAiError,
+} from '../../services/aiChatService'
 
 // OpenAI 객체 초기화는 함수 내부에서 진행 (Secret Manager 주입 시점 문제 방지)
 export const onAiMention = onDocumentCreated(
@@ -74,7 +77,7 @@ export const onAiMention = onDocumentCreated(
         `🤖 팬디봇 메시지 예약 완료: [${chatId}] messageId=${aiMessageRef.id}`,
       )
 
-      // 2. [추가] 질문자가 15초 내에 SSE를 시작하지 않을 경우를 대비한 가상 보험(Cloud Task) 예약
+      // 2. [추가] 질문자가 30초 내에 SSE를 시작하지 않을 경우를 대비한 가상 보험(Cloud Task) 예약
       try {
         // v2 함수의 리전이 default(us-central1)가 아니므로 전체 경로를 명시해야 합니다.
         const queue = getFunctions().taskQueue(
@@ -92,6 +95,11 @@ export const onAiMention = onDocumentCreated(
         logger.info(`🤖 백업 태스크 예약 완료: ${aiMessageRef.id}`)
       } catch (err) {
         logger.error('🤖 백업 태스크 예약 실패', err)
+        await handleAiError({
+          chatId,
+          messageId: aiMessageRef.id,
+          error: err,
+        })
       }
     } catch (e) {
       logger.error('🤖 팬디봇 트리거 에러', e)

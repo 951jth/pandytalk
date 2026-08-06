@@ -46,6 +46,7 @@ export interface ChatRoomLastMessage {
   senderName?: string
   seq?: number
   status?: MessageStatus
+  aiResponseExpiresAt?: ServerTime
   roomTitle?: string
   roomUrl?: string
   skipPush?: boolean
@@ -65,6 +66,7 @@ export interface ChatMessage {
   senderName?: string
   seq?: number
   status?: MessageStatus
+  aiResponseExpiresAt?: ServerTime
   roomTitle?: string
   roomUrl?: string
   skipPush?: boolean

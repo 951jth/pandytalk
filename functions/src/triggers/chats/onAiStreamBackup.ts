@@ -70,8 +70,15 @@ export const onAiStreamBackup = onTaskDispatched(
 
       // AI 응답 도구 및 메시지 설정 (공통 서비스 활용)
       const tools = getPandibotTools()
-      if (!prompt) return
-      const messages = getPandibotMessages(prompt, [], imageUrl, imageUrls)
+      if (!prompt && !imageUrl && !imageUrls?.length) {
+        throw new Error('AI 요청 내용이 없습니다.')
+      }
+      const messages = getPandibotMessages(
+        prompt || '',
+        [],
+        imageUrl,
+        imageUrls,
+      )
 
       const aiReplyText = await getAiResponse(
         openai,
@@ -97,7 +104,6 @@ export const onAiStreamBackup = onTaskDispatched(
     } catch (err) {
       logger.error('[onAiStreamBackup] Error:', err)
 
-      // 에러 시 상태 변경
       if (chatId && messageId) {
         await handleAiError({chatId, messageId, error: err})
       }

@@ -22,6 +22,7 @@ export interface ChatMessage {
   senderName?: string
   seq?: number
   status?: 'pending' | 'success' | 'failed' | 'streaming'
+  aiResponseExpiresAt?: number
   roomTitle?: string
   roomUrl?: string
   skipPush?: boolean

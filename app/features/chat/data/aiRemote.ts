@@ -1,3 +1,4 @@
+import {auth} from '@app/shared/firebase/firestore'
 import {AI_STREAM_URL} from '@shared/constants/ai'
 import EventSource from 'react-native-sse'
 import {logAiPerf} from '../utils/aiPerfLogger'
@@ -24,6 +25,13 @@ export const aiRemote = {
       let chunkCount = 0
       let receivedChars = 0
       const messageId = item.id || 'unknown'
+      const currentUser = auth.currentUser
+
+      if (!currentUser) {
+        throw new Error('로그인 정보를 확인할 수 없습니다.')
+      }
+
+      const idToken = await currentUser.getIdToken()
 
       logAiPerf({scope: 'sse', event: 'connect', messageId})
 
@@ -31,10 +39,10 @@ export const aiRemote = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           chatId,
-          ...item,
           messageId: item.id,
         }),
       })

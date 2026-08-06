@@ -7,13 +7,12 @@ import React from 'react'
 import {
   StyleSheet,
   View,
+  type GestureResponderEvent,
   type TextProps,
   type TouchableOpacityProps,
-  type GestureResponderEvent,
 } from 'react-native'
 
-interface AiStreamingTextProps
-  extends Pick<TouchableOpacityProps, 'onPress'> {
+interface AiStreamingTextProps extends Pick<TouchableOpacityProps, 'onPress'> {
   chatId?: string
   color?: string
   item?: ChatMessage
@@ -43,7 +42,7 @@ export default function AiStreamingText({
   const isOwner = item?.mentionerId === currentUid
 
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
-  const {streamedText, error, startStreaming} = useAiStreamResponse({
+  const {streamedText, error} = useAiStreamResponse({
     chatId,
     item,
     enabled: isStreamingStatus && isOwner,
@@ -54,18 +53,15 @@ export default function AiStreamingText({
 
   if (isStreamingStatus) {
     if (error) {
-      displayValue = '응답 생성 실패 (탭하여 재시도 ↻)'
+      console.error('error', error)
+      displayValue = '응답 생성에 실패했습니다.'
     } else {
       displayValue = streamedText || '팬디봇이 답변을 생성 중입니다...'
     }
   }
 
   const handlePress = (e: GestureResponderEvent) => {
-    if (isStreamingStatus && error && chatId && item) {
-      startStreaming(chatId, item)
-    } else if (onPress) {
-      onPress(e)
-    }
+    onPress?.(e)
   }
 
   return (
