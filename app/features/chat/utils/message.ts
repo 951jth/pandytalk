@@ -2,18 +2,11 @@ import {messageRemote} from '@app/features/chat/data/messageRemote.firebase' // 
 import type {InputMessageParams} from '@app/features/chat/hooks/useChatMessageInput'
 import type {User} from '@app/shared/types/auth'
 import type {ChatMessage, ChatRoom} from '@app/shared/types/chat'
-import {InfiniteData} from '@tanstack/react-query'
 
 type SetChatMessagePayload = {
   roomInfo: ChatRoom
   message: InputMessageParams
   user: User
-}
-
-type pageType = {
-  data: ChatMessage[]
-  lastVisible: unknown | null
-  isLastPage: boolean
 }
 
 export const MESSAGE_POLICY = {
@@ -73,26 +66,6 @@ export const setChatMessagePayload = ({
   }
 
   return payload
-}
-
-//채팅 메세지 캐시 페이징 재처리
-export const rebuildMessagePages = (
-  flat: ChatMessage[],
-  old: InfiniteData<pageType>, //기존 서버에서 받아왔던 페이지 lastVisible을 유지
-  pageSize: number,
-): InfiniteData<pageType> => {
-  const newPages: pageType[] = []
-  for (let i = 0; i < flat.length; i += pageSize) {
-    const slice = flat.slice(i, i + pageSize)
-    newPages.push({
-      data: slice,
-      lastVisible:
-        old.pages[Math.min(newPages.length, old.pages.length - 1)]
-          ?.lastVisible ?? null,
-      isLastPage: i + pageSize >= flat.length,
-    })
-  }
-  return {...old, pages: newPages.length ? newPages : old.pages}
 }
 
 export const normalize = (s: string) => s.trim().toLowerCase()

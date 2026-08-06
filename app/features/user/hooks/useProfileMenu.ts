@@ -26,8 +26,8 @@ export function useProfileMenu(onReset: () => void = () => {}) {
   const queryClient = useQueryClient()
   const {logout} = useLogout()
 
-  const openMenu = () => setMenuVisible(true)
-  const closeMenu = () => setMenuVisible(false)
+  const openMenu = useCallback(() => setMenuVisible(true), [])
+  const closeMenu = useCallback(() => setMenuVisible(false), [])
 
   // 🔄 데이터 재동기화 (캐시 삭제 및 새로고침)
   const onClear = useCallback(() => {

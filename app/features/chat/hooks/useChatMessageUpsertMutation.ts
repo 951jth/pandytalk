@@ -1,6 +1,7 @@
 import {messageService} from '@app/features/chat/service/messageService'
 import type {ChatMessage} from '@app/shared/types/chat'
 import type {ReactQueryPageType} from '@app/features/chat/types/react-query'
+import {updateInfiniteQueryItems} from '@app/features/chat/utils/infiniteQuery'
 import {mergeMessages} from '@app/shared/utils/chat'
 import {convertTimestampsToMillis} from '@app/shared/utils/firebase'
 import {
@@ -75,21 +76,16 @@ export const useChatMessageUpsertMutation = (
     ) => {
       queryClient.setQueryData<MessagesInfiniteData>(key, old => {
         const base = old ?? init
-        const newPages = base.pages.map(page => ({
-          ...page,
-          data: page.data.map(message => {
+        return (
+          updateInfiniteQueryItems(base, message => {
             if (message.id !== messageId) return message
             // 구독으로 확정된 success는 늦게 도착한 실패 결과로 되돌리지 않음
             if (message.status === 'success' && status === 'failed') {
               return message
             }
             return {...message, status}
-          }),
-        }))
-        return {
-          ...base,
-          pages: newPages,
-        }
+          }) ?? base
+        )
       })
     },
     [queryClient],

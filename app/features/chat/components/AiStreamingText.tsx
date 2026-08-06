@@ -2,6 +2,8 @@ import {auth} from '@app/shared/firebase/firestore'
 import type {ChatMessage} from '@app/shared/types/chat'
 import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
+import {useRevalidateExpiredAiMessage} from '@features/chat/hooks/useRevalidateExpiredAiMessage'
+import {getAiResponseDisplayText} from '@features/chat/policies/aiResponseDisplayPolicy'
 import COLORS from '@shared/constants/color'
 import React from 'react'
 import {
@@ -37,28 +39,31 @@ export default function AiStreamingText({
   ellipsizeMode,
   onPress,
 }: AiStreamingTextProps) {
-  const isStreamingStatus = item?.status === 'streaming'
+  const {
+    isExpired,
+    status: revalidationStatus,
+    refreshedMessage,
+  } = useRevalidateExpiredAiMessage(chatId, item)
+  const effectiveItem = refreshedMessage ?? item
+  const isStreamingStatus = effectiveItem?.status === 'streaming'
   const currentUid = auth.currentUser?.uid
-  const isOwner = item?.mentionerId === currentUid
+  const isOwner = effectiveItem?.mentionerId === currentUid
 
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
   const {streamedText, error} = useAiStreamResponse({
     chatId,
-    item,
-    enabled: isStreamingStatus && isOwner,
+    item: effectiveItem,
+    enabled: isStreamingStatus && isOwner && !isExpired,
   })
 
-  // 2) 스트리밍 상태에 따른 텍스트 결정
-  let displayValue = item?.text || ''
-
-  if (isStreamingStatus) {
-    if (error) {
-      console.error('error', error)
-      displayValue = '응답 생성에 실패했습니다.'
-    } else {
-      displayValue = streamedText || '팬디봇이 답변을 생성 중입니다...'
-    }
-  }
+  // 2) 통신/재검증 상태를 사용자용 표시 문구로 변환
+  const displayValue = getAiResponseDisplayText({
+    message: effectiveItem,
+    streamedText,
+    streamError: error,
+    isExpired,
+    revalidationStatus,
+  })
 
   const handlePress = (e: GestureResponderEvent) => {
     onPress?.(e)

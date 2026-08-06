@@ -13,6 +13,19 @@ type ChatMessageSqliteRow = Omit<ChatMessage, 'imageUrls'> & {
   imageUrls?: string | string[]
 }
 
+// const logAiResponseExpirationFromSQLite = (
+//   roomId: string,
+//   message: ChatMessageSqliteRow,
+// ) => {
+//   if (!__DEV__ || message.type !== 'ai_text') return
+//
+//   console.log('[SQLite] loaded AI response expiration', {
+//     roomId,
+//     messageId: message.id,
+//     aiResponseExpiresAt: message.aiResponseExpiresAt,
+//   })
+// }
+
 export const messageLocal = {
   //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
@@ -39,6 +52,7 @@ export const messageLocal = {
                   msg.seq ?? 1,
                   msg.status ?? 'success',
                   JSON.stringify(msg.imageUrls || []),
+                  toMillisFromServerTime(msg.aiResponseExpiresAt),
                 ]
                 tx.executeSql(query, values, undefined, (_tx, error) => {
                   console.error('[SQLite] saveMessagesToSQLite stmt fail', {
@@ -175,6 +189,7 @@ export const messageLocal = {
                     item.imageUrls = []
                   }
                 }
+                // logAiResponseExpirationFromSQLite(roomId, item)
                 messages.push(item)
               }
               // ✅ ASC 정렬 (오래된 메시지 → 최신 메시지 순)
@@ -215,6 +230,7 @@ export const messageLocal = {
                     item.imageUrls = []
                   }
                 }
+                // logAiResponseExpirationFromSQLite(roomId, item)
                 messages.push(item)
               }
               resolve(messages)
@@ -321,6 +337,7 @@ export const messageLocal = {
                   item.imageUrls = []
                 }
               }
+              // logAiResponseExpirationFromSQLite(roomId, item)
               resolve(item as ChatMessage)
             },
             (_tx, error) => {
