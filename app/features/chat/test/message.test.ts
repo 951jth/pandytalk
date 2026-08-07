@@ -1,7 +1,7 @@
 import {
-  rebuildMessagePages,
   setChatMessagePayload,
 } from '@app/features/chat/utils/message'
+import {rebuildInfiniteQueryPages} from '@app/features/chat/utils/infiniteQuery'
 import {mockMessages, mockRoomInfo, mockUser} from '@app/shared/test/mocks'
 import type {ChatMessage} from '@app/shared/types/chat'
 import type {InfiniteData} from '@tanstack/react-query'
@@ -105,7 +105,7 @@ describe('message.ts', () => {
       expect(payload?.roomTitle).toBe('테스트방')
     })
   })
-  describe('rebuildMessagePages', () => {
+  describe('rebuildInfiniteQueryPages', () => {
     it('메세지 페이지를 재구성한다.', () => {
       const InfiniteData = {
         pages: [
@@ -117,7 +117,11 @@ describe('message.ts', () => {
         ],
         pageParams: [],
       }
-      const {pages} = rebuildMessagePages(mockMessages(105), InfiniteData, 20)
+      const {pages} = rebuildInfiniteQueryPages(
+        mockMessages(105),
+        InfiniteData,
+        20,
+      )
       expect(pages.length).toBe(6)
       expect(pages[0].data.length).toBe(20)
       expect(pages[1].data.length).toBe(20)
@@ -136,7 +140,11 @@ describe('message.ts', () => {
         ],
         pageParams: [],
       }
-      const {pages} = rebuildMessagePages(mockMessages(40), InfiniteData, 20)
+      const {pages} = rebuildInfiniteQueryPages(
+        mockMessages(40),
+        InfiniteData,
+        20,
+      )
       expect(pages[0].lastVisible).toBe('cursor_1')
       expect(pages[1].lastVisible).toBe('cursor_2')
     })
@@ -146,7 +154,7 @@ describe('message.ts', () => {
         pages: [],
         pageParams: [],
       }
-      const {pages} = rebuildMessagePages(
+      const {pages} = rebuildInfiniteQueryPages(
         mockMessages(45),
         emptyPages,
         20,
@@ -164,7 +172,7 @@ describe('message.ts', () => {
         ],
         pageParams: [],
       }
-      const {pages} = rebuildMessagePages([], InfiniteData, 20)
+      const {pages} = rebuildInfiniteQueryPages([], InfiniteData, 20)
 
       // 로직상 flat이 비면 old.pages를 그대로 반환함
       expect(pages).toEqual(InfiniteData.pages)

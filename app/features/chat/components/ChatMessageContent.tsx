@@ -38,7 +38,8 @@ export default function ChatMessageContent({
   const shouldShowDetailPreview =
     mode === 'bubble' &&
     !!onMessagePress &&
-    shouldOpenMessageDetail(item)
+    shouldOpenMessageDetail(item) &&
+    item.status !== 'streaming'
   const handleDetailPress = shouldShowDetailPreview
     ? () => onMessagePress(item)
     : undefined

@@ -1,5 +1,6 @@
 import {useNavigation} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import {Icon} from 'react-native-paper'
@@ -77,6 +78,7 @@ function AdminMenuItem({
 export default function AdminMenuScreen() {
   type AppNav = NativeStackNavigationProp<AppRouteParamList>
   const navigation = useNavigation<AppNav>()
+  const tabBarHeight = useBottomTabBarHeight()
 
   const onPressMenu = (item: MenuItem) => {
     navigation.navigate(item.path)
@@ -91,7 +93,10 @@ export default function AdminMenuScreen() {
       renderItem={({item}) => (
         <AdminMenuItem item={item} onPress={onPressMenu} />
       )}
-      contentContainerStyle={styles.menuItemContents}
+      contentContainerStyle={[
+        styles.menuItemContents,
+        {paddingBottom: tabBarHeight + 16},
+      ]}
       showsVerticalScrollIndicator={false}
     />
   )

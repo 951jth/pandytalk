@@ -5,6 +5,7 @@ import {
 } from '@app/features/chat/data/messageRemote.firebase'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {toMillisFromServerTime} from '@app/shared/utils/firebase'
+import {logger} from '@app/shared/services/logger'
 
 export type SendMessageParams = {
   roomId?: string
@@ -20,6 +21,40 @@ const getErrorCode = (error: unknown) =>
     : undefined
 
 export const messageService = {
+  /** 서버 메시지를 로컬 타입으로 정규화하고 terminal 상태를 SQLite에 반영합니다. */
+  refreshChatMessage: async (roomId: string, messageId: string) => {
+    if (!roomId || !messageId) return null
+
+    const remoteMessage = await messageRemote.getChatMessageById(
+      roomId,
+      messageId,
+    )
+    if (!remoteMessage) return null
+
+    const normalizedMessage: ChatMessage = {
+      ...remoteMessage,
+      createdAt:
+        toMillisFromServerTime(remoteMessage.createdAt) ?? Date.now(),
+      aiResponseExpiresAt:
+        toMillisFromServerTime(remoteMessage.aiResponseExpiresAt) ?? undefined,
+    }
+
+    // 구독이 terminal 상태를 먼저 저장한 경우, 늦게 도착한 streaming
+    // 재조회 결과로 SQLite 상태가 역행하지 않도록 terminal만 저장합니다.
+    if (normalizedMessage.status !== 'streaming') {
+      try {
+        await messageLocal.saveMessagesToSQLite(roomId, [normalizedMessage])
+      } catch (error) {
+        logger.warn('[messageService] failed to persist refreshed message', {
+          roomId,
+          messageId,
+          error,
+        })
+      }
+    }
+
+    return normalizedMessage
+  },
   //채팅방 메세지 가져오기 By Seq(서버)
   getChatMessagesFromSeq: async (
     roomId: string,
@@ -41,7 +76,7 @@ export const messageService = {
     callback: (messages: ChatMessage[]) => void,
   ): Promise<() => void> => {
     if (!roomId) {
-      console.warn('subscribeChatMessages: roomId is missing')
+      logger.warn('subscribeChatMessages: roomId is missing')
       return Promise.resolve(() => {})
     }
 
@@ -62,7 +97,7 @@ export const messageService = {
     const gap = serverLastSeq - localLastSeq
     if (gap <= 0) return false // 이미 최신 상태
 
-    console.log(`🚀 [Sync] 동기화 시작 (${roomId}): Gap ${gap}개`)
+    logger.info(`🚀 [Sync] 동기화 시작 (${roomId}): Gap ${gap}개`)
 
     let messagesToSave: ChatMessage[] = []
 
@@ -181,7 +216,7 @@ export const messageService = {
           )
         }
       } catch (e) {
-        console.error('[getChatMessages] History fetch failed', e)
+        logger.error('[getChatMessages] History fetch failed', e)
         return localMessages
       }
     }
@@ -238,14 +273,14 @@ const sendChatMessageWithRemote = async (
         result.seq,
       )
       if (!updated) {
-        console.warn('[messageService] success message not found in SQLite', {
+        logger.warn('[messageService] success message not found in SQLite', {
           roomId: fetchedRoomId,
           messageId: newMessageId,
         })
       }
     } catch (localError) {
       // 서버 전송은 성공했으므로 로컬 갱신 실패가 전송 실패로 역행하지 않게 함
-      console.warn('[messageService] failed to persist send success', {
+      logger.warn('[messageService] failed to persist send success', {
         roomId: fetchedRoomId,
         messageId: newMessageId,
         error: localError,
@@ -261,7 +296,7 @@ const sendChatMessageWithRemote = async (
           newMessageId,
         )
       } catch (localError) {
-        console.warn('[messageService] failed to persist send failure', {
+        logger.warn('[messageService] failed to persist send failure', {
           roomId: fetchedRoomId,
           messageId: newMessageId,
           error: localError,
@@ -292,7 +327,7 @@ const startChatMessageSubscription = async (
     lastSeq = await messageLocal.getMaxLocalSeq(roomId)
   } catch (error) {
     // 로컬 조회 실패가 실시간 구독 시작까지 막지 않도록 처음부터 구독
-    console.warn('[messageService] failed to read local lastSeq', {
+    logger.warn('[messageService] failed to read local lastSeq', {
       roomId,
       error,
     })
@@ -317,7 +352,7 @@ const persistSubscribedMessages = async (
     await messageLocal.saveMessagesToSQLite(roomId, messages)
   } catch (error) {
     // 로컬 저장에 실패해도 수신 메시지는 현재 화면에 표시
-    console.warn('[messageService] failed to persist subscribed messages', {
+    logger.warn('[messageService] failed to persist subscribed messages', {
       roomId,
       error,
     })

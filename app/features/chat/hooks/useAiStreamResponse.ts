@@ -1,3 +1,4 @@
+import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import type {ChatMessage} from '@app/shared/types/chat'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {aiService} from '../service/aiService'
@@ -28,6 +29,14 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
   const [isStreaming, setIsStreaming] = useState<boolean>(false) // API 통신 상태
   const [error, setError] = useState<Error | null>(null)
 
+  // Context에서 AI 생성 상태 액션 가져오기
+  const {setIsAIGenerating} = useChatRoomUIAction()
+
+  // isStreaming이 변경될 때마다 Context의 AI 생성 상태 업데이트
+  useEffect(() => {
+    setIsAIGenerating(isStreaming)
+  }, [isStreaming, setIsAIGenerating])
+
   /**
    * [UX Optimization] Ref를 활용한 데이터 관리
    * 렌더링에 즉시 영향을 주지 않아도 되는 원본 데이터와 커서 위치는
@@ -42,6 +51,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     firstRenderAt: 0,
     chunkCount: 0,
   })
+  const connectionRef = useRef<{ close: () => void } | null | undefined>(null)
 
   // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
   const isPreviouslyProcessed = useRef<boolean>(
@@ -134,7 +144,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
-        await aiService.requestAiResponse({
+        connectionRef.current = await aiService.requestAiResponse({
           chatId: targetChatId,
           item: targetItem,
           onChunk: (chunk: string) => {
@@ -206,6 +216,16 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       startStreaming(chatId, item)
     }
   }, [enabled, chatId, item, startStreaming, isStreaming])
+
+  // 컴포넌트 언마운트 시 스트림 연결 해제
+  useEffect(() => {
+    return () => {
+      if (connectionRef.current) {
+        connectionRef.current.close()
+        connectionRef.current = null
+      }
+    }
+  }, [])
 
   const resetStream = useCallback(() => {
     if (timerRef.current) {

@@ -1,7 +1,7 @@
 <resources>
-  <color name="splash_bg">#FDFCF0</color>
-  <color name="ic_launcher_background">#FDFCF0</color>
+  <color name="splashscreen_background">#FFFFFF</color>
   <color name="iconBackground">#FDFCF0</color>
   <color name="colorPrimary">#023c69</color>
-  <color name="colorPrimaryDark">#ffffff</color>
+  <color name="bootsplash_background">#fdfcf0</color>
+  <color name="splash_bg">#fdfcf0</color>
 </resources>

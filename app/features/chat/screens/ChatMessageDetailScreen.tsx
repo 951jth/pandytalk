@@ -1,5 +1,5 @@
 import ChatMessageAvatar from '@app/features/chat/components/ChatMessageAvatar'
-import ChatMessageContent from '@app/features/chat/components/ChatMessageContent'
+import ChatMessageDetailContent from '@app/features/chat/components/ChatMessageDetailContent'
 import {useChatMessageDetailScreen} from '@app/features/chat/hooks/useChatMessageDetailScreen'
 import AppHeader from '@app/layout/AppHeader'
 import COLORS from '@app/shared/constants/color'
@@ -27,19 +27,13 @@ export default function ChatMessageDetailScreen() {
     refetch,
   } = useChatMessageDetailScreen()
 
-  if (isLoading) {
-    return (
-      <DetailScreenContainer>
-        <View style={styles.stateContainer}>
-          <ActivityIndicator color={COLORS.primary} />
-        </View>
-      </DetailScreenContainer>
-    )
-  }
+  const renderContent = () => {
+    if (isLoading) {
+      return <DetailScreenSkeleton />
+    }
 
-  if (isError || !message) {
-    return (
-      <DetailScreenContainer>
+    if (isError || !message) {
+      return (
         <View style={styles.stateContainer}>
           <Text style={styles.stateText}>
             메시지 정보를 불러올 수 없습니다.
@@ -50,12 +44,10 @@ export default function ChatMessageDetailScreen() {
             <Text style={styles.retryButtonText}>다시 시도</Text>
           </TouchableOpacity>
         </View>
-      </DetailScreenContainer>
-    )
-  }
+      )
+    }
 
-  return (
-    <DetailScreenContainer>
+    return (
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.senderSection}>
           <ChatMessageAvatar item={message} />
@@ -66,23 +58,19 @@ export default function ChatMessageDetailScreen() {
         </View>
 
         <View style={styles.messageCard}>
-          <ChatMessageContent
+          <ChatMessageDetailContent
             item={message}
-            isMine={isMine}
             bubbleMaxWidth={width - 64}
-            mode="detail"
           />
         </View>
       </ScrollView>
-    </DetailScreenContainer>
-  )
-}
+    )
+  }
 
-const DetailScreenContainer = ({children}: {children: React.ReactNode}) => {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="메시지 상세" />
-      {children}
+      {renderContent()}
     </SafeAreaView>
   )
 }
@@ -153,3 +141,11 @@ const styles = StyleSheet.create({
     color: COLORS.onPrimary,
   },
 })
+
+const DetailScreenSkeleton = () => {
+  return (
+    <View style={styles.stateContainer}>
+      <ActivityIndicator color={COLORS.primary} />
+    </View>
+  )
+}

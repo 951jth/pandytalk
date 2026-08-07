@@ -2,17 +2,19 @@ import {auth} from '@app/shared/firebase/firestore'
 import type {ChatMessage} from '@app/shared/types/chat'
 import CopyableText from '@app/shared/ui/text/CopyableText'
 import {useAiStreamResponse} from '@features/chat/hooks/useAiStreamResponse'
+import {useRevalidateExpiredAiMessage} from '@features/chat/hooks/useRevalidateExpiredAiMessage'
+import {getAiResponseDisplayText} from '@features/chat/policies/aiResponseDisplayPolicy'
 import COLORS from '@shared/constants/color'
 import React from 'react'
 import {
   StyleSheet,
   View,
+  type GestureResponderEvent,
   type TextProps,
   type TouchableOpacityProps,
 } from 'react-native'
 
-interface AiStreamingTextProps
-  extends Pick<TouchableOpacityProps, 'onPress'> {
+interface AiStreamingTextProps extends Pick<TouchableOpacityProps, 'onPress'> {
   chatId?: string
   color?: string
   item?: ChatMessage
@@ -37,22 +39,34 @@ export default function AiStreamingText({
   ellipsizeMode,
   onPress,
 }: AiStreamingTextProps) {
-  const isStreamingStatus = item?.status === 'streaming'
+  const {
+    isExpired,
+    status: revalidationStatus,
+    refreshedMessage,
+  } = useRevalidateExpiredAiMessage(chatId, item)
+  const effectiveItem = refreshedMessage ?? item
+  const isStreamingStatus = effectiveItem?.status === 'streaming'
   const currentUid = auth.currentUser?.uid
-  const isOwner = item?.mentionerId === currentUid
+  const isOwner = effectiveItem?.mentionerId === currentUid
 
   // 1) 질문자 본인이면서 스트리밍 중일 때만 SSE 훅 활성화
-  const {streamedText} = useAiStreamResponse({
+  const {streamedText, error} = useAiStreamResponse({
     chatId,
-    item,
-    enabled: isStreamingStatus && isOwner,
+    item: effectiveItem,
+    enabled: isStreamingStatus && isOwner && !isExpired,
   })
 
-  // 2) 스트리밍 상태에 따른 텍스트 결정
-  let displayValue = item?.text || ''
+  // 2) 통신/재검증 상태를 사용자용 표시 문구로 변환
+  const displayValue = getAiResponseDisplayText({
+    message: effectiveItem,
+    streamedText,
+    streamError: error,
+    isExpired,
+    revalidationStatus,
+  })
 
-  if (isStreamingStatus) {
-    displayValue = streamedText || '팬디봇이 답변을 생성 중입니다...'
+  const handlePress = (e: GestureResponderEvent) => {
+    onPress?.(e)
   }
 
   return (
@@ -60,10 +74,10 @@ export default function AiStreamingText({
       <CopyableText
         value={displayValue}
         textStyle={[styles.text, color ? {color} : {}]}
-        disabled={isStreamingStatus}
+        disabled={isStreamingStatus && !error}
         numberOfLines={numberOfLines}
         ellipsizeMode={ellipsizeMode}
-        onPress={onPress}
+        onPress={handlePress}
       />
     </View>
   )

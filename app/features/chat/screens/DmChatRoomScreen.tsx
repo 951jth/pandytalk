@@ -1,8 +1,8 @@
 import ChatInputBox from '@app/features/chat/components/ChatMessageInput'
 import ChatMessageList from '@app/features/chat/components/ChatMessageList'
+import {ChatRoomUIProvider} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useDmChatRoomScreen} from '@app/features/chat/hooks/useDmChatRoomScreen'
 import AppHeader from '@app/layout/AppHeader'
-import COLORS from '@app/shared/constants/color'
 import KeyboardUtilitiesWrapper from '@app/shared/ui/container/KeyboardUtilitiesWrapper'
 import React from 'react'
 import {StyleSheet, View} from 'react-native'
@@ -12,18 +12,9 @@ export default function DmChatRoomScreen() {
   const {user, targetId, roomId, roomInfo, initialChatInfo, headerTitle} =
     useDmChatRoomScreen()
 
-  // if (isLoading || !user) {
-  //   return (
-  //     <EmptyData
-  //       text="팬디톡이 소식을 불러오는 중이에요"
-  //       subText="잠시만 기다려주세요. 곧 대화가 시작됩니다!"
-  //     />
-  //   )
-  // }
-
   return (
-    <>
-      <SafeAreaView style={styles.container}>
+    <ChatRoomUIProvider>
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <KeyboardUtilitiesWrapper useTouchable={false}>
           <View style={styles.inner}>
             <AppHeader title={headerTitle} titleAlign="left" />
@@ -41,24 +32,18 @@ export default function DmChatRoomScreen() {
           </View>
         </KeyboardUtilitiesWrapper>
       </SafeAreaView>
-    </>
+    </ChatRoomUIProvider>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   inner: {
     flex: 1,
-    backgroundColor: COLORS.background, // ✅ 프리미엄 크림 베이지 배경
-  },
-  inputWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    zIndex: 10,
+    position: 'relative',
+    backgroundColor: 'transparent',
   },
 })

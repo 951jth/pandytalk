@@ -1,7 +1,7 @@
+import {ChatRoomUIProvider} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {useGroupChatRoomScreen} from '@app/features/chat/hooks/useGroupChatRoomScreen'
-import COLORS from '@shared/constants/color'
 import React from 'react'
-import {StyleSheet} from 'react-native'
+import {StyleSheet, View} from 'react-native'
 import {SafeAreaView} from 'react-native-safe-area-context'
 import AppHeader from '../../../layout/AppHeader'
 import KeyboardUtilitiesWrapper from '../../../shared/ui/container/KeyboardUtilitiesWrapper'
@@ -13,25 +13,36 @@ export default function GroupChatRoomScreen() {
     useGroupChatRoomScreen()
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardUtilitiesWrapper useTouchable={false}>
-        <AppHeader title={headerTitle} titleAlign="left" />
-        <ChatMessageList
-          roomId={roomId}
-          userId={user?.uid}
-          roomInfo={roomInfo}
-          initialChatInfo={initialChatInfo}
-          chatType={'group'}
-        />
-        <ChatInputBox roomInfo={roomInfo} chatType="group" />
-      </KeyboardUtilitiesWrapper>
-    </SafeAreaView>
+    <ChatRoomUIProvider>
+      <SafeAreaView
+        style={styles.container}
+        edges={['top', 'left', 'right']}>
+        <KeyboardUtilitiesWrapper useTouchable={false}>
+          <View style={styles.inner}>
+            <AppHeader title={headerTitle} titleAlign="left" />
+            <ChatMessageList
+              roomId={roomId}
+              userId={user?.uid}
+              roomInfo={roomInfo}
+              initialChatInfo={initialChatInfo}
+              chatType={'group'}
+            />
+            <ChatInputBox roomInfo={roomInfo} chatType="group" />
+          </View>
+        </KeyboardUtilitiesWrapper>
+      </SafeAreaView>
+    </ChatRoomUIProvider>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'transparent',
+  },
+  inner: {
+    flex: 1,
+    position: 'relative',
+    backgroundColor: 'transparent',
   },
 })

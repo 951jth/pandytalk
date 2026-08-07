@@ -7,7 +7,7 @@ import UserJoinScreen from '@app/features/user/screens/UserJoinScreen'
 import UsersManageScreen from '@app/features/user/screens/UsersManageScreen'
 import HarnessScreen from '@app/features/harness/screens/HarnessScreen'
 import AdminInquiriesScreen from '@app/features/admin/screens/AdminInquiriesScreen'
-import MainLayout from '@app/layout/MainLayout'
+import MainLayout, {MainTabLayout} from '@app/layout/MainLayout'
 import TabScreenNavigator from '@app/navigation/TabScreenNavigator'
 import type {
   AppRouteParamList,
@@ -46,8 +46,8 @@ type LayoutItem = {
 const appRoutes = (): LayoutItem[] => {
   return [
     {
-      key: 'main',
-      layout: MainLayout,
+      key: 'main-tabs',
+      layout: MainTabLayout,
       options: {
         headerShown: false,
       },
@@ -57,6 +57,15 @@ const appRoutes = (): LayoutItem[] => {
           title: '홈',
           component: TabScreenNavigator, // 실제 탭 화면
         },
+      ],
+    },
+    {
+      key: 'main',
+      layout: MainLayout,
+      options: {
+        headerShown: false,
+      },
+      children: [
         {
           name: 'guest-manage',
           title: '유저 관리',

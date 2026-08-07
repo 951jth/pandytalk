@@ -1,185 +1,327 @@
 # PandyTalk - Local-First Chat App
 
-👉 **Live App (Android)**: Google Play – [PandyTalk](https://play.google.com/store/apps/details?id=com.cshchatapp)  
-👉 **Detailed Engineering Log**: [Notion](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
+> 오프라인에서도 대화 내역을 즉시 조회하고, AI 답변을 실시간으로 받아볼 수 있는 Local-First 채팅 앱
 
-**SQLite 기반 Local-First 아키텍처**로 오프라인에서도 끊김 없이, 실시간 웹 검색 기능을 갖춘 **AI 비서(@팬디)와 함께 그룹 및 DM 채팅**을 즐길 수 있는 지능형 채팅 서비스입니다.
+[Google Play에서 PandyTalk 보기](https://play.google.com/store/apps/details?id=com.cshchatapp) · [상세 Engineering Log](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
 
----
+PandyTalk은 그룹 채팅과 DM에 AI 비서 `@팬디`를 결합한 React Native 채팅 서비스입니다. 채팅 메시지는 SQLite를 우선 조회해 네트워크 상태와 관계없이 빠르게 표시하고, 필요한 데이터만 Firestore에서 보충합니다. AI 답변은 SSE로 스트리밍하되, 연결이 완료되지 않는 상황까지 Cloud Tasks 기반 백업 처리로 복구합니다.
 
-## 📊 Performance Results
+## 핵심 성과
 
-| 지표          | Firestore (Cloud) | SQLite (Local)         | 개선 결과        |
-| :------------ | :---------------- | :--------------------- | :--------------- |
-| **로딩 속도** | ~286.74ms         | **~9.24ms**            | **약 31배 향상** |
-| **안정성**    | 낮음 (최대 535ms) | **매우 높음 (±1.5ms)** | 일관된 UX 제공   |
+| 해결한 문제 | 적용한 방식 | 결과 |
+| :--- | :--- | :--- |
+| 채팅방 진입 시 네트워크 조회 지연 | SQLite 우선 조회와 선택적 Firestore 동기화 | 평균 조회 시간 **286.74ms → 9.24ms**, 약 **31배 향상** |
+| AI 전체 답변이 끝날 때까지 기다리는 UX | HTTP/SSE 스트리밍 | 첫 응답 체감 시간 **2,511.84ms → 771.17ms**, 약 **69.3% 감소** |
+| SSE 연결 중단 시 AI 답변이 유실될 가능성 | Firestore 상태와 Cloud Tasks 백업 처리 | 미완료 응답을 백업 태스크로 처리 |
+| 메시지 전송 실패 시 불명확한 UI 상태 | SQLite 기반 `pending → success/failed` 상태 관리 | 즉시 표시, 실패 안내, 동일 메시지 재전송 지원 |
 
-> _참고: 위 수치는 특정 테스트 환경의 측정 결과로, 절대적인 수치보다는 로컬 DB 도입 전후의 상대적인 성능 차이를 확인하기 위한 참고용 데이터입니다._
+> 성능 수치는 특정 테스트 환경에서 전환 전후를 비교한 결과입니다. 절대 성능을 보장하는 값이 아니라 아키텍처 변경에 따른 상대적 차이를 확인하기 위한 자료입니다.
 
-**측정 방법**: 채팅 메시지 조회 액션을 `performance.now()` 기반의 커스텀 측정 훅으로 감싸 Firestore 직접 조회 경로와 SQLite 로컬 조회 경로의 응답 시간을 비교했습니다. 동일한 사용자 흐름에서 측정 태그별 로그를 남겨 평균 지연 시간뿐 아니라 최대 지연과 편차를 함께 확인했습니다.
+## 주요 기능
 
-- [🔗 usePerformanceMeasure.ts (성능 측정 훅)](app/shared/hooks/usePerformanceMeasure.ts)
+- 그룹 채팅 및 1:1 DM
+- SQLite 기반 오프라인 대화 조회
+- Firestore 실시간 메시지 구독 및 누락 데이터 동기화
+- 텍스트·다중 이미지 메시지 전송
+- 메시지 전송 상태 표시와 실패 메시지 재시도
+- `@팬디` 멘션 기반 AI 답변
+- SSE 기반 AI 답변 스트리밍
+- Serper API를 활용한 AI 웹 검색
+- FCM 메시지 알림
+- EAS Update 기반 OTA 업데이트
 
----
+## Engineering Highlights
 
-## ✨ Core Features & Key Logic
+### 1. Local-First 메시지 조회
 
-### 1. 데이터 동기화
-
-서버와 로컬의 데이터를 비교하여 누락된 메시지만 골라 빠르게 동기화합니다. 불필요한 데이터 전송을 줄여 성능을 최적화했습니다.
-
-- [🔗 messageService.getChatMessages (통합 조회 로직)](app/features/chat/service/messageService.ts)
-- [🔗 useChatMessagesInfinite (인피니트 쿼리 연동)](app/features/chat/hooks/useChatMessagesInfinite.ts)
-
-### 2. Local-First 데이터 구조
-
-모든 데이터의 기준을 로컬 DB에 두어 네트워크 의존성을 제거하고 오프라인 사용성을 확보했습니다.
-
-- [🔗 messageLocal.sqlite.ts (SQLite CRUD)](app/features/chat/data/messageLocal.sqlite.ts)
-- [🔗 messageRemote.firebase.ts (Firestore 연동)](app/features/chat/data/messageRemote.firebase.ts)
-
-### 3. 하이브리드 AI 스트리밍
-
-AI 봇(@팬디)과의 대화에서 즉각적인 반응(SSE)과 영구적인 기록(Firestore)을 동시에 제공하는 하이브리드 방식을 채택했습니다.
-
-- [🔗 onAiMention (봇 응답 및 데이터 수명 주기 관리)](functions/src/triggers/chats/onAiMention.ts)
-- [🔗 onAiStream (실시간 SSE 스트리밍)](functions/src/triggers/chats/onAiStream.ts)
-- [🔗 AiStreamingText (스트리밍 통합 UI 컴포넌트)](app/features/chat/components/AiStreamingText.tsx)
-
-### 4. 공용 폼 엔진 (InputForm)
-
-JSON 설정 기반으로 복잡한 폼을 선언적으로 관리하며, 유효성 검사 및 데이터 바인딩을 자동화하여 공통 UI의 생산성을 높였습니다.
-
-- [🔗 InputForm.tsx (선언적 폼 엔진)](app/shared/ui/form/InputForm.tsx)
-- [🔗 useInputForm (폼 상태 및 검증 훅)](app/shared/ui/form/hooks/useInputForm.ts)
-
----
-
-## 🚀 Technical Deep Dive
-
-### 1. Local-First 동기화 전략 (Sync Flow)
-
-단순 조회가 아닌, 로컬 상태를 기준으로 필요한 데이터만 서버에서 선별적으로 가져오며 유저에게 막힘없는 경험을 제공합니다.
+Firestore를 매번 직접 조회하면 채팅방 진입과 과거 메시지 탐색이 네트워크 상태에 영향을 받습니다. PandyTalk은 사용자에게 보여줄 메시지를 SQLite에서 먼저 조회하고, 로컬 데이터가 부족하거나 시퀀스 간극이 발견될 때만 Firestore를 호출합니다.
 
 ```mermaid
 sequenceDiagram
-    participant App as UseCase/Hook
-    participant Local as SQLite (SSOT)
-    participant Remote as Firestore (Cloud)
+    participant UI as Screen / Hook
+    participant Service as Message Service
+    participant Local as SQLite
+    participant Remote as Firestore
 
-    App->>Local: 1. 데이터 조회 (Cursor: seq)
-    Local-->>App: 로컬 캐시 반환
-    Note over App: 2. 데이터 간극(Gap) 또는 최신성(Stale) 검사
-    alt 동기화가 필요한 경우
-        App->>Remote: 3. 누락된 시퀀스 구간 요청
-        Remote-->>App: 서버 데이터 응답
-        App->>Local: 4. 로컬 DB에 Upsert (In-place Update)
-        Local-->>App: 5. 최종 확정 데이터 반환
+    UI->>Service: 메시지 조회(roomId, cursorSeq)
+    Service->>Local: 로컬 메시지 우선 조회
+    Local-->>Service: 캐시된 메시지 반환
+    Service->>Service: 개수·내부 Gap·Cursor Gap 검사
+
+    alt 로컬 데이터가 충분함
+        Service-->>UI: 로컬 메시지 즉시 반환
+    else 보충이 필요함
+        Service->>Remote: 필요한 구간만 조회
+        Remote-->>Service: 서버 메시지 반환
+        Service->>Local: Upsert
+        Service->>Local: 저장된 최종 데이터 재조회
+        Local-->>UI: 확정된 메시지 반환
+    end
+
+    opt Remote 조회 실패
+        Service-->>UI: 기존 로컬 메시지로 Fallback
     end
 ```
 
-### 2. 하이브리드 AI 아키텍처 (Hybrid AI Streaming)
+핵심 정책은 다음과 같습니다.
 
-단순한 요청-응답 방식이 아니라, 사용자 경험을 극대화하기 위해 **실시간 스트리밍(SSE)**과 **데이터베이스 영속성(Trigger)**을 분리하여 처리합니다.
+- 로컬 페이지가 충분하고 `seq`가 연속적이면 Firestore를 호출하지 않습니다.
+- 페이지 내부 Gap 또는 cursor 시작점의 Gap을 감지하면 서버 데이터로 보충합니다.
+- 서버에서 가져온 데이터도 곧바로 반환하지 않고 SQLite에 저장한 뒤 다시 조회합니다.
+- 네트워크 조회가 실패해도 기존 로컬 메시지를 반환해 대화 조회를 막지 않습니다.
+- 최신 메시지 Gap이 100개를 넘으면 전체를 한 번에 채우지 않고 최신 50개를 우선 확보합니다.
+
+관련 코드:
+
+- [`messageService.getChatMessages`](app/features/chat/service/messageService.ts)
+- [`messageLocal.sqlite.ts`](app/features/chat/data/messageLocal.sqlite.ts)
+- [`messageRemote.firebase.ts`](app/features/chat/data/messageRemote.firebase.ts)
+- [`useChatMessagesInfinite`](app/features/chat/hooks/useChatMessagesInfinite.ts)
+
+### 2. 실패 상태까지 고려한 메시지 전송
+
+메시지를 서버 응답 이후에만 표시하면 사용자는 전송 버튼을 누른 뒤 네트워크 왕복을 기다려야 합니다. PandyTalk은 메시지를 SQLite에 `pending` 상태로 먼저 저장해 즉시 표시하고, Remote 결과에 따라 상태와 서버 `seq`를 갱신합니다.
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: SQLite에 즉시 저장
+    pending --> success: Remote 전송 성공 + seq 반영
+    pending --> failed: Remote 전송 실패
+    failed --> pending: 사용자 재시도
+    pending --> success: 동일 ID가 서버에 있으면 기존 seq 재사용
+```
+
+- 서버 전송이 성공한 뒤 로컬 상태 저장이 실패하더라도 전송 자체를 실패로 되돌리지 않습니다.
+- 실패 처리 시 현재 상태가 `pending`인 메시지만 `failed`로 변경해 늦게 도착한 결과가 성공 상태를 덮지 않게 합니다.
+- 재시도에서는 동일한 메시지 ID를 사용하고, 서버에 이미 저장된 메시지라면 기존 `seq`를 반영합니다.
+- 실시간 수신 메시지는 SQLite 저장에 실패하더라도 화면 callback으로 전달해 현재 사용자의 대화를 막지 않습니다.
+
+관련 코드:
+
+- [`sendChatMessageWithRemote`](app/features/chat/service/messageService.ts)
+- [`useChatMessageUpsertMutation`](app/features/chat/hooks/useChatMessageUpsertMutation.ts)
+- [`ChatMessageStatusIcon`](app/features/chat/components/ChatMessageStatusIcon.tsx)
+
+### 3. SSE와 백업 태스크를 결합한 AI 응답
+
+AI 답변은 전체 생성 완료를 기다리면 첫 화면 출력이 늦어집니다. 반대로 클라이언트 SSE 연결에만 의존하면 앱 종료나 네트워크 단절 시 답변이 영구 저장되지 않을 수 있습니다.
+
+PandyTalk은 실시간 경험과 실패 복구를 다음 흐름으로 결합했습니다.
 
 ```mermaid
 sequenceDiagram
-    participant App as Client App
-    participant SSE as onAiStream (HTTP/SSE)
-    participant Firestore as Firestore (Trigger)
-    participant AI as OpenAI / Web Search (Serper)
+    participant User as Client App
+    participant DB as Firestore
+    participant Mention as onAiMention
+    participant Stream as onAiStream
+    participant Task as Cloud Tasks Backup
+    participant AI as OpenAI / Serper
 
-    App->>Firestore: 1. '@팬디' 멘션 메시지 전송
-    par 실시간 스트리밍 요청
-        App->>SSE: 2. SSE 연결 시도 (POST)
-        SSE->>AI: 3. OpenAI 스트림 요청
-        AI-->>SSE: 응답 청크(Chunk) 전달
-        SSE-->>App: 4. 실시간 글자 단위 출력 (typing effect)
-    and 백그라운드 데이터 처리 (Trigger)
-        Firestore->>Firestore: 5. 'onAiMention' 발화 감지
-        Firestore->>Firestore: 6. '입력 중...' 플레이스홀더 생성
-        Firestore->>AI: 7. OpenAI 최종 응답 획득
-        AI-->>Firestore: 최종 텍스트 응답
-        Firestore->>Firestore: 8. 메시지 본문 업데이트 & 푸시 알림
+    User->>DB: @팬디 멘션 메시지 전송
+    DB->>Mention: 문서 생성 Trigger
+    Mention->>DB: AI placeholder 생성 + seq 갱신
+    Mention->>Task: 30초 후 백업 작업 예약
+
+    User->>Stream: SSE 연결
+    Stream->>AI: 스트리밍 응답 요청
+    AI-->>Stream: 텍스트 Chunk
+    Stream-->>User: SSE 실시간 출력
+    Stream->>DB: 최종 답변과 상태 저장
+
+    Task->>DB: AI 메시지 상태 확인
+    alt 이미 success 또는 failed
+        Task-->>Task: 백업 건너뜀
+    else SSE 미완료
+        Task->>AI: 전체 답변 생성
+        AI-->>Task: 최종 답변
+        Task->>DB: 답변 저장
     end
-    Note over App: 9. 스트리밍 완료 후 최종 DB 데이터로 전환
 ```
 
-- **관점의 분리**: `onAiStream`은 오직 클라이언트의 시각적 경험(실시간 스트리밍)에만 집중하며, `onAiMention`은 데이터의 무결성(DB 저장, 푸시 알림, 시퀀스 번호 관리)을 책임집니다.
-- **웹 검색 엔진 통합**: Serper API를 연동하여 AI가 최신 웹 정보를 검색하고 답변에 반영할 수 있는 Function Calling 기능을 갖추고 있습니다.
+역할을 다음과 같이 분리했습니다.
 
----
+- `onAiMention`: 멘션 감지, AI placeholder와 sequence 생성, 백업 작업 예약
+- `onAiStream`: SSE 전송, 연결 중단 감지, 생성된 최종 텍스트 저장
+- `onAiStreamBackup`: SSE 미완료 상태 확인 및 답변 대체 생성
+- `AiStreamingText`: 수신한 작은 chunk를 자연스러운 타이핑 UI로 표시
 
-## 🧰 Tech Stack
+관련 코드:
 
-| 분류 | 기술 | 용도 |
-|---|---|---|
-| **Frontend** | React Native, TypeScript | 크로스플랫폼 앱 |
-| **UI** | React Native Paper | 디자인 시스템 |
-| **Server State** | React Query | 캐싱, 인피니트 쿼리 |
-| **Client State** | Redux Toolkit | 인증 세션 등 전역 상태 최소화 |
-| **Local DB** | SQLite (SSOT) | 오프라인 우선, 빠른 조회 |
-| **Remote DB** | Firebase Firestore | 실시간 동기화 |
-| **AI** | OpenAI GPT-4o, Serper API | AI 봇 응답 + 웹 검색 |
-| **Backend** | Firebase Cloud Functions | AI 트리거, 푸시 알림 |
-| **Push** | FCM | 메시지 알림 |
-| **배포** | EAS Build + EAS Update | CI/CD, OTA 업데이트 |
+- [`onAiMention`](functions/src/triggers/chats/onAiMention.ts)
+- [`onAiStream`](functions/src/triggers/chats/onAiStream.ts)
+- [`onAiStreamBackup`](functions/src/triggers/chats/onAiStreamBackup.ts)
+- [`useAiStreamResponse`](app/features/chat/hooks/useAiStreamResponse.ts)
+- [`AiStreamingText`](app/features/chat/components/AiStreamingText.tsx)
 
----
+### 4. Feature-Based Architecture와 데이터 레이어 분리
 
-## ⚙️ Getting Started
+기능별 응집도를 유지하면서 UI가 Firebase나 SQLite 구현 세부사항을 직접 알지 않도록 계층을 분리했습니다.
 
-### Pre-requisites
-- [Node.js](https://nodejs.org/) (v18+)
-- [Yarn](https://yarnpkg.com/)
-- [Android Studio](https://developer.android.com/studio) & Android SDK (for Android Emulation)
-- [Firebase Project](https://console.firebase.google.com/) (Firestore, Auth, Functions 활성화 필요)
+```mermaid
+flowchart LR
+    Screen["Screen<br/>레이아웃·렌더링"] --> ScreenHook["Screen Hook<br/>화면 상태·사용자 흐름"]
+    ScreenHook --> QueryHook["React Query Hook<br/>서버 상태·캐시"]
+    QueryHook --> Service["Service<br/>정책·검증·도메인 변환"]
+    Service --> Remote["Remote<br/>Firestore / HTTP"]
+    Service --> Local["Local<br/>SQLite"]
+```
 
-### Installation
+- Screen은 로딩·빈 상태·목록·폼 등 UI 표현에 집중합니다.
+- Custom Hook은 화면 상태, 검색, navigation과 여러 query 상태를 조합합니다.
+- Service는 권한, 동기화, validation, payload 구성과 오류 변환을 담당합니다.
+- Remote와 Local은 외부 저장소 접근과 원시 데이터 반환에 집중합니다.
+
+## 성능 측정
+
+### SQLite 도입 전후 비교
+
+동일한 채팅 메시지 조회 흐름을 `performance.now()` 기반의 커스텀 측정 훅으로 감싸 Firestore 직접 조회와 SQLite 로컬 조회 시간을 각각 5회 측정했습니다.
+
+| 지표 | Firestore | SQLite | 결과 |
+| :--- | ---: | ---: | :--- |
+| 평균 조회 시간 | 286.74ms | 9.24ms | 약 31배 향상 |
+| 최소 조회 시간 | 155.90ms | 7.89ms | 로컬 조회 지연 감소 |
+| 최대 조회 시간 | 535.88ms | 10.91ms | 네트워크 지터 영향 축소 |
+
+- [`usePerformanceMeasure.ts`](app/shared/hooks/usePerformanceMeasure.ts)
+- [SQLite 성능 측정 원본](app/features/chat/perpomance.md)
+
+### AI 스트리밍 비교
+
+같은 모델과 프롬프트에서 tool-call과 검색 preflight를 제외하고 `stream: false` 전체 응답 완료 시점과 `stream: true` 첫 content chunk 수신 시점을 비교했습니다.
+
+| 지표 | 일반 응답 | SSE | 결과 |
+| :--- | ---: | ---: | :--- |
+| 사용자 첫 응답 체감 시간 | 2,511.84ms | 771.17ms | 1,740.67ms 단축 |
+| 개선율 | - | - | 69.30% 감소 |
+
+별도의 장문 응답 5회 측정에서는 클라이언트가 첫 chunk를 받은 뒤 첫 텍스트를 그리기까지 평균 31.40ms가 걸렸습니다. 전체 대기 시간의 주요 병목이 클라이언트 렌더링보다 OpenAI 첫 token 준비 구간에 있다는 점도 확인했습니다.
+
+- [AI 스트리밍 성능 측정 결과](docs/research/ai-stream-performance-results.md)
+- [`aiStreamBenchmark.ts`](functions/src/triggers/test/aiStreamBenchmark.ts)
+- [`aiPerfLogger.ts`](app/features/chat/utils/aiPerfLogger.ts)
+
+## 테스트 전략
+
+채팅의 핵심 정책은 Service와 Hook 단위 테스트로 검증할 수 있게 구성했습니다.
+
+| 영역 | 주요 검증 시나리오 |
+| :--- | :--- |
+| Local-First 조회 | 로컬 데이터가 충분하면 Remote 미호출 |
+| 동기화 | 데이터 부족, 내부 sequence Gap, cursor Gap 발생 시 서버 보충 |
+| 장애 대응 | Remote 오류 발생 시 로컬 데이터 반환 |
+| 메시지 전송 | `pending`, `success`, `failed` 전이와 재시도 |
+| 정합성 | Remote 성공 후 SQLite 갱신 실패가 전송 실패로 역행하지 않음 |
+| 실시간 구독 | 로컬 마지막 `seq`부터 구독하고 SQLite 저장 후 화면 반영 |
+| 구독 복구 | 로컬 조회·저장 실패 시에도 구독과 화면 반영 유지 |
+
+관련 테스트:
+
+- [`messageService.test.ts`](app/features/chat/test/messageService.test.ts)
+- [`messageLocal.test.ts`](app/features/chat/test/messageLocal.test.ts)
+- [`messageRemote.test.ts`](app/features/chat/test/messageRemote.test.ts)
+- [`useChatMessagesInfinite.test.ts`](app/features/chat/test/useChatMessagesInfinite.test.ts)
+- [`useSubscribeChatMessages.test.ts`](app/features/chat/test/useSubscribeChatMessages.test.ts)
+
+> 이 문서에서는 테스트 파일과 검증 대상을 소개합니다. 특정 커밋의 테스트 통과 여부는 CI 또는 로컬 `yarn verify` 결과로 별도 확인해야 합니다.
+
+## Tech Stack
+
+| 분류 | 기술 | 역할 |
+| :--- | :--- | :--- |
+| Mobile | React Native 0.81, React 19, TypeScript | Android·iOS 클라이언트 |
+| Runtime | Expo 54 Bare Workflow | 네이티브 프로젝트와 Expo 모듈 통합 |
+| UI | React Native Paper, FlashList | 디자인 시스템과 채팅 목록 렌더링 |
+| Server State | TanStack React Query | 캐시, infinite query, mutation |
+| Client State | Redux Toolkit | 인증 세션과 최소 전역 상태 |
+| Local DB | SQLite | 메시지 우선 조회와 오프라인 캐시 |
+| Remote DB | Firebase Firestore | 메시지 영속화와 실시간 구독 |
+| Backend | Firebase Cloud Functions, Cloud Tasks | AI 처리, 이벤트 Trigger, 실패 복구 |
+| AI | OpenAI `gpt-4o-mini`, Serper API | AI 답변과 웹 검색 |
+| Push | Firebase Cloud Messaging | 메시지 알림 |
+| Monitoring | Firebase Analytics, Crashlytics | 사용자 이벤트와 오류 추적 |
+| Delivery | EAS Build, EAS Update, GitHub Actions | 빌드·OTA 업데이트 자동화 |
+
+## Project Structure
+
+```text
+pandytalk
+├─ app
+│  ├─ bootstrap               # Firebase·SQLite 등 앱 초기화
+│  ├─ features
+│  │  ├─ chat                 # 채팅, Local-First 동기화, AI 스트리밍
+│  │  ├─ auth                 # 로그인과 인증 정책
+│  │  ├─ group                # 그룹 생성과 관리
+│  │  ├─ notification         # 알림 설정과 처리
+│  │  └─ user                 # 프로필과 사용자 정보
+│  ├─ navigation              # 인증·권한별 화면 라우팅
+│  ├─ shared
+│  │  ├─ firebase             # Firebase 공용 인프라
+│  │  ├─ sqlite               # SQLite 연결과 공용 처리
+│  │  ├─ ui                   # 재사용 UI 컴포넌트
+│  │  └─ utils                # 공용 변환·검증 유틸리티
+│  └─ store                   # 최소 전역 클라이언트 상태
+├─ functions
+│  └─ src
+│     ├─ triggers             # Firestore·HTTP·Task 함수
+│     └─ services             # AI·알림 도메인 로직
+├─ docs
+│  ├─ arch                    # 설계 문서
+│  ├─ research                # 기술 조사와 성능 측정
+│  └─ retrospectives          # 문제 해결 회고
+├─ android
+└─ ios
+```
+
+## Getting Started
+
+### 요구 사항
+
+- Node.js `20.19.4` 이상
+- Yarn
+- Android Studio와 Android SDK 또는 Xcode
+- Firestore, Authentication, Functions가 활성화된 Firebase 프로젝트
+
+### 설치
+
 ```bash
-# Repository 클론
 git clone https://github.com/951jth/pandytalk.git
 cd pandytalk
-
-# 의존성 설치
 yarn install
 ```
 
-### Environment Setup
-1. Firebase 프로젝트에서 `google-services.json` (Android) 파일을 다운로드하여 `android/app/` 경로에 배치합니다.
-2. `.env` 파일에 필요한 API Key들을 설정합니다. (OpenAI, Serper 등)
+### 환경 설정
 
-### Execution
+1. Firebase 프로젝트의 Android용 `google-services.json`을 `android/app/`에 배치합니다.
+2. iOS 실행 시 Firebase 프로젝트의 `GoogleService-Info.plist`를 네이티브 프로젝트 설정에 맞게 배치합니다.
+3. 클라이언트 환경 변수는 프로젝트의 `.env`와 `app.config.js` 설정에 맞춰 구성합니다.
+4. OpenAI와 Serper API 키는 클라이언트 파일에 넣지 않고 Firebase Functions Secret으로 설정합니다.
+
+민감한 설정 파일과 API 키는 저장소에 커밋하지 않습니다.
+
+### 실행
+
 ```bash
-# Android 실행 (에뮬레이터 또는 기기 연결 필요)
-yarn android
-
-# 메트로 번들러만 실행할 경우
+# Metro 개발 서버
 yarn start
 
-# 캐시 초기화가 필요한 경우
-yarn start --reset-cache
+# Android 개발 빌드
+yarn android
+
+# iOS 개발 빌드
+yarn ios
 ```
 
----
-
-## 🗂 Project Structure
-
-도메인(Feature) 단위로 로직을 캡슐화하여 유지보수성을 높인 **Feature-based Architecture**를 채택했습니다.
+### 정적 검사와 테스트
 
 ```bash
-app
-├─ bootstrap          # Native 연동 및 앱 초기화 (Firebase, SQLite 등)
-├─ features           # 도메인 중심의 서비스 로직 및 UI
-│  ├─ chat            # 핵심 채팅 엔진 (Sync Service, Message Hooks, Layered Data)
-│  ├─ auth            # 가입/로그인 및 세션 관리
-│  ├─ notification    # FCM 및 내부 알림 시스템
-│  └─ user            # 프로필 및 유저 컨텍스트
-├─ shared             # 전역 재사용 인프라 및 UI Kit
-│  ├─ sqlite          # Local-First의 핵심인 SQLite SSOT 관리
-│  ├─ firebase        # Firestore Remote 클라이언트
-│  ├─ ui              # 공용 시각 요소 (InputForm 엔진, 공용 버튼 등)
-│  └─ utils           # 시간 변환, 포맷터 등 유틸리티
-├─ navigation         # 권한별 화면 라우팅 정책
-└─ store              # 서버 상태 외의 최소한의 앱 전역 상태(Redux)
+# lint + TypeScript + Jest
+yarn verify
 ```
+
+## Engineering Log
+
+구현 결과뿐 아니라 선택의 배경, 장애 원인, 시도한 해결책과 후속 과제를 기록하고 있습니다.
+
+- [상세 Engineering Log](https://app.notion.com/p/3a859549cbc080bcb9f6ecbecbd7ae87?p=3a859549cbc080c9bf68c1155e975f7d&pm=c)
+

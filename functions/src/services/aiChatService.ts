@@ -1,6 +1,10 @@
 import * as logger from 'firebase-functions/logger'
 import {FieldValue, Timestamp} from 'firebase-admin/firestore'
-import {AI_BOT_ID, AI_BOT_NAME} from '../constants/ai'
+import {
+  AI_BOT_ID,
+  AI_BOT_NAME,
+  AI_RESPONSE_EXPIRATION_MS,
+} from '../constants/ai'
 import {db, messaging} from '../core/firebase'
 import type {AiRecentMessage} from '../types/chat'
 import {toAiRecentMessages, toErrorMessage} from '../utils/aiUtils'
@@ -18,6 +22,10 @@ export function createAiInitialMessage(params: {
   imageUrls?: string[]
 }) {
   const {id, prompt, mentionerId, seq, imageUrl, imageUrls} = params
+  const aiResponseExpiresAt = Timestamp.fromMillis(
+    Timestamp.now().toMillis() + AI_RESPONSE_EXPIRATION_MS,
+  )
+
   return {
     id,
     text: '팬디봇이 답변을 생성 중입니다...',
@@ -31,6 +39,7 @@ export function createAiInitialMessage(params: {
     seq,
     createdAt: FieldValue.serverTimestamp(),
     status: 'streaming' as const,
+    aiResponseExpiresAt,
     skipPush: true,
   }
 }

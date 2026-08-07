@@ -11,6 +11,7 @@ import {
   collection,
   doc,
   FirebaseFirestoreTypes,
+  getDocFromServer,
   getDocs,
   limit,
   orderBy,
@@ -29,6 +30,26 @@ export type SendChatMessageResult = {
 type SendChatMessagePayload = Omit<ChatMessage, 'createdAt'>
 
 export const messageRemote = {
+  /** 디스크 캐시를 우회하고 특정 메시지의 현재 서버 상태를 조회합니다. */
+  getChatMessageById: (roomId: string, messageId: string) => {
+    return firebaseCall('messageRemote.getChatMessageById', async () => {
+      const messageRef = doc(
+        firestore,
+        'chats',
+        roomId,
+        'messages',
+        messageId,
+      )
+      const snapshot = await getDocFromServer(messageRef)
+
+      if (!snapshot.exists()) return null
+
+      return {
+        id: snapshot.id,
+        ...snapshot.data(),
+      } as ChatMessage
+    })
+  },
   getLatestSeq: async (roomId: string): Promise<number> => {
     return firebaseCall('messageRemote.getLatestSeq', async () => {
       const messagesRef = collection(firestore, 'chats', roomId, 'messages')

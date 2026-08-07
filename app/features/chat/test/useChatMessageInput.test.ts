@@ -14,6 +14,12 @@ jest.mock('@app/features/chat/hooks/useChatRoomCreateMutation', () => ({
 jest.mock('@app/store/reduxHooks')
 jest.mock('@app/features/chat/utils/message')
 jest.mock('@app/features/media/service/fileService')
+jest.mock('@app/features/chat/contexts/ChatRoomUIContext', () => ({
+  useChatRoomUIAction: () => ({
+    setIsAIGenerating: jest.fn(),
+    scrollToBottom: jest.fn(),
+  }),
+}))
 jest.spyOn(Alert, 'alert').mockImplementation(() => {})
 
 describe('useChatMessageInput (채팅 전송 로직 테스트)', () => {

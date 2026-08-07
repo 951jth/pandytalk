@@ -1,6 +1,7 @@
 import {useUsersScreen} from '@app/features/user/hooks/useUsersScreen'
 import COLORS from '@app/shared/constants/color'
 import UserListSkeleton from '@app/features/user/components/UserListSkeleton'
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
 import React from 'react'
 import {FlatList, StyleSheet, Text, View} from 'react-native'
 import EmptyData from '../../../shared/ui/common/EmptyData'
@@ -9,6 +10,7 @@ import GroupMainThumnail from '../../group/components/GroupMainThumnail'
 import UserListItem from '../components/UserListItem'
 
 export default function UsersScreen(): React.JSX.Element {
+  const tabBarHeight = useBottomTabBarHeight()
   const {
     searchQuery,
     setSearchQuery,
@@ -80,7 +82,10 @@ export default function UsersScreen(): React.JSX.Element {
         refreshing={isLoading}
         onRefresh={refetch}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          {paddingBottom: tabBarHeight + 16},
+        ]}
       />
     </View>
   )
@@ -93,7 +98,6 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flexGrow: 1,
-    paddingBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',

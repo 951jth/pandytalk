@@ -135,11 +135,12 @@ export const showPermissionBlockedAlert = ({
   )
 }
 /**
- * Android 13 미만에서 파일 쓰기 권한 보장
+ * Android 9 이하에서만 외부 저장소 쓰기 권한 보장.
+ * Android 10(API 29)부터는 MediaStore/scoped storage를 사용하므로 권한 요청이 필요 없다.
  */
 export const ensureAndroidWritePermission = async (): Promise<boolean> => {
   if (Platform.OS !== 'android') return true
-  if (Platform.Version >= 33) return true
+  if (Platform.Version >= 29) return true
   const status = await check(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE)
   if (status === RESULTS.GRANTED) return true
   const res = await request(PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE)

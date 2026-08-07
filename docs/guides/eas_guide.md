@@ -30,17 +30,28 @@
 
 ## 3. 실전 활용 시나리오
 
+### 개발 환경: Android DevelopmentDebug 실행
+
+- **기본 명령어**: `yarn android`
+- **동작**: 기존 `android/`의 `developmentDebug` variant를 증분 빌드하고 `com.cshchatapp.debug` 앱을 설치한 뒤 Expo Metro를 함께 실행합니다.
+- **USB 기기 연결 확인**: 필요하면 `adb reverse tcp:8081 tcp:8081`을 실행합니다.
+- **Metro만 별도로 실행**: `yarn start`
+- **이미 Metro가 실행 중일 때 Native만 재빌드**: `yarn android:native`
+- **주의**: 이 프로젝트는 Bare 방식이므로 기존 `android/`가 있는 상태에서 일반 개발 빌드에 `expo prebuild`를 사용하지 않습니다.
+
 ### 시나리오 A: 단순 UI 수정이나 로직 변경 시
 - **방법**: 명령어를 통한 업데이트 배포
-- **명령어**: `npm run update` (또는 `eas update --branch main`)
-- **특징**: 현재 프로젝트는 `npm run update` 실행 시 자동으로 `prebuild`가 선행되어 `app.config.js` 설정이 네이티브 코드에 동기화된 상태로 배포됩니다.
+- **명령어**: `yarn update` (또는 `eas update --branch main`)
+- **특징**: JavaScript/TypeScript 변경만 EAS Update로 배포합니다. Native 변경이나 Native 의존성 변경은 포함하면 안 됩니다.
 - **결과**: 이미 배포된 앱을 재설치할 필요 없이, 앱을 재실행하면 자동으로 반영됨.
 
 ### 시나리오 B: 새로운 라이브러리 추가나 네이티브 설정 변경 시
-- **방법**: 프리빌드 후 새로운 네이티브 빌드 생성
-- **명령어**: 
-  1. `npm run prebuild` (또는 `npx expo prebuild`) : `app.config.js` 설정을 네이티브 폴더로 동기화
-  2. 로컬 빌드 혹은 `npx eas build --profile apk` (또는 production)
+- **방법**: React Native CLI Native 프로젝트에서 새로운 Android 빌드 생성
+- **명령어**:
+  1. 로컬 AAB 생성: `yarn build:aab`
+  2. 기존 AAB 제출: `yarn submit:aab`
+  3. 버전 증가부터 제출까지 한 번에 실행: `yarn build:submit`
+- **버전 관리**: `build:aab` 실행 시 Android `versionCode`와 `runtimeVersion`이 함께 1 증가합니다. 빌드 실패 후 같은 번호로 재시도할 때는 `yarn build:aab:retry`를 사용합니다.
 - **결과**: 네이티브 레이어의 변경 사항(새 라이브러리, 앱 버전 등)이 포함된 새 설치 파일이 생성됨. 기존 사용자들은 새 파일을 설치받아야 함.
 
 ---
@@ -59,6 +70,7 @@
 3. `/eas-update` 시 `--branch production` 명령어로 배포 대상 구분.
 
 ## 5. 관리 팁
-- **runtimeVersion**: `app.config.js`에 정의된 이 버전이 다르면 업데이트를 받지 않습니다. 네이티브 코드가 크게 바뀌었을 때는 이 버전을 올리고 새 빌드(Build)를 해야 합니다.
-- **Prebuild의 중요성**: `app.config.js`를 수정했다면 반드시 `npm run prebuild`를 통해 `android/`, `ios/` 폴더를 최신화해야 합니다. 이를 거치지 않고 빌드하면 `app.config.js`의 변경 사항이 빌드 결과물에 포함되지 않습니다.
+- **runtimeVersion**: Android는 `yarn build:aab`이 `versionCode`와 함께 자동으로 올립니다. iOS runtimeVersion은 별도로 유지됩니다.
+- **Bare 프로젝트 원칙**: 이 프로젝트는 React Native CLI로 시작해 Expo Modules를 연결한 구조이므로 `android/`, `ios/`가 원본입니다. 일반 빌드 과정에서 `expo prebuild` 또는 `expo prebuild --clean`을 실행하지 않습니다.
+- **버전 점검**: 파일을 변경하지 않고 Android 버전 동기화 상태만 확인하려면 `yarn version:android:check`를 사용합니다.
 - **Fingerprint**: EAS 5.0 이상에서는 네이티브 코드 변경 시 자동으로 감지하여 업데이트 전 경고를 줍니다.

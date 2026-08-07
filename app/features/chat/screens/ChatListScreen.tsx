@@ -4,6 +4,7 @@ import type {TabParamList} from '@app/navigation/types'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
 import ChatListSkeleton from '@app/features/chat/components/ChatListSkeleton'
+import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
 import {useRoute, type RouteProp} from '@react-navigation/native'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
@@ -17,6 +18,7 @@ const MemoizedChatListItem = memo(ChatListItemCard)
 
 //1:1 (DM), 그룹채팅(group) 모두 사용중인 화면.
 export default function ChatListScreen() {
+  const tabBarHeight = useBottomTabBarHeight()
   const {params} = useRoute<ChatRouteParams>()
   const type = params?.type ?? 'dm'
   const {
@@ -79,7 +81,10 @@ export default function ChatListScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         style={{flex: 1}}
-        contentContainerStyle={styles.chatContents}
+        contentContainerStyle={[
+          styles.chatContents,
+          {paddingBottom: tabBarHeight + 16},
+        ]}
       />
     </View>
   )
@@ -91,7 +96,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background, // 앱 전체 테마 반영
   },
   chatContents: {
-    paddingBottom: 16, // 하단 탭바 여백 확보
     flexGrow: 1, // ✅ 목록이 비었을 때 화면을 꽉 채우도록 설정
   },
   empty: {

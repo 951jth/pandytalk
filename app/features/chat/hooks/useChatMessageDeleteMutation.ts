@@ -1,5 +1,5 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
-import {rebuildMessagePages} from '@app/features/chat/utils/message'
+import {rebuildInfiniteQueryPages} from '@app/features/chat/utils/infiniteQuery'
 import {ChatMessage} from '@app/shared/types/chat'
 import {ReactQueryPageType} from '@app/features/chat/types/react-query'
 import {InfiniteData, useMutation, useQueryClient} from '@tanstack/react-query'
@@ -26,7 +26,7 @@ export const useChatMessageDeleteMutation = (roomId?: string | null) => {
         const allMsgs = old.pages.flatMap(p => p.data)
         const filtered = allMsgs.filter(m => m.id !== messageId)
         // 3. 페이지 재구성
-        return rebuildMessagePages(filtered, old, 20)
+        return rebuildInfiniteQueryPages(filtered, old, 20)
       })
 
       return {prev}
