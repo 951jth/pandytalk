@@ -104,6 +104,9 @@ export const messageService = {
     // 3. 갭 크기에 따른 전략적 대응
     if (gap > 100) {
       // 갭이 너무 크면 중간을 다 채우기보다 최신 50개만 가져와서 스택을 맞춤
+      // TODO(면접관 피드백): 최신 50개만 가져올 경우, 그 이전의 950개 메시지는 로컬에서 영원히 누락(비어있는 상태)될 위험이 있습니다.
+      // 사용자가 과거로 스크롤할 때 하단의 `hasGapInRange`와 맞물려 오프라인 캐시 정합성이 깨질 수 있습니다.
+      // '이 구간은 비어있음'을 나타내는 더미(Tombstone) 메시지 삽입이나, 별도의 Cursor/Page 관리가 필요합니다.
       const {items} = await messageService.getChatMessagesFromSeq(
         roomId,
         undefined,
@@ -185,6 +188,10 @@ export const messageService = {
     if (localMessages.length > 1) {
       const firstSeq = localMessages[0].seq || 0
       const lastSeq = localMessages[localMessages.length - 1].seq || 0
+      // TODO(면접관 피드백): 서버에서 '메시지 삭제' 기능 등으로 특정 seq가 물리적으로 지워진 경우,
+      // (firstSeq - lastSeq) 계산은 영원히 데이터 개수와 일치하지 않게 됩니다.
+      // 이 경우 사용자가 스크롤할 때마다 무한히 서버 API를 호출(Infinite Fetch Loop)하는 치명적인 버그가 발생할 수 있습니다.
+      // 삭제된 메시지를 뜻하는 'Tombstone(묘비)' 상태를 설계에 포함시켜 seq 연속성 계산의 구멍을 메워야 합니다.
       if (firstSeq - lastSeq !== localMessages.length - 1) {
         hasGapInRange = true
       }

@@ -10,12 +10,12 @@ PandyTalk은 그룹 채팅과 DM에 AI 비서 `@팬디`를 결합한 React Nativ
 
 | 해결한 문제 | 적용한 방식 | 결과 |
 | :--- | :--- | :--- |
-| 채팅방 진입 시 네트워크 조회 지연 | SQLite 우선 조회와 선택적 Firestore 동기화 | 평균 조회 시간 **286.74ms → 9.24ms**, 약 **31배 향상** |
-| AI 전체 답변이 끝날 때까지 기다리는 UX | HTTP/SSE 스트리밍 | 첫 응답 체감 시간 **2,511.84ms → 771.17ms**, 약 **69.3% 감소** |
+| 채팅방 진입 시 네트워크 조회 지연 | SQLite 우선 조회와 선택적 Firestore 동기화 | 개발 환경 5회 측정에서 Firestore 직접 조회 평균 **286.74ms**, warm SQLite 조회 평균 **9.24ms** 관찰 |
+| AI 전체 답변이 끝날 때까지 기다리는 UX | HTTP/SSE 스트리밍 | 격리 실험 6회에서 SSE 첫 content chunk 평균 **771.17ms**, non-stream 전체 완료 평균 **2,511.84ms** 측정 |
 | SSE 연결 중단 시 AI 답변이 유실될 가능성 | Firestore 상태와 Cloud Tasks 백업 처리 | 미완료 응답을 백업 태스크로 처리 |
 | 메시지 전송 실패 시 불명확한 UI 상태 | SQLite 기반 `pending → success/failed` 상태 관리 | 즉시 표시, 실패 안내, 동일 메시지 재전송 지원 |
 
-> 성능 수치는 특정 테스트 환경에서 전환 전후를 비교한 결과입니다. 절대 성능을 보장하는 값이 아니라 아키텍처 변경에 따른 상대적 차이를 확인하기 위한 자료입니다.
+> 성능 수치는 제한된 개발 환경의 소표본 측정 결과입니다. SQLite 수치는 원격 조회와 warm local 조회의 경로 차이를, AI 수치는 non-stream 전체 완료와 SSE 첫 chunk의 체감 시점 차이를 비교합니다. 절대 성능이나 동일 조건의 처리량 향상을 의미하지 않습니다.
 
 ## 주요 기능
 
@@ -173,29 +173,39 @@ flowchart LR
 
 ## 성능 측정
 
-### SQLite 도입 전후 비교
+### Firestore 원격 조회와 warm SQLite 조회 비교
 
-동일한 채팅 메시지 조회 흐름을 `performance.now()` 기반의 커스텀 측정 훅으로 감싸 Firestore 직접 조회와 SQLite 로컬 조회 시간을 각각 5회 측정했습니다.
+개발 환경에서 동일한 채팅 메시지 조회 흐름을 `performance.now()` 기반의 커스텀 측정 훅으로 감싸 Firestore 원격 fetch와 데이터가 저장된 SQLite의 local query를 각각 5회 측정했습니다.
 
 | 지표 | Firestore | SQLite | 결과 |
 | :--- | ---: | ---: | :--- |
-| 평균 조회 시간 | 286.74ms | 9.24ms | 약 31배 향상 |
-| 최소 조회 시간 | 155.90ms | 7.89ms | 로컬 조회 지연 감소 |
-| 최대 조회 시간 | 535.88ms | 10.91ms | 네트워크 지터 영향 축소 |
+| 평균 | 286.74ms | 9.24ms | warm local 경로에서 약 31분의 1 수준의 조회 시간 관찰 |
+| 최소 | 155.90ms | 7.89ms | - |
+| 최대 | 535.88ms | 10.91ms | 원격 조회가 네트워크 상태에 더 크게 영향받는 경향 확인 |
+
+이 비교는 Local-First 조회 경로를 선택하기 위한 방향성 검증입니다.
+
+- SQLite에 데이터가 존재하는 warm path를 측정했으며, cache miss 시 발생하는 Firestore fetch·SQLite save·재조회 전체 시간은 포함하지 않았습니다.
+- React Native 목록 렌더링과 사용자가 화면을 인지하기까지의 end-to-end 시간은 포함하지 않았습니다.
+- 표본이 각각 5회이고 기기·데이터량·네트워크 조건별 반복 측정이 아니므로 일반적인 성능 수치로 해석하지 않습니다.
 
 - [`usePerformanceMeasure.ts`](app/shared/hooks/usePerformanceMeasure.ts)
 - [SQLite 성능 측정 원본](app/features/chat/perpomance.md)
 
 ### AI 스트리밍 비교
 
-같은 모델과 프롬프트에서 tool-call과 검색 preflight를 제외하고 `stream: false` 전체 응답 완료 시점과 `stream: true` 첫 content chunk 수신 시점을 비교했습니다.
+같은 모델과 프롬프트에서 tool-call과 검색 preflight를 제외하고 `stream: false` 전체 응답 완료 시점과 `stream: true` 첫 content chunk 수신 시점을 6회 비교했습니다. 두 값은 같은 완료 시점의 처리량 비교가 아니라, 사용자가 첫 내용을 볼 수 있는 시점의 차이를 확인하기 위한 지표입니다.
 
-| 지표 | 일반 응답 | SSE | 결과 |
-| :--- | ---: | ---: | :--- |
-| 사용자 첫 응답 체감 시간 | 2,511.84ms | 771.17ms | 1,740.67ms 단축 |
-| 개선율 | - | - | 69.30% 감소 |
+| 측정 시점 | 평균 | 해석 |
+| :--- | ---: | :--- |
+| non-stream 전체 응답 완료 | 2,511.84ms | 전체 생성이 끝난 뒤 화면에 표시 가능 |
+| SSE 첫 content chunk | 771.17ms | 전체 완료 전에 첫 내용을 표시 가능 |
+| 두 시점의 평균 차이 | 1,740.67ms | non-stream 전체 완료 대기 시간 대비 69.30% 앞선 시점 |
 
-별도의 장문 응답 5회 측정에서는 클라이언트가 첫 chunk를 받은 뒤 첫 텍스트를 그리기까지 평균 31.40ms가 걸렸습니다. 전체 대기 시간의 주요 병목이 클라이언트 렌더링보다 OpenAI 첫 token 준비 구간에 있다는 점도 확인했습니다.
+실제 tool/search 경로를 포함한 별도의 장문 응답 5회 측정에서는 첫 화면 출력이 평균 12.91초, 전체 응답 완료가 평균 23.54초였습니다. 클라이언트가 첫 chunk를 받은 뒤 첫 텍스트를 그리기까지는 평균 31.40ms였습니다. 격리 실험의 771.17ms와 실제 첫 화면 출력의 차이를 통해, 주요 대기 구간이 클라이언트 렌더링보다 tool/search preflight와 OpenAI 첫 token 준비 쪽에 있음을 확인했습니다.
+
+- 생성형 AI 응답은 실행마다 내용과 길이가 달라질 수 있고 표본도 작으므로, 69.30%는 해당 프롬프트와 측정 회차에 한정된 상대적 차이입니다.
+- 격리 실험은 스트리밍이 전체 생성 시간을 줄였다는 근거가 아니라, 완료 전 첫 내용을 전달할 수 있음을 확인한 측정입니다.
 
 - [AI 스트리밍 성능 측정 결과](docs/research/ai-stream-performance-results.md)
 - [`aiStreamBenchmark.ts`](functions/src/triggers/test/aiStreamBenchmark.ts)
@@ -324,4 +334,3 @@ yarn verify
 구현 결과뿐 아니라 선택의 배경, 장애 원인, 시도한 해결책과 후속 과제를 기록하고 있습니다.
 
 - [상세 Engineering Log](https://app.notion.com/p/3a859549cbc080bcb9f6ecbecbd7ae87?p=3a859549cbc080c9bf68c1155e975f7d&pm=c)
-
