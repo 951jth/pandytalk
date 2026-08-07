@@ -291,7 +291,7 @@ export const onAiStream = onRequest(
         }
       }
 
-      // 2. 최종 응답 종료 보장
+      // 2. 아직 열려 있는 HTTP 응답 종료
       if (!res.writableEnded) {
         res.end()
       }

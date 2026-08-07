@@ -135,7 +135,7 @@ export const showPermissionBlockedAlert = ({
   )
 }
 /**
- * Android 9 이하에서만 외부 저장소 쓰기 권한 보장.
+ * Android 9 이하에서 외부 저장소 쓰기 권한을 확인하고 필요하면 요청합니다.
  * Android 10(API 29)부터는 MediaStore/scoped storage를 사용하므로 권한 요청이 필요 없다.
  */
 export const ensureAndroidWritePermission = async (): Promise<boolean> => {

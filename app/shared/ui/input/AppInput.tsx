@@ -103,7 +103,7 @@ export default function AppInput({
     )
   }
 
-  // 값은 항상 문자열로 보장
+  // TextInput에 전달할 값을 문자열로 정규화
   const v =
     typeof value === 'string' ? value : value == null ? '' : String(value)
 

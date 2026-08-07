@@ -13,7 +13,7 @@ export interface ChatMessage {
   senderId: string
   text?: string
   prompt?: string // AI 응답 시 원본 질문 보관 (SSE 연동용)
-  mentionerId?: string // AI를 호출한 유저 UID (중복 스트리밍 방지용)
+  mentionerId?: string // AI 질문자 식별 및 스트림 요청 권한 확인용
   type: 'text' | 'image' | 'file' | 'ai_text'
   imageUrl?: string
   imageUrls?: string[]

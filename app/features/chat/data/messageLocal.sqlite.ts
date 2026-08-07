@@ -27,7 +27,7 @@ type ChatMessageSqliteRow = Omit<ChatMessage, 'imageUrls'> & {
 // }
 
 export const messageLocal = {
-  //채팅방 마이그레이션 중에는 sqliteCall의 순서를 보장하는 옵션임.
+  // 테이블 마이그레이션과 메시지 저장이 겹치지 않도록 공용 SQLite lock을 사용
   saveMessagesToSQLite: (roomId: string, messages: ChatMessage[]) => {
     return sqliteCall(
       'messageLocal.saveMessagesToSQLite',

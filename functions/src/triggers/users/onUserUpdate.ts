@@ -46,7 +46,7 @@ export const onUserGroupIdUpdated = onDocumentUpdated(
         // const nextChat = db.doc(`users/${uid}/chats/${nextGroupId}`)
         const nextGroup = db.doc(`groups/${nextGroupId}`)
 
-        // 기본 채팅방 보장: 최초 생성시에만 createdAt 기록
+        // 기본 채팅방이 없을 때만 생성하고 createdAt을 기록
         if (roomRef && roomSnap && !roomSnap.exists) {
           tx.set(roomRef, {
             groupId: nextGroupId,

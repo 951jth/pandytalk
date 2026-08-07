@@ -26,7 +26,7 @@ export const onAiMention = onDocumentCreated(
       const senderId: string = message.senderId
       const text: string = message.text || ''
 
-      // 무한 루프 방지: 봇이 보낸 메시지면 무시
+      // 봇 메시지는 다시 AI 응답 생성을 트리거하지 않음
       if (senderId === AI_BOT_ID) return
 
       // "@팬디" 멘션 확인

@@ -38,7 +38,7 @@ export const useChatMessagesInfinite = (roomId: string | null | undefined) => {
 
         return createPageResult(messages)
       } catch (e) {
-        // 모든 레이어에서 에러 발생 시 fallback
+        // queryFn까지 전파된 조회 오류는 빈 페이지로 대체
         return initChatPage
       }
     },

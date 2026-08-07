@@ -47,7 +47,7 @@ export const useChatRoomInfo = (roomId?: string | null) => {
     }
   }, [roomQuery.data, membersQuery.data])
 
-  // isFetching 상태를 Ref에 동기화 (useFocusEffect 무한 루프 방지)
+  // isFetching 변경으로 focus effect가 재등록되지 않도록 Ref에 동기화
   useEffect(() => {
     isFetchingRef.current = roomQuery.isFetching
   }, [roomQuery.isFetching])
@@ -57,7 +57,7 @@ export const useChatRoomInfo = (roomId?: string | null) => {
 
   useFocusEffect(
     useCallback(() => {
-      // 이미 데이터를 가져오는 중이 아닐 때만 refetch 실행 (중복 호출 방지)
+      // 이미 조회 중이면 포커스 진입에 따른 추가 refetch를 생략
       if (roomId && !isFetchingRef.current) {
         refetchRoom()
       }

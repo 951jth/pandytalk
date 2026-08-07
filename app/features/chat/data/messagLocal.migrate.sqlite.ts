@@ -130,7 +130,7 @@ export const messageMigrateLocal = {
           },
           // ✅ 트랜잭션 레벨 에러도 잡아서 reject
           error => reject(error),
-          // ✅ 트랜잭션 완료 보장
+          // 트랜잭션 완료 callback에서 Promise를 resolve
           () => resolve(),
         )
       })

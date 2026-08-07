@@ -27,8 +27,7 @@ export function useAuthGate() {
   const {checkProfileAccess} = useAuthProfileGate()
 
   useEffect(() => {
-    // 화면에 렌더링되어(마운트되어) 있는가?"** 를 추적하여
-    // **안전하게 상태(State)를 업데이트하기 위한 플래그(Flag) 변수**입니다.
+    // effect 정리 이후 비동기 callback이 상태를 갱신하지 않도록 추적합니다.
     let isEffectActive = true
 
     const unsubscribe = onAuthStateChanged(auth, user => {

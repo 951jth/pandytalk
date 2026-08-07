@@ -46,13 +46,12 @@ export const onAiStreamBackup = onTaskDispatched(
       const currentStatus = messageData?.status || 'unknown'
 
       // 이미 성공했거나 실패 처리되었다면 종료
-      // [Interview Point] 스트리밍 중인 경우에도 SSE 트리거가 작동 중이므로 백업 로직을 실행하지 않음 (Race Condition 방지)
       if (
         messageData?.status === 'success' ||
         messageData?.status === 'failed'
       ) {
         logger.info(
-          `[onAiStreamBackup] ✅ Skipping backup: SSE is active or already done. ${messageId} (status=${currentStatus})`,
+          `[onAiStreamBackup] ✅ Skipping backup: terminal status. ${messageId} (status=${currentStatus})`,
         )
         return
       }

@@ -10,12 +10,8 @@ export interface UseAiStreamOptions {
   enabled?: boolean
 }
 
-/**
- * [Interview Point]
- * 컴포넌트 라이프사이클과 독립적인 중복 요청 방지 처리를 위해 전역 Set 사용.
- * 화면 전환이나 재마운트 시 이미 진행 중인 스트리밍이 다시 시작되는 현상을 원천 차단합니다.
- */
-const processedMessageIds = new Set<string>()
+/** 동일한 메시지에 활성 SSE 연결이 둘 이상 생성되지 않도록 앱 프로세스에서 공유합니다. */
+const activeStreamMessageIds = new Set<string>()
 
 /**
  * AI 응답 스트리밍 및 자연스러운 타이핑 효과를 위한 커스텀 훅
@@ -52,11 +48,17 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
     chunkCount: 0,
   })
   const connectionRef = useRef<{ close: () => void } | null | undefined>(null)
+  const ownedMessageIdRef = useRef<string | null>(null)
+  const attemptedMessageIdRef = useRef<string | null>(null)
+  const isMountedRef = useRef(true)
 
-  // 메모리 누수 방지 및 재마운트 시 정합성을 위한 처리
-  const isPreviouslyProcessed = useRef<boolean>(
-    !!item?.id && processedMessageIds.has(item.id),
-  )
+  const releaseActiveStream = useCallback((messageId?: string) => {
+    const ownedMessageId = ownedMessageIdRef.current
+    if (!ownedMessageId || (messageId && ownedMessageId !== messageId)) return
+
+    activeStreamMessageIds.delete(ownedMessageId)
+    ownedMessageIdRef.current = null
+  }, [])
 
   /**
    * [Core Logic] 자연스러운 타이핑 효과 (Smooth Typing Effect)
@@ -64,8 +66,6 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
    * 적을 때는 한 글자씩 천천히 출력되도록 유동적으로 가속도를 조절합니다.
    */
   useEffect(() => {
-    if (isPreviouslyProcessed.current) return
-
     const startTyping = () => {
       if (timerRef.current) return
 
@@ -95,7 +95,7 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             timerRef.current = null
           }
         }
-      }, 20) // 20ms 간격으로 업데이트하여 인간의 가독 효율에 최적화
+      }, 20) // 작은 단위로 텍스트를 갱신해 타이핑 효과를 표현
     }
 
     startTyping()
@@ -116,12 +116,15 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       const targetMessageId = targetItem.id
 
       // 1. 멱등성 검사: 동일 메시지 ID에 대한 중복 스트리밍 차단
-      if (targetMessageId && processedMessageIds.has(targetMessageId)) {
+      if (targetMessageId && activeStreamMessageIds.has(targetMessageId)) {
+        attemptedMessageIdRef.current = targetMessageId
         return
       }
 
       if (targetMessageId) {
-        processedMessageIds.add(targetMessageId)
+        activeStreamMessageIds.add(targetMessageId)
+        ownedMessageIdRef.current = targetMessageId
+        attemptedMessageIdRef.current = targetMessageId
       }
 
       setDisplayText('')
@@ -144,10 +147,12 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
       try {
         // 2. aiService를 통한 SSE 통신 호출
-        connectionRef.current = await aiService.requestAiResponse({
+        const connection = await aiService.requestAiResponse({
           chatId: targetChatId,
           item: targetItem,
           onChunk: (chunk: string) => {
+            if (!isMountedRef.current) return
+
             // [Data Partitioning] 수신된 척(Chunk)을 원본 Ref에 누적하고,
             // 타이핑 타이머가 이를 감지하여 화면에 순차적으로 노출함
             fullTextRef.current += chunk
@@ -165,7 +170,9 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
             }
           },
           onDone: () => {
-            setIsStreaming(false) // 스트리밍 완료 핸들러
+            releaseActiveStream(targetMessageId)
+            connectionRef.current = null
+            if (isMountedRef.current) setIsStreaming(false)
             logAiPerf({
               scope: 'stream',
               event: 'streamDone',
@@ -176,31 +183,47 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
                 chars: fullTextRef.current.length,
               },
             })
-            if (targetMessageId) processedMessageIds.delete(targetMessageId)
           },
           onError: (err: unknown) => {
+            releaseActiveStream(targetMessageId)
+            connectionRef.current = null
             logAiPerf({
               scope: 'stream',
               event: 'streamError',
               messageId: targetMessageId,
               startedAt: perfRef.current.startAt,
             })
-            setError(err instanceof Error ? err : new Error(String(err)))
-            setIsStreaming(false)
+            if (isMountedRef.current) {
+              setError(err instanceof Error ? err : new Error(String(err)))
+              setIsStreaming(false)
+            }
           },
         })
+
+        if (
+          !isMountedRef.current ||
+          ownedMessageIdRef.current !== targetMessageId
+        ) {
+          connection?.close()
+          releaseActiveStream(targetMessageId)
+          return
+        }
+        connectionRef.current = connection
       } catch (err: unknown) {
+        releaseActiveStream(targetMessageId)
         logAiPerf({
           scope: 'stream',
           event: 'requestError',
           messageId: targetMessageId,
           startedAt: perfRef.current.startAt,
         })
-        setError(err instanceof Error ? err : new Error(String(err)))
-        setIsStreaming(false)
+        if (isMountedRef.current) {
+          setError(err instanceof Error ? err : new Error(String(err)))
+          setIsStreaming(false)
+        }
       }
     },
-    [],
+    [releaseActiveStream],
   )
 
   // 컴포넌트 마운트 시 조건에 따른 자동 시작 전략
@@ -209,6 +232,8 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
       enabled &&
       chatId &&
       item &&
+      item.id &&
+      attemptedMessageIdRef.current !== item.id &&
       (item.prompt || item.imageUrl || item.imageUrls?.length) &&
       !isStreaming &&
       fullTextRef.current === ''
@@ -219,25 +244,35 @@ export const useAiStreamResponse = (params: UseAiStreamOptions) => {
 
   // 컴포넌트 언마운트 시 스트림 연결 해제
   useEffect(() => {
+    isMountedRef.current = true
+
     return () => {
+      isMountedRef.current = false
       if (connectionRef.current) {
         connectionRef.current.close()
         connectionRef.current = null
       }
+      releaseActiveStream()
     }
-  }, [])
+  }, [releaseActiveStream])
 
   const resetStream = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
+    if (connectionRef.current) {
+      connectionRef.current.close()
+      connectionRef.current = null
+    }
+    releaseActiveStream()
+    attemptedMessageIdRef.current = null
     setDisplayText('')
     fullTextRef.current = ''
     cursorRef.current = 0
     setIsStreaming(false)
     setError(null)
-  }, [])
+  }, [releaseActiveStream])
 
   return {
     streamedText: displayText, // 화면에 그려질 실시간 텍스트
