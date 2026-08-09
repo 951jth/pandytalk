@@ -1,6 +1,6 @@
 const PRODUCTION_ANDROID_PACKAGE = 'com.cshchatapp'
 const DEVELOPMENT_ANDROID_PACKAGE = 'com.cshchatapp.debug'
-const ANDROID_RUNTIME_VERSION = '48'
+const ANDROID_RUNTIME_VERSION = '49'
 const IOS_RUNTIME_VERSION = '47'
 
 // 이 프로젝트는 React Native CLI로 시작해 Expo Modules를 연결한 Bare 프로젝트다.
@@ -47,7 +47,7 @@ module.exports = {
     // scripts/bumpAndroidBuildVersion.js가 versionCode와 함께 증가시킨다.
     runtimeVersion: ANDROID_RUNTIME_VERSION,
     package: PRODUCTION_ANDROID_PACKAGE, // 안드로이드 운영 앱 고유 ID (패키지명)
-    versionCode: 48, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
+    versionCode: 49, // 빌드 회차 (정수값, 업데이트 시 올려야 함)
 
     // 적응형 아이콘: 안드로이드 8.0 이상에서 필수
     adaptiveIcon: {

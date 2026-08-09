@@ -24,7 +24,7 @@
     "clean-android": "cd android && gradlew --stop && gradlew clean --no-daemon && cd ..",
     "version:android:check": "node scripts/bumpAndroidBuildVersion.js --check",
     "version:android": "node scripts/bumpAndroidBuildVersion.js",
-    "build:aab": "yarn version:android && cd android && gradlew bundleProductionRelease && cd ..",
+    "build:aab": "cd android && gradlew bundleProductionRelease && cd ..",
     "build:aab:retry": "cd android && gradlew bundleProductionRelease && cd ..",
     "submit:aab": "eas submit --platform android --profile production --path ./android/app/build/outputs/bundle/productionRelease/app-production-release.aab",
     "build:submit": "yarn build:aab && yarn submit:aab",
