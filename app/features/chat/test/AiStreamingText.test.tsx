@@ -32,7 +32,7 @@ describe('AiStreamingText SSE 활성화 조건', () => {
   })
 
   it('질문자의 미만료 streaming 메시지는 SSE를 시작한다', () => {
-    ;(useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
+    (useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
       isExpired: false,
       status: 'idle',
       refreshedMessage: null,
@@ -46,7 +46,7 @@ describe('AiStreamingText SSE 활성화 조건', () => {
   })
 
   it('만료된 streaming 메시지는 질문자여도 SSE를 시작하지 않는다', () => {
-    ;(useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
+    (useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
       isExpired: true,
       status: 'checking',
       refreshedMessage: null,
@@ -60,7 +60,7 @@ describe('AiStreamingText SSE 활성화 조건', () => {
   })
 
   it('다른 사용자의 streaming 메시지는 SSE를 시작하지 않는다', () => {
-    ;(useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
+    (useRevalidateExpiredAiMessage as jest.Mock).mockReturnValue({
       isExpired: false,
       status: 'idle',
       refreshedMessage: null,

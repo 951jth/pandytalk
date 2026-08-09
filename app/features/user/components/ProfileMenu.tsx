@@ -28,7 +28,6 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({
     setWithdrawalVisible,
     onDelete,
   } = useProfileMenu(onReset)
-
   return (
     <>
       <CustomMenu

@@ -1,8 +1,9 @@
 import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
 import {userService} from '@app/features/user/service/userService'
+import type {AppRouteParamList} from '@app/navigation/types'
 import COLORS from '@app/shared/constants/color'
 import {useLogout} from '@app/shared/hooks/useLogout'
-import type {AppRouteParamList} from '@app/navigation/types'
+import {logger} from '@app/shared/services/logger'
 import {MenuItem} from '@app/shared/ui/menu/CustomMenu'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useNavigation} from '@react-navigation/native'
@@ -25,9 +26,12 @@ export function useProfileMenu(onReset: () => void = () => {}) {
   const [withdrawalVisible, setWithdrawalVisible] = useState(false) // ✅ 추가
   const queryClient = useQueryClient()
   const {logout} = useLogout()
-
-  const openMenu = useCallback(() => setMenuVisible(true), [])
-  const closeMenu = useCallback(() => setMenuVisible(false), [])
+  const openMenu = useCallback(() => {
+    setMenuVisible(true)
+  }, [])
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false)
+  }, [])
 
   // 🔄 데이터 재동기화 (캐시 삭제 및 새로고침)
   const onClear = useCallback(() => {
@@ -44,7 +48,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
               await messageLocal.clearAllMessages()
               queryClient.clear()
               const allMessages = await messageLocal.getAllMessages()
-              console.log('all messages: ', allMessages)
+              logger.info('all messages: ', allMessages)
               Alert.alert('완료', '메시지를 초기화했습니다.')
             } catch (e) {
               const message = e instanceof Error ? e.message : '초기화 실패!'
