@@ -2,7 +2,7 @@
 
 > 오프라인에서도 대화 내역을 즉시 조회하고, AI 답변을 실시간으로 받아볼 수 있는 Local-First 채팅 앱
 
-[Google Play에서 PandyTalk 보기](https://play.google.com/store/apps/details?id=com.cshchatapp) · [상세 Engineering Log](https://www.notion.so/Engineering-Log-30159549cbc0800286f9faf3a378fda2?pvs=12)
+[Google Play에서 PandyTalk 보기](https://play.google.com/store/apps/details?id=com.cshchatapp) · [상세 Engineering Log](https://app.notion.com/p/3a859549cbc080bcb9f6ecbecbd7ae87?p=3a859549cbc080c9bf68c1155e975f7d&pm=c&t=3b759549cbc0802a906e00a9e5da28e6)
 
 PandyTalk은 그룹 채팅과 DM에 AI 비서 `@팬디`를 결합한 React Native 채팅 서비스입니다. 채팅 메시지는 SQLite를 우선 조회해 네트워크 상태와 관계없이 빠르게 표시하고, 필요한 데이터만 Firestore에서 보충합니다. AI 답변은 SSE로 스트리밍하되, 연결이 완료되지 않는 상황까지 Cloud Tasks 기반 백업 처리로 복구합니다.
 
@@ -333,4 +333,4 @@ yarn verify
 
 구현 결과뿐 아니라 선택의 배경, 장애 원인, 시도한 해결책과 후속 과제를 기록하고 있습니다.
 
-- [상세 Engineering Log](https://app.notion.com/p/3a859549cbc080bcb9f6ecbecbd7ae87?p=3a859549cbc080c9bf68c1155e975f7d&pm=c)
+- [상세 Engineering Log](https://app.notion.com/p/3a859549cbc080bcb9f6ecbecbd7ae87?p=3a859549cbc080c9bf68c1155e975f7d&pm=c&t=3b759549cbc0802a906e00a9e5da28e6)
