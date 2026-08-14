@@ -1,11 +1,11 @@
-import {messageLocal} from '@app/features/chat/data/messageLocal.sqlite'
+import { messageLocal } from '@app/features/chat/data/messageLocal.sqlite'
 import {
   messageRemote,
   type SendChatMessageResult,
 } from '@app/features/chat/data/messageRemote.firebase'
-import type {ChatMessage} from '@app/shared/types/chat'
-import {toMillisFromServerTime} from '@app/shared/utils/firebase'
-import {logger} from '@app/shared/services/logger'
+import { logger } from '@app/shared/services/logger'
+import type { ChatMessage } from '@app/shared/types/chat'
+import { toMillisFromServerTime } from '@app/shared/utils/firebase'
 
 export type SendMessageParams = {
   roomId?: string
@@ -152,12 +152,20 @@ export const messageService = {
     return messages
   },
 
-  //메세지 전송 (신규채팅생성)
+  /**
+   * 메시지 전송 (Optimistic UI 적용)
+   * 내부적으로 sendChatMessageWithRemote 헬퍼를 사용하여
+   * 로컬 DB(SQLite)에 pending 상태로 먼저 저장한 후 서버에 전송합니다.
+   */
   sendChatMessage: (params: SendMessageParams) => {
     return sendChatMessageWithRemote(params, messageRemote.sendChatMessage)
   },
 
-  //실패 메세지 재시도 (서버에 동일 ID가 있으면 기존 seq 사용)
+  /**
+   * 실패 메시지 재시도
+   * 실패한 메시지를 동일한 ID로 서버에 다시 전송합니다.
+   * 서버에 이미 동일 ID가 도달해 있다면 기존 seq를 그대로 유지합니다.
+   */
   retryChatMessage: (params: SendMessageParams) => {
     return sendChatMessageWithRemote(params, messageRemote.retryChatMessage)
   },
@@ -188,7 +196,6 @@ export const messageService = {
     if (localMessages.length > 1) {
       const firstSeq = localMessages[0].seq || 0
       const lastSeq = localMessages[localMessages.length - 1].seq || 0
-      // TODO(면접관 피드백): 서버에서 '메시지 삭제' 기능 등으로 특정 seq가 물리적으로 지워진 경우,
       // (firstSeq - lastSeq) 계산은 영원히 데이터 개수와 일치하지 않게 됩니다.
       // 이 경우 사용자가 스크롤할 때마다 무한히 서버 API를 호출(Infinite Fetch Loop)하는 치명적인 버그가 발생할 수 있습니다.
       // 삭제된 메시지를 뜻하는 'Tombstone(묘비)' 상태를 설계에 포함시켜 seq 연속성 계산의 구멍을 메워야 합니다.
@@ -242,6 +249,18 @@ type SendMessageRemote = (
   message: Omit<ChatMessage, 'createdAt'>,
 ) => Promise<SendChatMessageResult>
 
+/**
+ * [내부 헬퍼 함수] 메시지 전송 및 재시도의 공통 로직을 처리합니다.
+ * 
+ * 1. 낙관적 업데이트(Optimistic UI)를 위해 SQLite에 `pending` 상태로 즉시 저장합니다.
+ * 2. 서버(Firestore)에 메시지를 전송(또는 재시도)합니다.
+ * 3. 서버 전송 성공 시 SQLite의 메시지 상태를 `success`로, 실패 시 `failed`로 갱신합니다.
+ * 
+ * Race Condition 방지 로직:
+ * - 서버 전송은 성공했으나 SQLite 갱신(success)에 실패해도, 전송 자체를 실패로 역행시키지 않습니다.
+ * - 전송 실패(failed) 처리 시, 메시지가 여전히 `pending` 상태일 때만 `failed`로 덮어씌웁니다. 
+ *   (늦게 도착한 성공 응답이 실패 응답에 의해 덮어씌워지는 것을 방지)
+ */
 const sendChatMessageWithRemote = async (
   {roomId, message}: SendMessageParams,
   sendRemote: SendMessageRemote,
@@ -345,7 +364,7 @@ const startChatMessageSubscription = async (
     lastSeq,
     newMessages => {
       if (newMessages.length === 0) return
-      void persistSubscribedMessages(roomId, newMessages, callback)
+      persistSubscribedMessages(roomId, newMessages, callback)
     },
   )
 }

@@ -1,10 +1,11 @@
-import {messageService} from '@app/features/chat/service/messageService'
-import {useFocusEffect} from '@react-navigation/native'
-import {useQueryClient} from '@tanstack/react-query'
-import {useCallback, useRef} from 'react'
+import { messageService } from '@app/features/chat/service/messageService'
+import { useFocusEffect } from '@react-navigation/native'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useRef } from 'react'
 
 /**
  * 채팅방 진입/포커스 시 최신 메시지 싱크를 담당하는 훅
+ * 현재는 미사용이지만 나중에 구조 변경 될 수 있어서 남겨둠
  */
 export const useSyncChatMessages = (
   roomId: string | null | undefined,
