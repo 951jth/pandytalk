@@ -1,4 +1,4 @@
-import {useLogout} from '@app/shared/hooks/useLogout'
+import useLogout from '@app/features/auth/hooks/useLogout'
 import {analytics} from '@app/shared/services/analytics'
 import type {User} from '@app/shared/types/auth'
 import type {AppDispatch} from '@app/store/store'

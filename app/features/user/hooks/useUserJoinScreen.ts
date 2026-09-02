@@ -1,13 +1,13 @@
-import type {CheckedRecordType} from '@app/features/auth/components/TermAgreementList'
-import {authRemote} from '@app/features/auth/data/authRemote.firebase'
-import {userService} from '@app/features/user/service/userService'
 import {
   checkRequiredTerm,
   defaultTermsRecord,
-} from '@app/shared/constants/terms'
+  type CheckedRecordType,
+} from '@app/features/auth/constants/terms'
+import {authRemote} from '@app/features/auth/data/authRemote.firebase'
+import type {ProfileInputRef} from '@app/features/media/components/EditProfile'
+import {userService} from '@app/features/user/service/userService'
 import type {UserJoinRequest} from '@app/features/user/types/user'
 import {InputFormRef} from '@app/shared/ui/form/InputForm'
-import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {handleFirebaseJoinError} from '@app/shared/utils/logger'
 import type {AppDispatch} from '@app/store/store'
 import {fetchUserById} from '@app/store/userSlice'

@@ -6,8 +6,8 @@ import {useCallback} from 'react'
 import {Alert} from 'react-native'
 import {useDispatch} from 'react-redux'
 
-//기능이 추가될 가능성이 있어서 공통 훅으로뺌
-export const useLogout = () => {
+// 인증 종료 후 앱의 사용자 상태와 서버 캐시를 함께 초기화한다.
+export default function useLogout() {
   const queryClient = useQueryClient()
   const dispatch = useDispatch<AppDispatch>()
   const logout = useCallback(async (source: string = 'use_logout') => {

@@ -1,4 +1,6 @@
-import type {CheckedRecordType} from '@app/features/auth/components/TermAgreementList'
+import type {ServerTime} from '@app/shared/types/firebase'
+
+export type CheckedRecordType = Record<string, ServerTime | null>
 
 export const terms = [
   {
@@ -55,7 +57,7 @@ export const defaultTermsRecord = terms.reduce(
     ...acc,
     [obj.id]: null,
   }),
-  {},
+  {} as CheckedRecordType,
 )
 
 export const checkRequiredTerm = (checkedRecord: CheckedRecordType) => {

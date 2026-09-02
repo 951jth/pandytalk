@@ -1,11 +1,11 @@
 import React, {useState} from 'react'
 import {Alert} from 'react-native'
 
+import useLogout from '@app/features/auth/hooks/useLogout'
 import {userService} from '@app/features/user/service/userService'
 import {AppButton} from '@app/shared/ui/button/AppButton'
 import ConfirmModal from '@app/shared/ui/modal/ConfirmModal'
 
-import {useLogout} from '@app/shared/hooks/useLogout'
 import {useAppSelector} from '@app/store/reduxHooks'
 
 type propTypes = {

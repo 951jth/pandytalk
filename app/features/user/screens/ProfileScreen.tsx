@@ -3,11 +3,11 @@ import {Pressable, ScrollView, StyleSheet, Text, View} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient'
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
 
+import EditProfile from '@app/features/media/components/EditProfile'
 import ProfileMenu from '@app/features/user/components/ProfileMenu'
 import {useProfileScreen} from '@app/features/user/hooks/useProfileScreen'
 import COLORS from '@app/shared/constants/color'
 import {AppButton} from '@app/shared/ui/button/AppButton'
-import EditProfile from '@app/shared/ui/upload/EditProfile'
 import InputForm from '../../../shared/ui/form/InputForm'
 
 /**

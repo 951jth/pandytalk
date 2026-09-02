@@ -1,6 +1,24 @@
-import {sqliteLock} from '@app/features/chat/utils/message'
-
 const BE_QUITE = false
+
+type AsyncTask<T> = () => Promise<T>
+
+class AsyncQueueLock {
+  private tail: Promise<void> = Promise.resolve()
+
+  runExclusive<T>(task: AsyncTask<T>): Promise<T> {
+    const run = async () => task()
+    const next = this.tail.then(run, run)
+
+    this.tail = next.then(
+      () => undefined,
+      () => undefined,
+    )
+
+    return next
+  }
+}
+
+const sqliteLock = new AsyncQueueLock()
 
 export async function sqliteCall<T>(
   label: string,

@@ -1,5 +1,11 @@
 import {fileService} from '@app/features/media/service/fileService'
 import COLORS from '@app/shared/constants/color'
+import DefaultProfile from '@app/shared/ui/common/DefaultProfile'
+import ImageViewer from '@app/shared/ui/common/ImageViewer'
+import {
+  requestPhotoPermission,
+  showPermissionBlockedAlert,
+} from '@app/shared/utils/permission'
 import React, {
   forwardRef,
   useCallback,
@@ -10,12 +16,6 @@ import React, {
 import {Alert, StyleSheet, View} from 'react-native'
 import {launchImageLibrary} from 'react-native-image-picker'
 import {ActivityIndicator, FAB} from 'react-native-paper'
-import {
-  requestPhotoPermission,
-  showPermissionBlockedAlert,
-} from '../../utils/permission'
-import DefaultProfile from '../common/DefaultProfile'
-import ImageViewer from '../common/ImageViewer'
 
 interface propTypes {
   // previewUrl: string | null

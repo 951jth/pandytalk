@@ -53,20 +53,21 @@ app/features/<feature>/
 ### 2.3 Feature 간 참조
 
 - 같은 feature 내부에서는 해당 feature의 세부 경로를 직접 import할 수 있다.
-- 다른 feature를 참조해야 하면 상대 feature의 공개 API(`app/features/<feature>/index.ts`)를 우선 사용한다.
+- 다른 feature를 참조할 때도 소유 feature가 드러나는 명시적인 세부 경로를 사용할 수 있다.
+- 외부 소비처가 많고 안정적인 계약을 제공할 필요가 있을 때만 `index.ts` 공개 API를 선택한다. 파일 모양을 맞추기 위한 `index.ts` 생성은 강제하지 않는다.
 - 다른 feature의 `data/`를 직접 import하지 않는다.
-- 다른 feature의 내부 Component·Hook·Service를 임의로 참조하지 않는다. 교차 사용이 의도된 항목만 공개 API에서 export한다.
-- 순환 의존이 생기면 공개 API를 늘리지 말고 조립 책임을 `bootstrap`, `navigation`, 상위 Screen 또는 별도 orchestration 계층으로 이동한다.
+- 다른 feature의 Component·Hook·Service는 교차 사용이 의도된 경우에만 참조하고, 해당 feature의 책임을 소비처에 복제하지 않는다.
+- 순환 의존이 생기면 `index.ts` export를 늘리지 말고 조립 책임을 `bootstrap`, `navigation`, 상위 Screen 또는 별도 orchestration 계층으로 이동한다.
 
 ```ts
-// 권장: 다른 feature가 공개한 계약 사용
-import {userService, type User} from '@app/features/user'
-
-// 지양: 다른 feature 내부 경로에 직접 결합
+// 허용: 소유 feature와 대상이 드러나는 명시적인 경로
 import {userService} from '@app/features/user/service/userService'
+
+// 금지: 다른 feature의 데이터 계층 직접 접근
+import {userRemote} from '@app/features/user/data/userRemote.firebase'
 ```
 
-기존 교차 참조는 한 번에 전체 이동하지 않는다. 신규 코드와 수정하는 경로부터 공개 API를 적용하고, 관련 없는 legacy 파일은 별도 작업으로 남긴다.
+기존 교차 참조는 한 번에 전체 이동하지 않는다. 신규 코드와 수정하는 경로부터 책임 경계를 적용하고, 관련 없는 legacy 파일은 별도 작업으로 남긴다.
 
 ## 3. API 레이어 분리 (Remote/Local × Service)
 

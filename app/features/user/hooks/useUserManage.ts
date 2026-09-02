@@ -1,7 +1,7 @@
 import {userService} from '@app/features/user/service/userService'
 import type {User} from '@app/shared/types/auth'
 import type {InputFormRef} from '@app/shared/ui/form/InputForm'
-import type {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
+import type {ProfileInputRef} from '@app/features/media/components/EditProfile'
 import {useAppSelector} from '@app/store/reduxHooks'
 import {useQueryClient} from '@tanstack/react-query'
 import {useRef, useState} from 'react'

@@ -69,28 +69,3 @@ export const setChatMessagePayload = ({
 }
 
 export const normalize = (s: string) => s.trim().toLowerCase()
-
-// 락 안에서 실행될 작업의 형태
-type AnyFn<T> = () => Promise<T>
-
-// 동일한 lock 인스턴스에 등록된 비동기 작업을 등록 순서대로 실행
-class AsyncQueueLock {
-  // 처음엔 아무 작업도 없으니까 Promise.resolve()
-  private tail: Promise<void> = Promise.resolve()
-  // 이전 작업의 정산 이후 현재 작업을 실행하도록 tail에 연결
-  runExclusive<T>(fn: AnyFn<T>): Promise<T> {
-    const run = async () => fn()
-    // 핵심2: 이전 작업의 실패와 성공에 상관없이 다음 함수를 run
-    const next = this.tail.then(run, run)
-
-    this.tail = next.then(
-      () => undefined,
-      () => undefined,
-    )
-
-    return next
-  }
-}
-
-//Promise 요청이 끝난 뒤에 로직을 실행.
-export const sqliteLock = new AsyncQueueLock()

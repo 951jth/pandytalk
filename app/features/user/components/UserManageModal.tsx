@@ -3,13 +3,13 @@ import {Modal, ScrollView, StyleSheet, Text, View} from 'react-native'
 
 import InputForm from '../../../shared/ui/form/InputForm'
 
+import EditProfile from '@app/features/media/components/EditProfile'
 import {useUserManage} from '@app/features/user/hooks/useUserManage'
 import {updateUserItems} from '@app/features/user/screens/updateUser.form'
 import COLORS from '@app/shared/constants/color'
 import {User} from '@app/shared/types/auth'
 import {AppButton} from '@app/shared/ui/button/AppButton'
 import BottomSheetModal from '@app/shared/ui/modal/BottomSheetModal'
-import EditProfile from '@app/shared/ui/upload/EditProfile'
 
 const ButtonsByType = {
   pending: [

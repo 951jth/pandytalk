@@ -1,14 +1,15 @@
-import COLORS from '@app/shared/constants/color'
-import {terms} from '@app/shared/constants/terms'
+import {
+  defaultTermsRecord,
+  terms,
+  type CheckedRecordType,
+} from '@app/features/auth/constants/terms'
 import {termType} from '@app/features/auth/types/term'
-import {ServerTime} from '@app/shared/types/firebase'
+import COLORS from '@app/shared/constants/color'
 import {serverTimestamp} from '@react-native-firebase/firestore'
 import React, {useMemo, useState} from 'react'
 import {StyleSheet, Text, View} from 'react-native'
 import {Checkbox, IconButton} from 'react-native-paper'
 import TermViewModal from './TermViewModal'
-
-export type CheckedRecordType = Record<string, ServerTime | null>
 
 type Props = {
   /** Controlled: 외부에서 전달하는 체크 레코드 (없으면 내부 상태 사용) */
@@ -17,18 +18,13 @@ type Props = {
   onChange?: (next: CheckedRecordType) => void
 }
 
-const defaultCheckedRecord: CheckedRecordType = terms.reduce(
-  (acc, obj) => ({...acc, [obj.id]: null}),
-  {} as CheckedRecordType,
-)
-
 export default (function TermAgreementList({
   checkedRecord: controlled,
   onChange,
 }: Props) {
   // Uncontrolled 모드에서만 사용하는 내부 상태
   const [innerRecord, setInnerRecord] =
-    useState<CheckedRecordType>(defaultCheckedRecord)
+    useState<CheckedRecordType>(defaultTermsRecord)
   const [viewCode, setViewCode] = useState<string | null>(null)
 
   // 항상 여기서 현재 사용할 소스를 결정

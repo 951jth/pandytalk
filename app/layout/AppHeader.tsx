@@ -1,6 +1,6 @@
+import useLogout from '@app/features/auth/hooks/useLogout'
 import {useTabScreens} from '@app/navigation/useTabScreens'
 import COLORS from '@app/shared/constants/color'
-import {useLogout} from '@app/shared/hooks/useLogout'
 import {useNavigation, useNavigationState} from '@react-navigation/native'
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {ReactNode} from 'react'

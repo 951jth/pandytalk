@@ -9,12 +9,14 @@ import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native'
 import {auth, firestore} from '../../../shared/firebase/firestore'
 import InputForm from '../../../shared/ui/form/InputForm'
 
+import EditProfile, {
+  type ProfileInputRef,
+} from '@app/features/media/components/EditProfile'
 import COLORS from '@app/shared/constants/color'
 import {ServerTime} from '@app/shared/types/firebase'
 import {FormItem} from '@app/shared/types/form'
 import {Group} from '@app/features/group/types/group'
 import AppInput from '@app/shared/ui/input/AppInput'
-import EditProfile, {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
 import {formatServerDate} from '../../../shared/utils/format'
 import UserSelect from '../../user/components/UserSelect'
 

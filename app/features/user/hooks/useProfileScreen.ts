@@ -10,7 +10,7 @@ import {createUserProfileItems} from '@app/features/user/screens/setProfiles.for
 import {userService} from '@app/features/user/service/userService'
 import {type User} from '@app/shared/types/auth'
 import {type UpdateInput} from '@app/shared/types/firebase'
-import {ProfileInputRef} from '@app/shared/ui/upload/EditProfile'
+import type {ProfileInputRef} from '@app/features/media/components/EditProfile'
 import {formatUpdateCreatedAt} from '@app/shared/utils/update'
 import useKeyboardFocus from '../../../shared/hooks/useKeyboardFocus'
 import {InputFormRef} from '../../../shared/ui/form/InputForm'
