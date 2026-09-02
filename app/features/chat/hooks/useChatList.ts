@@ -1,9 +1,9 @@
 import {useChatWithMembersInfo} from '@app/features/chat/hooks/useChatWithMembersInfo'
 import {useMyChatListInfinite} from '@app/features/chat/hooks/useMyChatListInfinite'
 import type {ChatRoom} from '@app/shared/types/chat'
+import {useAppSelector} from '@app/store/reduxHooks'
 import {debounce} from 'lodash'
 import {useEffect, useMemo, useState} from 'react'
-import {useAppSelector} from '../../../store/reduxHooks'
 
 type ChatListType = Extract<ChatRoom['type'], 'dm' | 'group'>
 

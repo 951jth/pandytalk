@@ -18,20 +18,11 @@
       "@shared/*": [
         "app/shared/*"
       ],
-      "@services/*": [
-        "app/services/*"
-      ],
       "@navigation/*": [
         "app/navigation/*"
       ],
-      "@layout/*": [
-        "app/shared/layout/*"
-      ],
       "@constants/*": [
         "app/shared/constants/*"
-      ],
-      "@db/*": [
-        "app/db/*"
       ]
     },
     "jsx": "react",
