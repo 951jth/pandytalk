@@ -1,3 +1,4 @@
+import { logger } from '@app/shared/services/logger'
 const BE_QUITE = false
 
 type AsyncTask<T> = () => Promise<T>
@@ -31,7 +32,14 @@ export async function sqliteCall<T>(
   const exec = () => (shouldLock ? sqliteLock.runExclusive(run) : run())
 
   // 배포 환경에서는 바로 실행(로그만 스킵). 락은 운영에서도 유지하는 게 안전함.
-  if (!__DEV__ || BE_QUITE) return await exec()
+  if (!__DEV__ || BE_QUITE) {
+    try {
+      return await exec()
+    } catch (e) {
+      logger.error(`[SQLITE] ${label} failed`, e)
+      throw e
+    }
+  }
 
   console.groupCollapsed(`🧱 [SQLITE] ${label}`)
   const start = Date.now()

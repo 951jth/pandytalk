@@ -2,6 +2,7 @@ import {useEffect} from 'react'
 import * as Updates from 'expo-updates'
 import {AppState} from 'react-native'
 import {logger} from '@app/shared/services/logger'
+import {analytics} from '@app/shared/services/analytics'
 import {formatUpdateCreatedAt} from '@app/shared/utils/update'
 
 /**
@@ -58,6 +59,11 @@ export const useEASUpdateManager = () => {
             logger.info(
               'EAS Update fetch successful. Reloading app to apply...',
             )
+            // 통계 추가: 업데이트 성공 이벤트 전송
+            analytics.track('eas_update_applied', {
+              updateId: Updates.updateId ?? 'unknown',
+            })
+            
             // 4. 즉시 재시작하여 적용 (사용자 요청: 자동 로드 방식)
             await Updates.reloadAsync()
           } else {

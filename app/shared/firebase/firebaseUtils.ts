@@ -12,7 +12,17 @@ export const firebaseCall = async <T>(
   logName: string,
   fn: () => Promise<T>,
 ): Promise<T> => {
-  if (!__DEV__ || BE_QUITE) return await fn()
+  if (!__DEV__ || BE_QUITE) {
+    try {
+      return await fn()
+    } catch (e) {
+      const expected = isExpectedError(e)
+      if (!expected) {
+        logger.error(`[Firestore/Call] ${logName} failed`, e)
+      }
+      throw e
+    }
+  }
   const startTime = Date.now()
 
   try {
@@ -62,7 +72,12 @@ export const firebaseObserver = (
     return q.onSnapshot(
       {includeMetadataChanges: true},
       onNext,
-      onError, // 에러 콜백이 있으면 전달, 없으면 undefined
+      (error: Error) => {
+        if (!isExpectedError(error)) {
+          logger.error(`[Firestore/Sub] ${logName} failed`, error)
+        }
+        onError?.(error)
+      }
     )
   }
   const startTime = Date.now()
@@ -155,7 +170,17 @@ export const firebaseRefObserver = (
   const options = {includeMetadataChanges: true}
 
   if (!__DEV__ || BE_QUITE) {
-    return onSnapshot(ref, options, onNext, onError)
+    return onSnapshot(
+      ref, 
+      options, 
+      onNext, 
+      (error: Error) => {
+        if (!isExpectedError(error)) {
+          logger.error(`[Firestore/Sub] ${logName} failed`, error)
+        }
+        onError?.(error)
+      }
+    )
   }
 
   const displayName = shortenString(logName)
