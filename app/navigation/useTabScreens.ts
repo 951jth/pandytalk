@@ -1,7 +1,8 @@
 import AdminMenuScreen from '@app/features/admin/screens/AdminMenuScreen'
 import ChatUnreadCount from '@app/features/chat/components/ChatUnreadCount'
 import GroupChatUnreadCount from '@app/features/chat/components/GroupChatUnreadCount'
-import ChatListScreen from '@app/features/chat/screens/ChatListScreen'
+import DmChatListScreen from '@app/features/chat/screens/DmChatListScreen'
+import GroupChatListScreen from '@app/features/chat/screens/GroupChatListScreen'
 import ProfileScreen from '@app/features/user/screens/ProfileScreen'
 import UsersScreen from '@app/features/user/screens/UsersScreen'
 import {useAppSelector} from '@app/store/reduxHooks'
@@ -90,9 +91,8 @@ export const useTabScreens = () => {
       {
         name: 'chats',
         title: '채팅',
-        component: ChatListScreen,
+        component: DmChatListScreen,
         icon: 'chat',
-        getParams: () => ({type: 'dm'}),
         badge: ChatUnreadCount,
       },
       {
@@ -109,8 +109,7 @@ export const useTabScreens = () => {
         name: 'group-chat-list',
         title: '그룹 채팅',
         icon: 'account-multiple',
-        component: ChatListScreen,
-        getParams: () => ({type: 'group'}),
+        component: GroupChatListScreen,
         badge: () => ChatUnreadCount({type: 'group'}),
         filtered: !isAdmin,
         disabled: isPending,

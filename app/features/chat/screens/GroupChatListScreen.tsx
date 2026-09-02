@@ -1,26 +1,25 @@
-import COLORS from '@app/shared/constants/color'
+import ChatListItemCard from '@app/features/chat/components/ChatListItemCard'
+import ChatListSkeleton from '@app/features/chat/components/ChatListSkeleton'
+import {useChatList} from '@app/features/chat/hooks/useChatList'
 import type {ChatItemWithMemberInfo} from '@app/features/chat/types/chat'
-import type {TabParamList} from '@app/navigation/types'
+import type {AppRouteParamList} from '@app/navigation/types'
+import COLORS from '@app/shared/constants/color'
 import EmptyData from '@app/shared/ui/common/EmptyData'
 import SearchInput from '@app/shared/ui/input/SearchInput'
-import ChatListSkeleton from '@app/features/chat/components/ChatListSkeleton'
 import {useBottomTabBarHeight} from '@react-navigation/bottom-tabs'
-import {useRoute, type RouteProp} from '@react-navigation/native'
+import {useNavigation} from '@react-navigation/native'
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack'
 import React, {memo, useCallback} from 'react'
 import {FlatList, StyleSheet, View} from 'react-native'
 import {ActivityIndicator} from 'react-native-paper'
-import ChatListItemCard from '../components/ChatListItemCard'
-import {useChatListScreen} from '../hooks/useChatListScreen'
 
-type ChatRouteParams = RouteProp<TabParamList, 'chats' | 'group-chat-list'>
+type Navigation = NativeStackNavigationProp<AppRouteParamList, 'group-chat'>
 
 const MemoizedChatListItem = memo(ChatListItemCard)
 
-//1:1 (DM), 그룹채팅(group) 모두 사용중인 화면.
-export default function ChatListScreen() {
+export default function GroupChatListScreen() {
+  const navigation = useNavigation<Navigation>()
   const tabBarHeight = useBottomTabBarHeight()
-  const {params} = useRoute<ChatRouteParams>()
-  const type = params?.type ?? 'dm'
   const {
     input,
     setInput,
@@ -30,17 +29,32 @@ export default function ChatListScreen() {
     hasNextPage,
     fetchNextPage,
     refetch,
-    moveToChatRoom,
-  } = useChatListScreen(type)
+  } = useChatList('group')
+
+  const moveToChatRoom = useCallback(
+    (chatInfo: ChatItemWithMemberInfo) => {
+      if (!chatInfo.id) return
+
+      navigation.navigate('group-chat', {
+        initialChatInfo: {
+          id: chatInfo.id,
+          type: 'group',
+          title: chatInfo.name,
+          image: chatInfo.image,
+          lastSeq: chatInfo.lastSeq,
+        },
+      })
+    },
+    [navigation],
+  )
 
   const renderItem = useCallback(
-    ({item}: {item: ChatItemWithMemberInfo}) => {
-      return (
-        <MemoizedChatListItem item={item} moveToChatRoom={moveToChatRoom} />
-      )
-    },
+    ({item}: {item: ChatItemWithMemberInfo}) => (
+      <MemoizedChatListItem item={item} moveToChatRoom={moveToChatRoom} />
+    ),
     [moveToChatRoom],
   )
+
   if (isLoading && !chats?.length) {
     return (
       <View style={styles.container}>
@@ -58,7 +72,7 @@ export default function ChatListScreen() {
       />
       <FlatList
         data={chats}
-        keyExtractor={e => e?.id}
+        keyExtractor={item => item.id}
         renderItem={renderItem}
         onEndReached={() => {
           if (hasNextPage) fetchNextPage()
@@ -80,7 +94,7 @@ export default function ChatListScreen() {
         onRefresh={refetch}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        style={{flex: 1}}
+        style={styles.list}
         contentContainerStyle={[
           styles.chatContents,
           {paddingBottom: tabBarHeight + 16},
@@ -93,10 +107,13 @@ export default function ChatListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background, // 앱 전체 테마 반영
+    backgroundColor: COLORS.background,
+  },
+  list: {
+    flex: 1,
   },
   chatContents: {
-    flexGrow: 1, // ✅ 목록이 비었을 때 화면을 꽉 채우도록 설정
+    flexGrow: 1,
   },
   empty: {
     flex: 1,

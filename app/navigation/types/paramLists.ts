@@ -1,12 +1,11 @@
 import {NavigatorScreenParams} from '@react-navigation/native'
-import type {ChatRoom} from '@app/shared/types/chat'
 import type {InitialDmChatInfo, InitialGroupChatInfo} from './initialChat'
 
 export type TabParamList = {
   users: undefined
-  chats: {type?: ChatRoom['type']} | undefined
+  chats: undefined
   'group-chat-tab': undefined
-  'group-chat-list': {type: ChatRoom['type']}
+  'group-chat-list': undefined
   profile: undefined
   'admin-menu': undefined
 }
