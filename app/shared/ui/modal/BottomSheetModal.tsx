@@ -2,6 +2,7 @@ import React from 'react'
 import {StyleSheet, View, type StyleProp, type ViewStyle} from 'react-native'
 import Modal from 'react-native-modal'
 import COLORS from '@app/shared/constants/color'
+import {useSafeAreaInsets} from 'react-native-safe-area-context'
 
 type RNModalProps = React.ComponentProps<typeof Modal>
 
@@ -25,9 +26,11 @@ export default function BottomSheetModal({
   children,
   contentStyle,
   modalStyle,
-  avoidKeyboard = false,
+  avoidKeyboard = true,
   ...rest
 }: Props) {
+  const insets = useSafeAreaInsets()
+
   return (
     <Modal
       isVisible={visible}
@@ -42,7 +45,7 @@ export default function BottomSheetModal({
       useNativeDriver
       useNativeDriverForBackdrop
       {...rest}>
-      <View style={[styles.content, contentStyle]}>{children}</View>
+      <View style={[styles.content, {paddingBottom: Math.max(insets.bottom, 16)}, contentStyle]}>{children}</View>
     </Modal>
   )
 }

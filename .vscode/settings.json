@@ -68,5 +68,7 @@
     "variables": "#9CDCFE",
     "numbers": "#B5CEA8",
     "types": "#4EC9B0"
-  }
+  },
+  "java.import.exclusions": ["**/node_modules/**"],
+  "java.project.importOnFirstTimeStartup": "disabled"
 } 
