@@ -1,5 +1,6 @@
 import React from 'react'
-import {Modal, ScrollView, StyleSheet, Text, View} from 'react-native'
+import {Modal, StyleSheet, Text, View} from 'react-native'
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
 
 import InputForm from '../../../shared/ui/form/InputForm'
 
@@ -90,11 +91,15 @@ export default function UserManageModal({
     useUserManage({record, onComplete})
 
   return (
-    <BottomSheetModal visible={open} onClose={onClose}>
+    <BottomSheetModal visible={open} onClose={onClose} avoidKeyboard={false}>
       <View style={styles.container}>
-        <ScrollView
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          extraScrollHeight={20}
+          contentContainerStyle={{ flexGrow: 1 }}
+        >
           <InputForm
             ref={formRef}
             items={updateUserItems}
@@ -143,7 +148,7 @@ export default function UserManageModal({
               )
             }
           />
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
     </BottomSheetModal>
   )

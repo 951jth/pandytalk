@@ -17,7 +17,7 @@ export default function GroupModalForm({
   onRefresh,
 }: propTypes) {
   return (
-    <BottomSheetModal visible={open} onClose={onClose}>
+    <BottomSheetModal visible={open} onClose={onClose} avoidKeyboard={false}>
       <GroupForm record={record} onClose={onClose} onRefresh={onRefresh} />
     </BottomSheetModal>
   )
