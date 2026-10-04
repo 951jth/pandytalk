@@ -11,15 +11,14 @@ import {
 import {ChatMessage} from '../../types/chat'
 
 /**
- * 질문자가 10~15초 이내에 스트리밍을 시작하지 않았을 경우,
- * 서버가 대신 답변을 생성하여 Firestore에 저장합니다.
+ * 질문자가 30초 이내에 스트리밍을 완료하지 않았을 경우,
+ * 서버가 대신 답변을 생성하여 Firestore에 저장합니다. (1회만 검증)
  */
 //Cloud Tasks 큐(Queue) 와 트리거가 연결된 함수
 export const onAiStreamBackup = onTaskDispatched(
   {
     retryConfig: {
-      maxAttempts: 3,
-      minBackoffSeconds: 15,
+      maxAttempts: 1,
     },
     secrets: ['OPENAI_API_SECRET', 'SERPER_API_SECRET'],
     region: 'asia-northeast3',
