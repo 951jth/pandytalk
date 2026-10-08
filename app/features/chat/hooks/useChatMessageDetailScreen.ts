@@ -11,6 +11,7 @@ import {
   type InfiniteData,
 } from '@tanstack/react-query'
 import {useMemo} from 'react'
+import type {RootState} from '@app/store/store'
 
 type ChatMessageDetailRoute = RouteProp<
   AppRouteParamList,
@@ -20,7 +21,7 @@ type ChatMessageDetailRoute = RouteProp<
 export const useChatMessageDetailScreen = () => {
   const route = useRoute<ChatMessageDetailRoute>()
   const queryClient = useQueryClient()
-  const {data: user} = useAppSelector(state => state.user)
+  const {data: user} = useAppSelector((state: RootState) => state.user)
   const {roomId, messageId} = route.params
   const cachedMessage = useMemo(() => {
     const cached = queryClient.getQueryData<
