@@ -17,30 +17,53 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Lint, Typecheck and Test
+  checks:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Lint
+            command: yarn lint
+          - name: Typecheck
+            command: yarn typecheck
+          - name: Unit Tests
+            command: yarn test
     steps:
-      - name: 📦 저장소 체크아웃
+      - name: 저장소 체크아웃
         uses: actions/checkout@v4
 
-      - name: 🟢 Node.js 설정
+      - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
           node-version: 22.15.0
-          cache: 'yarn'
+          cache: yarn
 
-      - name: 📥 의존성 패키지 설치
+      - name: 의존성 패키지 설치
         run: yarn install --frozen-lockfile
 
-      - name: 🔍 타입 체크
-        run: yarn typecheck
+      - name: ${{ matrix.name }} 실행
+        run: ${{ matrix.command }}
 
-      - name: ✨ 린트 체크
-        run: yarn lint
-
-      - name: 🧪 단위 테스트 실행
-        run: yarn test
+  test:
+    # 브랜치 보호에서 이 이름을 필수 검사로 지정합니다.
+    name: Lint, Typecheck and Test
+    needs: checks
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 모든 CI 검사 결과 확인
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        run: |
+          echo "CI 검사 결과: $CHECKS_RESULT" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CHECKS_RESULT" != "success" ]; then
+            echo "::error::린트·타입 체크·테스트가 모두 성공해야 머지 및 배포할 수 있습니다."
+            exit 1
+          fi
 
   update:
     name: EAS Update
