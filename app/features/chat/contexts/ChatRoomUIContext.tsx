@@ -1,8 +1,6 @@
-import {FlashList} from '@shopify/flash-list'
 import React, {createContext, ReactNode, useContext} from 'react'
 import {NativeScrollEvent, NativeSyntheticEvent} from 'react-native'
 
-import type {ChatMessageItemProps} from '../components/ChatMessageItem'
 import AnimatedAIGradient from '../components/AnimatedAIGradient'
 import {useChatScroll} from '../hooks/useChatScroll'
 
@@ -24,7 +22,7 @@ const ChatRoomUIStateContext = createContext<ChatRoomUIState | null>(null)
 const ChatRoomUIActionContext = createContext<ChatRoomUIAction | null>(null)
 
 import COLORS from '@app/shared/constants/color'
-import {View, StyleSheet} from 'react-native'
+import {View} from 'react-native'
 
 export const ChatRoomUIProvider = ({children}: {children: ReactNode}) => {
   const [isAIGenerating, setIsAIGenerating] = React.useState(false)

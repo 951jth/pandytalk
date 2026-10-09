@@ -6,7 +6,8 @@
 
 명령을 제안하거나 실행하기 전, 작업 유형에 맞는 워크플로우 파일을 먼저 읽고 따르세요.
 
-- **git, commit, push, branch, merge, PR:** `.agent/workflows/pushAndCommit.md`
+- **코드 리뷰, PR 리뷰:** [.agent/workflows/code-review.md](.agent/workflows/code-review.md)
+- **git, commit, push, branch, merge, PR 생성·수정:** `.agent/workflows/pushAndCommit.md`
 - **버전 업, 빌드 번호, release, runtime version:** `.agent/workflows/release-versioning.md`
 - **EAS Build, EAS Update, deploy, OTA:** `.agent/workflows/eas-update.md`
 - **프로젝트 자동화, 프로젝트 회고록 작성:** `.agent/workflows/retrospective.md`
@@ -30,3 +31,10 @@
 - `npm`, `npx`, `yarn`, EAS, 빌드, 전체 테스트/lint 등 **구동이 오래 걸리는 명령은 자동 실행하지 않습니다.** 
 - 검증 실패(예: 샌드박스 오류) 시 무단 재시도하지 않으며, 정적 점검 후 사용자 확인을 받으세요.
 - 대규모 변경 사항은 편집 전에 구현 계획을 먼저 작성하거나 사용자에게 확인받으세요.
+
+## 4. Code Review Rules
+
+- 코드 리뷰 또는 PR 리뷰를 수행하기 전에 [코드 리뷰 규칙](.agent/workflows/code-review.md)을 반드시 읽고 따릅니다.
+- 리뷰는 한국어로 작성하고, 실제 문제가 발생하는 조건과 코드 근거를 설명합니다.
+- 리뷰 요청에서는 파일 수정·커밋·push·머지·배포를 수행하지 않습니다. GitHub PR에 리뷰 의견을 게시하는 것은 리뷰 작업에 포함됩니다.
+- 기존 커밋·push 승인 규칙은 유지합니다. 리뷰 지침은 CI 검사와 브랜치 보호 규칙을 대체하지 않습니다.

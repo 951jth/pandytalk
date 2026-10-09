@@ -19,7 +19,6 @@ export default function ChatMessageDetailScreen() {
   const {width} = useWindowDimensions()
   const {
     message,
-    isMine,
     senderName,
     formattedDate,
     isLoading,

@@ -31,7 +31,7 @@ export default function ChatMessageInput({
       chatType,
     })
 
-  const handleSend = (type: 'text' | 'image', result?: any) => {
+  const handleSend = (type: 'text' | 'image', result?: unknown) => {
     if (!loading) {
       onSendMessage(type, result)
       scrollToBottom(true)

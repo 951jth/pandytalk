@@ -119,7 +119,7 @@ export const useRevalidateExpiredAiMessage = (
     let cancelled = false
     setStatus('checking')
 
-    void revalidateAiMessage(chatId, messageId)
+    revalidateAiMessage(chatId, messageId)
       .then(refreshed => {
         if (cancelled) return
         if (!refreshed) {
@@ -169,7 +169,7 @@ export const useRevalidateExpiredAiMessage = (
     return () => {
       cancelled = true
     }
-  }, [chatId, isExpired, item?.id, queryClient])
+  }, [chatId, isExpired, item, queryClient])
 
   const applicableRefreshedMessage =
     refreshedMessage?.id === item?.id ? refreshedMessage : null

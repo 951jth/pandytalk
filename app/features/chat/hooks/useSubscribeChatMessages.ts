@@ -13,7 +13,7 @@ export const useSubscribeChatMessages = (roomId?: string | null) => {
       let isActive = true
       let unsubscribe: (() => void) | undefined
 
-      void messageService
+      messageService
         .subscribeChatMessages(
           roomId,
           newMessages => {

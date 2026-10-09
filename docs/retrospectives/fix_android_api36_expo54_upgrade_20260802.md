@@ -308,6 +308,24 @@ git revert 9251408
 - Android 12 이상과 이하의 스플래시 스크린샷을 기준 이미지로 남깁니다.
 - Native 의존성 변경과 EAS Update 대상 변경을 CI 경로 필터에서 지속적으로 구분합니다.
 
+## 📜 [참고] 과거 EAS Update 및 Submit 파이프라인 충돌 이력
+본 문서는 2026년 8월 업그레이드 내용을 다루고 있으나, 빌드 파이프라인 정비의 연장선으로 과거(2026년 2월 ~ 4월) EAS 초기 도입 시 발생했던 주요 오류와 해결 커밋 이력을 아래에 참고용으로 병기합니다.
+
+### 1. 초기 EAS 설정 및 모듈 충돌 (2026-02-05 ~ 06)
+- **관련 커밋**: `395e8a2` (fixing: eas 수정중), `24b4b85` (fix: expo 모듈 충돌)
+- **문제 현상**: `settings.gradle` 중복 설정으로 인한 빌드 오류(`Multiple projects in the build...`) 및 `app.json` name 누락으로 인한 런타임 미등록 오류(`has not been registered`).
+- **해결 내역**: 중복 구문 제거(RN 표준 Autolinking) 및 `app.json`에 `"name": "cshchatapp"` 명시.
+
+### 2. 빌드 프로필(aab/apk) 호환성 에러 (2026-03-29 ~ 30)
+- **관련 커밋**: `190abbf` (fix: eas build), `2779bc6` (chore: add apk build profile), `27c275c` (chore: eas.json의 apk 프로필 빌드 타입을 aab로 변경), `65d478f` (fix: expo version)
+- **문제 현상**: `eas build` 시 로컬 테스트용(apk)과 스토어 배포용(aab) 프로필 지정이 명확하지 않아 빌드 실패.
+- **해결 내역**: `eas.json` 내 `apk` 프로필 별도 신설 및, 릴리즈용 프로필에 `buildType: "app-bundle"` 강제.
+
+### 3. EAS Submit 패키지명(applicationId) 충돌 및 완전 분리 (2026-04-18)
+- **관련 커밋**: `1a7090d` (chore(android): EAS Submit 오류 해결을 위해 Product Flavors 마이그레이션)
+- **문제 현상**: 스토어 Submit 과정에서 `.debug` 접미사(`applicationIdSuffix`) 설정이 EAS 빌드 파이프라인과 얽혀 제출 및 빌드 타겟 지정 오류 발생.
+- **해결 내역**: `android/app/build.gradle`에 **Product Flavors**(`production`, `development`)를 도입하여 빌드 레벨에서 환경별 패키지명 분리 완료. 이에 맞춰 `eas.json`의 `gradleCommand` 분리 및 `package.json` 스크립트(`--mode developmentDebug`) 마이그레이션 완료.
+
 ---
 **기록자**: Codex (AI Coding Assistant)
 **상태**: 코드 반영 및 정적 검증 완료, 실기기·릴리즈 빌드 검증 대기
