@@ -133,7 +133,7 @@ export function useProfileMenu(onReset: () => void = () => {}) {
             userInfo?.authority === 'ADMIN' || userInfo?.authority === 'TEST',
         },
       ].filter(item => !item.filtered),
-    [navigation, onClear, onLogout, onReset, userInfo],
+    [closeMenu, navigation, onClear, onLogout, onReset, userInfo],
   )
 
   return {
