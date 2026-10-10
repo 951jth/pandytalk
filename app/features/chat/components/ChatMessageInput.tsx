@@ -2,6 +2,7 @@ import React, {useCallback} from 'react'
 import {StyleSheet, View, type LayoutChangeEvent} from 'react-native'
 import {IconButton, TextInput} from 'react-native-paper'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
+import type {ImagePickerResponse} from 'react-native-image-picker'
 
 import {useChatRoomUIAction} from '@app/features/chat/contexts/ChatRoomUIContext'
 import {
@@ -31,7 +32,7 @@ export default function ChatMessageInput({
       chatType,
     })
 
-  const handleSend = (type: 'text' | 'image', result?: unknown) => {
+  const handleSend = (type: 'text' | 'image', result?: ImagePickerResponse) => {
     if (!loading) {
       onSendMessage(type, result)
       scrollToBottom(true)

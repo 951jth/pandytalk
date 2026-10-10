@@ -5,7 +5,9 @@ description: EAS Update (CodePush) 사용 방법
 // turbo-all
 사용자가 "/eas-update", "업데이트해줘", "배포해줘" 또는 이와 유사한 요청을 하면 다음 단계를 수행하세요.
 
-### 자동화 규칙:
+### 실행 작업의 자동화 규칙:
+
+코드 리뷰에서 이 문서를 읽는 경우 아래 배포·커밋·버전 변경 절차를 실행하지 않고 설정과 호환성만 검토합니다.
 
 1.  **상태 점검:** 프로젝트 루트(`c:\Users\CSH\Projects\pandytalk`)에서 변경 내역(`git status -s`)을 확인합니다.
 2.  **네이티브 변경 감지:** 다음과 같은 항목이 변경 목록에 포함되어 있는지 분석합니다.
@@ -24,7 +26,7 @@ description: EAS Update (CodePush) 사용 방법
 
 ### 1. 업데이트 배포 (JS 수정 시)
 
-수정한 코드를 사용자 기기에 즉시 반영하려면 아래 명령어를 실행하세요. 이제 `prebuild`가 자동으로 먼저 실행되어 `app.config.js` 설정이 네이티브 폴더와 동기화됩니다.
+수정한 코드를 사용자 기기에 즉시 반영하려면 아래 명령어를 실행하세요. 현재 update 스크립트는 main 브랜치에 발행하며 prebuild를 실행하지 않습니다. 이 Bare 프로젝트의 android/와 ios/는 네이티브 설정 원본입니다.
 
 ```bash
 npm run update
@@ -33,21 +35,33 @@ npm run update
 또는 상세 설명과 함께 배포하려면:
 
 ```bash
-eas update --branch production --message "업데이트 내용 입력"
+eas update --branch main --message "업데이트 내용 입력"
 ```
 
 ### 2. 네이티브 변경 사항 반영 (중요)
 
-아래와 같은 변경이 있을 때는 `eas update` 만으로는 부족하며, **반드시 새로 빌드해서 스토어에 업로드(또는 기기에 재설치)** 해야 합니다.
+아래 변경은 기존 설치 앱의 네이티브 런타임과 호환되는지 확인합니다. 호환되지 않으면 EAS Update만으로 반영할 수 없으며 새 바이너리 배포가 필요합니다. 의존성이나 파일이 바뀌었다는 사실만으로 새 빌드가 필요하다고 단정하지 않습니다.
 
 - `package.json`의 새로운 라이브러리 추가
 - `android` 또는 `ios` 폴더 내의 네이티브 코드 수정
 - `app.config.js`의 네이티브 설정 변경
 
-⚠️ **주의**: 버전을 올리거나 빌드를 새로 해야 할 경우, `/release` 명령어를 사용하여 `release-versioning.md` 워크플로우에 따라 `app.config.js`, `build.gradle`, `strings.xml` 세 곳의 버전을 반드시 동기화해야 합니다. **네이티브 빌드 전에는 반드시 `npm run prebuild`를 실행하여 설정이 반영되었는지 확인하세요.**
+⚠️ **주의**: 버전을 올리거나 빌드를 새로 해야 할 경우, `/release` 명령어를 사용하여 `release-versioning.md` 워크플로우에 따라 `app.config.js`, `build.gradle`, `strings.xml` 세 곳의 버전을 반드시 동기화해야 합니다. 이 프로젝트에서는 prebuild로 네이티브 프로젝트를 재생성하지 않습니다. 실제 네이티브 파일과 버전 스크립트 연결을 확인하세요.
 
 ### 3. 현재 설정 정보
 
 - **Project ID**: `713adbab-1d3b-4992-9aab-396e9557bd0f`
 - **Owner**: `sehooncho`
 - **Channel**: `main` (기본값)
+
+
+## 호환성과 배포 경로의 상세 검토
+
+- 이 프로젝트는 RN CLI에 Expo Modules를 연결한 Bare 구조입니다. android/와 ios/를 네이티브 설정 원본으로 보고, prebuild를 자동 실행하거나 전제하지 않습니다.
+- 네이티브 코드·의존성·권한·설정 변경이 기존 설치 앱의 런타임과 호환되지 않는 OTA로 발행될 위험을 확인합니다. package.json 변경만으로 새 네이티브 빌드가 필요하다고 단정하지 않습니다.
+- 앱 코드와 네이티브 파일이 함께 변경될 때도 OTA가 발행될 수 있는지 워크플로우 이벤트·경로 필터·Job 조건을 함께 확인합니다. 경로 제외만으로 네이티브 변경 차단을 보장한다고 판단하지 않습니다.
+- versionCode는 Android 제출용 빌드 번호, runtimeVersion은 OTA 호환성 기준입니다. 둘이 같아야 한다는 EAS 공통 요구사항으로 설명하지 않습니다.
+- Android에서는 app.config.js의 versionCode·ANDROID_RUNTIME_VERSION, build.gradle의 versionCode, strings.xml의 expo_runtime_version을 함께 관리하는 프로젝트 규칙을 확인합니다. iOS 런타임은 별도로 판단합니다.
+- 버전 검사·증가가 실제 빌드 명령에 연결되어 있는지 확인합니다. 스크립트가 존재한다는 이유만으로 모든 빌드에서 자동 실행된다고 가정하지 않습니다.
+- 채널과 업데이트 브랜치를 구분하고, 운영·검증 앱이 같은 채널을 사용할 때 배포 영향 범위를 확인합니다. 서버의 채널 매핑을 로컬 설정만으로 확정하지 않습니다.
+- 문서와 코드가 충돌하면 실제 설정·호출 경로를 근거로 불일치를 설명합니다.

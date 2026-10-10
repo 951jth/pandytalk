@@ -93,7 +93,7 @@ Remote / Local  ← Firestore/HTTP/SQLite 입출력
 
 ## 4. Screen과 Hook 책임
 
-메인 스크린(`*Screen.tsx`)은 UI 렌더링에 집중하되, 작은 화면 조합을 무조건 별도 Screen Hook 파일로 추출하지 않는다.
+메인 스크린(`*Screen.tsx`)은 UI 렌더링에 집중하되, 단순한 로컬 상태(UI State)나 짧은 로직까지 무조건 별도 Screen Hook(`use*Screen.ts`) 파일로 분리(추출)하지 않는다. 복잡성이 낮다면 스크린 내부에서 처리해 파편화를 방지한다.
 
 | 담당 | 역할 | 위치 예시 |
 | :--- | :--- | :--- |
