@@ -6,6 +6,7 @@
 
 명령을 제안하거나 실행하기 전, 작업 유형에 맞는 워크플로우 파일을 먼저 읽고 따르세요.
 
+- **브랜치 전략, PR 생성·갱신, PR 리뷰·병합 기준:** [docs/pr-ci-process.md](docs/pr-ci-process.md)를 먼저 읽고, 실행 절차는 아래 작업별 워크플로우를 따릅니다.
 - **코드 리뷰, PR 리뷰:** [.agent/workflows/code-review.md](.agent/workflows/code-review.md)
 - **Firebase Functions 작성·변경·리뷰:** [.agent/workflows/firebase-functions.md](.agent/workflows/firebase-functions.md)
 - **git, commit, push, branch, merge, PR 생성·수정:** `.agent/workflows/pushAndCommit.md`
