@@ -83,7 +83,7 @@ export const MESSAGE_COLUMNS_V5 = buildColumnsArray(V5_COLUMNS)
 
 // 🔥🔥TODO: 버전업될떄마다 확인🔥🔥
 // 최신 버전: 예) v2까지 존재한다면 2
-type Migration = (tx: Transaction) => Promise<void> | void
+type Migration = (tx: Transaction) => void
 // ✅ key는 "업데이트 후 버전"으로 통일 (1,2,3...)
 export const migrations: Record<number, Migration> = {
   // v0 -> v1 : messages 테이블/인덱스 생성 (예: 초기 스키마)
@@ -95,220 +95,88 @@ export const migrations: Record<number, Migration> = {
   },
 
   // v1 -> v2 : seq 컬럼 추가
-  2: tx =>
-    new Promise<void>((resolve, reject) => {
-      tx.executeSql(
-        `PRAGMA table_info(${MESSAGE_TABLE});`,
-        [],
-        (_, {rows}) => {
-          const columns: string[] = []
-          for (let i = 0; i < rows.length; i++) {
-            columns.push(rows.item(i).name)
-          }
+  2: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
 
-          if (!columns.includes('seq')) {
-            logger.info('➕ [Migration] Adding "seq" column...')
-            tx.executeSql(
-              'ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;',
-              [],
-              () => {
-                tx.executeSql(
-                  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
-                  [],
-                  () => resolve(),
-                  (_tx, err) => {
-                    reject(err)
-                    return true
-                  },
-                )
-              },
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          } else {
-            logger.info('ℹ️ [Migration] "seq" column already exists, skipping.')
-            tx.executeSql(
-              CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
-              [],
-              () => resolve(),
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          }
-        },
-        (_tx, err) => {
-          reject(err)
-          return true
-        },
-      )
-    }),
+      if (!columns.includes('seq')) {
+        logger.info('➕ [Migration] Adding "seq" column...')
+        tx.executeSql('ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;')
+      } else {
+        logger.info('ℹ️ [Migration] "seq" column already exists, skipping.')
+      }
+
+      // 인덱스는 IF NOT EXISTS가 있으므로 안전하게 호출 가능
+      tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
+    })
+  },
   //v2 -> v3 : status 컬럼 추가
-  3: tx =>
-    new Promise<void>((resolve, reject) => {
-      tx.executeSql(
-        `PRAGMA table_info(${MESSAGE_TABLE});`,
-        [],
-        (_, {rows}) => {
-          const columns: string[] = []
-          for (let i = 0; i < rows.length; i++) {
-            columns.push(rows.item(i).name)
-          }
+  3: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
 
-          if (!columns.includes('status')) {
-            logger.info('➕ [Migration] Adding "status" column...')
-            tx.executeSql(
-              'ALTER TABLE messages ADD COLUMN status TEXT DEFAULT \'success\';',
-              [],
-              () => resolve(),
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          } else {
-            logger.info(
-              'ℹ️ [Migration] "status" column already exists, skipping.',
-            )
-            resolve()
-          }
-        },
-        (_tx, err) => {
-          reject(err)
-          return true
-        },
-      )
-    }),
+      if (!columns.includes('status')) {
+        logger.info('➕ [Migration] Adding "status" column...')
+        tx.executeSql(
+          'ALTER TABLE messages ADD COLUMN status TEXT DEFAULT \'success\';',
+        )
+      } else {
+        logger.info('ℹ️ [Migration] "status" column already exists, skipping.')
+      }
+    })
+  },
   //v3 -> v4 : imageUrls 컬럼 추가
-  4: tx =>
-    new Promise<void>((resolve, reject) => {
-      tx.executeSql(
-        `PRAGMA table_info(${MESSAGE_TABLE});`,
-        [],
-        (_, {rows}) => {
-          const columns: string[] = []
-          for (let i = 0; i < rows.length; i++) {
-            columns.push(rows.item(i).name)
-          }
+  4: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
 
-          if (!columns.includes('imageUrls')) {
-            logger.info('➕ [Migration] Adding "imageUrls" column...')
-            tx.executeSql(
-              'ALTER TABLE messages ADD COLUMN imageUrls TEXT;',
-              [],
-              () => resolve(),
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          } else {
-            logger.info(
-              'ℹ️ [Migration] "imageUrls" column already exists, skipping.',
-            )
-            resolve()
-          }
-        },
-        (_tx, err) => {
-          reject(err)
-          return true
-        },
-      )
-    }),
+      if (!columns.includes('imageUrls')) {
+        logger.info('➕ [Migration] Adding "imageUrls" column...')
+        tx.executeSql('ALTER TABLE messages ADD COLUMN imageUrls TEXT;')
+      } else {
+        logger.info('ℹ️ [Migration] "imageUrls" column already exists, skipping.')
+      }
+    })
+  },
   //v4 -> v5 : AI 응답 만료 시각 컬럼 추가
-  5: tx =>
-    new Promise<void>((resolve, reject) => {
-      tx.executeSql(
-        `PRAGMA table_info(${MESSAGE_TABLE});`,
-        [],
-        (_, {rows}) => {
-          const columns: string[] = []
-          for (let i = 0; i < rows.length; i++) {
-            columns.push(rows.item(i).name)
-          }
+  5: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], (_, {rows}) => {
+      const columns: string[] = []
+      for (let i = 0; i < rows.length; i++) {
+        columns.push(rows.item(i).name)
+      }
 
-          if (!columns.includes('aiResponseExpiresAt')) {
-            logger.info(
-              '➕ [Migration] Adding "aiResponseExpiresAt" column...',
-            )
-            tx.executeSql(
-              'ALTER TABLE messages ADD COLUMN aiResponseExpiresAt INTEGER;',
-              [],
-              () => resolve(),
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          } else {
-            logger.info(
-              'ℹ️ [Migration] "aiResponseExpiresAt" column already exists, skipping.',
-            )
-            resolve()
-          }
-        },
-        (_tx, err) => {
-          reject(err)
-          return true
-        },
-      )
-    }),
-  //v5 -> v6 : roomId, seq DESC 복합 인덱스 보장 (seq 컬럼 존재 여부 확인 후 생성)
-  6: tx =>
-    new Promise<void>((resolve, reject) => {
+      if (!columns.includes('aiResponseExpiresAt')) {
+        logger.info(
+          '➕ [Migration] Adding "aiResponseExpiresAt" column...',
+        )
+        tx.executeSql(
+          'ALTER TABLE messages ADD COLUMN aiResponseExpiresAt INTEGER;',
+        )
+      } else {
+        logger.info(
+          'ℹ️ [Migration] "aiResponseExpiresAt" column already exists, skipping.',
+        )
+      }
+    })
+  },
+  //v5 -> v6 : roomId, seq DESC 복합 인덱스 보장
+  // (v2 등 이전 마이그레이션의 PRAGMA table_info 콜백 내 ALTER TABLE 이후에 실행되도록 동일하게 table_info 콜백에서 큐잉)
+  6: tx => {
+    tx.executeSql(`PRAGMA table_info(${MESSAGE_TABLE});`, [], () => {
       logger.info('➕ [Migration] Ensuring "idx_messages_room_seq" index...')
-      tx.executeSql(
-        `PRAGMA table_info(${MESSAGE_TABLE});`,
-        [],
-        (_, {rows}) => {
-          const columns: string[] = []
-          for (let i = 0; i < rows.length; i++) {
-            columns.push(rows.item(i).name)
-          }
-
-          if (!columns.includes('seq')) {
-            // seq가 아직 없으면 먼저 컬럼 추가 후 인덱스 생성
-            logger.info('➕ [Migration v6] Adding missing "seq" column before index...')
-            tx.executeSql(
-              'ALTER TABLE messages ADD COLUMN seq INTEGER DEFAULT 0;',
-              [],
-              () => {
-                tx.executeSql(
-                  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
-                  [],
-                  () => resolve(),
-                  (_tx, err) => {
-                    reject(err)
-                    return true
-                  },
-                )
-              },
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          } else {
-            tx.executeSql(
-              CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
-              [],
-              () => resolve(),
-              (_tx, err) => {
-                reject(err)
-                return true
-              },
-            )
-          }
-        },
-        (_tx, err) => {
-          reject(err)
-          return true
-        },
-      )
-    }),
+      tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
+    })
+  },
 }
 
 //🔥🔥TODO: 중요 가장 최근 컬럼값으로 설정해야함 (초기화 할떄 사용함)🔥🔥
