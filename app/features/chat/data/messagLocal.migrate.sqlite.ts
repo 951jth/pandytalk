@@ -1,4 +1,5 @@
 import {
+  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
   CREATE_MESSAGE_TABLE_RECENT_SQL,
   LATEST_DB_VERSION,
   MESSAGE_TABLE,
@@ -19,6 +20,23 @@ type UserVersionRow = {
 }
 
 type TableInfoRow = {
+  cid?: number
+  name?: string
+  type?: string
+  notnull?: number
+  dflt_value?: string | null
+  pk?: number
+}
+
+export type MessageColumnSchema = {
+  name: string
+  type: string
+  notNull: boolean
+  defaultValue: string | null
+  isPrimaryKey: boolean
+}
+
+type IndexListRow = {
   name?: string
 }
 
@@ -47,53 +65,56 @@ export const messageMigrateLocal = {
   migrateDatabaseIfNeeded: async (): Promise<void> => {
     return sqliteCall(
       'messageLocal.migrateDatabaseIfNeeded',
-      () => {
-        return new Promise((resolve, reject) => {
-          db.transaction(
-            (tx: Transaction) => {
-              tx.executeSql('PRAGMA user_version;', [], (_, {rows}) => {
-                const currentVersion = rows.item(0).user_version ?? 0
-                logger.info(`📘 Current DB version: ${currentVersion}`)
-                let nextVersion = currentVersion + 1 // 🔥 여기서 +1부터 시작
-                while (nextVersion <= LATEST_DB_VERSION) {
-                  const migrate = migrations[nextVersion]
+      async () => {
+        const currentVersion = await messageMigrateLocal.getUserVersion()
+        logger.info(`📘 Current DB version: ${currentVersion}`)
 
-                  if (migrate) {
-                    logger.info(
-                      `🚀 [Migration] Version ${nextVersion - 1} -> ${nextVersion} 시작...`,
-                    )
-                    migrate(tx)
-                  } else {
-                    logger.warn(
-                      `⚠️ [Migration] v${nextVersion}에 대한 정의를 찾을 수 없습니다.`,
-                    )
+        let nextVersion = currentVersion + 1
+        while (nextVersion <= LATEST_DB_VERSION) {
+          const migrate = migrations[nextVersion]
+          const targetVer = nextVersion
+
+          if (migrate) {
+            logger.info(
+              `🚀 [Migration] Version ${targetVer - 1} -> ${targetVer} 시작...`,
+            )
+            await new Promise<void>((resolve, reject) => {
+              db.transaction(
+                async (tx: Transaction) => {
+                  try {
+                    await migrate(tx)
+                    tx.executeSql(`PRAGMA user_version = ${targetVer};`)
+                  } catch (err) {
+                    reject(err)
                   }
-
-                  nextVersion++
-                }
-                // 최종 버전 업데이트
-                if (nextVersion > currentVersion + 1) {
-                  tx.executeSql(
-                    `PRAGMA user_version = ${LATEST_DB_VERSION};`,
-                    [],
-                    () => {
-                      logger.info(
-                        `✅ [Migration] DB updated to version ${LATEST_DB_VERSION}`,
-                      )
-                    },
+                },
+                err => {
+                  logger.error(
+                    `❌ [Migration] Version ${targetVer} transaction failed`,
+                    err,
                   )
-                } else {
-                  logger.info('✅ [Migration] DB already up to date.')
-                }
-              })
-            },
-            err => {
-              logger.error('❌ Migration transaction failed', err)
-              reject(err)
-            },
-            () => resolve(),
-          )
-        })
+                  reject(err)
+                },
+                () => {
+                  logger.info(
+                    `✅ [Migration] DB updated to version ${targetVer}`,
+                  )
+                  resolve()
+                },
+              )
+            })
+          } else {
+            logger.warn(
+              `⚠️ [Migration] v${targetVer}에 대한 정의를 찾을 수 없습니다.`,
+            )
+          }
+
+          nextVersion++
+        }
+
+        if (nextVersion <= currentVersion + 1) {
+          logger.info('✅ [Migration] DB already up to date.')
+        }
       },
       {lock: true},
     )
@@ -107,15 +128,31 @@ export const messageMigrateLocal = {
               CREATE_MESSAGE_TABLE_RECENT_SQL,
               [],
               () => {
-                // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
                 tx.executeSql(
-                  `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
                   [],
                   () => {
-                    logger.info(`✅ messages table ready (v${LATEST_DB_VERSION})`)
+                    // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
+                    tx.executeSql(
+                      `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                      [],
+                      () => {
+                        logger.info(
+                          `✅ messages table ready (v${LATEST_DB_VERSION})`,
+                        )
+                      },
+                      (_tx, error) => {
+                        logger.error('❌ Failed to set user_version', error)
+                        reject(error)
+                        return true
+                      },
+                    )
                   },
                   (_tx, error) => {
-                    logger.error('❌ Failed to set user_version', error)
+                    logger.error(
+                      '❌ Failed to create messages room_seq index',
+                      error,
+                    )
                     reject(error)
                     return true
                   },
@@ -197,6 +234,75 @@ export const messageMigrateLocal = {
       })
     })
   },
+  // 현재 messages 테이블의 컬럼 스키마 상세 조회
+  getMessageColumnsSchema: () => {
+    return sqliteCall('messageLocal.getMessageColumnsSchema', () => {
+      return new Promise<MessageColumnSchema[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          tx.executeSql(
+            `PRAGMA table_info(${MESSAGE_TABLE});`,
+            [],
+            (_tx: Transaction, res: ResultSet) => {
+              try {
+                const schema: MessageColumnSchema[] = []
+                for (let i = 0; i < res.rows.length; i++) {
+                  const row = res.rows.item(i) as TableInfoRow
+                  if (row?.name) {
+                    schema.push({
+                      name: String(row.name),
+                      type: String(row.type ?? ''),
+                      notNull: Boolean(row.notnull),
+                      defaultValue:
+                        row.dflt_value !== undefined && row.dflt_value !== null
+                          ? String(row.dflt_value)
+                          : null,
+                      isPrimaryKey: Boolean(row.pk),
+                    })
+                  }
+                }
+                resolve(schema)
+              } catch (e) {
+                reject(e)
+              }
+            },
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+  // 현재 messages 테이블에 생성된 인덱스 이름 목록 조회
+  getMessageIndexes: () => {
+    return sqliteCall('messageLocal.getMessageIndexes', () => {
+      return new Promise<string[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          tx.executeSql(
+            `PRAGMA index_list(${MESSAGE_TABLE});`,
+            [],
+            (_tx: Transaction, res: ResultSet) => {
+              try {
+                const indexes: string[] = []
+                for (let i = 0; i < res.rows.length; i++) {
+                  const row = res.rows.item(i) as IndexListRow
+                  if (row?.name) indexes.push(String(row.name))
+                }
+                resolve(indexes)
+              } catch (e) {
+                reject(e)
+              }
+            },
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
   //테이블을 삭제 후 재생성 (최종 수단)
   rebuildMessageTable: async () => {
     return sqliteCall(
@@ -207,6 +313,7 @@ export const messageMigrateLocal = {
             (tx: Transaction) => {
               tx.executeSql(`DROP TABLE IF EXISTS ${MESSAGE_TABLE};`)
               tx.executeSql(CREATE_MESSAGE_TABLE_RECENT_SQL)
+              tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
             },
             reject,
             resolve,

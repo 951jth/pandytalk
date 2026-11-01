@@ -1,5 +1,6 @@
 import ChatListItemCard from '@app/features/chat/components/ChatListItemCard'
 import ChatListSkeleton from '@app/features/chat/components/ChatListSkeleton'
+// import ChatSqliteDebugButton from '@app/features/chat/components/ChatSqliteDebugButton'
 import {useChatList} from '@app/features/chat/hooks/useChatList'
 import type {ChatItemWithMemberInfo} from '@app/features/chat/types/chat'
 import type {AppRouteParamList} from '@app/navigation/types'
@@ -65,6 +66,8 @@ export default function GroupChatListScreen() {
 
   return (
     <View style={styles.container}>
+      {/* 🛠️ 디버그용 SQLite 확인 버튼 (확인 후 아래 한 줄만 주석 처리) */}
+      {/* <ChatSqliteDebugButton /> */}
       <SearchInput
         placeholder="검색할 닉네임을 입력해주세요."
         value={input}
