@@ -153,10 +153,27 @@ function createInMemorySqliteState(initial?: {
 
         // 6. CREATE INDEX IF NOT EXISTS <indexName> ON messages ...
         const indexMatch = normalized.match(
-          /^CREATE INDEX IF NOT EXISTS\s+(\w+)\s+ON\s+messages/i,
+          /^CREATE INDEX IF NOT EXISTS\s+(\w+)\s+ON\s+messages\s*\(([^)]+)\)/i,
         )
         if (indexMatch) {
-          state.indexes.add(indexMatch[1])
+          const indexName = indexMatch[1]
+          const indexCols = indexMatch[2]
+            .split(',')
+            .map(c => c.trim().split(/\s+/)[0])
+
+          for (const col of indexCols) {
+            if (!state.columns.includes(col)) {
+              const err = new Error(`no such column: ${col}`)
+              if (onError) {
+                onError(txObj, err)
+              } else {
+                throw err
+              }
+              return
+            }
+          }
+
+          state.indexes.add(indexName)
           onSuccess?.(txObj, {rows: {length: 0, item: () => undefined}})
           return
         }
