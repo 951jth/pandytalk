@@ -65,56 +65,53 @@ export const messageMigrateLocal = {
   migrateDatabaseIfNeeded: async (): Promise<void> => {
     return sqliteCall(
       'messageLocal.migrateDatabaseIfNeeded',
-      async () => {
-        const currentVersion = await messageMigrateLocal.getUserVersion()
-        logger.info(`📘 Current DB version: ${currentVersion}`)
+      () => {
+        return new Promise((resolve, reject) => {
+          db.transaction(
+            (tx: Transaction) => {
+              tx.executeSql('PRAGMA user_version;', [], (_, {rows}) => {
+                const currentVersion = rows.item(0).user_version ?? 0
+                logger.info(`📘 Current DB version: ${currentVersion}`)
+                let nextVersion = currentVersion + 1 // 🔥 여기서 +1부터 시작
+                while (nextVersion <= LATEST_DB_VERSION) {
+                  const migrate = migrations[nextVersion]
 
-        let nextVersion = currentVersion + 1
-        while (nextVersion <= LATEST_DB_VERSION) {
-          const migrate = migrations[nextVersion]
-          const targetVer = nextVersion
-
-          if (migrate) {
-            logger.info(
-              `🚀 [Migration] Version ${targetVer - 1} -> ${targetVer} 시작...`,
-            )
-            await new Promise<void>((resolve, reject) => {
-              db.transaction(
-                async (tx: Transaction) => {
-                  try {
-                    await migrate(tx)
-                    tx.executeSql(`PRAGMA user_version = ${targetVer};`)
-                  } catch (err) {
-                    reject(err)
+                  if (migrate) {
+                    logger.info(
+                      `🚀 [Migration] Version ${nextVersion - 1} -> ${nextVersion} 시작...`,
+                    )
+                    migrate(tx)
+                  } else {
+                    logger.warn(
+                      `⚠️ [Migration] v${nextVersion}에 대한 정의를 찾을 수 없습니다.`,
+                    )
                   }
-                },
-                err => {
-                  logger.error(
-                    `❌ [Migration] Version ${targetVer} transaction failed`,
-                    err,
-                  )
-                  reject(err)
-                },
-                () => {
-                  logger.info(
-                    `✅ [Migration] DB updated to version ${targetVer}`,
-                  )
-                  resolve()
-                },
-              )
-            })
-          } else {
-            logger.warn(
-              `⚠️ [Migration] v${targetVer}에 대한 정의를 찾을 수 없습니다.`,
-            )
-          }
 
-          nextVersion++
-        }
-
-        if (nextVersion <= currentVersion + 1) {
-          logger.info('✅ [Migration] DB already up to date.')
-        }
+                  nextVersion++
+                }
+                // 최종 버전 업데이트
+                if (nextVersion > currentVersion + 1) {
+                  tx.executeSql(
+                    `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                    [],
+                    () => {
+                      logger.info(
+                        `✅ [Migration] DB updated to version ${LATEST_DB_VERSION}`,
+                      )
+                    },
+                  )
+                } else {
+                  logger.info('✅ [Migration] DB already up to date.')
+                }
+              })
+            },
+            err => {
+              logger.error('❌ Migration transaction failed', err)
+              reject(err)
+            },
+            () => resolve(),
+          )
+        })
       },
       {lock: true},
     )
