@@ -7,6 +7,9 @@ import type {Transaction} from 'react-native-sqlite-storage'
 import {logger} from '@app/shared/services/logger'
 
 export const MESSAGE_TABLE = 'messages' as const
+export const MESSAGE_ROOM_SEQ_INDEX = 'idx_messages_room_seq' as const
+export const CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL =
+  `CREATE INDEX IF NOT EXISTS ${MESSAGE_ROOM_SEQ_INDEX} ON ${MESSAGE_TABLE} (roomId, seq DESC);`
 
 // 🔥🔥TODO: 테이블 버전이 업될때마다 확인해야함🔥🔥
 //V1 테이블 (id, roomId, text, senderId, createdAt, type, imageUrl, senderPicURL, senderName)
@@ -107,9 +110,7 @@ export const migrations: Record<number, Migration> = {
       }
 
       // 인덱스는 IF NOT EXISTS가 있으므로 안전하게 호출 가능
-      tx.executeSql(
-        'CREATE INDEX IF NOT EXISTS idx_messages_room_seq ON messages (roomId, seq DESC);',
-      )
+      tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
     })
   },
   //v2 -> v3 : status 컬럼 추가
@@ -168,11 +169,16 @@ export const migrations: Record<number, Migration> = {
       }
     })
   },
+  //v5 -> v6 : roomId, seq DESC 복합 인덱스 보장
+  6: tx => {
+    logger.info('➕ [Migration] Ensuring "idx_messages_room_seq" index...')
+    tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
+  },
 }
 
 //🔥🔥TODO: 중요 가장 최근 컬럼값으로 설정해야함 (초기화 할떄 사용함)🔥🔥
 export const MESSAGE_PLACEHOLDERS = MESSAGE_COLUMNS_V5.map(() => '?').join(', ')
 export const MESSAGE_COLUMN_SQL = MESSAGE_COLUMNS_V5.join(', ')
 export const MESSAGES_COLUMNS = MESSAGE_COLUMNS_V5
-export const LATEST_DB_VERSION = 5
+export const LATEST_DB_VERSION = 6
 export const CREATE_MESSAGE_TABLE_RECENT_SQL = CREATE_MESSAGE_TABLE_V5_SQL

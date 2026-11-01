@@ -1,4 +1,5 @@
 import {
+  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
   CREATE_MESSAGE_TABLE_RECENT_SQL,
   LATEST_DB_VERSION,
   MESSAGE_TABLE,
@@ -19,6 +20,23 @@ type UserVersionRow = {
 }
 
 type TableInfoRow = {
+  cid?: number
+  name?: string
+  type?: string
+  notnull?: number
+  dflt_value?: string | null
+  pk?: number
+}
+
+export type MessageColumnSchema = {
+  name: string
+  type: string
+  notNull: boolean
+  defaultValue: string | null
+  isPrimaryKey: boolean
+}
+
+type IndexListRow = {
   name?: string
 }
 
@@ -107,15 +125,31 @@ export const messageMigrateLocal = {
               CREATE_MESSAGE_TABLE_RECENT_SQL,
               [],
               () => {
-                // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
                 tx.executeSql(
-                  `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                  CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL,
                   [],
                   () => {
-                    logger.info(`✅ messages table ready (v${LATEST_DB_VERSION})`)
+                    // 2) ✅ 신규 설치 케이스에서 버전도 최신으로 세팅
+                    tx.executeSql(
+                      `PRAGMA user_version = ${LATEST_DB_VERSION};`,
+                      [],
+                      () => {
+                        logger.info(
+                          `✅ messages table ready (v${LATEST_DB_VERSION})`,
+                        )
+                      },
+                      (_tx, error) => {
+                        logger.error('❌ Failed to set user_version', error)
+                        reject(error)
+                        return true
+                      },
+                    )
                   },
                   (_tx, error) => {
-                    logger.error('❌ Failed to set user_version', error)
+                    logger.error(
+                      '❌ Failed to create messages room_seq index',
+                      error,
+                    )
                     reject(error)
                     return true
                   },
@@ -197,6 +231,75 @@ export const messageMigrateLocal = {
       })
     })
   },
+  // 현재 messages 테이블의 컬럼 스키마 상세 조회
+  getMessageColumnsSchema: () => {
+    return sqliteCall('messageLocal.getMessageColumnsSchema', () => {
+      return new Promise<MessageColumnSchema[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          tx.executeSql(
+            `PRAGMA table_info(${MESSAGE_TABLE});`,
+            [],
+            (_tx: Transaction, res: ResultSet) => {
+              try {
+                const schema: MessageColumnSchema[] = []
+                for (let i = 0; i < res.rows.length; i++) {
+                  const row = res.rows.item(i) as TableInfoRow
+                  if (row?.name) {
+                    schema.push({
+                      name: String(row.name),
+                      type: String(row.type ?? ''),
+                      notNull: Boolean(row.notnull),
+                      defaultValue:
+                        row.dflt_value !== undefined && row.dflt_value !== null
+                          ? String(row.dflt_value)
+                          : null,
+                      isPrimaryKey: Boolean(row.pk),
+                    })
+                  }
+                }
+                resolve(schema)
+              } catch (e) {
+                reject(e)
+              }
+            },
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
+  // 현재 messages 테이블에 생성된 인덱스 이름 목록 조회
+  getMessageIndexes: () => {
+    return sqliteCall('messageLocal.getMessageIndexes', () => {
+      return new Promise<string[]>((resolve, reject) => {
+        db.transaction((tx: Transaction) => {
+          tx.executeSql(
+            `PRAGMA index_list(${MESSAGE_TABLE});`,
+            [],
+            (_tx: Transaction, res: ResultSet) => {
+              try {
+                const indexes: string[] = []
+                for (let i = 0; i < res.rows.length; i++) {
+                  const row = res.rows.item(i) as IndexListRow
+                  if (row?.name) indexes.push(String(row.name))
+                }
+                resolve(indexes)
+              } catch (e) {
+                reject(e)
+              }
+            },
+            (_tx: Transaction, err: SQLError) => {
+              reject(err)
+              return true
+            },
+          )
+        })
+      })
+    })
+  },
   //테이블을 삭제 후 재생성 (최종 수단)
   rebuildMessageTable: async () => {
     return sqliteCall(
@@ -207,6 +310,7 @@ export const messageMigrateLocal = {
             (tx: Transaction) => {
               tx.executeSql(`DROP TABLE IF EXISTS ${MESSAGE_TABLE};`)
               tx.executeSql(CREATE_MESSAGE_TABLE_RECENT_SQL)
+              tx.executeSql(CREATE_MESSAGE_ROOM_SEQ_INDEX_SQL)
             },
             reject,
             resolve,
