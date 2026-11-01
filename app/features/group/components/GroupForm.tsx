@@ -4,7 +4,8 @@ import {
 } from '@react-native-firebase/firestore'
 import {useQueryClient} from '@tanstack/react-query'
 import React, {useMemo, useRef, useState} from 'react'
-import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native'
+import {Alert, StyleSheet, Text, View} from 'react-native'
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view'
 
 import {auth, firestore} from '../../../shared/firebase/firestore'
 import InputForm from '../../../shared/ui/form/InputForm'
@@ -150,9 +151,12 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
   }
   return (
     <View style={styles.container}>
-      <ScrollView
+      <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={20}
+        contentContainerStyle={{ flexGrow: 1 }}>
         <InputForm
           buttonLabel="저장"
           items={items}
@@ -181,7 +185,7 @@ export default function GroupForm({record, onRefresh, onClose}: propTypes) {
           btnDisable={loading}
           useBotton={true}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   )
 }
